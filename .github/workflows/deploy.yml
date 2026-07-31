@@ -1,0 +1,59 @@
+name: Deploy Quartz to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # 수동 트리거도 가능
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# 동시 배포 방지 (진행 중인 배포가 있으면 취소하지 않고 대기)
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: 🔨 Quartz 빌드
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 소스 체크아웃
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # 전체 히스토리 (last-modified 날짜 계산용)
+
+      - name: 🟢 Node.js 설정
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: 📦 의존성 설치
+        run: npm ci
+
+      - name: 🏗 Quartz 빌드
+        run: npx quartz build
+
+      - name: ⚙️ GitHub Pages 설정
+        uses: actions/configure-pages@v4
+
+      - name: 📤 빌드 결과물 업로드
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: public  # Quartz 빌드 출력 디렉토리
+
+  deploy:
+    name: 🚀 GitHub Pages 배포
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: 🌐 GitHub Pages 배포
+        id: deployment
+        uses: actions/deploy-pages@v4

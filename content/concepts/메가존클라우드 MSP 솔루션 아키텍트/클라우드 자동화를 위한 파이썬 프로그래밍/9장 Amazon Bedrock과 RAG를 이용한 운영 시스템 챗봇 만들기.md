@@ -1,0 +1,11 @@
+---
+title: "9장 Amazon Bedrock과 RAG를 이용한 운영 시스템 챗봇 만들기"
+date: 2026-08-02
+tags: ["메가존클라우드 MSP 솔루션 아키텍트", "클라우드 자동화를 위한 파이썬 프로그래밍"]
+is_public: true
+draft: false
+---
+
+# 9장. Amazon Bedrock과 RAG를 이용한 운영 시스템 챗봇 만들기
+
+[실습 1. Amazon Bedrock Knowledge Base를 이용한 지식기반 챗봇](9%EC%9E%A5%20Amazon%20Bedrock%EA%B3%BC%20RAG%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EC%9A%B4%EC%98%81%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EC%B1%97%EB%B4%87%20%EB%A7%8C%EB%93%A4%EA%B8%B0/%EC%8B%A4%EC%8A%B5%201%20Amazon%20Bedrock%20Knowledge%20Base%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EC%A7%80%EC%8B%9D%EA%B8%B0%EB%B0%98%20%EC%B1%97%EB%B4%87)[Bedrock Knowledge Base와 Python을 이용한 운영 챗봇 만들기](9%EC%9E%A5%20Amazon%20Bedrock%EA%B3%BC%20RAG%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EC%9A%B4%EC%98%81%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EC%B1%97%EB%B4%87%20%EB%A7%8C%EB%93%A4%EA%B8%B0/Bedrock%20Knowledge%20Base%EC%99%80%20Python%EC%9D%84%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EC%9A%B4%EC%98%81%20%EC%B1%97%EB%B4%87%20%EB%A7%8C%EB%93%A4%EA%B8%B0)[실습 2. 지식 기반 + 운영 상태 조회 기반 챗봇](9%EC%9E%A5%20Amazon%20Bedrock%EA%B3%BC%20RAG%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EC%9A%B4%EC%98%81%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EC%B1%97%EB%B4%87%20%EB%A7%8C%EB%93%A4%EA%B8%B0/%EC%8B%A4%EC%8A%B5%202%20%EC%A7%80%EC%8B%9D%20%EA%B8%B0%EB%B0%98%20+%20%EC%9A%B4%EC%98%81%20%EC%83%81%ED%83%9C%20%EC%A1%B0%ED%9A%8C%20%EA%B8%B0%EB%B0%98%20%EC%B1%97%EB%B4%87)[Bedrock Agent를 Python 호출하기](9%EC%9E%A5%20Amazon%20Bedrock%EA%B3%BC%20RAG%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EC%9A%B4%EC%98%81%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EC%B1%97%EB%B4%87%20%EB%A7%8C%EB%93%A4%EA%B8%B0/Bedrock%20Agent%EB%A5%BC%20Python%20%ED%98%B8%EC%B6%9C%ED%95%98%EA%B8%B0)

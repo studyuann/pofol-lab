@@ -15,6 +15,7 @@ draft: false
 ## 최근 노트
 
 - [[concepts/index|📚 개념 노트 모음]]
+- [[concepts/메가존클라우드 MSP 솔루션 아키텍트/index|☁️ 메가존클라우드 MSP 솔루션 아키텍트 위키]]
 - [[projects/index|🛠 프로젝트 노트 모음]]
 
 ---

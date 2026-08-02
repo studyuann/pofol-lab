@@ -300,7 +300,7 @@ sudo systemctl enable httpd
 # 11. 웹페이지 생성
 
 ```
-sudo vi /var/www/html/index
+sudo vi /var/www/html/index.html
 ```
 
 내용

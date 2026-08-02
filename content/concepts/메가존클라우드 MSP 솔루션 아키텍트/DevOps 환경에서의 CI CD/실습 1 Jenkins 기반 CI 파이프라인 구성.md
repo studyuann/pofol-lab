@@ -159,11 +159,11 @@ jenkins-ci-lab
 ```
 jenkins-ci-lab/
  ├─ Dockerfile
- ├─ index
+ ├─ index.html
  └─ README.md
 ```
 
-### `index`
+### `index.html`
 
 ```
 <!DOCTYPE html>
@@ -184,7 +184,7 @@ jenkins-ci-lab/
 ```
 FROM nginx:latest
 
-COPY index /usr/share/nginx/html/index
+COPY index.html /usr/share/nginx/html/index.html
 ```
 
 ### Dockerfile 설명
@@ -193,9 +193,9 @@ COPY index /usr/share/nginx/html/index
 
 Nginx 공식 이미지를 기반 이미지로 사용한다.
 
-### `COPY index ...`
+### `COPY index.html ...`
 
-현재 저장소의 `index` 파일을 Nginx 웹 루트 위치에 복사한다.
+현재 저장소의 `index.html` 파일을 Nginx 웹 루트 위치에 복사한다.
 
 즉, 이 이미지는 **Nginx + 사용자 정의 정적 페이지** 구조를 가진다.
 
@@ -724,7 +724,7 @@ Checkout
 
 * `load build definition from Dockerfile`
 
-* `COPY index ...`
+* `COPY index.html ...`
 
 * `naming to ... sample-docker-app:latest`
 
@@ -833,8 +833,8 @@ Just the push event
 예:
 
 ```
-echo"<p>Webhook triggered build</p>" >> index
-git add index
+echo"<p>Webhook triggered build</p>" >> index.html
+git add index.html
 git commit-m"test: trigger jenkins webhook build"
 git push origin main
 ```

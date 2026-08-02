@@ -42,7 +42,7 @@ S3
      └ Object
           ├ image.jpg
           ├ log.txt
-          └ index
+          └ index.html
 ```
 
 구성 요소
@@ -105,7 +105,7 @@ ap-northeast-2
 테스트 HTML 생성
 
 ```
-index
+index.html
 ```
 
 내용
@@ -127,13 +127,13 @@ index
 객체 클릭
 
 ```
-index
+index.html
 ```
 
 객체 URL 확인
 
 ```
-https://이니셜-s3-bucket-ACCOUNT_ID.s3.ap-northeast-2.amazonaws.com/index
+https://이니셜-s3-bucket-ACCOUNT_ID.s3.ap-northeast-2.amazonaws.com/index.html
 ```
 
 브라우저 접속
@@ -377,7 +377,7 @@ aws s3 ls s3://이니셜-s3-bucket-ACCOUNT_ID
 결과
 
 ```
-index
+index.html
 ```
 
 ---
@@ -393,7 +393,7 @@ Pre-Signed URL은 **일시적으로 접근을 허용하는 URL**이다.
 CLI 실행
 
 ```
-aws s3 presign s3://이니셜-s3-bucket-ACCOUNT_ID/index --expires-in 60
+aws s3 presign s3://이니셜-s3-bucket-ACCOUNT_ID/index.html --expires-in 60
 ```
 
 설명
@@ -450,7 +450,7 @@ Enable
 Index document
 
 ```
-index
+index.html
 ```
 
 ---
@@ -515,7 +515,7 @@ S3 Access Control Test
 
 조건
 
-* index 업로드
+* index.html 업로드
 
 * ACL로 Public 접근 허용
 

@@ -50,7 +50,7 @@ Control Plane은 클러스터를 제어하는 핵심 영역임.
 
 온프레미스에서는 이 영역을 직접 설치하고 직접 운영해야 함.
 
-반면 EKS에서는 Control Plane이 AWS 관리형으로 제공됨. ([AWS Documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl?utm_source=chatgpt.com))
+반면 EKS에서는 Control Plane이 AWS 관리형으로 제공됨. ([AWS Documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html?utm_source=chatgpt.com))
 
 ### 2-2. Worker Node
 
@@ -265,7 +265,7 @@ move eksctl.exe C:\Tools\
 eksctl version
 ```
 
-정상 설치되면 버전 정보가 출력됨. ([AWS Documentation](https://docs.aws.amazon.com/eks/latest/eksctl/installation?utm_source=chatgpt.com))
+정상 설치되면 버전 정보가 출력됨. ([AWS Documentation](https://docs.aws.amazon.com/eks/latest/eksctl/installation.html?utm_source=chatgpt.com))
 
 ---
 
@@ -273,7 +273,7 @@ eksctl version
 
 ## 윈도우 CMD 기준
 
-AWS는 `eksctl`을 이용한 시작 방식을 EKS 빠른 시작 방법으로 안내함. ([AWS Documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl?utm_source=chatgpt.com))
+AWS는 `eksctl`을 이용한 시작 방식을 EKS 빠른 시작 방법으로 안내함. ([AWS Documentation](https://docs.aws.amazon.com/eks/latest/userguide/getting-started-eksctl.html?utm_source=chatgpt.com))
 
 CMD에서 여러 줄로 쓰려면 줄 끝에 `^` 문자를 사용해야 함.
 

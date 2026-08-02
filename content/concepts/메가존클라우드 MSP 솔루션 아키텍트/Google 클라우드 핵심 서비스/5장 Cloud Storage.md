@@ -152,7 +152,7 @@ Google 공식 문서는 객체를 “파일 형식에 상관없이 저장되는 
 
 예시
 
-* `index`
+* `index.html`
 
 * `logo.png`
 
@@ -507,7 +507,7 @@ gcloud storage buckets describe gs://$BUCKET_NAME
 
 ```
 mkdir -p ~/gcs-lab
-cat > ~/gcs-lab/index<<'EOF'
+cat > ~/gcs-lab/index.html<<'EOF'
 <h1>Cloud Storage Lab</h1>
 <p>This file was uploaded to Google Cloud Storage.</p>
 EOF
@@ -529,7 +529,7 @@ ls -l ~/gcs-lab
 ## 단일 파일 업로드
 
 ```
-gcloud storage cp ~/gcs-lab/index gs://$BUCKET_NAME/
+gcloud storage cp ~/gcs-lab/index.html gs://$BUCKET_NAME/
 ```
 
 ## 추가 파일 업로드
@@ -568,7 +568,7 @@ gcloud storage ls --recursive gs://$BUCKET_NAME
 
 ### 기대 결과
 
-* `index`
+* `index.html`
 
 * `backup.txt`
 
@@ -582,7 +582,7 @@ gcloud storage ls --recursive gs://$BUCKET_NAME
 
 ```
 mkdir-p ~/gcs-download
-gcloud storage cp gs://$BUCKET_NAME/index ~/gcs-download/
+gcloud storage cp gs://$BUCKET_NAME/index.html ~/gcs-download/
 gcloud storage cp gs://$BUCKET_NAME/backups/backup.txt ~/gcs-download/
 ls -l ~/gcs-download
 ```
@@ -646,13 +646,13 @@ gcloud storage buckets add-iam-policy-binding gs://$BUCKET_NAME \
 ## 공개 URL 테스트
 
 ```
-https://storage.googleapis.com/BUCKET_NAME/index
+https://storage.googleapis.com/BUCKET_NAME/index.html
 ```
 
 예시
 
 ```
-https://storage.googleapis.com/my-bucket-name/index
+https://storage.googleapis.com/my-bucket-name/index.html
 ```
 
 ### 실습 후 원복

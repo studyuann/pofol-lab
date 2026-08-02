@@ -799,4 +799,4 @@ except Exception as e:
 
 * 생성형 AI에게 요청할 때는 인증 방식, 조회 대상, 출력할 필드, 필터링 조건, 예외 처리 요구를 함께 적는 것이 좋다.
 
-[boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이 확인](5%EC%9E%A5%20AWS%20%EC%9A%B4%EC%98%81%20%EB%B3%B4%EC%95%88%20%EC%A0%90%EA%B2%80%20%EC%9E%90%EB%8F%99%ED%99%94/boto3%EB%A1%9C%20%EB%A1%9C%EA%B7%B8%EC%9D%B8%20%EC%82%AC%EC%9A%A9%EC%9E%90%20%EA%B6%8C%ED%95%9C%EB%B3%84%20IAM%20Role%20%EC%83%9D%EC%84%B1%20%EB%B0%8F%20AssumeRole%20%EA%B6%8C%ED%95%9C%20%EC%B0%A8%EC%9D%B4%20)[프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영 자동화](5%EC%9E%A5%20AWS%20%EC%9A%B4%EC%98%81%20%EB%B3%B4%EC%95%88%20%EC%A0%90%EA%B2%80%20%EC%9E%90%EB%8F%99%ED%99%94/%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%94%EB%93%9C,%20FastAPI,%20MariaDB,%20boto3%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EB%A1%9C%EA%B7%B8%EC%9D%B8%20%EA%B8%B0%EB%B0%98%20AWS%20%EC%9A%B4%EC%98%81%20)
+ [[boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이|boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이 확인]]  [[프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영|프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영 자동화]]

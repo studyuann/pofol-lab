@@ -225,7 +225,7 @@ cd ~/ecr-lab
 ## 7.2 HTML 파일 작성
 
 ```
-cat > index <<'EOF'
+cat > index.html <<'EOF'
 <h1>Hello ECR</h1>
 <p>This container image is stored in Amazon ECR.</p>
 EOF
@@ -233,11 +233,11 @@ EOF
 
 ### 명령어 설명
 
-### `cat > index <<'EOF'`
+### `cat > index.html <<'EOF'`
 
 * 여러 줄 내용을 한 번에 파일로 저장할 때 사용하는 방식임
 
-* `EOF` 전까지 입력한 문자열이 `index` 파일 내용으로 저장됨
+* `EOF` 전까지 입력한 문자열이 `index.html` 파일 내용으로 저장됨
 
 ---
 
@@ -246,7 +246,7 @@ EOF
 ```
 cat > Dockerfile <<'EOF'
 FROM nginx:latest
-COPY index /usr/share/nginx/html/index
+COPY index.html /usr/share/nginx/html/index.html
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
 EOF
@@ -260,9 +260,9 @@ EOF
 
 * 즉, 웹서버 기능은 nginx가 담당함
 
-### `COPY index /usr/share/nginx/html/index`
+### `COPY index.html /usr/share/nginx/html/index.html`
 
-* 현재 디렉터리에 있는 `index` 파일을 컨테이너 내부 nginx 웹 루트 경로에 복사함
+* 현재 디렉터리에 있는 `index.html` 파일을 컨테이너 내부 nginx 웹 루트 경로에 복사함
 
 ### `EXPOSE 80`
 
@@ -298,7 +298,7 @@ docker build -t sample-web:v1 .
 
 * 현재 디렉터리를 build context로 사용한다는 의미임
 
-* Dockerfile과 index이 현재 디렉터리에 있어야 함
+* Dockerfile과 index.html이 현재 디렉터리에 있어야 함
 
 ---
 
@@ -570,7 +570,7 @@ aws ecr list-images \
 ## 14.1 HTML 수정
 
 ```
-cat > index <<'EOF'
+cat > index.html <<'EOF'
 <h1>Hello ECR v2</h1>
 <p>This is version 2 image.</p>
 EOF

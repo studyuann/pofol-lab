@@ -28,7 +28,7 @@ draft: false
 
 * `aws sts get-caller-identity` 결과 해석 방법
 
-AWS는 장기 Access Key보다 IAM Role과 임시 자격 증명 사용을 권장한다. IAM Role을 EC2에 연결하면 애플리케이션은 인스턴스 메타데이터 서비스(IMDS)에서 임시 자격 증명을 받아 AWS API를 호출할 수 있다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2?utm_source=chatgpt.com))
+AWS는 장기 Access Key보다 IAM Role과 임시 자격 증명 사용을 권장한다. IAM Role을 EC2에 연결하면 애플리케이션은 인스턴스 메타데이터 서비스(IMDS)에서 임시 자격 증명을 받아 AWS API를 호출할 수 있다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html?utm_source=chatgpt.com))
 
 ---
 
@@ -60,7 +60,7 @@ AWS CLI / AWS SDK
 
 핵심은 EC2 내부에 Access Key를 직접 저장하지 않는다는 점이다.
 
-대신 IAM Role을 기반으로 한 임시 자격 증명이 인스턴스 내부에서 자동으로 제공되고, AWS CLI와 SDK는 이를 자동으로 사용한다. AWS 문서에서도 EC2에서 애플리케이션에 장기 자격 증명을 배포하는 대신 IAM Role 사용을 권장한다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2?utm_source=chatgpt.com))
+대신 IAM Role을 기반으로 한 임시 자격 증명이 인스턴스 내부에서 자동으로 제공되고, AWS CLI와 SDK는 이를 자동으로 사용한다. AWS 문서에서도 EC2에서 애플리케이션에 장기 자격 증명을 배포하는 대신 IAM Role 사용을 권장한다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles_use_switch-role-ec2.html?utm_source=chatgpt.com))
 
 ---
 
@@ -159,7 +159,7 @@ Role 이름 예시
 
 EC2가 Role을 사용할 수 있으려면 신뢰 정책(Trust Policy)에 EC2 서비스가 포함되어야 한다.
 
-즉 이 Role은 “누가 Assume 할 수 있는가”를 EC2로 지정한 Role이다. IAM Role은 임시 자격 증명을 제공하며, EC2 워크로드에는 인스턴스 프로파일을 통해 전달된다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles?utm_source=chatgpt.com))
+즉 이 Role은 “누가 Assume 할 수 있는가”를 EC2로 지정한 Role이다. IAM Role은 임시 자격 증명을 제공하며, EC2 워크로드에는 인스턴스 프로파일을 통해 전달된다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_roles.html?utm_source=chatgpt.com))
 
 ---
 
@@ -253,7 +253,7 @@ arn:aws:sts::계정ID:assumed-role/Role이름/세션이름
 
 즉 Access Key를 직접 설정한 것이 아니라 Role을 Assume 한 세션으로 동작하는 상태다.
 
-이 결과는 Role 기반 임시 자격 증명이 사용되고 있음을 보여준다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp?utm_source=chatgpt.com))
+이 결과는 Role 기반 임시 자격 증명이 사용되고 있음을 보여준다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html?utm_source=chatgpt.com))
 
 ---
 
@@ -452,7 +452,7 @@ http://169.254.169.254/latest/meta-data/iam/security-credentials/$ROLE_NAME
 
 메타데이터에 현재 자격 증명이 반영된 시각이다.
 
-이 결과는 EC2가 장기 자격 증명이 아닌 **STS 기반 임시 자격 증명**을 사용하고 있음을 보여준다. AWS STS는 임시 보안 자격 증명을 제공하는 서비스다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp?utm_source=chatgpt.com))
+이 결과는 EC2가 장기 자격 증명이 아닌 **STS 기반 임시 자격 증명**을 사용하고 있음을 보여준다. AWS STS는 임시 보안 자격 증명을 제공하는 서비스다. ([AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp.html?utm_source=chatgpt.com))
 
 ---
 

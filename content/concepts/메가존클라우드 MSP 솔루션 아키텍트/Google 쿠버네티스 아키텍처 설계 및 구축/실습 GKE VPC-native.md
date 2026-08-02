@@ -303,7 +303,7 @@ nginx   1/1     Running   0          20s   10.20.0.5   gke-vpc-native-cluster-de
 ### 8-2. nginx 응답 페이지를 구분 가능하게 수정
 
 ```
-kubectl exec nginx -- /bin/sh -c 'echo "hello from gke pod" > /usr/share/nginx/html/index'
+kubectl exec nginx -- /bin/sh -c 'echo "hello from gke pod" > /usr/share/nginx/html/index.html'
 ```
 
 파드 내부에서 직접 확인:
@@ -441,7 +441,7 @@ gcloud compute instances create curl-vm \
 
 kubectl run nginx --image=nginx --port=80
 
-kubectl exec nginx -- /bin/sh -c 'echo "hello from gke pod" > /usr/share/nginx/html/index'
+kubectl exec nginx -- /bin/sh -c 'echo "hello from gke pod" > /usr/share/nginx/html/index.html'
 
 kubectl get pods -o wide
 

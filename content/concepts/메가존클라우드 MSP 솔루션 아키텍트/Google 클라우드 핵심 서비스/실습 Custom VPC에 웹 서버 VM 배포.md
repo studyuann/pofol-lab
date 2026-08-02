@@ -410,7 +410,7 @@ apt-get update -y
 apt-get install -y nginx
 systemctl enable nginx
 systemctl start nginx
-echo "<h1>GCP Compute Engine Web Server</h1>" > /var/www/html/index
+echo "<h1>GCP Compute Engine Web Server</h1>" > /var/www/html/index.html
 EOF
 ```
 
@@ -436,7 +436,7 @@ EOF
 
   현재 부팅 세션에서 nginx를 바로 실행한다.
 
-* `echo "<h1>GCP Compute Engine Web Server</h1>" > /var/www/html/index`
+* `echo "<h1>GCP Compute Engine Web Server</h1>" > /var/www/html/index.html`
 
   웹 브라우저로 접속했을 때 확인할 수 있는 인덱스 페이지를 생성한다.
 

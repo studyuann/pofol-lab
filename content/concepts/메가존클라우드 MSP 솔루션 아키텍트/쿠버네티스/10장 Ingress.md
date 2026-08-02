@@ -636,4 +636,4 @@ curl -k https://example.local/app2
 
 경로 기반 인그레스는 **하나의 인증서**만 관리하면 된다는 큰 장점이 있다. 기존 `san.cnf` 파일의 `[ alt_names ]` 섹션에 `DNS.3 = example.local`을 추가해서 인증서를 다시 만들면 HTTPS까지 적용된다.
 
-[10-1. SAN 포함 인증서 실습](10%EC%9E%A5%20Ingress/10-1%20SAN%20%ED%8F%AC%ED%95%A8%20%EC%9D%B8%EC%A6%9D%EC%84%9C%20%EC%8B%A4%EC%8A%B5)
+ [[10-1 SAN 포함 인증서 실습|10-1. SAN 포함 인증서 실습]]

@@ -52,7 +52,7 @@ S3
      └ Object
           ├ image.jpg
           ├ log.txt
-          └ index
+          └ index.html
 ```
 
 S3의 핵심 구성요소는 다음과 같다.
@@ -278,7 +278,7 @@ Block Public Access 가 막고 있으면 외부 공개되지 않음
 파일명
 
 ```
-index
+index.html
 ```
 
 내용
@@ -300,7 +300,7 @@ index
 
 파일을 선택한 뒤 업로드를 진행한다.
 
-업로드가 끝나면 버킷 내부에 `index` 객체가 생성된다.
+업로드가 끝나면 버킷 내부에 `index.html` 객체가 생성된다.
 
 ---
 
@@ -311,7 +311,7 @@ index
 업로드한 객체를 클릭한다.
 
 ```
-index
+index.html
 ```
 
 객체 상세 화면에서 URL을 확인한다.
@@ -319,7 +319,7 @@ index
 예시 형식
 
 ```
-https://이니셜-s3-bucket-ACCOUNT_ID.s3.ap-northeast-2.amazonaws.com/index
+https://이니셜-s3-bucket-ACCOUNT_ID.s3.ap-northeast-2.amazonaws.com/index.html
 ```
 
 ---
@@ -445,7 +445,7 @@ Block Public Access가 켜져 있으면 실제 공개가 차단될 수 있다.
 
 ## 7.4 객체 Public 설정
 
-버킷 안의 객체 목록에서 `index`을 선택한다.
+버킷 안의 객체 목록에서 `index.html`을 선택한다.
 
 다음 메뉴를 선택한다.
 
@@ -469,7 +469,7 @@ Block Public Access가 켜져 있으면 실제 공개가 차단될 수 있다.
 다시 객체 URL을 브라우저에서 연다.
 
 ```
-https://이니셜-s3-bucket-ACCOUNT_ID.s3.ap-northeast-2.amazonaws.com/index
+https://이니셜-s3-bucket-ACCOUNT_ID.s3.ap-northeast-2.amazonaws.com/index.html
 ```
 
 결과
@@ -601,7 +601,7 @@ Bucket Policy는 버킷 리소스에 직접 붙는 정책이다.
 
 전체 객체 공개가 아니라, 특정 파일만 공개할 수도 있다.
 
-예를 들어 `index`만 공개하려면 다음처럼 작성한다.
+예를 들어 `index.html`만 공개하려면 다음처럼 작성한다.
 
 ```
 {
@@ -612,13 +612,13 @@ Bucket Policy는 버킷 리소스에 직접 붙는 정책이다.
       "Effect":"Allow",
       "Principal":"*",
       "Action":"s3:GetObject",
-      "Resource":"arn:aws:s3:::이니셜-s3-bucket-ACCOUNT_ID/index"
+      "Resource":"arn:aws:s3:::이니셜-s3-bucket-ACCOUNT_ID/index.html"
     }
   ]
 }
 ```
 
-이 정책을 사용하면 `index`만 외부 접근 가능하고,
+이 정책을 사용하면 `index.html`만 외부 접근 가능하고,
 
 다른 객체는 여전히 접근이 거부된다.
 
@@ -778,7 +778,7 @@ aws s3ls s3://이니셜-s3-bucket-ACCOUNT_ID
 예상 결과
 
 ```
-2026-03-21 12:00:00         92 index
+2026-03-21 12:00:00         92 index.html
 ```
 
 ---
@@ -788,13 +788,13 @@ aws s3ls s3://이니셜-s3-bucket-ACCOUNT_ID
 다음 명령으로 객체를 EC2로 내려받을 수 있다.
 
 ```
-aws s3 cp s3://이니셜-s3-bucket-ACCOUNT_ID/index .
+aws s3 cp s3://이니셜-s3-bucket-ACCOUNT_ID/index.html .
 ```
 
 파일 확인
 
 ```
-cat index
+cat index.html
 ```
 
 결과
@@ -853,7 +853,7 @@ Pre-Signed URL은
 AWS CLI에서 다음 명령을 실행한다.
 
 ```
-aws s3 presign s3://이니셜-s3-bucket-ACCOUNT_ID/index--expires-in60
+aws s3 presign s3://이니셜-s3-bucket-ACCOUNT_ID/index.html--expires-in60
 ```
 
 설명
@@ -869,7 +869,7 @@ aws s3 presign s3://이니셜-s3-bucket-ACCOUNT_ID/index--expires-in60
 예시 형식
 
 ```
-https://이니셜-s3-bucket-ACCOUNT_ID.s3.amazonaws.com/index?X-Amz-Algorithm=...
+https://이니셜-s3-bucket-ACCOUNT_ID.s3.amazonaws.com/index.html?X-Amz-Algorithm=...
 ```
 
 ---
@@ -901,7 +901,7 @@ AccessDenied
 문제 실습과 연결해서 30초 URL도 만들 수 있다.
 
 ```
-aws s3 presign s3://이니셜-s3-bucket-ACCOUNT_ID/index--expires-in30
+aws s3 presign s3://이니셜-s3-bucket-ACCOUNT_ID/index.html--expires-in30
 ```
 
 # 11. Static Website Hosting 실습
@@ -933,7 +933,7 @@ S3에는 두 가지 접근 관점이 있다.
 예
 
 ```
-https://버킷명.s3.ap-northeast-2.amazonaws.com/index
+https://버킷명.s3.ap-northeast-2.amazonaws.com/index.html
 ```
 
 이 방식은 S3 API 기반 객체 접근이다.
@@ -980,7 +980,7 @@ Enable
 Index document
 
 ```
-index
+index.html
 ```
 
 필요하다면 Error document도 지정할 수 있다.
@@ -988,7 +988,7 @@ index
 예
 
 ```
-error
+error.html
 ```
 
 저장한다.
@@ -1028,7 +1028,7 @@ Static Website Hosting 설정 후 제공되는 웹사이트 엔드포인트를 �
 http://이니셜-s3-bucket-ACCOUNT_ID.s3-website-ap-northeast-2.amazonaws.com
 ```
 
-브라우저에서 접속하면 `index`이 기본 페이지로 표시된다.
+브라우저에서 접속하면 `index.html`이 기본 페이지로 표시된다.
 
 예상 결과
 
@@ -1077,7 +1077,7 @@ This file is stored in Amazon S3.
 
 조건
 
-* `index` 업로드
+* `index.html` 업로드
 
 * ACL 방식으로 Public Read 허용
 
@@ -1095,7 +1095,7 @@ Bucket Policy를 사용해서 다음 조건을 구현한다.
 
 예시
 
-* `index` 은 공개
+* `index.html` 은 공개
 
 * `private.txt` 는 비공개 유지
 
@@ -1110,7 +1110,7 @@ Bucket Policy를 사용해서 다음 조건을 구현한다.
       "Effect":"Allow",
       "Principal":"*",
       "Action":"s3:GetObject",
-      "Resource":"arn:aws:s3:::이니셜-s3-lab/index"
+      "Resource":"arn:aws:s3:::이니셜-s3-lab/index.html"
     }
   ]
 }
@@ -1131,7 +1131,7 @@ Pre-Signed URL을 생성한다.
 명령 예시
 
 ```
-aws s3 presign s3://이니셜-s3-lab/index--expires-in30
+aws s3 presign s3://이니셜-s3-lab/index.html--expires-in30
 ```
 
 확인 사항

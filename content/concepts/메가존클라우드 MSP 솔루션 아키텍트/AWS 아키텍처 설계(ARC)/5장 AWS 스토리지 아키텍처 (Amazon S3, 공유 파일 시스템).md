@@ -788,22 +788,22 @@ hello s3
 
 ---
 
-## 5.21.1 index 파일 생성
+## 5.21.1 index.html 파일 생성
 
 ```
-cat > index<<'EOF'
+cat > index.html<<'EOF'
 <h1>Welcome to S3 Static Website</h1>
 EOF
 ```
 
-이 명령은 `index` 파일을 생성하고 HTML 내용을 저장함.
+이 명령은 `index.html` 파일을 생성하고 HTML 내용을 저장함.
 
 ---
 
 ## 5.21.2 파일 업로드
 
 ```
-aws s3cp index s3://이니셜-arc-s3-bucket-고유값/
+aws s3cp index.html s3://이니셜-arc-s3-bucket-고유값/
 ```
 
 ---
@@ -818,7 +818,7 @@ S3 콘솔 → 버킷 선택 → Properties → Static website hosting
 | --- | --- |
 | Static website hosting | Enable |
 | Hosting type | Host a static website |
-| Index document | index |
+| Index document | index.html |
 
 ---
 

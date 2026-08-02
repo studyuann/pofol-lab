@@ -185,7 +185,7 @@ Resources:
             yum install httpd -y
             systemctl start httpd
             systemctl enable httpd
-            echo "CloudFormation Web Server" > /var/www/html/index
+            echo "CloudFormation Web Server" > /var/www/html/index.html
 
 
 # Auto Scaling Group

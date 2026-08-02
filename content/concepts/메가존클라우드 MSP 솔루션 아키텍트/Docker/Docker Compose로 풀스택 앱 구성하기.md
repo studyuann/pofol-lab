@@ -94,7 +94,7 @@ fullstack-todo/
 │   ├── Dockerfile
 │   ├── package.json
 │   ├── public/
-|   |     |- index 
+|   |     |- index.html 
 │   └── src/
 │       ├── App.js
 │       ├── App.css
@@ -736,7 +736,7 @@ CMD ["nginx", "-g", "daemon off;"]
 
 ### 5.3 메인 React 컴포넌트
 
-### public/index
+### public/index.html
 
 ```
 <!DOCTYPE html>

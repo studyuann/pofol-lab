@@ -12,7 +12,7 @@ draft: false
 
 * **메타데이터**: `user_name`과 `bg_color`라는 키(Key)를 설정합니다.
 
-* **시작 스크립트**: 부팅 시 메타데이터 서버에서 위 두 값을 읽어와 `index` 파일을 동적으로 생성합니다.
+* **시작 스크립트**: 부팅 시 메타데이터 서버에서 위 두 값을 읽어와 `index.html` 파일을 동적으로 생성합니다.
 
 ---
 
@@ -32,7 +32,7 @@ USER_NAME=$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/co
 BG_COLOR=$(curl -H "Metadata-Flavor: Google" http://metadata.google.internal/computeMetadata/v1/instance/attributes/bg_color)
 
 # 3. 가져온 메타데이터를 사용하여 웹 페이지 생성
-cat <<EOF > /var/www/html/index
+cat <<EOF > /var/www/html/index.html
 <!DOCTYPE html>
 <html lang="ko">
 <head>

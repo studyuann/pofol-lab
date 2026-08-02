@@ -100,7 +100,7 @@ kubectl get pods -n kube-system
 
 ## EBS CSI Driver용 권한
 
-EBS CSI driver는 AWS API를 호출해 EBS 볼륨을 생성하고 연결해야 하므로 IAM 권한이 필요함. AWS는 이 권한을 위해 `AmazonEBSCSIDriverPolicy` 관리형 정책을 사용하도록 안내함. 또한 권한 부여 방식으로는 **EKS Pod Identity** 사용을 권장하고, 준비되지 않았다면 **IRSA**를 사용할 수 있다고 설명함. ([docs.aws.amazon.com](https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi?utm_source=chatgpt.com))
+EBS CSI driver는 AWS API를 호출해 EBS 볼륨을 생성하고 연결해야 하므로 IAM 권한이 필요함. AWS는 이 권한을 위해 `AmazonEBSCSIDriverPolicy` 관리형 정책을 사용하도록 안내함. 또한 권한 부여 방식으로는 **EKS Pod Identity** 사용을 권장하고, 준비되지 않았다면 **IRSA**를 사용할 수 있다고 설명함. ([docs.aws.amazon.com](https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html?utm_source=chatgpt.com))
 
 ### 5-1. Pod Identity Agent 설치 여부 확인
 
@@ -419,8 +419,8 @@ kubectl exec -it app-ebs -- sh
 컨테이너 안에서 실행:
 
 ```
-echo EBS Volume Test > /usr/share/nginx/html/index
-cat /usr/share/nginx/html/index
+echo EBS Volume Test > /usr/share/nginx/html/index.html
+cat /usr/share/nginx/html/index.html
 ```
 
 정상이라면 다음처럼 보임.

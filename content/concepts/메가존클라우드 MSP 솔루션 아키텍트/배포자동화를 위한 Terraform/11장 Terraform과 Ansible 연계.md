@@ -1007,7 +1007,7 @@ EOT
 
 Nginx만 설치하면 기본 페이지가 보인다.
 
-여기서 한 단계 더 나아가서 index 파일을 배포해보자.
+여기서 한 단계 더 나아가서 index.html 파일을 배포해보자.
 
 ## 14.1 playbook.yml 수정
 
@@ -1028,7 +1028,7 @@ Nginx만 설치하면 기본 페이지가 보인다.
 
     - name: Deploy custom index page
       copy:
-        dest: /var/www/html/index
+        dest: /var/www/html/index.html
         content:|
           <html>
           <head><title>Terraform + Ansible</title></head>
@@ -1055,7 +1055,7 @@ Nginx만 설치하면 기본 페이지가 보인다.
 
 ```
 copy:
-  dest: /var/www/html/index
+  dest: /var/www/html/index.html
   content:|
 ```
 
@@ -1244,7 +1244,7 @@ terraform destroy -auto-approve
 
 * 서비스 활성화 및 시작
 
-* 사용자 정의 index 배포
+* 사용자 정의 index.html 배포
 
 ### 과제 2. 서버 2대로 확장하기
 

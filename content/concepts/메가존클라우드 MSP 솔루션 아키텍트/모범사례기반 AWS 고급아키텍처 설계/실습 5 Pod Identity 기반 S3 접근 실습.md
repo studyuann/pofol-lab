@@ -72,7 +72,7 @@ AWS는 EKS Pod Identity가 서비스어카운트와 IAM 역할을 연결하고, 
 
 5. 테스트용 S3 버킷이 있으면 더 좋지만, 이번 실습은 `s3 ls` 정도만으로도 확인 가능함
 
-AWS는 EKS Pod Identity를 쓰려면 클러스터에 `eks-pod-identity-agent` add-on이 있어야 한다고 설명함. `eksctl` 문서도 association 생성 전에 이 add-on이 선설치되어 있어야 한다고 안내함. ([AWS Documentation](https://docs.aws.amazon.com/ko_kr/eks/latest/eksctl/pod-identity-associations?utm_source=chatgpt.com))
+AWS는 EKS Pod Identity를 쓰려면 클러스터에 `eks-pod-identity-agent` add-on이 있어야 한다고 설명함. `eksctl` 문서도 association 생성 전에 이 add-on이 선설치되어 있어야 한다고 안내함. ([AWS Documentation](https://docs.aws.amazon.com/ko_kr/eks/latest/eksctl/pod-identity-associations.html?utm_source=chatgpt.com))
 
 먼저 현재 add-on을 확인함.
 
@@ -473,7 +473,7 @@ aws iam list-attached-role-policies --role-name EKS-PodIdentity-S3-ReadOnly
 
 association은 **클러스터 + 네임스페이스 + 서비스어카운트** 조합에 정확히 맞아야 함.
 
-이 셋 중 하나라도 다르면 권한이 적용되지 않음. AWS CLI 문서도 namespace와 service-account를 명시적으로 받음. ([AWS Documentation](https://docs.aws.amazon.com/cli/latest/reference/eks/create-pod-identity-association?utm_source=chatgpt.com))
+이 셋 중 하나라도 다르면 권한이 적용되지 않음. AWS CLI 문서도 namespace와 service-account를 명시적으로 받음. ([AWS Documentation](https://docs.aws.amazon.com/cli/latest/reference/eks/create-pod-identity-association.html?utm_source=chatgpt.com))
 
 ---
 

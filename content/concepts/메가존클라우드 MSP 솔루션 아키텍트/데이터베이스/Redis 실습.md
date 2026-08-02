@@ -125,7 +125,7 @@ FLUSHALL  : 모든 DB 삭제
 
 ---
 
-[Redis 데이터모델](Redis%20%EC%8B%A4%EC%8A%B5/Redis%20%EB%8D%B0%EC%9D%B4%ED%84%B0%EB%AA%A8%EB%8D%B8)
+ [[Redis 데이터모델]] 
 
 ## 3-1) STRING
 

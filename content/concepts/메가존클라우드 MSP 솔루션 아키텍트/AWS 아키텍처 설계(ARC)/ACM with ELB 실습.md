@@ -248,7 +248,7 @@ Amazon Linux 2023 기준으로 진행한다.
 ```
 sudo dnf install-y httpd
 sudo systemctl enable--now httpd
-echo"<h1>Web Server 1</h1>" |sudotee /var/www/html/index
+echo"<h1>Web Server 1</h1>" |sudotee /var/www/html/index.html
 ```
 
 ### Web Server 2
@@ -256,7 +256,7 @@ echo"<h1>Web Server 1</h1>" |sudotee /var/www/html/index
 ```
 sudo dnf install-y httpd
 sudo systemctl enable--now httpd
-echo"<h1>Web Server 2</h1>" |sudotee /var/www/html/index
+echo"<h1>Web Server 2</h1>" |sudotee /var/www/html/index.html
 ```
 
 ---
@@ -277,7 +277,7 @@ echo"<h1>Web Server 2</h1>" |sudotee /var/www/html/index
 
 * 즉, 현재 실행도 하고 다음 부팅 후 자동 시작도 설정하는 명령이다
 
-### `echo "<h1>Web Server 1</h1>" | sudo tee /var/www/html/index`
+### `echo "<h1>Web Server 1</h1>" | sudo tee /var/www/html/index.html`
 
 * Apache 기본 문서 루트 경로에 HTML 파일을 생성한다
 
@@ -763,7 +763,7 @@ SNI(Server Name Indication) 값을 함께 전달한다.
 
 1. EC2 웹 서버 2대 준비
 
-2. Apache 설치 및 index 작성
+2. Apache 설치 및 index.html 작성
 
 3. Target Group 생성
 

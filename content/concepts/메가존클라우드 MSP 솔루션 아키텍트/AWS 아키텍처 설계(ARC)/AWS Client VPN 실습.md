@@ -328,7 +328,7 @@ pki/private/client1.kyt.key
 
 # 6. Windows에서 Easy-RSA 설치 및 인증서 생성
 
-<https://docs.aws.amazon.com/ko_kr/vpn/latest/clientvpn-admin/client-auth-mutual-enable>
+<https://docs.aws.amazon.com/ko_kr/vpn/latest/clientvpn-admin/client-auth-mutual-enable.html>
 
 ### 6.1 Easy-RSA 압축 해제
 

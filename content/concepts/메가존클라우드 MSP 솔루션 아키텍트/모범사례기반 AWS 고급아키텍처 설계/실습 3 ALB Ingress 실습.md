@@ -56,7 +56,7 @@ EKS에서는 AWS Load Balancer Controller가 이 Ingress를 해석해서 **AWS A
 
 4. Ingress를 생성할 수 있는 권한과 서브넷 태그 설정이 준비되어 있어야 함
 
-[AWS Load Balancer Controller 설치](%EC%8B%A4%EC%8A%B5%203%20ALB%20Ingress%20%EC%8B%A4%EC%8A%B5/AWS%20Load%20Balancer%20Controller%20%EC%84%A4%EC%B9%98)
+ [[AWS Load Balancer Controller 설치]] 
 
 먼저 현재 컨텍스트와 노드를 확인함.
 
@@ -77,7 +77,7 @@ kubectl get pods -n kube-system
 kubectl get deployment -n kube-system
 ```
 
-일반적으로 `aws-load-balancer-controller`라는 이름의 Deployment가 보여야 함. AWS는 Helm을 사용한 설치 절차와 함께 `aws-load-balancer-controller` 리소스를 기준으로 안내함. ([docs.aws.amazon.com](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm?utm_source=chatgpt.com))
+일반적으로 `aws-load-balancer-controller`라는 이름의 Deployment가 보여야 함. AWS는 Helm을 사용한 설치 절차와 함께 `aws-load-balancer-controller` 리소스를 기준으로 안내함. ([docs.aws.amazon.com](https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html?utm_source=chatgpt.com))
 
 ---
 

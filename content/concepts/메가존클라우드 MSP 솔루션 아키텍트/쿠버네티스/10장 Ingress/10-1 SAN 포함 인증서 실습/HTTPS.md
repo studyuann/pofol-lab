@@ -8,7 +8,7 @@ draft: false
 
 # HTTPS
 
-[SSL-TLS\_HTTPS.pdf](HTTPS/SSL-TLS_HTTPS.pdf)
+[[SSL-TLS\_HTTPS.pdf]]
 
 ```
 암호화 통신 :  암호 알고리즘
@@ -82,12 +82,12 @@ server {
     location / {
     }
 
-    error_page 404 /404;
-        location = /40x {
+    error_page 404 /404.html;
+        location = /40x.html {
     }
 
-    error_page 500 502 503 504 /50x;
-        location = /50x {
+    error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
     }
 }
 ```

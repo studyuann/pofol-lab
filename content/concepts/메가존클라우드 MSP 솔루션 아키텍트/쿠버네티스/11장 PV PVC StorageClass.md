@@ -346,7 +346,7 @@ StorageClass에서 주로 보는 핵심 옵션은 다음임.
   + `Immediate`: PVC 생성 즉시 PV 생성/바인딩
   + `WaitForFirstConsumer`: Pod가 어디 노드에 배치될 지 정해진 후 바인딩(멀티 노드에서 자주 권장)
 
-[Local Path Provisioner](11%EC%9E%A5%20PV%20PVC%20StorageClass/Local%20Path%20Provisioner) 
+ [[Local Path Provisioner]] 
 
 ---
 
@@ -562,4 +562,4 @@ kubectl exec -it app-pod -- sh -c "cat /data/test.txt"
 
 ---
 
-[NFS 이용하기](11%EC%9E%A5%20PV%20PVC%20StorageClass/NFS%20%EC%9D%B4%EC%9A%A9%ED%95%98%EA%B8%B0)[Longhorn 이용하기](11%EC%9E%A5%20PV%20PVC%20StorageClass/Longhorn%20%EC%9D%B4%EC%9A%A9%ED%95%98%EA%B8%B0)
+ [[NFS 이용하기]]  [[Longhorn 이용하기]]

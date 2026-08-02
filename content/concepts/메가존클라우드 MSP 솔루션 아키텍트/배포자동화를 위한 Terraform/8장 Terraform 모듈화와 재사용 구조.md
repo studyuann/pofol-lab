@@ -593,7 +593,7 @@ project-a/
 
 ---
 
-[module 예제](8%EC%9E%A5%20Terraform%20%EB%AA%A8%EB%93%88%ED%99%94%EC%99%80%20%EC%9E%AC%EC%82%AC%EC%9A%A9%20%EA%B5%AC%EC%A1%B0/module%20%EC%98%88%EC%A0%9C)
+ [[module 예제]] 
 
 # 실습. Terraform 모듈화와 재사용 구조 실습
 

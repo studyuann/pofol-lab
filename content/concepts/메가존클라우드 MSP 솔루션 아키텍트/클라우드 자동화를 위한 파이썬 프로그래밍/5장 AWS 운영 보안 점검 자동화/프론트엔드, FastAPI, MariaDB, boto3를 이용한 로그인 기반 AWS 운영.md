@@ -217,7 +217,7 @@ cloud-ops-web/
 │   ├── s3_service.py
 │   ├── init_db.py
 │   └── static/
-│       ├── index
+│       ├── index.html
 │       ├── app.js
 │       └── style.css
 └── requirements.txt
@@ -1307,7 +1307,7 @@ def index():
     프론트엔드 랜딩페이지를 반환한다.
     """
 
-    return FileResponse("static/index")
+    return FileResponse("static/index.html")
 
 
 @app.post("/auth/login", response_model=TokenResponse)
@@ -1577,9 +1577,9 @@ arn:aws:sts::471166314777:assumed-role/app-operator-role/app-operator-operator-s
 
 # 20. 프론트엔드 작성
 
-## 20.1 index 작성
+## 20.1 index.html 작성
 
-파일명: `app/static/index`
+파일명: `app/static/index.html`
 
 ```
 <!DOCTYPE html>

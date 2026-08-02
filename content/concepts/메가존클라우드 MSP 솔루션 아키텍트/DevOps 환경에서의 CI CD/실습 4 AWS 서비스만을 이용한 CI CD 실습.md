@@ -392,7 +392,7 @@ HTTPS + Git credentials 또는 HTTPS + credential helper 방식 사용 가능함
 
 ```
 cicd-demo/
-├─ index
+├─ index.html
 ├─ buildspec.yml
 ├─ appspec.yml
 └─ scripts/
@@ -405,7 +405,7 @@ cicd-demo/
 
 # 13. 파일 작성
 
-## 13.1 index
+## 13.1 index.html
 
 ```
 <!DOCTYPE html>
@@ -440,7 +440,7 @@ phases:
     commands:
       - echo "Build phase started"
       - mkdir -p output
-      - cp -r index appspec.yml scripts output/
+      - cp -r index.html appspec.yml scripts output/
   post_build:
     commands:
       - echo "Build phase completed"
@@ -473,7 +473,7 @@ CodeBuild가 해석하는 빌드 스펙 버전임.
 
 * `p`는 디렉터리가 이미 있어도 오류 없이 넘어감
 
-### `cp -r index appspec.yml scripts output/`
+### `cp -r index.html appspec.yml scripts output/`
 
 * 배포에 필요한 파일을 `output` 폴더로 복사함
 
@@ -584,7 +584,7 @@ echo "=== BeforeInstall 시작 ==="
 dnf install nginx -y || true
 mkdir -p /usr/share/nginx/html
 # 중요: 기존에 있던 기본 Welcome 페이지를 지워야 우리 파일이 보입니다.
-rm -f /usr/share/nginx/html/index
+rm -f /usr/share/nginx/html/index.html
 chown -R nginx:nginx /usr/share/nginx/html
 ```
 
@@ -634,7 +634,7 @@ set-e
 
 echo "=== ValidateService started ==="
 
-curl -f http://localhost/index
+curl -f http://localhost/index.html
 
 echo "=== ValidateService completed ==="
 ```
@@ -1008,7 +1008,7 @@ AWS Native CI/CD Demo - Version 1
 
 # 19. 변경 후 자동 배포 실습
 
-## 19.1 index 수정
+## 19.1 index.html 수정
 
 기존 문구를 아래처럼 수정함.
 
@@ -1129,7 +1129,7 @@ CodeDeploy가 훅 스크립트를 순서대로 실행함.
 
 ```
 저장소 루트
-├─ index
+├─ index.html
 ├─ buildspec.yml
 ├─ appspec.yml
 └─ scripts/
@@ -1185,7 +1185,7 @@ chmod +x scripts/*.sh
 
 * nginx 미실행
 
-* `/var/www/html/index` 누락
+* `/var/www/html/index.html` 누락
 
 * localhost HTTP 응답 실패
 

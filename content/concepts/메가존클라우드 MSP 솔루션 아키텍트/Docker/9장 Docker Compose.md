@@ -312,14 +312,14 @@ docker compose down
 my-web-app/
 ├── docker-compose.yml
 ├── web/
-│   └── index
+│   └── index.html
 └── nginx/
     └── nginx.conf
 ```
 
 ### 9.9.2 HTML 파일 생성
 
-**web/index**
+**web/index.html**
 
 ```
 <!DOCTYPE html>
@@ -377,12 +377,12 @@ http {
 
         location / {
             root /usr/share/nginx/html;
-            index index;
+            index index.html;
         }
 
         # 에러 페이지 설정
-        error_page 500 502 503 504 /50x;
-        location = /50x {
+        error_page 500 502 503 504 /50x.html;
+        location = /50x.html {
             root /usr/share/nginx/html;
         }
     }

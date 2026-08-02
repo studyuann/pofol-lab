@@ -82,7 +82,7 @@ Docker 이미지는 하나의 파일이 아니라
 ```
 Layer 1: ubuntu base
 Layer 2: apt install nginx
-Layer 3: copy index
+Layer 3: copy index.html
 Layer 4: CMD nginx
 ```
 
@@ -185,7 +185,7 @@ RUN apt update && apt install -y nginx
 ### 4.4.3 COPY / ADD
 
 ```
-COPY index /usr/share/nginx/html/
+COPY index.html /usr/share/nginx/html/
 ```
 
 * 호스트 파일을 이미지로 복사
@@ -424,14 +424,14 @@ node_modules
 ```
 webapp/
  ├ Dockerfile
- └ index
+ └ index.html
 ```
 
 ### Dockerfile
 
 ```
 FROM nginx:latest
-COPY index /usr/share/nginx/html/index
+COPY index.html /usr/share/nginx/html/index.html
 ```
 
 ### 빌드 및 실행
@@ -541,4 +541,4 @@ docker inspect nginx
 
 ---
 
-[Docker 이미지 생성하기 실습](4%EC%9E%A5%20Docker%20%EC%9D%B4%EB%AF%B8%EC%A7%80%EC%99%80%20Dockerfile/Docker%20%EC%9D%B4%EB%AF%B8%EC%A7%80%20%EC%83%9D%EC%84%B1%ED%95%98%EA%B8%B0%20%EC%8B%A4%EC%8A%B5)
+ [[Docker 이미지 생성하기 실습]]

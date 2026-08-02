@@ -114,7 +114,7 @@ Backup Plan만 만든다고 바로 백업이 수행되지는 않음.
 
 * 실습 중 즉시 백업 테스트
 
-AWS Backup은 자동 백업 계획 외에도 수동으로 On-demand Backup을 생성할 수 있음. ([AWS 문서](https://docs.aws.amazon.com/aws-backup/latest/devguide/recov-point-create-on-demand-backup?utm_source=chatgpt.com))
+AWS Backup은 자동 백업 계획 외에도 수동으로 On-demand Backup을 생성할 수 있음. ([AWS 문서](https://docs.aws.amazon.com/aws-backup/latest/devguide/recov-point-create-on-demand-backup.html?utm_source=chatgpt.com))
 
 ---
 
@@ -692,7 +692,7 @@ AWS Backup에는 복구 테스트 계획 기능이 있으며, 일정 기반으�
 
 Restore testing plan 생성 후 주기적 복구 검증 구조 이해
 
-AWS Backup은 복구 테스트 기능을 제공하며, 계획 생성 후 선택 대상을 연결해 특정 또는 임의의 Recovery Point 기준으로 테스트를 수행할 수 있다. ([AWS 문서](https://docs.aws.amazon.com/aws-backup/latest/devguide/restore-testing?utm_source=chatgpt.com))
+AWS Backup은 복구 테스트 기능을 제공하며, 계획 생성 후 선택 대상을 연결해 특정 또는 임의의 Recovery Point 기준으로 테스트를 수행할 수 있다. ([AWS 문서](https://docs.aws.amazon.com/aws-backup/latest/devguide/restore-testing.html?utm_source=chatgpt.com))
 
 ---
 

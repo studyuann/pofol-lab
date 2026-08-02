@@ -385,7 +385,7 @@ aws logs start-query \
 
 반면 `start-query` 명령의 `--start-time`, `--end-time`은 **초 단위 Unix timestamp**를 사용한다.
 
-`start-query`는 로그 그룹, 시간 범위, 쿼리 문자열을 지정해 CloudWatch Logs Insights 쿼리를 시작한다. ([AWS Documentation](https://docs.aws.amazon.com/cli/latest/reference/logs/start-query?utm_source=chatgpt.com))
+`start-query`는 로그 그룹, 시간 범위, 쿼리 문자열을 지정해 CloudWatch Logs Insights 쿼리를 시작한다. ([AWS Documentation](https://docs.aws.amazon.com/cli/latest/reference/logs/start-query.html?utm_source=chatgpt.com))
 
 실행 결과 예시:
 
@@ -635,7 +635,7 @@ app\_access.log
 
 ```
 2026-05-06T09:00:01Z INFO 192.168.10.11 GET / 200 1243 35
-2026-05-06T09:00:03Z INFO 192.168.10.12 GET /index 200 2310 42
+2026-05-06T09:00:03Z INFO 192.168.10.12 GET /index.html 200 2310 42
 2026-05-06T09:00:05Z INFO 192.168.10.13 GET /login 200 1980 51
 2026-05-06T09:00:08Z WARN 192.168.10.14 POST /login 401 512 73
 2026-05-06T09:00:10Z INFO 192.168.10.15 GET /products 200 4521 64
@@ -760,7 +760,7 @@ find ./alb-logs -name "*.gz" -exec gunzip -k {} \;
 예제 로그:
 
 ```
-2026-04-28T10:00:01 INFO GET /index 200 120
+2026-04-28T10:00:01 INFO GET /index.html 200 120
 2026-04-28T10:00:03 ERROR GET /api/users 500 532
 2026-04-28T10:00:05 WARN POST /login 401 210
 2026-04-28T10:00:07 ERROR POST /api/orders 503 621

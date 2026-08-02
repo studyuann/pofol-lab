@@ -115,4 +115,4 @@ draft: false
 
 6️⃣ **VPN 세션 종료 후 터널 해제**
 
-[Remote VPN 구성 실습](Remote%20VPN/Remote%20VPN%20%EA%B5%AC%EC%84%B1%20%EC%8B%A4%EC%8A%B5)
+ [[Remote VPN 구성 실습]]

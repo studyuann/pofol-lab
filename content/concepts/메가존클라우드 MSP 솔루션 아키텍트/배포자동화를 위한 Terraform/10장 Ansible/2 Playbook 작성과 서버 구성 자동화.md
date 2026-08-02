@@ -26,7 +26,7 @@ ad-hoc command는 빠르게 테스트하거나 1회성 작업을 처리할 때 �
 
 * 자동 시작 등록
 
-* index 파일 배포
+* index.html 파일 배포
 
 이런 절차를 매번 ad-hoc command 여러 줄로 실행하면 다음과 같은 문제가 생김.
 
@@ -470,8 +470,8 @@ Ubuntu, Debian 계열에서 패키지 설치와 제거를 담당함.
 ```
 - name: Copy index file
   ansible.builtin.copy:
-    src: index
-    dest: /var/www/html/index
+    src: index.html
+    dest: /var/www/html/index.html
     mode: '0644'
 ```
 
@@ -629,7 +629,7 @@ ansible -i inventory.ini all -m command -a "ls -ld /opt/myapp"
 
 이번에는 간단한 HTML 파일을 복사함.
 
-### `index` 파일 작성
+### `index.html` 파일 작성
 
 ```
 <html>
@@ -653,8 +653,8 @@ ansible -i inventory.ini all -m command -a "ls -ld /opt/myapp"
   tasks:
     - name: Copy index file
       ansible.builtin.copy:
-        src: index
-        dest: /var/www/html/index
+        src: index.html
+        dest: /var/www/html/index.html
         mode: '0644'
 ```
 
@@ -669,7 +669,7 @@ ansible-playbook -i inventory.ini deploy-index.yml
 브라우저에서 웹서버 IP로 접속하거나, 다음 명령으로 확인할 수 있음.
 
 ```
-ansible -i inventory.ini web -m command -a "cat /var/www/html/index"
+ansible -i inventory.ini web -m command -a "cat /var/www/html/index.html"
 ```
 
 ---

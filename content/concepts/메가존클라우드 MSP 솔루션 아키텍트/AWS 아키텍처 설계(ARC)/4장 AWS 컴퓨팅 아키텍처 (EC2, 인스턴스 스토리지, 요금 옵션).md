@@ -226,7 +226,7 @@ yum update-y
 yum install-y httpd
 systemctl enable httpd
 systemctlstart httpd
-echo"<h1>Hello EC2</h1>" > /var/www/html/index
+echo"<h1>Hello EC2</h1>" > /var/www/html/index.html
 ```
 
 이 스크립트를 넣고 EC2를 생성하면, 인스턴스가 부팅되면서 자동으로 웹 서버를 설치하고 시작함.
@@ -843,7 +843,7 @@ dnf update -y
 dnf install -y httpd
 systemctl enable httpd
 systemctlstart httpd
-echo"<h1>Welcome to EC2 Web Server</h1>" > /var/www/html/index
+echo"<h1>Welcome to EC2 Web Server</h1>" > /var/www/html/index.html
 ```
 
 ### 명령어 설명
@@ -876,7 +876,7 @@ Amazon Linux 2023 계열에서는 패키지 관리 도구로 `dnf`를 사용함.
 
 지금 즉시 Apache 서비스를 실행함.
 
-### `echo "<h1>Welcome to EC2 Web Server</h1>" > /var/www/html/index`
+### `echo "<h1>Welcome to EC2 Web Server</h1>" > /var/www/html/index.html`
 
 웹 서버의 기본 문서 경로에 HTML 파일을 생성함.
 

@@ -135,7 +135,7 @@ bucket-name.s3.ap-northeast-2.amazonaws.com
 * AWS 계정
 
 * 정적 웹 파일
-  + `index`
+  + `index.html`
   + 필요 시 `style.css`, `app.js`, 이미지 파일
 
 * S3 버킷 생성 권한
@@ -144,7 +144,7 @@ bucket-name.s3.ap-northeast-2.amazonaws.com
 
 실습에 사용할 기본 파일 예시는 다음과 같다.
 
-## index
+## index.html
 
 ```
 <!DOCTYPE html>
@@ -224,7 +224,7 @@ Block all public access
 
 # 8. Step 3. 정적 파일 업로드
 
-생성한 버킷에 `index` 파일을 업로드한다.
+생성한 버킷에 `index.html` 파일을 업로드한다.
 
 경로
 
@@ -235,7 +235,7 @@ S3 → 대상 버킷 선택 → Upload
 업로드 후 버킷 내부에 최소한 다음 파일이 있어야 한다.
 
 ```
-index
+index.html
 ```
 
 이 시점에서는 S3 URL로 직접 열리지 않아도 정상이다.
@@ -282,7 +282,7 @@ Origin access control settings (recommended)
 
 새 OAC를 생성하거나 기존 OAC를 선택한다.
 
-이 설정이 바로 CloudFront만 S3 오리진에 접근할 수 있도록 제한하는 핵심이다. AWS CloudFront 시작 가이드에서도 S3 origin에 대해 OAC를 사용하는 배포 생성 절차를 제공한다. ([AWS Docs](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/GettingStarted.SimpleDistribution?utm_source=chatgpt.com))
+이 설정이 바로 CloudFront만 S3 오리진에 접근할 수 있도록 제한하는 핵심이다. AWS CloudFront 시작 가이드에서도 S3 origin에 대해 OAC를 사용하는 배포 생성 절차를 제공한다. ([AWS Docs](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/GettingStarted.SimpleDistribution.html?utm_source=chatgpt.com))
 
 ## 9.3 Viewer protocol policy 설정
 
@@ -299,7 +299,7 @@ Redirect HTTP to HTTPS
 HTTPS only
 ```
 
-정적 사이트를 배포할 때는 일반적으로 HTTPS 사용을 강제하는 것이 좋다. CloudFront 문서에서도 Viewer Protocol Policy를 통해 HTTPS 강제를 설정할 수 있다고 설명한다. ([AWS Docs](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-cloudfront-to-s3-origin?utm_source=chatgpt.com))
+정적 사이트를 배포할 때는 일반적으로 HTTPS 사용을 강제하는 것이 좋다. CloudFront 문서에서도 Viewer Protocol Policy를 통해 HTTPS 강제를 설정할 수 있다고 설명한다. ([AWS Docs](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-cloudfront-to-s3-origin.html?utm_source=chatgpt.com))
 
 ## 9.4 Default root object 설정
 
@@ -307,10 +307,10 @@ HTTPS only
 
 ```
 Default root object
-index
+index.html
 ```
 
-이 값을 설정하면 CloudFront 도메인 루트(`/`) 접속 시 `index` 을 기본 문서로 반환한다.
+이 값을 설정하면 CloudFront 도메인 루트(`/`) 접속 시 `index.html` 을 기본 문서로 반환한다.
 
 예를 들어 사용자가 다음 주소로 접속했을 때
 
@@ -318,7 +318,7 @@ index
 https://배포도메인/
 ```
 
-실제로는 `index` 이 응답된다.
+실제로는 `index.html` 이 응답된다.
 
 ## 9.5 Cache settings
 
@@ -418,7 +418,7 @@ d123exampleabcd.cloudfront.net
 https://d123exampleabcd.cloudfront.net
 ```
 
-정상이라면 `index` 내용이 표시된다.
+정상이라면 `index.html` 내용이 표시된다.
 
 ## 확인 포인트
 
@@ -441,7 +441,7 @@ https://d123exampleabcd.cloudfront.net
 예를 들어 S3 객체 URL을 직접 열어본다.
 
 ```
-https://이니셜-cf-static-site-001.s3.ap-northeast-2.amazonaws.com/index
+https://이니셜-cf-static-site-001.s3.ap-northeast-2.amazonaws.com/index.html
 ```
 
 또는 브라우저/CLI에서 직접 접근을 시도해본다.
@@ -462,7 +462,7 @@ https://이니셜-cf-static-site-001.s3.ap-northeast-2.amazonaws.com/index
 
 정적 웹사이트에서는 캐시 동작도 함께 이해하는 것이 좋다.
 
-예를 들어 `index` 의 내용을 수정해 다시 업로드한다.
+예를 들어 `index.html` 의 내용을 수정해 다시 업로드한다.
 
 수정 예시
 
@@ -499,7 +499,7 @@ CloudFront → Distribution → Invalidations → Create invalidation
 또는 특정 파일만 지정
 
 ```
-/index
+/index.html
 ```
 
 이 작업은 캐시된 객체를 강제로 무효화해서 새 콘텐츠를 더 빨리 반영하는 데 사용한다.
@@ -532,9 +532,9 @@ CloudFront → Distribution → Invalidations → Create invalidation
 
 확인 항목
 
-* Default root object가 `index` 로 설정되어 있는지
+* Default root object가 `index.html` 로 설정되어 있는지
 
-* 실제 버킷에 `index` 이 업로드되어 있는지
+* 실제 버킷에 `index.html` 이 업로드되어 있는지
 
 * 대소문자가 일치하는지
 
@@ -615,7 +615,7 @@ CloudFront → Distribution → Invalidations → Create invalidation
 
 * 퍼블릭 액세스 차단 유지
 
-* `index` 업로드 완료
+* `index.html` 업로드 완료
 
 * CloudFront 배포 생성 완료
 

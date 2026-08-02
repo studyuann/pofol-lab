@@ -255,7 +255,7 @@ spec:
     command:
     - sh
     - -c
-    - echo "<h1>Hello from Init</h1>" > /work/index
+    - echo "<h1>Hello from Init</h1>" > /work/index.html
     volumeMounts:
     - name: html
       mountPath: /work

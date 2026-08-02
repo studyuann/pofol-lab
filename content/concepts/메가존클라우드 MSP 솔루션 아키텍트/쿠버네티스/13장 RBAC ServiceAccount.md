@@ -765,4 +765,4 @@ chmod 600 ~/.kube/config
 
 ---
 
-[실습문제 1](13%EC%9E%A5%20RBAC%20ServiceAccount/%EC%8B%A4%EC%8A%B5%EB%AC%B8%EC%A0%9C%201)
+ [[실습문제 1]]

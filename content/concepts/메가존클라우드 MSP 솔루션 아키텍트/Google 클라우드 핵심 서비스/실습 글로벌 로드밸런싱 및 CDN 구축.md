@@ -65,7 +65,7 @@ apt-get install -y nginx
 
 HOSTNAME=$(hostname)
 
-cat <<EOF > /var/www/html/index
+cat <<EOF > /var/www/html/index.html
 <h1>This is Server: ${HOSTNAME}</h1>
 <p>Loaded from backend VM</p>
 EOF
@@ -75,7 +75,7 @@ server {
     listen 80 default_server;
     listen [::]:80 default_server;
     root /var/www/html;
-    index index;
+    index index.html;
     location / {
         add_header Cache-Control "public, max-age=60";
         try_files \$uri \$uri/ =404;
@@ -241,7 +241,7 @@ http://[부하분산기_프론트엔드_IP]
 
 * 또는 기본 캐시 모드 유지
 
-정적 HTML 파일을 서비스하는 구조이므로 실습 목적에는 충분함. `index` 같은 정적 콘텐츠는 CDN 캐시 테스트에 적합하다. Cloud CDN은 백엔드 서비스 설정에서 캐시 모드와 TTL 관련 옵션을 조정할 수 있다.
+정적 HTML 파일을 서비스하는 구조이므로 실습 목적에는 충분함. `index.html` 같은 정적 콘텐츠는 CDN 캐시 테스트에 적합하다. Cloud CDN은 백엔드 서비스 설정에서 캐시 모드와 TTL 관련 옵션을 조정할 수 있다.
 
 ### 5. 저장 및 업데이트
 

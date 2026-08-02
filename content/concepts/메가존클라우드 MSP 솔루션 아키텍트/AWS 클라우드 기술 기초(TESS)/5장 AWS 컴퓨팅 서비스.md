@@ -186,7 +186,7 @@ m5.large
 
 는 중간 규모 애플리케이션 서버에 적합하다.
 
-<https://docs.aws.amazon.com/ko_kr/ec2/latest/instancetypes/instance-type-names>
+<https://docs.aws.amazon.com/ko_kr/ec2/latest/instancetypes/instance-type-names.html>
 
 ---
 

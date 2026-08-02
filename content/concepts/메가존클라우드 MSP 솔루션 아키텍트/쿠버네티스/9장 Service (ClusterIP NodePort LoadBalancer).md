@@ -463,4 +463,4 @@ Service는:
 
 ---
 
-[MetalLB(로드밸런서 구현체)](9%EC%9E%A5%20Service%20(ClusterIP%20NodePort%20LoadBalancer)/MetalLB(%EB%A1%9C%EB%93%9C%EB%B0%B8%EB%9F%B0%EC%84%9C%20%EA%B5%AC%ED%98%84%EC%B2%B4)%206ed720e46f498295b96d01849a79a168)
+ [[MetalLB(로드밸런서 구현체)]]

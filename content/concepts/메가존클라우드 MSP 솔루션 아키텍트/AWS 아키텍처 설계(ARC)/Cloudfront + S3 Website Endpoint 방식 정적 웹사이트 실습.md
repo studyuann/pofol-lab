@@ -16,7 +16,7 @@ draft: false
 
 * S3 Static Website Hosting 활성화
 
-* `index` 과 `error` 설정
+* `index.html` 과 `error.html` 설정
 
 * 버킷 퍼블릭 접근 허용
 
@@ -86,7 +86,7 @@ S3 Website Endpoint
 
 이번 실습에서는 최소한 다음 파일을 준비한다.
 
-## index
+## index.html
 
 ```
 <!DOCTYPE html>
@@ -103,7 +103,7 @@ S3 Website Endpoint
 </html>
 ```
 
-## error
+## error.html
 
 ```
 <!DOCTYPE html>
@@ -172,10 +172,10 @@ Hosting type
 Host a static website
 
 Index document
-index
+index.html
 
 Error document
-error
+error.html
 ```
 
 설정 후 저장한다.
@@ -262,7 +262,7 @@ S3 website endpoint로 정적 사이트를 공개하려면 콘텐츠가 publicly
 
 # 9. Step 5. 파일 업로드
 
-버킷에 `index` 과 `error` 파일을 업로드한다.
+버킷에 `index.html` 과 `error.html` 파일을 업로드한다.
 
 경로
 
@@ -273,8 +273,8 @@ S3 → 버킷 선택 → Upload
 업로드 후 최소한 다음 두 파일이 존재해야 한다.
 
 ```
-index
-error
+index.html
+error.html
 ```
 
 이제 버킷은 웹사이트처럼 응답할 준비가 된 상태다.
@@ -309,7 +309,7 @@ http://bucket-name.s3-website-Region.amazonaws.com
 http://이니셜-s3-website-lab-001.s3-website.ap-northeast-2.amazonaws.com
 ```
 
-정상이라면 `index` 내용이 표시된다.
+정상이라면 `index.html` 내용이 표시된다.
 
 ## 확인 포인트
 
@@ -319,7 +319,7 @@ http://이니셜-s3-website-lab-001.s3-website.ap-northeast-2.amazonaws.com
 
 * `https://` 가 아니라는 점을 확인했는지
 
-S3 website endpoint는 HTTPS를 지원하지 않기 때문에 **반드시 HTTP로 접속**해야 한다. ([AWS Docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteEndpoints))
+S3 website endpoint는 HTTPS를 지원하지 않기 때문에 **반드시 HTTP로 접속**해야 한다. ([AWS Docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteEndpoints.html))
 
 ---
 
@@ -330,10 +330,10 @@ S3 website endpoint는 HTTPS를 지원하지 않기 때문에 **반드시 HTTP�
 예
 
 ```
-http://이니셜-s3-website-lab-001.s3-website.ap-northeast-2.amazonaws.com/notfound
+http://이니셜-s3-website-lab-001.s3-website.ap-northeast-2.amazonaws.com/notfound.html
 ```
 
-정상이라면 `error` 이 표시된다.
+정상이라면 `error.html` 이 표시된다.
 
 S3 static website hosting은 4XX 오류에 대해 custom error document를 지정할 수 있고, 지정하지 않으면 기본 HTML 오류 문서를 반환한다.
 
@@ -343,7 +343,7 @@ S3 static website hosting은 4XX 오류에 대해 custom error document를 지�
 
 이제 비교 목적으로 CloudFront를 앞단에 붙여본다.
 
-이 단계의 목적은 “CloudFront를 붙이면 사용자 입장에서는 HTTPS 접속이 가능하지만, 오리진은 여전히 공개 website endpoint”라는 점을 확인하는 것이다. ([AWS Docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteEndpoints))
+이 단계의 목적은 “CloudFront를 붙이면 사용자 입장에서는 HTTPS 접속이 가능하지만, 오리진은 여전히 공개 website endpoint”라는 점을 확인하는 것이다. ([AWS Docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteEndpoints.html))
 
 경로
 
@@ -381,14 +381,14 @@ CloudFront → Create distribution
 HTTP only
 ```
 
-이유는 S3 website endpoint가 HTTPS를 지원하지 않기 때문이다. ([AWS Docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteEndpoints))
+이유는 S3 website endpoint가 HTTPS를 지원하지 않기 때문이다. ([AWS Docs](https://docs.aws.amazon.com/AmazonS3/latest/userguide/WebsiteEndpoints.html))
 
 ## 13.4 Default root object
 
 설정값
 
 ```
-index
+index.html
 ```
 
 ## 13.5 Viewer protocol policy
@@ -516,9 +516,9 @@ website endpoint는 public content만 지원하고 SSL을 지원하지 않는 �
 
 * Static website hosting 활성화 완료
 
-* `index` 설정 완료
+* `index.html` 설정 완료
 
-* `error` 설정 완료
+* `error.html` 설정 완료
 
 * Block Public Access 해제 완료
 

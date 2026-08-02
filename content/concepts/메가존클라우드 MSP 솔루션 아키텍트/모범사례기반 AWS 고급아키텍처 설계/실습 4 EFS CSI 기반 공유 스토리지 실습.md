@@ -304,8 +304,8 @@ kubectl exec -it efs-pod1 -- sh
 컨테이너 내부에서 실행:
 
 ```
-echo EFS Shared Storage Test > /usr/share/nginx/html/index
-cat /usr/share/nginx/html/index
+echo EFS Shared Storage Test > /usr/share/nginx/html/index.html
+cat /usr/share/nginx/html/index.html
 ```
 
 두 번째 Pod에서 같은 파일을 확인함.
@@ -317,7 +317,7 @@ kubectl exec -it efs-pod2 -- sh
 컨테이너 내부에서 실행:
 
 ```
-cat /usr/share/nginx/html/index
+cat /usr/share/nginx/html/index.html
 ```
 
 같은 내용이 보이면 공유 스토리지가 정상 동작한 것임.
@@ -653,8 +653,8 @@ kubectl exec -it efs-dynamic-pod1 -- sh
 컨테이너 내부에서 실행:
 
 ```
-echo EFS Dynamic Provisioning Test > /usr/share/nginx/html/index
-cat /usr/share/nginx/html/index
+echo EFS Dynamic Provisioning Test > /usr/share/nginx/html/index.html
+cat /usr/share/nginx/html/index.html
 ```
 
 두 번째 Pod에서 확인:
@@ -666,7 +666,7 @@ kubectl exec -it efs-dynamic-pod2 -- sh
 컨테이너 내부에서 실행:
 
 ```
-cat /usr/share/nginx/html/index
+cat /usr/share/nginx/html/index.html
 ```
 
 같은 내용이 보이면 동적 방식도 공유 스토리지로 정상 동작한 것임.

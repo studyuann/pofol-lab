@@ -1,0 +1,779 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>BGP Neighbor 연결 과정 (BGP 피어링 과정)</title><meta name="data-notion-page-icon" content="📗"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%93%97%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="bdc720e4-6f49-836f-9d4b-01068a92bed3" class="page sans" data-notion-page-icon="📗"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="📗"></span></div><h1 class="page-title" dir="auto"><strong>BGP Neighbor 연결 과정 (BGP 피어링 과정)</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><p id="645720e4-6f49-837d-8e66-013ab4501ce0" class="" dir="auto">BGP(Border Gateway Protocol)는 <strong>자율 시스템(AS, Autonomous System)</strong> 간의 경로를 교환하는 라우팅 프로토콜이다.</p><p id="928720e4-6f49-83ce-86b2-010e6c74f738" class="" dir="auto">BGP는 <strong>Neighbor(피어, Peer)</strong> 라우터와 <strong>TCP 연결(Port 179)</strong> 을 맺고, <strong>경로 정보(라우팅 테이블)</strong> 를 공유한다.</p><h2 id="dd5720e4-6f49-8261-81ca-01068c401c8d" class="" dir="auto"><strong>1. BGP Neighbor 연결 과정 (Finite State Machine)</strong></h2><p id="bc9720e4-6f49-820b-a770-010091fb9cec" class="" dir="auto">BGP 피어링이 형성될 때, 라우터는 <strong>6단계의 상태 변화(Finite State Machine, FSM)</strong> 를 거칩니다.</p><table id="709720e4-6f49-8295-bfac-8146a28b19d1" class="simple-table" dir="ltr"><tbody><tr id="6e9720e4-6f49-82b9-83ad-01ed6754c712" dir="ltr"><td id="TQHu" class="">단계</td><td id="}&lt;;z" class="">상태 이름</td><td id="HLUa" class="">설명</td></tr><tr id="bd8720e4-6f49-8314-8912-01bdaf9f7e71" dir="ltr"><td id="TQHu" class="">1️⃣</td><td id="}&lt;;z" class=""><strong>Idle</strong></td><td id="HLUa" class="">BGP 프로세스가 시작되었지만, 아직 연결을 시도하지 않음</td></tr><tr id="258720e4-6f49-8209-ac75-81befb46642b" dir="ltr"><td id="TQHu" class="">2️⃣</td><td id="}&lt;;z" class=""><strong>Connect</strong></td><td id="HLUa" class="">TCP(포트 179)를 사용하여 Neighbor와 연결 시도</td></tr><tr id="e5c720e4-6f49-8278-9cbe-018a499a7781" dir="ltr"><td id="TQHu" class="">3️⃣</td><td id="}&lt;;z" class=""><strong>Active</strong></td><td id="HLUa" class="">이전 단계에서 연결 실패 시, 다시 연결을 시도</td></tr><tr id="72f720e4-6f49-83b5-a88d-01218f22bbdb" dir="ltr"><td id="TQHu" class="">4️⃣</td><td id="}&lt;;z" class=""><strong>OpenSent</strong></td><td id="HLUa" class="">Open 메시지를 보내고, 상대방의 Open 메시지를 기다림</td></tr><tr id="dc9720e4-6f49-8282-a877-012904999c9b" dir="ltr"><td id="TQHu" class="">5️⃣</td><td id="}&lt;;z" class=""><strong>OpenConfirm</strong></td><td id="HLUa" class="">Keepalive 메시지를 주고받으며 세션 확인</td></tr><tr id="b25720e4-6f49-83ea-98bd-01e526993e4b" dir="ltr"><td id="TQHu" class="">6️⃣</td><td id="}&lt;;z" class=""><strong>Established</strong> ✅</td><td id="HLUa" class="">BGP Neighbor 관계가 성립되고, 경로 정보(UPDATE 메시지) 교환 시작</td></tr></tbody></table><hr id="885720e4-6f49-82d5-a090-01d238b6b2b4" dir="auto"/><h2 id="a17720e4-6f49-8228-b3f4-8100f4e25824" class="" dir="auto"><strong>2. BGP Neighbor 연결 과정 상세 설명</strong></h2><h3 id="01a720e4-6f49-82b4-bf36-8133c6781ea4" class="" dir="auto"><strong>🔹 (1) Idle 상태</strong></h3><ul id="6a2720e4-6f49-8274-a7a2-815651efb4ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BGP 프로세스가 실행되었지만, 아직 Neighbor(피어)와 연결을 시도하지 않음</li></ul><ul id="a32720e4-6f49-825a-8fa3-0150303c7535" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>원인:</strong> 초기 상태이거나, 이전 세션이 종료되었을 때</li></ul><ul id="fb8720e4-6f49-83a6-b9a0-815c5379112c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Idle 상태에서 빠져나오려면?</strong><ul id="90d720e4-6f49-82a1-820c-810119d7f90d" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>neighbor</code> 명령을 통해 수동으로 설정</li></ul><ul id="cdf720e4-6f49-8379-97db-01612ade61cb" class="bulleted-list" dir="auto"><li style="list-style-type:circle">라우터 설정에 문제가 없는지 확인</li></ul></li></ul><h3 id="cda720e4-6f49-8265-a728-8117cf3ddfea" class="" dir="auto"><strong>🔹 (2) Connect 상태</strong></h3><ul id="eb6720e4-6f49-837e-acf1-01193860509f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우터가 <strong>TCP(포트 179)</strong> 를 사용하여 BGP Neighbor(피어)와 연결을 시도</li></ul><ul id="ddb720e4-6f49-823f-b743-81cf494bdfac" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>성공 시:</strong> OpenSent 상태로 이동</li></ul><ul id="0c8720e4-6f49-82a5-bce0-01fca3624b8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>실패 시:</strong> Active 상태로 이동</li></ul><h3 id="389720e4-6f49-82b8-bee4-014deea6d52a" class="" dir="auto"><strong>🔹 (3) Active 상태</strong></h3><ul id="6f6720e4-6f49-828a-9bf7-8144f81d12ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Connect 상태에서 TCP 연결이 실패하면 Active 상태로 변경됨</li></ul><ul id="55a720e4-6f49-8262-998e-01b38e4f9fe6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다시 TCP 연결을 시도</li></ul><ul id="06d720e4-6f49-8350-b96b-810c0e035f2b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>반복적으로 Active 상태가 유지되면?</strong><ul id="43e720e4-6f49-8377-a523-81cce219bc4b" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><strong>Neighbor IP 설정 확인</strong> (올바른 IP인지 확인)</li></ul><ul id="44b720e4-6f49-8296-9454-01d799f78342" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><strong>TCP 연결 가능 여부 확인</strong> (<code>telnet [neighbor IP] 179</code> 실행)</li></ul><ul id="754720e4-6f49-83b2-89d2-816f192c99d9" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><strong>AS 번호가 맞는지 확인</strong></li></ul></li></ul><h3 id="945720e4-6f49-832c-88b9-818b27b6e818" class="" dir="auto"><strong>🔹 (4) OpenSent 상태</strong></h3><ul id="477720e4-6f49-830c-881e-81e3fffa4678" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TCP 연결이 성공하면 <strong>BGP Open 메시지를 전송</strong></li></ul><ul id="fd7720e4-6f49-8364-9c56-81903a032179" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상대방의 <strong>Open 메시지를 기다리는 상태</strong></li></ul><ul id="998720e4-6f49-82d3-afeb-01c4b41e607c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Open 메시지에는 다음 정보 포함</strong><ul id="70c720e4-6f49-832c-b8a9-816c7773a0f3" class="bulleted-list" dir="auto"><li style="list-style-type:circle">BGP 버전</li></ul><ul id="3e2720e4-6f49-83ed-ae6a-814d15b67a96" class="bulleted-list" dir="auto"><li style="list-style-type:circle">AS 번호</li></ul><ul id="b1e720e4-6f49-82d6-a1a2-814f07a7243d" class="bulleted-list" dir="auto"><li style="list-style-type:circle">BGP 라우터 ID</li></ul><ul id="41b720e4-6f49-828c-a79f-01b2a45f2bf6" class="bulleted-list" dir="auto"><li style="list-style-type:circle">홀드 타임(Hold Time)</li></ul></li></ul><h3 id="7d2720e4-6f49-8349-8dbf-01e2a13806fe" class="" dir="auto"><strong>🔹 (5) OpenConfirm 상태</strong></h3><ul id="8f1720e4-6f49-828c-997e-81cfd0b2e2c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BGP Open 메시지를 주고받은 후 <strong>Keepalive 메시지 교환</strong></li></ul><ul id="173720e4-6f49-83f6-b38e-81401c78d0f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BGP Neighbor가 정상적으로 동작하는지 확인</li></ul><ul id="d19720e4-6f49-82a1-99e2-813296171731" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>만약 문제가 발생하면?</strong><ul id="21a720e4-6f49-825d-a621-81a1afc90387" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Notification 메시지를 보내고 세션 종료</li></ul></li></ul><h3 id="3cd720e4-6f49-82f8-a990-810118d79fea" class="" dir="auto"><strong>🔹 (6) Established 상태 ✅</strong></h3><ul id="56d720e4-6f49-8202-b224-012a1fa4b98b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BGP 피어링이 성공적으로 맺어짐</li></ul><ul id="110720e4-6f49-821e-a2ed-811eb77fb8b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>UPDATE 메시지를 교환</strong>하여 라우팅 정보를 공유</li></ul><ul id="7c0720e4-6f49-82d5-bd95-81e1e4ef095d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>BGP 상태가 Established가 아니면, 경로 정보가 교환되지 않음!</strong><ul id="817720e4-6f49-839f-bf00-01466981d36b" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>show ip bgp summary</code> 명령어로 확인 가능</li></ul></li></ul><hr id="4e9720e4-6f49-8321-890b-01a86511038d" dir="auto"/><h2 id="c3c720e4-6f49-83db-ae17-8165ef308236" class="" dir="auto"><strong>3. BGP Neighbor 연결 상태 확인</strong></h2><p id="c4f720e4-6f49-83ed-94e2-013092158a00" class="" dir="auto">Cisco 라우터에서 BGP Neighbor 상태를 확인하는 명령어입니다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="ac1720e4-6f49-8287-9482-81b46cf40729" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">Router# show ip bgp summary
+</code></pre><p id="f7c720e4-6f49-8231-b18b-0146c8f02b99" class="" dir="auto">출력 예시:</p><pre id="afe720e4-6f49-8314-923b-8123d0bef239" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Neighbor        V    AS     MsgRcvd MsgSent  State   PfxRcd
+192.168.1.2    4  65002       120      130  Established  10
+</code></pre><p id="bcf720e4-6f49-82ef-b72c-813ef43dbe8a" class="" dir="auto">✅ <strong>State가 Established이면 BGP 피어링이 성공적으로 맺어짐</strong></p><hr id="6f2720e4-6f49-83db-b65d-016e3e5c230d" dir="auto"/><h2 id="987720e4-6f49-827c-bd2b-019373e475da" class="" dir="auto"><strong>4. BGP Neighbor 연결 문제 해결 (Troubleshooting)</strong></h2><p id="a1a720e4-6f49-83ab-a1d8-01f90942b17c" class="" dir="auto">BGP Neighbor가 <strong>Established 상태로 올라가지 않는 경우</strong>, 다음을 확인해야 합니다.</p><table id="3d6720e4-6f49-8364-9da8-01bba84541c9" class="simple-table" dir="ltr"><tbody><tr id="71e720e4-6f49-8353-a0de-0119decec99f" dir="ltr"><td id="ecdy" class="">상태</td><td id="fOZG" class="">원인</td><td id="uySN" class="">해결 방법</td></tr><tr id="6d5720e4-6f49-83d4-9ab8-0168e3fcd5ac" dir="ltr"><td id="ecdy" class="">Idle</td><td id="fOZG" class="">BGP 설정 없음, IP 오류, ACL 차단</td><td id="uySN" class=""><code>neighbor</code> 설정 확인, 방화벽 확인</td></tr><tr id="eb5720e4-6f49-83b2-8fdb-01c6d274495d" dir="ltr"><td id="ecdy" class="">Connect</td><td id="fOZG" class="">TCP 연결 실패</td><td id="uySN" class="">상대방 라우터와 네트워크 연결 확인</td></tr><tr id="195720e4-6f49-83d3-8002-01a96aebfad5" dir="ltr"><td id="ecdy" class="">Active</td><td id="fOZG" class="">상대방 라우터 응답 없음</td><td id="uySN" class="">AS 번호, IP 주소, 포트 179 확인</td></tr><tr id="284720e4-6f49-83b3-aec9-012982935b87" dir="ltr"><td id="ecdy" class="">OpenSent</td><td id="fOZG" class="">BGP 버전 불일치</td><td id="uySN" class="">같은 BGP 버전 사용하도록 설정</td></tr><tr id="c78720e4-6f49-82d6-963a-81aeedbf2470" dir="ltr"><td id="ecdy" class="">OpenConfirm</td><td id="fOZG" class="">Keepalive 메시지 문제</td><td id="uySN" class="">BGP 설정 다시 확인</td></tr></tbody></table><h3 id="39e720e4-6f49-83a0-a4a6-81d34c20fe18" class="" dir="auto"><strong>🔹 네트워크 연결 확인</strong></h3><pre id="d82720e4-6f49-83b4-b794-811a3a4be9af" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ping [neighbor IP]
+telnet [neighbor IP] 179
+</code></pre><p id="c87720e4-6f49-8282-aef9-018d3a1b38f4" class="" dir="auto">🔍 <strong>TCP 포트 179가 열려 있는지 확인</strong></p><h3 id="cc6720e4-6f49-82c0-8e0b-01c3d5bf3720" class="" dir="auto"><strong>🔹 BGP 설정 확인</strong></h3><pre id="da7720e4-6f49-8214-9ce7-0190c2bce2c4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">show running-config | include bgp
+</code></pre><p id="1f6720e4-6f49-8258-8fb8-01f3dd1d4f81" class="" dir="auto">🔍 <strong>AS 번호, Neighbor IP가 올바른지 확인</strong></p><hr id="a1e720e4-6f49-8327-84b0-81ab833cccc1" dir="auto"/><h2 id="2ac720e4-6f49-83af-9e31-0156417672e4" class="" dir="auto"><strong>5. BGP Neighbor 연결 예제</strong></h2><h3 id="556720e4-6f49-8212-8f21-81a7ddd39f27" class="" dir="auto"><strong>🔹 eBGP 설정 (AS 65001 ↔ AS 65002)</strong></h3><h3 id="6fc720e4-6f49-82be-bd73-8108d03aa721" class="" dir="auto"><strong>🔹 Router A (AS 65001)</strong></h3><pre id="929720e4-6f49-82b7-a0a6-81a595e048a0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">RouterA(config)# router bgp 65001
+RouterA(config-router)# neighbor 192.168.1.2 remote-as 65002
+RouterA(config-router)# exit
+</code></pre><h3 id="1e1720e4-6f49-8280-b1da-01ae36ec68be" class="" dir="auto"><strong>🔹 Router B (AS 65002)</strong></h3><pre id="447720e4-6f49-8316-8744-01954166194e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">RouterB(config)# router bgp 65002
+RouterB(config-router)# neighbor 192.168.1.1 remote-as 65001
+RouterB(config-router)# exit
+</code></pre><p id="3e7720e4-6f49-83e2-ad1d-01137b4aa29d" class="" dir="auto">🔹 <strong>설정이 올바르면, </strong><code><strong>show ip bgp summary</strong></code><strong> 에서 Established 확인 가능</strong></p><hr id="550720e4-6f49-82ef-9b89-014836224823" dir="auto"/><h2 id="c5f720e4-6f49-8399-af12-8100ab0c81ff" class="" dir="auto"><strong>결론</strong></h2><ul id="ff1720e4-6f49-82c8-a2e9-81f9c45f68e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BGP Neighbor 연결은 <strong>6단계의 FSM(State Machine) 과정</strong>을 거친다.</li></ul><ul id="de0720e4-6f49-82b8-a3e0-0168bc797cf8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Established 상태가 되어야 정상적인 BGP 피어링 및 경로 교환 가능</strong></li></ul><ul id="c77720e4-6f49-828e-acec-81f7347b7848" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>BGP 문제 발생 시, Neighbor IP / AS 번호 / TCP 179 포트 등을 확인해야 함</strong></li></ul><ul id="92f720e4-6f49-82b8-b410-0110d16481c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>BGP 설정이 정상이라면 </strong><code><strong>show ip bgp summary</strong></code><strong>에서 Established 상태 확인 가능</strong></li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

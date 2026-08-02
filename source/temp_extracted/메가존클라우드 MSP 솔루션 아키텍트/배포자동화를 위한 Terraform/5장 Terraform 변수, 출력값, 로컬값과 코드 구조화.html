@@ -1,0 +1,1034 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>5장. Terraform 변수, 출력값, 로컬값과 코드 구조화</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="65c720e4-6f49-8201-9ee7-81da7a66b08c" class="page sans"><header><h1 class="page-title" dir="auto">5장. Terraform 변수, 출력값, 로컬값과 코드 구조화</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="1c8720e4-6f49-832c-b933-81255b211566" class="" dir="auto">장 목표</h2><p id="1d7720e4-6f49-831e-99bd-81445dec7757" class="" dir="auto">이 장에서는 Terraform 코드를 더 유연하고 재사용 가능하게 만드는 핵심 요소인 <strong>variable</strong>, <strong>output</strong>, <strong>locals</strong>, 그리고 <strong>파일 분리 구조</strong>를 학습한다.</p><p id="765720e4-6f49-834d-b80e-0198588b9192" class="" dir="auto">앞 장까지는 Terraform 코드 한 파일 안에 값을 직접 적어 넣는 방식으로 개념을 익혔다면, 이제부터는 값을 외부에서 전달하거나, 공통 값을 한곳에 정리하고, 필요한 값을 밖으로 노출하는 구조를 이해해야 한다.</p><p id="b42720e4-6f49-83e6-b9d5-0141c093d927" class="" dir="auto">이 장을 학습한 뒤에는 다음이 가능해야 한다.</p><ul id="c6b720e4-6f49-82ef-8077-01222af26b4f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>variable</code>의 의미와 역할을 설명할 수 있음</li></ul><ul id="669720e4-6f49-8285-a29d-011b9034170e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform.tfvars</code> 파일의 역할을 설명할 수 있음</li></ul><ul id="602720e4-6f49-83d2-8a75-01fdb0e5f283" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CLI 변수 전달 방식을 설명할 수 있음</li></ul><ul id="542720e4-6f49-82c2-b334-8198696103fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>output</code>의 의미와 역할을 설명할 수 있음</li></ul><ul id="764720e4-6f49-83b9-bb5e-81da949b3862" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>locals</code>의 의미와 역할을 설명할 수 있음</li></ul><ul id="d57720e4-6f49-83d0-975a-0125a6ec3616" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하드코딩된 Terraform 코드를 변수 기반으로 바꿀 수 있음</li></ul><ul id="c0b720e4-6f49-8207-8de8-014fadb5ec0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 <code>.tf</code> 파일로 코드를 분리해도 하나의 구성으로 동작한다는 점을 이해할 수 있음</li></ul><ul id="569720e4-6f49-833f-be98-0103398c6ebe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VS Code 기준으로 Terraform 프로젝트 구조를 정리할 수 있음</li></ul><hr id="40d720e4-6f49-83e7-801d-0190e479ddca" dir="auto"/><h2 id="7e6720e4-6f49-83c1-a13b-019966a6f04c" class="" dir="auto">1. 왜 변수와 출력값, 로컬값이 필요한가</h2><p id="edf720e4-6f49-8391-9dbe-8180d7abd535" class="" dir="auto">다음은 값을 직접 적어 넣은 코드다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="e5c720e4-6f49-83ed-87bc-8194c17df77c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = &quot;ami-0123456789abcdef0&quot;
+  instance_type = &quot;t3.micro&quot;
+
+  tags = {
+    Name = &quot;web-server&quot;
+  }
+}</code></pre><p id="a20720e4-6f49-8238-b1c2-814226ec3f4f" class="" dir="auto">이 방식은 코드가 조금만 많아져도 곧바로 불편해진다.</p><p id="682720e4-6f49-8259-b40d-012432bc1cf3" class="" dir="auto">예를 들어 다음 상황을 생각해보자.</p><ul id="581720e4-6f49-8362-a893-013f58bd3624" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발 환경은 <code>t3.micro</code>, 운영 환경은 <code>t3.small</code>을 써야 함</li></ul><ul id="1a8720e4-6f49-82f7-a2c8-0165e07bfe78" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전마다 사용할 AMI가 달라질 수 있음</li></ul><ul id="f5a720e4-6f49-83b9-a3fb-011a3bd0f10e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 이름 규칙을 여러 리소스에 공통으로 적용해야 함</li></ul><ul id="37b720e4-6f49-82ff-ba55-014c8b4c90ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성된 인스턴스 ID나 퍼블릭 IP를 나중에 확인하고 싶음</li></ul><ul id="75e720e4-6f49-826d-93e9-012f2fd42cb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">팀원들이 같은 코드를 서로 다른 값으로 실행해야 함</li></ul><p id="58b720e4-6f49-820b-ba94-8135972170c0" class="" dir="auto">이런 상황에서 모든 값을 코드 안에 직접 적어 넣으면 다음 문제가 생긴다.</p><ul id="179720e4-6f49-824d-a641-017ed3372dcf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재사용성이 떨어짐</li></ul><ul id="dce720e4-6f49-83d2-952c-01a2c0abc188" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경별 변경이 어려움</li></ul><ul id="0be720e4-6f49-8298-afd2-01b36aa9fd89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중복 값이 많아짐</li></ul><ul id="f9a720e4-6f49-828f-bdb0-8135b1d12723" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실수 가능성이 커짐</li></ul><ul id="f86720e4-6f49-8246-a24a-81573db47940" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과 확인이 불편해짐</li></ul><p id="f3b720e4-6f49-838e-acfb-81602bf28758" class="" dir="auto">이 문제를 해결하기 위해 Terraform은 다음 기능을 제공한다.</p><ul id="243720e4-6f49-8379-82f5-01b5d45228ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>variable</strong> → 외부에서 값을 입력받는 기능</li></ul><ul id="ec4720e4-6f49-830c-a9bb-01338bb8ae2e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>output</strong> → 생성 결과나 중요한 값을 밖으로 보여주는 기능</li></ul><ul id="929720e4-6f49-8334-b402-8140a01f636b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>locals</strong> → 코드 내부에서 공통 값을 정리하는 기능</li></ul><p id="5a1720e4-6f49-83f9-925f-0151e23623a2" class="" dir="auto">즉, Terraform 코드를 위 값들을 사용하여 <strong> 재사용 가능한 구조로 </strong>만들 수 있다.</p><hr id="ef1720e4-6f49-8316-a47a-8167d1ec4c51" dir="auto"/><h2 id="b34720e4-6f49-8334-a6ff-813350517f81" class="" dir="auto">2. variable</h2><h3 id="ff9720e4-6f49-832c-8052-010864dc1841" class="" dir="auto">2.1 variable이란 무엇인가</h3><p id="2b5720e4-6f49-82ec-80fc-01322d5d3b57" class="" dir="auto"><code>variable</code>은 Terraform 코드가 외부로부터 입력값을 받을 수 있도록 정의하는 블록이다.</p><p id="a71720e4-6f49-83b2-8f16-8107d25e810a" class="" dir="auto">즉, Terraform 코드에서 사용할 <strong>입력 파라미터</strong>를 선언하는 것이다.</p><p id="8c3720e4-6f49-8333-b94d-0189be3232cc" class="" dir="auto">예를 들어 다음과 같이 정의할 수 있다.</p><pre id="c4c720e4-6f49-82ec-9c29-01be11fb80f9" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;instance_type&quot; {
+  type = string
+}</code></pre><p id="8e0720e4-6f49-8241-b4f1-8196b9b596ce" class="" dir="auto">이 코드는 <code>instance_type</code>이라는 이름의 문자열 입력값을 받겠다는 의미다.</p><p id="27e720e4-6f49-8359-8f59-8142f9de65a7" class="" dir="auto">이제 다른 블록에서는 이 값을 다음처럼 사용할 수 있다.</p><pre id="770720e4-6f49-8302-b64c-01120d7e3348" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">instance_type = var.instance_type</code></pre><p id="013720e4-6f49-8338-92cb-013a21b9b44f" class="" dir="auto">즉, <code>var.instance_type</code>은</p><p id="1ab720e4-6f49-83c7-b1d5-81eec0f88129" class="" dir="auto">“variable로 선언한 <code>instance_type</code> 값을 사용하겠다”는 뜻이다.</p><hr id="872720e4-6f49-8377-a114-01fbdae25bae" dir="auto"/><h3 id="643720e4-6f49-8217-b5fc-014748c0795e" class="" dir="auto">2.2 왜 variable이 필요한가</h3><p id="8ee720e4-6f49-83cf-9a9b-014c2a13e6cb" class="" dir="auto">예를 들어 EC2 인스턴스 타입을 코드에 직접 적는 방식은 다음과 같다.</p><pre id="c4c720e4-6f49-8226-8617-8150ac5d576c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">instance_type = &quot;t3.micro&quot;</code></pre><p id="806720e4-6f49-8321-a7be-017644876e4a" class="" dir="auto">이 방식은 단순하지만, 환경이 바뀔 때마다 코드를 직접 수정해야 한다.</p><p id="9c5720e4-6f49-83f2-8a08-010bbf867067" class="" dir="auto">반면 variable을 사용하면 코드 구조는 그대로 두고 값만 바꿀 수 있다.</p><p id="2ff720e4-6f49-8363-9ca8-81ccdc12400a" class="" dir="auto">예를 들어</p><ul id="291720e4-6f49-820d-989b-814ebad91b33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발 환경 → <code>t3.micro</code></li></ul><ul id="675720e4-6f49-839e-9a05-014e77dc08b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경 → <code>t3.small</code></li></ul><p id="db7720e4-6f49-83e6-a8fe-81582746b85a" class="" dir="auto">이렇게 같은 코드에 다른 값을 넣어 재사용할 수 있다.</p><p id="782720e4-6f49-8300-8e28-018e74bb22fb" class="" dir="auto">즉, variable은 <strong>코드와 값을 분리하는 도구</strong>다.</p><hr id="51e720e4-6f49-823b-a6fd-01601e4c9ff2" dir="auto"/><h3 id="a78720e4-6f49-8281-a9a3-01cbef5dbe13" class="" dir="auto">2.3 기본 구조</h3><pre id="033720e4-6f49-8375-8bda-014c44691b11" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;이름&quot; {
+  type = 자료형
+}</code></pre><p id="8e1720e4-6f49-83bd-b860-817dcc4b1066" class="" dir="auto">가장 자주 사용하는 자료형은 다음과 같다.</p><ul id="83d720e4-6f49-82e6-aff7-010c477cdb13" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>string</code></li></ul><ul id="9ce720e4-6f49-83c3-908f-01f27d91c912" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>number</code></li></ul><ul id="a38720e4-6f49-8285-be13-810a0b1eda0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>bool</code></li></ul><ul id="fc6720e4-6f49-8337-8cbc-01c18474e2c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>list(string)</code></li></ul><ul id="e09720e4-6f49-82ef-a52a-81492c18512d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>map(string)</code></li></ul><ul id="23a720e4-6f49-8270-aa73-0158f8d506be" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>object({...})</code></li></ul><hr id="34c720e4-6f49-82d6-8f25-81f1c4039a01" dir="auto"/><h3 id="029720e4-6f49-8215-add2-01e4584b28a1" class="" dir="auto">2.4 default 값</h3><p id="add720e4-6f49-8316-ac64-81f29ffdf8cc" class="" dir="auto">variable에는 기본값을 줄 수 있다.</p><pre id="3fd720e4-6f49-8354-9546-01f60a34bc24" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;instance_type&quot; {
+  type    = string
+  default = &quot;t3.micro&quot;
+}</code></pre><p id="346720e4-6f49-830d-8aa7-01cd145d2121" class="" dir="auto">이 경우 별도로 값을 전달하지 않으면 <code>t3.micro</code>를 사용한다.</p><p id="08a720e4-6f49-8225-b645-011108f5d71c" class="" dir="auto">즉,</p><ul id="46d720e4-6f49-83e3-a536-816a8b88faf1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>default</code>가 있으면 값 전달을 생략할 수 있음</li></ul><ul id="b73720e4-6f49-821e-8e3d-011e70952081" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>default</code>가 없으면 실행 시 값을 반드시 제공해야 함</li></ul><hr id="7d6720e4-6f49-83fc-941a-816b714ad6ba" dir="auto"/><h3 id="e6c720e4-6f49-82c4-82f7-01193c27f76b" class="" dir="auto">2.5 description</h3><p id="587720e4-6f49-836e-9543-81d165dca3bf" class="" dir="auto">실무에서는 <code>description</code>을 함께 쓰는 것이 좋다.</p><pre id="fc7720e4-6f49-8226-9330-8181d96652d9" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;instance_type&quot; {
+  type        = string
+  description = &quot;EC2 instance type&quot;
+  default     = &quot;t3.micro&quot;
+}</code></pre><p id="8f1720e4-6f49-8324-b27c-816ee10e0810" class="" dir="auto"><code>description</code>은 문서화 역할을 한다.</p><p id="bf0720e4-6f49-82d5-8472-01af1868773e" class="" dir="auto">특히 변수가 많아질수록 이 설명이 매우 중요해진다.</p><hr id="fd7720e4-6f49-830a-8730-01592a4045f7" dir="auto"/><h2 id="1b4720e4-6f49-8270-8ea2-01d20fc3675f" class="" dir="auto">3. terraform.tfvars</h2><h3 id="62f720e4-6f49-8361-ad9f-814c573a1fc9" class="" dir="auto">3.1 tfvars 파일이란 무엇인가</h3><p id="cc6720e4-6f49-82ab-8014-013d221657e3" class="" dir="auto">variable을 선언했다고 해서 값이 자동으로 들어오지는 않는다.</p><p id="309720e4-6f49-828d-be42-01d47974c320" class="" dir="auto">값을 전달하는 방법이 필요하다.</p><p id="a4c720e4-6f49-8294-bcd4-81b7e8417436" class="" dir="auto">그 방법 중 가장 대표적인 것이 <code>terraform.tfvars</code> 파일이다.</p><p id="867720e4-6f49-8290-8e8e-8121d90e1a78" class="" dir="auto">예를 들어 다음과 같이 작성할 수 있다.</p><pre id="28f720e4-6f49-8260-b1b7-01ee9ac2536a" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">instance_type = &quot;t3.micro&quot;
+instance_name = &quot;web-server&quot;</code></pre><p id="75c720e4-6f49-8220-a44c-011db9f71f89" class="" dir="auto">Terraform은 기본적으로 <code>terraform.tfvars</code> 파일을 자동으로 읽는다.</p><p id="7aa720e4-6f49-8390-9fc3-81e2f6fe4217" class="" dir="auto">즉, 코드에는 변수 선언만 해두고, 실제 값은 이 파일에서 주입할 수 있다.</p><hr id="00f720e4-6f49-8345-bd1a-81e14522f41d" dir="auto"/><h3 id="7d2720e4-6f49-83d8-8a84-012b66c22da5" class="" dir="auto">3.2 왜 tfvars를 쓰는가</h3><p id="85c720e4-6f49-830e-9280-818f35d19384" class="" dir="auto"><code>terraform.tfvars</code>를 사용하면 다음 장점이 있다.</p><ul id="5a1720e4-6f49-821e-ac0c-812cb31dcd3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드와 값이 분리됨</li></ul><ul id="8f4720e4-6f49-83a2-b35a-814fcd32ecf8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경별 값 관리가 쉬움</li></ul><ul id="5fc720e4-6f49-827f-a4e7-01954a362209" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 코드로 dev/stage/prod를 다르게 실행할 수 있음</li></ul><ul id="139720e4-6f49-8300-8ee7-81e89b4b4a5a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변수 전달을 반복 입력하지 않아도 됨</li></ul><p id="650720e4-6f49-823e-b349-81ab1abf4b60" class="" dir="auto">즉, <code>terraform.tfvars</code>는 <strong>실행 시 주입할 값 모음 파일</strong>이라고 보면 된다.</p><hr id="c04720e4-6f49-8324-9c30-019d195010c5" dir="auto"/><h3 id="f9c720e4-6f49-83ee-9eeb-8173781edd4c" class="" dir="auto">3.3 예제</h3><h3 id="c5b720e4-6f49-832d-a682-014a8ec7f5f8" class="" dir="auto">variables.tf</h3><pre id="5d3720e4-6f49-839b-8815-81f17e180f3a" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;instance_type&quot; {
+  type = string
+}
+
+variable &quot;instance_name&quot; {
+  type = string
+}</code></pre><h3 id="33d720e4-6f49-828e-a158-017304dd8310" class="" dir="auto">terraform.tfvars</h3><pre id="d36720e4-6f49-8245-a2c8-019df939a6df" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">instance_type = &quot;t3.micro&quot;
+instance_name = &quot;web-server&quot;</code></pre><h3 id="633720e4-6f49-8334-811c-819c4afc00c4" class="" dir="auto">main.tf</h3><pre id="4d7720e4-6f49-83a0-aaaa-8106d4ecb751" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = &quot;ami-0123456789abcdef0&quot;
+  instance_type = var.instance_type
+
+  tags = {
+    Name = var.instance_name
+  }
+}</code></pre><p id="42c720e4-6f49-8330-aa16-811ecad1350e" class="" dir="auto">이 구조에서는 값을 코드 안에 직접 입력하지 않고, 외부에서 가져온다.</p><hr id="ad5720e4-6f49-8332-90bf-8130cf0be9c0" dir="auto"/><h2 id="3e6720e4-6f49-835f-8ac0-81210a66c6fc" class="" dir="auto">4. CLI 변수 전달</h2><h3 id="6e4720e4-6f49-82bb-bb4f-01fd96bedde4" class="" dir="auto">4.1 개념</h3><p id="49e720e4-6f49-83ab-a46b-815e56dfd7c7" class="" dir="auto">변수는 파일뿐 아니라 명령행에서도 직접 전달할 수 있다.</p><p id="5e3720e4-6f49-82df-9eed-810ab13ff10c" class="" dir="auto">이 방식은 테스트나 일회성 실행에서 유용하다.</p><p id="0c0720e4-6f49-83ed-9514-012637f0cabc" class="" dir="auto">예를 들어 다음처럼 사용할 수 있다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="5e4720e4-6f49-8246-84e5-01df8b1d9c5f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">terraform plan -var=&quot;instance_type=t3.micro&quot;</code></pre><p id="75c720e4-6f49-83e3-95f1-012ced7e0a26" class="" dir="auto">또는 여러 개를 함께 전달할 수도 있다.</p><pre id="aa4720e4-6f49-82ca-94eb-013c38441f78" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">terraform plan -var=&quot;instance_type=t3.micro&quot; -var=&quot;instance_name=web-server&quot;</code></pre><hr id="ddb720e4-6f49-8305-8b97-01f4811a0302" dir="auto"/><h3 id="b9e720e4-6f49-82a0-8541-817c9e91887b" class="" dir="auto">4.2 언제 사용하는가</h3><p id="678720e4-6f49-8360-8cc4-813f36ddec60" class="" dir="auto">CLI 변수 전달은 다음 상황에서 유용하다.</p><ul id="046720e4-6f49-8286-8ba8-01acc14538a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빠르게 테스트할 때</li></ul><ul id="31b720e4-6f49-830d-9a39-0159b9abc5fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잠깐 다른 값으로 실행해볼 때</li></ul><ul id="1a7720e4-6f49-8338-afec-01d96f41689f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 파이프라인에서 값을 주입할 때</li></ul><ul id="54f720e4-6f49-8284-801b-01e7de4a5b4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">tfvars 파일을 따로 두지 않고 실험할 때</li></ul><p id="613720e4-6f49-8282-bf85-8153bd3dfbbc" class="" dir="auto">다만 변수가 많아지면 명령어가 길어지고 관리가 불편해진다.</p><p id="ef7720e4-6f49-83bf-bc6e-814e0b362c3a" class="" dir="auto">그래서 실무에서는 보통 tfvars 파일과 함께 사용하거나, 자동화 도구에서 주입한다.</p><hr id="f47720e4-6f49-82c3-b232-813a132bfa4c" dir="auto"/><h3 id="ecb720e4-6f49-8281-8249-811fa7621217" class="" dir="auto">4.3 tfvars와 CLI 중 무엇이 우선인가</h3><p id="ac5720e4-6f49-825e-8323-819139c5eb48" class="" dir="auto">기본적으로는 <strong>명시적으로 전달한 값이 더 우선</strong>한다고 이해하면 된다.</p><p id="b54720e4-6f49-820a-b63f-01bcb9a676d1" class="" dir="auto">즉, CLI에서 직접 <code>-var</code>로 준 값은 사용자가 지금 실행에서 특별히 지정한 값이기 때문에 의미가 크다.</p><hr id="9ef720e4-6f49-82fb-af13-01f2162cd334" dir="auto"/><h2 id="6ec720e4-6f49-8386-bd9b-81331ea77617" class="" dir="auto">5. output</h2><h3 id="bcf720e4-6f49-8388-a10d-019b488d9555" class="" dir="auto">5.1 output이란 무엇인가</h3><p id="71a720e4-6f49-8397-bb5b-815a3dafbd5c" class="" dir="auto"><code>output</code>은 Terraform이 생성하거나 조회한 값 중에서</p><p id="612720e4-6f49-8398-809f-81e4bbebcda5" class="" dir="auto">사용자에게 보여주고 싶은 값을 밖으로 노출하는 기능이다.</p><p id="b44720e4-6f49-82bd-90e3-81475be580c0" class="" dir="auto">예를 들어 다음과 같이 사용할 수 있다.</p><pre id="f46720e4-6f49-822e-98d4-0127d60f891c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;instance_id&quot; {
+  value = aws_instance.web.id
+}</code></pre><p id="079720e4-6f49-837e-b5d0-816e57fc4694" class="" dir="auto">이 코드는 <code>aws_instance.web.id</code> 값을 <code>instance_id</code>라는 이름으로 출력하겠다는 뜻이다.</p><hr id="a11720e4-6f49-831f-af4d-81bdc1846420" dir="auto"/><h3 id="762720e4-6f49-83ac-a481-01c8c310d83f" class="" dir="auto">5.2 왜 output이 필요한가</h3><p id="127720e4-6f49-82eb-ba09-019220558c08" class="" dir="auto">Terraform은 리소스를 잘 만들었더라도, 생성된 값을 자동으로 눈에 잘 보이게 정리해서 보여주지는 않는다.</p><p id="a2a720e4-6f49-83e4-a473-01cb21a216f0" class="" dir="auto">특히 다음 값들은 실습과 운영 모두에서 자주 확인한다.</p><ul id="e4f720e4-6f49-8381-a639-01f1802e597e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 ID</li></ul><ul id="1fb720e4-6f49-8205-ab10-0173304ffef8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 IP</li></ul><ul id="a69720e4-6f49-832f-aa03-01dcf5d21ebd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC ID</li></ul><ul id="d2d720e4-6f49-8234-81c2-8143fe1ca1ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet ID 목록</li></ul><ul id="1fc720e4-6f49-836d-b5f5-81c3c9b373f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로드밸런서 DNS 이름</li></ul><p id="a85720e4-6f49-825c-b1db-013f8f27a97d" class="" dir="auto">이럴 때 output을 사용하면 결과를 명확히 확인할 수 있다.</p><p id="cbc720e4-6f49-833b-b7a6-0133b5698d49" class="" dir="auto">즉, output은 <strong>Terraform 코드의 결과를 출력할 때 </strong>사용한다..</p><hr id="dfe720e4-6f49-82ab-83c1-01ed7d7b6834" dir="auto"/><h3 id="140720e4-6f49-8238-9c3d-01a16a1c1f62" class="" dir="auto">5.3 기본 구조</h3><pre id="3a6720e4-6f49-8222-9d23-815edf73020a" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;이름&quot; {
+  value = 값
+}</code></pre><p id="c0f720e4-6f49-83fc-992e-011152a7e735" class="" dir="auto">예시:</p><pre id="318720e4-6f49-83ff-b03c-8187466582e2" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;public_ip&quot; {
+  value = aws_instance.web.public_ip
+}</code></pre><hr id="d39720e4-6f49-8300-8af3-814af00ec30e" dir="auto"/><h3 id="4c7720e4-6f49-82d6-bf0c-81bf741a44ad" class="" dir="auto">5.4 description과 sensitive</h3><p id="b36720e4-6f49-83a7-b59b-01695802c8a8" class="" dir="auto">실무에서는 output에도 설명을 붙일 수 있다.</p><pre id="b9a720e4-6f49-8236-854f-016b2f4b6125" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;instance_id&quot; {
+  description = &quot;Created EC2 instance ID&quot;
+  value       = aws_instance.web.id
+}</code></pre><p id="4cd720e4-6f49-8398-a707-811a1b0a8b4a" class="" dir="auto">민감한 값은 <code>sensitive = true</code>로 표시할 수 있다.</p><pre id="074720e4-6f49-82c9-82ac-8179b3ecd0eb" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;db_password&quot; {
+  value     = &quot;example-password&quot;
+  sensitive = true
+}</code></pre><p id="3b3720e4-6f49-83fc-9930-010327c004c3" class="" dir="auto">이 설정의 목적은 해당 값을 다른 곳으로 전달할 때 사용하려고 할 때 화면이나 로그 등에 노출되지 않도록 하는 것이다. 즉, CICD환경에서 출력된 값을 이용해 다른 동작을 하려고 할 때 안전하게 전달할 수 있다.</p><hr id="bcd720e4-6f49-82f0-8c0c-0171d6c0c9d0" dir="auto"/><h2 id="02e720e4-6f49-83f5-882d-01e6a85ddbc5" class="" dir="auto">6. locals</h2><h3 id="d39720e4-6f49-8290-9b6c-817cbed4011a" class="" dir="auto">6.1 locals란 무엇인가</h3><p id="024720e4-6f49-8382-9ea6-01b36912e5b4" class="" dir="auto"><code>locals</code>는 Terraform 코드 내부에서 <strong>공통 값이나 계산 결과를 이름 붙여 재사용하는 기능</strong>이다.</p><p id="c63720e4-6f49-8358-8027-014672cc0316" class="" dir="auto">즉, 외부 입력을 받는 variable과 달리, locals는 <strong>코드 안에서 사용하기 위한 값</strong>으로 변경이 불가능하다.</p><p id="829720e4-6f49-827b-b088-81c2449ae015" class="" dir="auto">예를 들어 다음과 같이 사용할 수 있다.</p><pre id="833720e4-6f49-82a7-9ebd-81895e98a3e3" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">locals {
+  common_tags = {
+    Environment = &quot;dev&quot;
+    Project     = &quot;terraform-lab&quot;
+  }
+}</code></pre><p id="b1b720e4-6f49-8286-9127-01f87a80181b" class="" dir="auto">그리고 다른 곳에서 다음처럼 쓸 수 있다.</p><pre id="4c4720e4-6f49-82e4-bd97-0120aaa31a32" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">tags = local.common_tags</code></pre><hr id="02c720e4-6f49-82c7-aa24-81f916c01bc2" dir="auto"/><h3 id="f5a720e4-6f49-83e0-9a7e-8176b4dcb89f" class="" dir="auto">6.2 왜 locals가 필요한가</h3><p id="934720e4-6f49-83ce-9105-81d81e58ef4c" class="" dir="auto">코드가 커지면 같은 값이나 같은 표현식이 여러 번 반복된다.</p><p id="781720e4-6f49-8362-9c4b-811f0090521e" class="" dir="auto">예를 들어 다음 상황을 생각해보자.</p><ul id="ef2720e4-6f49-828c-9b9c-01a76dfa3909" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 리소스에 공통 태그를 붙이고 싶음</li></ul><ul id="30b720e4-6f49-8285-bfeb-81cc8511ac9e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름 규칙을 공통으로 만들고 싶음</li></ul><ul id="f27720e4-6f49-82a6-97b4-019362251791" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 곳에서 같은 문자열 조합을 사용해야 함</li></ul><p id="86c720e4-6f49-82f0-b3bb-01931e33c61b" class="" dir="auto">이런 값을 각 리소스마다 직접 적으면 중복이 생긴다.</p><p id="699720e4-6f49-8377-b42b-81a0d1040e71" class="" dir="auto">예:</p><pre id="187720e4-6f49-822c-b5d9-8114f5369f0a" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">tags = {
+  Environment = &quot;dev&quot;
+  Project     = &quot;terraform-lab&quot;
+}</code></pre><p id="a26720e4-6f49-82a6-9151-01be91a6c935" class="" dir="auto">이 코드가 여러 리소스에 반복되면 유지보수가 불편해진다.</p><p id="f7c720e4-6f49-820b-9971-813d95710727" class="" dir="auto">반면 locals를 사용하면 한곳에서 관리할 수 있다.</p><hr id="6b8720e4-6f49-836c-954f-811b65ba9627" dir="auto"/><h3 id="c60720e4-6f49-83b2-b5db-81078adb7dc9" class="" dir="auto">6.3 기본 구조</h3><pre id="db9720e4-6f49-8278-be4e-01338589f47c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">locals {
+  이름 = 값
+}</code></pre><p id="d77720e4-6f49-8207-8848-019019a6b0ae" class="" dir="auto">예:</p><pre id="11c720e4-6f49-82d1-b0fa-015c2d30f289" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">locals {
+  instance_name = &quot;dev-web-01&quot;
+}</code></pre><p id="e59720e4-6f49-8339-980d-81547d3fcbcb" class="" dir="auto">사용할 때는 다음처럼 쓴다.</p><pre id="2d5720e4-6f49-834b-9f49-017a0797afa3" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">local.instance_name</code></pre><p id="26d720e4-6f49-8231-a241-01d508b13f1e" class="" dir="auto">즉,</p><ul id="b37720e4-6f49-824e-bfc6-01046d92f29f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">variable 참조 → <code>var.변수명</code></li></ul><ul id="42b720e4-6f49-8283-8c44-016df8a43d3c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">locals 참조 → <code>local.이름</code></li></ul><p id="03c720e4-6f49-8387-b5fb-8198e5310c48" class="" dir="auto">이 차이를 구분해야 한다.</p><hr id="1e5720e4-6f49-824a-a16f-01f945b82633" dir="auto"/><h3 id="aea720e4-6f49-82c3-95d7-81395a0e6ce7" class="" dir="auto">6.4 locals와 variable의 차이</h3><h3 id="55d720e4-6f49-8214-a57e-81ffcabbbcb6" class="" dir="auto">variable</h3><ul id="13f720e4-6f49-83fb-989a-0118a9606f2b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 입력값</li></ul><ul id="fdb720e4-6f49-83fd-9ba8-013f0c797a53" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자가 실행 시 바꿀 수 있음</li></ul><ul id="435720e4-6f49-83d9-9ca8-81679dfaf12e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 바깥에서 들어옴</li></ul><h3 id="b1b720e4-6f49-8255-aae4-81a6ad3d5b82" class="" dir="auto">locals</h3><ul id="fb0720e4-6f49-821a-84c1-810b65a70679" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부 사용 값</li></ul><ul id="443720e4-6f49-8322-a4db-0162a19699a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 안에서 참조함.</li></ul><ul id="98d720e4-6f49-829f-a85e-81aa9d2573a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 입력이 아니라 내부 재사용 목적</li></ul><hr id="5a5720e4-6f49-83d5-8325-01cca4db953d" dir="auto"/><h2 id="b15720e4-6f49-8369-8ad7-8138ff198e43" class="" dir="auto">7. 파일 분리 구조</h2><h3 id="039720e4-6f49-8275-8ccf-81ca43d16249" class="" dir="auto">7.1 왜 파일을 분리하는가</h3><p id="070720e4-6f49-822d-9211-81fb9b797413" class="" dir="auto">Terraform은 한 파일에 모든 코드를 다 써도 동작한다.</p><p id="ef4720e4-6f49-825a-9d4d-81e2a121b772" class="" dir="auto">예를 들어 <code>main.tf</code> 하나에 <code>provider</code>, <code>resource</code>, <code>variable</code>, <code>output</code>, <code>locals</code>를 모두 넣어도 된다.</p><p id="280720e4-6f49-82bb-8758-81c4618c834a" class="" dir="auto">하지만 코드가 커질수록 한 파일에 다 넣는 방식은 불편해진다.</p><ul id="c4b720e4-6f49-822b-aa13-01bb48276a34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">찾기 어려움</li></ul><ul id="703720e4-6f49-83f2-990d-0194d3e757c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">수정하기 어려움</li></ul><ul id="6d0720e4-6f49-83d6-b7cc-81832ed1951d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">협업 시 충돌이 많아짐</li></ul><ul id="a9d720e4-6f49-824b-b004-81467a4bb802" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변수와 출력, 리소스가 섞여 가독성이 떨어짐</li></ul><p id="c2e720e4-6f49-83ae-8e96-011c7f834a58" class="" dir="auto">그래서 실무에서는 역할별로 파일을 나누는 경우가 많다.</p><hr id="458720e4-6f49-83e4-a1d0-8147086320d6" dir="auto"/><h3 id="dfa720e4-6f49-82b7-b35a-01d60434bd81" class="" dir="auto">7.2 대표적인 분리 방식</h3><p id="f38720e4-6f49-82db-b5d4-810955a7158f" class="" dir="auto">가장 기본적인 구조는 다음과 같다.</p><ul id="f52720e4-6f49-833f-9f9b-01144d4fb283" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>main.tf</code> → 주요 resource, data, provider</li></ul><ul id="549720e4-6f49-83a8-8862-017d2b98fd6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>variables.tf</code> → variable 정의</li></ul><ul id="05e720e4-6f49-8347-81df-01a4a6476bff" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>outputs.tf</code> → output 정의</li></ul><ul id="d0f720e4-6f49-8382-8d70-81bc79c94a71" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>locals.tf</code> → locals 정의</li></ul><ul id="cb6720e4-6f49-83ff-a406-012aa94cc07c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform.tfvars</code> → 변수 실제 값</li></ul><p id="a55720e4-6f49-830c-8f7e-017af91f32dc" class="" dir="auto">이렇게 나눠두면 파일 역할이 명확해진다.</p><hr id="673720e4-6f49-82e8-ad5a-01fdfd13ed4d" dir="auto"/><h3 id="be1720e4-6f49-838c-a737-014ed4a026d1" class="" dir="auto">7.3 중요한 점</h3><p id="9cd720e4-6f49-8399-9b8e-81ff8a375af1" class="" dir="auto">파일을 나눴다고 해서 Terraform이 각 파일을 독립 실행하는 것은 아니다.</p><p id="a49720e4-6f49-82bc-8009-81e9ba5d1fd2" class="" dir="auto">같은 디렉터리 안의 <code>.tf</code> 파일들은 <strong>하나의 구성(configuration)</strong> 으로 함께 읽힌다.</p><p id="3ac720e4-6f49-823a-bcaf-01d986f2a0a4" class="" dir="auto">즉,</p><ul id="c9f720e4-6f49-8256-b169-01d2cff66c38" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>main.tf</code>에서 <code>var.instance_type</code>을 써도</li></ul><ul id="e41720e4-6f49-83ab-9393-01b92d84beb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>variables.tf</code>에 선언만 되어 있으면 정상적으로 연결된다.</li></ul><p id="537720e4-6f49-83d4-b0dd-8123e79efa35" class="" dir="auto">초보자는 종종 “main.tf에서 정의해야 main.tf에서 쓸 수 있지 않나?”라고 생각하는데, 그렇지 않다.</p><p id="9ae720e4-6f49-839c-afd1-818ffc42fca0" class="" dir="auto">Terraform은 디렉터리 단위로 <code>.tf</code> 파일들을 함께 읽는다.</p><hr id="69f720e4-6f49-8331-be9e-81f315fe3741" dir="auto"/><h2 id="ec1720e4-6f49-82dd-bc03-012737b8ec71" class="" dir="auto">8. VS Code 기준 프로젝트 구조화</h2><p id="4a9720e4-6f49-8316-846c-01117b8683e6" class="" dir="auto">입문 단계에서 가장 무난한 Terraform 프로젝트 구조는 다음과 같다.</p><pre id="83c720e4-6f49-8388-9f7f-014fd90c9689" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform-aws-lab/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── locals.tf
+├── terraform.tfvars
+├── .terraform.lock.hcl
+└── .terraform/</code></pre><p id="4db720e4-6f49-8292-bf14-014a3bbffb55" class="" dir="auto">각 파일의 역할은 다음과 같다.</p><h3 id="df5720e4-6f49-8334-9f74-015b9d079367" class="" dir="auto"><code>main.tf</code></h3><p id="cff720e4-6f49-837e-b10f-01b832a9b935" class="" dir="auto">실제 provider, resource, data source를 배치하는 중심 파일이다.</p><h3 id="6f4720e4-6f49-8394-b3c9-81c025fd765c" class="" dir="auto"><code>variables.tf</code></h3><p id="1a7720e4-6f49-837a-b07e-81f11226889a" class="" dir="auto">입력 변수 선언을 모아두는 파일이다.</p><h3 id="359720e4-6f49-8372-a333-0126fd352fbb" class="" dir="auto"><code>outputs.tf</code></h3><p id="f12720e4-6f49-8377-94d6-0192aafda028" class="" dir="auto">사용자에게 보여줄 출력값을 모아두는 파일이다.</p><h3 id="636720e4-6f49-83a9-b844-81e9da3bce8f" class="" dir="auto"><code>locals.tf</code></h3><p id="edf720e4-6f49-82b6-8415-817313f1dd05" class="" dir="auto">공통 태그, 공통 이름 규칙, 재사용 값 등을 모아두는 파일이다.</p><h3 id="59b720e4-6f49-8245-9cb8-81344e23f188" class="" dir="auto"><code>terraform.tfvars</code></h3><p id="a2c720e4-6f49-8251-9cba-01e29e412e23" class="" dir="auto">현재 실행 환경에서 사용할 실제 변수값을 적는 파일이다.</p><h3 id="281720e4-6f49-8209-8adb-81ee3140d965" class="" dir="auto"><code>.terraform.lock.hcl</code></h3><p id="7e9720e4-6f49-829f-bd0c-01b46b53724a" class="" dir="auto">초기화 시 설치된 provider 버전 정보를 고정하는 파일이다.</p><h3 id="308720e4-6f49-82a7-a7fb-8155038f7ec5" class="" dir="auto"><code>.terraform/</code></h3><p id="247720e4-6f49-8348-b13b-010a402bf4c6" class="" dir="auto">초기화 과정에서 생성되는 내부 작업 디렉터리다.</p><hr id="dab720e4-6f49-83bc-a692-01575b246ad2" dir="auto"/><h2 id="833720e4-6f49-8332-b55d-8185d8b08f99" class="" dir="auto">9. 하드코딩 코드에서 구조화 코드로 바꾸는 흐름</h2><p id="0e4720e4-6f49-83f2-9dca-013c20d7b02b" class="" dir="auto">다음처럼 하드코딩된 코드가 있다고 하자.</p><pre id="9a6720e4-6f49-8295-a628-8185f123ccea" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = &quot;ami-0123456789abcdef0&quot;
+  instance_type = &quot;t3.micro&quot;
+
+  tags = {
+    Name = &quot;dev-web-01&quot;
+  }
+}</code></pre><p id="3bd720e4-6f49-8201-8044-0114168c1dce" class="" dir="auto">이 코드는 재사용성은 낮다.</p><p id="931720e4-6f49-8253-b40c-811e0aaae486" class="" dir="auto">이를 점진적으로 바꾸면 다음 흐름이 된다.</p><h3 id="2d4720e4-6f49-838d-88c0-81389d4cb212" class="" dir="auto">1단계. variable 적용</h3><pre id="476720e4-6f49-8223-8649-01519381588a" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;instance_type&quot; {
+  type    = string
+  default = &quot;t3.micro&quot;
+}
+
+variable &quot;instance_name&quot; {
+  type    = string
+  default = &quot;dev-web-01&quot;
+}</code></pre><pre id="01d720e4-6f49-8277-8684-01252c936df8" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = &quot;ami-0123456789abcdef0&quot;
+  instance_type = var.instance_type
+
+  tags = {
+    Name = var.instance_name
+  }
+}</code></pre><hr id="edb720e4-6f49-8223-8a54-010fcbf44245" dir="auto"/><h3 id="e36720e4-6f49-836f-8680-019d8bf94158" class="" dir="auto">2단계. locals 적용</h3><pre id="20c720e4-6f49-82f2-8f4e-014c0691f313" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">locals {
+  common_tags = {
+    Environment = &quot;dev&quot;
+    Project     = &quot;terraform-lab&quot;
+  }
+}</code></pre><pre id="eb4720e4-6f49-838f-b478-81392cf4f6af" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = &quot;ami-0123456789abcdef0&quot;
+  instance_type = var.instance_type
+
+  tags = merge(local.common_tags, {
+    Name = var.instance_name
+  })
+}</code></pre><p id="9f4720e4-6f49-8374-9a54-01c559da9be1" class="" dir="auto">여기서 <code>merge()</code>는 여러 맵을 하나로 합치는 함수다.</p><p id="fc6720e4-6f49-83ef-afaf-0113e9b69cdb" class="" dir="auto">즉, 공통 태그와 개별 태그를 합쳐서 사용한다.</p><hr id="edc720e4-6f49-83b6-beff-01d99ffae47b" dir="auto"/><h3 id="67d720e4-6f49-8239-875c-81d8e4d457d8" class="" dir="auto">3단계. output 적용</h3><pre id="4c4720e4-6f49-8228-851b-01d267011a9b" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;instance_id&quot; {
+  value = aws_instance.web.id
+}</code></pre><p id="432720e4-6f49-8248-aafc-016862645514" class="" dir="auto">즉, 하드코딩 코드는 점차 다음과 같은 구조로 발전한다.</p><ul id="e0d720e4-6f49-8338-b944-8100fd648215" class="bulleted-list" dir="auto"><li style="list-style-type:disc">입력은 variable</li></ul><ul id="efb720e4-6f49-82ba-8a6d-01a94f8b4564" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 정리는 locals</li></ul><ul id="923720e4-6f49-8364-8326-01f3adf07740" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과 확인은 output</li></ul><hr id="248720e4-6f49-824d-b327-811ec5bf63b4" dir="auto"/><h2 id="21b720e4-6f49-8375-94fd-01bccec0bf9c" class="" dir="auto">11. 자주 하는 실수</h2><h3 id="53c720e4-6f49-83e8-bf84-8198b1c70086" class="" dir="auto">11.1 variable 선언 없이 <code>var.</code> 사용함</h3><p id="78a720e4-6f49-8223-9d35-01a40e6eb630" class="" dir="auto">예를 들어 다음처럼 사용했는데</p><pre id="231720e4-6f49-8294-ac64-01ee92de679a" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">instance_type = var.instance_type</code></pre><p id="994720e4-6f49-83c7-9f4d-81c8b62f8f53" class="" dir="auto"><code>variable &quot;instance_type&quot;</code> 선언이 없으면 오류가 발생한다.</p><p id="4f4720e4-6f49-82bc-959c-0141c505b1db" class="" dir="auto">즉, <code>var.</code>로 참조하려면 반드시 해당 variable이 먼저 선언되어 있어야 한다.</p><hr id="61f720e4-6f49-8351-9305-810c1a9b2e38" dir="auto"/><h3 id="f14720e4-6f49-82f9-a8e2-814f5edd8b4a" class="" dir="auto">11.2 locals를 <code>var.</code>처럼 참조함</h3><p id="25d720e4-6f49-829c-81d2-01d285c12733" class="" dir="auto">예를 들어 locals를 선언해놓고</p><pre id="210720e4-6f49-82e8-b7b5-81204efead23" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">locals {
+  instance_name = &quot;dev-web-01&quot;
+}</code></pre><p id="28c720e4-6f49-83b5-86f6-8135f166510b" class="" dir="auto">아래처럼 쓰면 틀린다.</p><pre id="3ca720e4-6f49-8384-95a3-81bca1fd71e6" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">Name = var.instance_name</code></pre><p id="527720e4-6f49-83cd-ba2d-0136d513805b" class="" dir="auto">locals는 반드시 <code>local.</code>로 참조해야 한다.</p><p id="abe720e4-6f49-82a3-9f30-01a2ece35874" class="" dir="auto">정답:</p><pre id="600720e4-6f49-82d4-a978-818e9af3122c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">Name = local.instance_name</code></pre><hr id="7bb720e4-6f49-8202-9d52-81b566f96e85" dir="auto"/><h3 id="f77720e4-6f49-8241-b930-0100ce90fa2f" class="" dir="auto">11.3 output을 리소스 생성용이 아님.</h3><p id="5de720e4-6f49-8248-b627-814a95ea98f8" class="" dir="auto">output은 어디까지나 결과를 보여주는 용도다.</p><p id="412720e4-6f49-83fa-9231-8162367c295d" class="" dir="auto">다른 블록의 입력값을 정의하는 기능이 아니다.</p><p id="1af720e4-6f49-8399-8857-8195a20f88e1" class="" dir="auto">즉,</p><ul id="bb0720e4-6f49-82c7-bf33-81f44eb35f39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">variable → 입력</li></ul><ul id="a11720e4-6f49-835d-9b05-01c870395299" class="bulleted-list" dir="auto"><li style="list-style-type:disc">output → 출력</li></ul><hr id="3e2720e4-6f49-831f-b488-01f9977da00e" dir="auto"/><h3 id="d43720e4-6f49-839f-908d-013f9ca4581f" class="" dir="auto">11.4 tfvars 파일에 선언까지 같이 적으려 함</h3><p id="e31720e4-6f49-839a-ab64-0178f328f124" class="" dir="auto"><code>terraform.tfvars</code>에는 variable 블록을 적는 것이 아니라,</p><p id="fca720e4-6f49-8253-a5e0-01529993ec97" class="" dir="auto">이미 선언된 변수에 대한 <strong>값만</strong> 적는다.</p><p id="8db720e4-6f49-8356-9eb0-8122ee8c40e4" class="" dir="auto">틀린 형태:</p><pre id="e7f720e4-6f49-83ed-bd48-01bb7b3d21bf" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;instance_type&quot; {
+  default = &quot;t3.micro&quot;
+}</code></pre><p id="dc4720e4-6f49-82a6-8e60-01ec6680226e" class="" dir="auto">올바른 형태:</p><pre id="657720e4-6f49-82e2-8319-01644cdb81cf" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">instance_type = &quot;t3.micro&quot;</code></pre><hr id="77a720e4-6f49-838b-bf14-01383bae7c51" dir="auto"/><h2 id="9db720e4-6f49-82f0-b0bb-8128c03a9881" class="" dir="auto">12. 장 정리</h2><p id="292720e4-6f49-82e5-84b6-817148f4f3e2" class="" dir="auto">이 장의 핵심은 다음과 같다.</p><ul id="3eb720e4-6f49-822d-aa68-81ae6561ba48" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>variable</code>은 외부에서 입력값을 받기 위한 기능이다.</li></ul><ul id="205720e4-6f49-8274-9b69-81878b6adaea" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform.tfvars</code>는 변수 실제 값을 파일로 전달하는 방식이다.</li></ul><ul id="48e720e4-6f49-8329-b3db-81cdfb75fe54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CLI의 <code>var</code> 옵션으로도 값을 직접 전달할 수 있다.</li></ul><ul id="52d720e4-6f49-8282-b5d8-812853c17a50" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>output</code>은 생성 결과나 중요한 값을 밖으로 보여주는 기능이다.</li></ul><ul id="080720e4-6f49-83db-bdf4-8181019608a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>locals</code>는 코드 내부에서 공통 값이나 계산 결과를 정리하는 기능이다.</li></ul><ul id="091720e4-6f49-839a-9f24-01006b11a452" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform 코드는 여러 <code>.tf</code> 파일로 나누어도 같은 디렉터리 안에서는 하나의 구성으로 함께 동작한다.</li></ul><ul id="750720e4-6f49-8204-9136-810b1772dba6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무에서는 <code>main.tf</code>, <code>variables.tf</code>, <code>outputs.tf</code>, <code>locals.tf</code>, <code>terraform.tfvars</code> 형태로 분리하는 경우가 많다.</li></ul><hr id="e46720e4-6f49-82ac-b073-01dc94c93da4" dir="auto"/><h1 id="827720e4-6f49-8262-a519-81339df983c2" class="" dir="auto">실습. Terraform 변수, 출력값, 로컬값과 코드 구조화 실습</h1><h2 id="08d720e4-6f49-83a8-8064-01492c78a374" class="" dir="auto">실습 1. variable과 tfvars로 EC2 설정값 분리하기</h2><hr id="bf9720e4-6f49-83d8-9d51-01864d3b1856" dir="auto"/><h3 id="b0b720e4-6f49-8217-88c6-0161143f73eb" class="" dir="auto">파일 1. <code>variables.tf</code></h3><pre id="ffe720e4-6f49-8201-8672-815ae7ce876f" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;instance_type&quot; {
+  type        = string
+  description = &quot;EC2 instance type&quot;
+}
+
+variable &quot;instance_name&quot; {
+  type        = string
+  description = &quot;EC2 Name tag&quot;
+}</code></pre><hr id="a55720e4-6f49-821b-96fc-811dccaac6c5" dir="auto"/><h3 id="3c9720e4-6f49-83b1-b4c7-01fc5e9f5880" class="" dir="auto">파일 2. <code>terraform.tfvars</code></h3><pre id="b3f720e4-6f49-82da-b9ab-015e39b01243" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">instance_type = &quot;t3.micro&quot;
+instance_name = &quot;dev-web-01&quot;</code></pre><hr id="547720e4-6f49-82c3-b9e1-01bf4262b678" dir="auto"/><h3 id="625720e4-6f49-8376-91d1-8182f4bb2568" class="" dir="auto">파일 3. <code>main.tf</code></h3><pre id="2da720e4-6f49-8276-92fb-813262ba687b" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;6.41.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}
+
+data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+
+  owners = [&quot;amazon&quot;]
+
+  filter {
+    name   = &quot;name&quot;
+    values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+  }
+}
+
+resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+
+  tags = {
+    Name = var.instance_name
+  }
+}</code></pre><hr id="755720e4-6f49-83a5-b462-012626f27129" dir="auto"/><h3 id="02d720e4-6f49-82c4-94f3-81ce48a2fa51" class="" dir="auto">실행 명령</h3><pre id="9a8720e4-6f49-833a-9d5d-8161a024590a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform init
+terraform plan</code></pre><hr id="83f720e4-6f49-8378-8513-8144cddf62a9" dir="auto"/><h3 id="fb0720e4-6f49-82c5-b277-81fde8e01008" class="" dir="auto">확인 포인트</h3><ul id="6c1720e4-6f49-8230-8bf6-8158d6504fcd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>instance_type</code>과 <code>instance_name</code>은 코드에 직접 쓰지 않았음</li></ul><ul id="247720e4-6f49-8366-b209-01bbd9c14bfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform이 <code>terraform.tfvars</code> 파일 값을 자동으로 읽음</li></ul><ul id="c95720e4-6f49-8374-877c-81cea99c48e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 코드 구조를 유지한 채 값만 바꿔 실행 가능함</li></ul><hr id="c0f720e4-6f49-838c-9806-012540c682ff" dir="auto"/><h2 id="0a4720e4-6f49-8205-850d-0188f3bd5b11" class="" dir="auto">실습 2. CLI <code>var</code> 옵션으로 값 직접 전달하기</h2><h3 id="35d720e4-6f49-830b-b8d1-8159ab104aa2" class="" dir="auto">실습 목적</h3><p id="d27720e4-6f49-8306-be9b-014eb9673d69" class="" dir="auto">변수값을 파일이 아니라 명령행에서 직접 전달하는 방식을 확인한다.</p><hr id="ad0720e4-6f49-83d5-a29e-01fe647fd336" dir="auto"/><h3 id="c4f720e4-6f49-827e-a991-01ca35f55d70" class="" dir="auto"><code>terraform.tfvars</code> 사용 없이 실행 예시</h3><pre id="9e4720e4-6f49-82e5-bd01-012a18f461e7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">terraform plan -var=&quot;instance_type=t3.small&quot; -var=&quot;instance_name=cli-web-01&quot;</code></pre><hr id="168720e4-6f49-825d-ba4b-81b522e78dce" dir="auto"/><h3 id="9c1720e4-6f49-82df-9ab5-013014406c39" class="" dir="auto">설명</h3><p id="129720e4-6f49-8325-8bfe-0192f286a439" class="" dir="auto">이 명령은 현재 실행에서만 변수값을 직접 주입한다.</p><ul id="e10720e4-6f49-8342-b2b6-815e8aebc68d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>instance_type</code> → <code>t3.small</code></li></ul><ul id="98a720e4-6f49-82a5-a061-818c4d794994" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>instance_name</code> → <code>cli-web-01</code></li></ul><p id="071720e4-6f49-826f-95b6-010de0ee804d" class="" dir="auto">즉, tfvars 파일 없이도 variable 값을 전달할 수 있다.</p><hr id="9e8720e4-6f49-824b-b6e6-81b892c88786" dir="auto"/><h3 id="b2e720e4-6f49-8205-a681-01ef52749509" class="" dir="auto">확인 포인트</h3><ul id="366720e4-6f49-833d-8f4e-81c5b40bc5ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일회성 테스트에는 편리함</li></ul><ul id="9e4720e4-6f49-82d3-b4d4-8115504aa8d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변수가 많아지면 명령이 길어짐</li></ul><ul id="151720e4-6f49-83b4-bc1b-81092e9cb302" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반복 실행이나 환경별 관리에는 tfvars 파일 방식이 더 편리할 수 있음</li></ul><hr id="244720e4-6f49-831f-b1eb-0152cb5f5d48" dir="auto"/><h2 id="921720e4-6f49-8329-ae54-0128640716af" class="" dir="auto">실습 3. locals로 공통 태그 정리하기</h2><p id="fac720e4-6f49-827f-ac0d-81170766f79c" class="" dir="auto">반복되는 값을 locals로 정리해서 코드 중복을 줄이는 방식을 이해한다.</p><hr id="381720e4-6f49-8339-a340-019a61a8886f" dir="auto"/><h3 id="807720e4-6f49-8217-a737-819438734c1b" class="" dir="auto">파일 1. <code>locals.tf</code></h3><pre id="918720e4-6f49-8368-897c-81689dad66b4" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">locals {
+  common_tags = {
+    Environment = &quot;dev&quot;
+    Project     = &quot;terraform-lab&quot;
+    Owner       = &quot;student&quot;
+  }
+}</code></pre><hr id="62e720e4-6f49-83d8-a829-813e95742946" dir="auto"/><h3 id="fba720e4-6f49-82e0-8a30-81f5a255a59d" class="" dir="auto">파일 2. <code>main.tf</code> 수정</h3><pre id="7f7720e4-6f49-8208-968c-017e4d4b281b" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;6.41.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}
+
+data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+
+  owners = [&quot;amazon&quot;]
+
+  filter {
+    name   = &quot;name&quot;
+    values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+  }
+}
+
+resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+
+  tags = merge(local.common_tags, {
+    Name = var.instance_name
+  })
+}</code></pre><hr id="1f2720e4-6f49-8230-add2-8130edb5c270" dir="auto"/><p id="e22720e4-6f49-8324-a714-812e0eb42c7b" class="" dir="auto"><code>merge()</code> 함수는 여러 맵을 하나로 합친다.</p><p id="b9c720e4-6f49-8240-a8f9-81fb27fb5459" class="" dir="auto">즉,</p><ul id="a56720e4-6f49-821f-a27a-812e274c464c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>local.common_tags</code> 에 있는 공통 태그</li></ul><ul id="4d0720e4-6f49-83e8-ac45-01a9ec7a171b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Name = var.instance_name</code> 개별 태그</li></ul><p id="d4a720e4-6f49-82f9-81dd-81374117c8d5" class="" dir="auto">를 합쳐서 최종 태그로 사용한다.</p><hr id="4ec720e4-6f49-8218-a375-8165fff8a39e" dir="auto"/><h3 id="d12720e4-6f49-820b-b047-013df6a99893" class="" dir="auto">확인 포인트</h3><ul id="e51720e4-6f49-8326-8c8e-81f16669a976" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 태그를 한곳에서 관리할 수 있음</li></ul><ul id="afd720e4-6f49-83fd-b551-0170663b44dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 리소스에서 재사용하기 쉬움</li></ul><ul id="b45720e4-6f49-82a0-a964-81db27f6bc8e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">값 변경 시 유지보수가 편해짐</li></ul><hr id="b55720e4-6f49-8340-9e58-01e3b507df2a" dir="auto"/><h2 id="77f720e4-6f49-832a-a3fb-81983fb6cddc" class="" dir="auto">실습 4. output으로 생성 결과 확인하기</h2><h3 id="110720e4-6f49-834e-b86b-019941e4a9a0" class="" dir="auto">실습 목적</h3><p id="ad4720e4-6f49-830c-b997-01a637bf4f61" class="" dir="auto">생성된 리소스의 주요 값을 <code>output</code>으로 확인하는 방식을 익힌다.</p><hr id="a42720e4-6f49-82ca-9224-016459292c7f" dir="auto"/><h3 id="6b2720e4-6f49-8377-a4c3-8109a0f7040e" class="" dir="auto">파일 1. <code>outputs.tf</code></h3><pre id="b48720e4-6f49-82f4-8d51-018030dadefa" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;instance_id&quot; {
+  description = &quot;Created EC2 instance ID&quot;
+  value       = aws_instance.web.id
+}
+
+output &quot;instance_public_ip&quot; {
+  description = &quot;Created EC2 public IP&quot;
+  value       = aws_instance.web.public_ip
+}
+
+output &quot;ami_id_used&quot; {
+  description = &quot;AMI ID used for EC2&quot;
+  value       = data.aws_ami.amazon_linux.id
+}</code></pre><hr id="176720e4-6f49-82e2-8fd0-8154e14c555c" dir="auto"/><h3 id="b59720e4-6f49-8357-ac67-81940857000b" class="" dir="auto">실행 명령</h3><pre id="400720e4-6f49-836e-a1c7-01d5dcfe4f95" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">terraform apply -auto-approve</code></pre><hr id="262720e4-6f49-83c8-867c-81dba15b101e" dir="auto"/><h3 id="815720e4-6f49-83e0-998f-8195560d4a26" class="" dir="auto">설명</h3><p id="9a0720e4-6f49-8330-b567-0116e7f28b86" class="" dir="auto"><code>apply</code>가 끝나면 Terraform은 output 값을 화면에 보여준다.</p><p id="cdd720e4-6f49-8375-9b01-0190bcf0ddb1" class="" dir="auto">어떤 값이 실제로 사용되었고 어떤 결과가 나왔는지를 바로 확인할 수 있다.</p><hr id="fd3720e4-6f49-82bc-9e26-81ce4e6f78a9" dir="auto"/><h3 id="4e2720e4-6f49-838d-914a-811d4e8908f9" class="" dir="auto">apply 이후 다시 확인하는 방법</h3><pre id="520720e4-6f49-82a5-b83d-019e55eb3751" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform output</code></pre><p id="a7b720e4-6f49-83c9-ae51-81864d623390" class="" dir="auto">특정 값만 보고 싶다면 다음처럼 사용할 수 있다.</p><pre id="0a7720e4-6f49-8310-905d-816b8826cd96" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform output instance_id</code></pre><hr id="cb9720e4-6f49-83f0-890e-01581f610d64" dir="auto"/><h3 id="a61720e4-6f49-8267-bf52-01dfa2bc6b15" class="" dir="auto">확인 포인트</h3><ul id="d36720e4-6f49-8360-977e-814195be726d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>output</code>은 결과 확인용이다</li></ul><ul id="51b720e4-6f49-82ef-aa7e-817e9d9bfb48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스의 중요한 속성을 쉽게 다시 볼 수 있다</li></ul><ul id="e09720e4-6f49-82d3-b515-813564eea930" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Source 값도 output으로 함께 확인할 수 있다</li></ul><hr id="f04720e4-6f49-8288-ac23-819e8eec779a" dir="auto"/><h2 id="882720e4-6f49-83dc-8720-01577f26eca2" class="" dir="auto">실습 5. 파일 분리 구조 확인하기</h2><h3 id="81a720e4-6f49-82b2-be46-014eaf714763" class="" dir="auto">실습 목적</h3><p id="2a5720e4-6f49-820e-8b18-81c769e487f4" class="" dir="auto">Terraform이 같은 디렉터리 안의 여러 <code>.tf</code> 파일을 하나의 구성으로 읽는다는 점을 체감한다.</p><hr id="a4a720e4-6f49-82d6-9df0-01ea0ed530b0" dir="auto"/><h3 id="221720e4-6f49-8251-aa32-816403fe1198" class="" dir="auto">예시 디렉터리 구조</h3><pre id="72d720e4-6f49-824f-b8a5-81eafd9d5f54" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform-aws-lab/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── locals.tf
+├── terraform.tfvars
+├── .terraform.lock.hcl
+└── .terraform/</code></pre><hr id="e4a720e4-6f49-836b-9546-81c665728d4a" dir="auto"/><h3 id="496720e4-6f49-82ee-823c-01c6ece016e1" class="" dir="auto">확인 방법</h3><p id="06e720e4-6f49-83e7-9668-810b945b7ce1" class="" dir="auto">다음과 같은 상태여야 한다.</p><ul id="f8f720e4-6f49-82fb-b288-810d3afdd76b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>main.tf</code> 에서 <code>var.instance_type</code> 사용</li></ul><ul id="000720e4-6f49-83ac-b9b6-818dd63def28" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>variables.tf</code> 에서 <code>instance_type</code> 선언</li></ul><ul id="eb9720e4-6f49-82e1-a66a-817f0ac44d10" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>locals.tf</code> 에서 <code>common_tags</code> 선언</li></ul><ul id="d76720e4-6f49-829e-9c85-01609f4186d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>outputs.tf</code> 에서 <code>aws_instance.web.id</code> 출력</li></ul><p id="b09720e4-6f49-8331-87bb-01985dfa6bfd" class="" dir="auto">이렇게 파일이 나뉘어 있어도 Terraform은 전체를 하나의 구성으로 읽는다.</p><p id="e4b720e4-6f49-8330-9609-8179f971ee8d" class="" dir="auto">즉, 파일이 달라도 다음 참조는 모두 정상 동작한다.</p><ul id="c41720e4-6f49-829b-b494-0154a1e18600" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>var.instance_type</code></li></ul><ul id="b49720e4-6f49-8256-bb7c-01c53d8097e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>local.common_tags</code></li></ul><ul id="3f7720e4-6f49-8356-8269-81394388e459" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_instance.web.id</code></li></ul><ul id="0d9720e4-6f49-8333-b556-01b249173555" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data.aws_ami.amazon_linux.id</code></li></ul><hr id="17e720e4-6f49-82a5-beea-010b7fb1be84" dir="auto"/><h2 id="7cd720e4-6f49-82e7-97e8-018437e29eca" class="" dir="auto">실습 6. 전체 예제 코드 정리본</h2><h3 id="c1f720e4-6f49-82a3-9404-817bcec52922" class="" dir="auto"><code>main.tf</code></h3><pre id="0a3720e4-6f49-82c9-9dcb-01a97db43f90" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;6.41.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}
+
+data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+
+  owners = [&quot;amazon&quot;]
+
+  filter {
+    name   = &quot;name&quot;
+    values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+  }
+}
+
+resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = var.instance_type
+
+  tags = merge(local.common_tags, {
+    Name = var.instance_name
+  })
+}</code></pre><hr id="512720e4-6f49-82ff-a74e-8149fa798141" dir="auto"/><h3 id="bba720e4-6f49-82ec-807f-01c3bfa5f3c4" class="" dir="auto"><code>variables.tf</code></h3><pre id="6bc720e4-6f49-826c-a163-01395822b118" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;instance_type&quot; {
+  type        = string
+  description = &quot;EC2 instance type&quot;
+}
+
+variable &quot;instance_name&quot; {
+  type        = string
+  description = &quot;EC2 Name tag&quot;
+}</code></pre><hr id="5b9720e4-6f49-8379-aa33-81f7b90e466e" dir="auto"/><h3 id="61b720e4-6f49-8368-bd5d-819d293556c9" class="" dir="auto"><code>locals.tf</code></h3><pre id="2e8720e4-6f49-82c8-946c-813963438239" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">locals {
+  common_tags = {
+    Environment = &quot;dev&quot;
+    Project     = &quot;terraform-lab&quot;
+    Owner       = &quot;student&quot;
+  }
+}</code></pre><hr id="fe7720e4-6f49-82ce-985c-81fea4aec483" dir="auto"/><h3 id="0a6720e4-6f49-8200-a65c-0176bec1b480" class="" dir="auto"><code>outputs.tf</code></h3><pre id="c1e720e4-6f49-8361-95e3-0181a21c4826" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;instance_id&quot; {
+  description = &quot;Created EC2 instance ID&quot;
+  value       = aws_instance.web.id
+}
+
+output &quot;instance_public_ip&quot; {
+  description = &quot;Created EC2 public IP&quot;
+  value       = aws_instance.web.public_ip
+}
+
+output &quot;ami_id_used&quot; {
+  description = &quot;AMI ID used for EC2&quot;
+  value       = data.aws_ami.amazon_linux.id
+}</code></pre><hr id="b32720e4-6f49-821a-80cf-81074ca2e7db" dir="auto"/><h3 id="0f4720e4-6f49-82d1-b391-01c7b8840ee4" class="" dir="auto"><code>terraform.tfvars</code></h3><pre id="927720e4-6f49-825f-b363-0188dfbd20a5" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">instance_type = &quot;t3.micro&quot;
+instance_name = &quot;dev-web-01&quot;</code></pre><hr id="5df720e4-6f49-83c3-9988-010cebc5f43d" dir="auto"/><h3 id="5da720e4-6f49-8205-8d6a-819072657b79" class="" dir="auto">실행 순서</h3><pre id="9e9720e4-6f49-8209-9860-81eefd535664" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">terraform init
+terraform fmt
+terraform validate
+terraform plan
+terraform apply -auto-approve
+terraform output
+terraform destroy -auto-approve</code></pre><hr id="0a1720e4-6f49-82de-a00e-011c561867ec" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,797 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>2장. CI/CD 파이프라인 구조 이해</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="56c720e4-6f49-83f4-8818-818388cd85f4" class="page sans"><header><h1 class="page-title" dir="auto">2장. CI/CD 파이프라인 구조 이해</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="17b720e4-6f49-83d6-9902-015867bb2a4e" class="" dir="auto">1. 파이프라인이란 무엇인가</h2><figure id="39e720e4-6f49-83f6-97bd-0178b5e1bab9" class="image" data-notion-image="2%EC%9E%A5%20CI%20CD%20%ED%8C%8C%EC%9D%B4%ED%94%84%EB%9D%BC%EC%9D%B8%20%EA%B5%AC%EC%A1%B0%20%EC%9D%B4%ED%95%B4/image.png" dir="ltr"><a href="2%EC%9E%A5%20CI%20CD%20%ED%8C%8C%EC%9D%B4%ED%94%84%EB%9D%BC%EC%9D%B8%20%EA%B5%AC%EC%A1%B0%20%EC%9D%B4%ED%95%B4/image.png"><img style="width:704.0000610351562px" src="2%EC%9E%A5%20CI%20CD%20%ED%8C%8C%EC%9D%B4%ED%94%84%EB%9D%BC%EC%9D%B8%20%EA%B5%AC%EC%A1%B0%20%EC%9D%B4%ED%95%B4/image.png"/></a></figure><h3 id="136720e4-6f49-8349-86d6-81aee3da8040" class="" dir="auto">1.1 파이프라인의 정의</h3><p id="158720e4-6f49-82e2-8095-01434315b024" class="" dir="auto">파이프라인은 소스코드 변경이 발생한 뒤, 그 변경 사항이 빌드되고 검증되며 배포 가능한 형태로 변환되고, 최종적으로 특정 환경에 반영되기까지의 절차를 <strong>순차적 또는 조건부 단계로 연결한 자동화 흐름</strong>이다.</p><p id="b39720e4-6f49-8373-a40b-01aa796fc72c" class="" dir="auto">단순히 여러 명령어를 한 줄로 나열한 것이 아니라, 각 단계가 명확한 목적을 가지고 연결되어야 함.</p><p id="00e720e4-6f49-83e4-91f2-0142730c02be" class="" dir="auto">예를 들면 다음과 같은 흐름이다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="a99720e4-6f49-82e4-b2b3-0128e07aff1d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Code Commit
+   ↓
+Build
+   ↓
+Test
+   ↓
+Artifact Create
+   ↓
+Publish
+   ↓
+Deploy
+   ↓
+Verify</code></pre><p id="81d720e4-6f49-8269-9c18-81f13780a77f" class="" dir="auto">이 구조에서 중요한 점은 앞 단계의 결과가 다음 단계의 입력이 된다는 것이다.</p><p id="dcd720e4-6f49-8238-aaa0-81a9a467ff92" class="" dir="auto">즉, Build가 실패하면 Test로 가지 않음. Test가 실패하면 Deploy로 가지 않음.</p><p id="caf720e4-6f49-82a3-9782-01fb3a503d34" class="" dir="auto">이렇게 해야 불완전한 결과물이 운영 환경까지 흘러가지 않음.</p><hr id="93f720e4-6f49-828e-8514-8179254a36d0" dir="auto"/><h3 id="4ab720e4-6f49-8212-a585-814630096bfc" class="" dir="auto">1.2 왜 파이프라인이 필요한가</h3><p id="892720e4-6f49-831a-b3c2-81e740de34be" class="" dir="auto">수동 방식에서는 배포 절차가 사람의 기억과 숙련도에 의존함.</p><p id="ce3720e4-6f49-8241-a139-817ac3dd0811" class="" dir="auto">하지만 시스템이 커질수록 이 방식은 한계를 드러냄.</p><p id="071720e4-6f49-839a-9992-81dd38e59cb8" class="" dir="auto">예를 들어 다음 문제가 발생할 수 있음.</p><ul id="153720e4-6f49-820a-830f-8140385c4759" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오늘은 A 서버에 먼저 배포했는데 내일은 B 서버에 먼저 배포함</li></ul><ul id="368720e4-6f49-83b6-b789-017cd2983c9f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 운영자는 설정 파일을 수정했고, 다른 운영자는 수정하지 않았음</li></ul><ul id="842720e4-6f49-8306-b918-81882f881134" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트를 누락한 채 운영 반영이 이루어짐</li></ul><ul id="d29720e4-6f49-83d1-8dd0-014e3030a784" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이전 버전으로 되돌리는 절차가 정리돼 있지 않음</li></ul><p id="c8c720e4-6f49-8211-af97-8199bcfd03cd" class="" dir="auto">파이프라인은 이런 문제를 줄이기 위해 배포 과정을 <strong>정형화</strong>하고 <strong>반복 가능하게</strong> 만든다.</p><p id="96a720e4-6f49-8217-8597-81e7261a4e66" class="" dir="auto">즉, 파이프라인의 목적은 단순 자동화가 아니라 다음을 보장하는 데 있음.</p><ul id="fad720e4-6f49-82ca-b8b6-81f7742c13a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재현성</li></ul><ul id="803720e4-6f49-837f-a530-8123f644e61c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일관성</li></ul><ul id="f54720e4-6f49-8377-a222-81f045864e75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">추적 가능성</li></ul><ul id="79a720e4-6f49-8383-8c43-8108be8b272a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">검증 가능성</li></ul><ul id="583720e4-6f49-82a9-a9dc-01b416c4c833" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실패 시 차단 가능성</li></ul><hr id="4d2720e4-6f49-831f-9b63-81b65231a4d2" dir="auto"/><h2 id="0ff720e4-6f49-8348-85e3-019f43e7618b" class="" dir="auto">2. 파이프라인의 기본 단계</h2><p id="bc0720e4-6f49-82f6-acfa-019107278e38" class="" dir="auto">CI/CD 파이프라인은 조직마다 세부 구성이 조금씩 다르지만, 보통 다음 단계를 중심으로 설명할 수 있음.</p><pre id="b83720e4-6f49-825e-8599-01c52e22a289" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all"> → Source
+ → Build
+ → Test
+ → Package
+ → Publish
+ → Deploy
+ → Verify</code></pre><p id="949720e4-6f49-8271-9641-819d600b13c1" class="" dir="auto">각 단계는 이름만 알면 되는 것이 아니라, 무엇을 입력받고 무엇을 출력하는지 이해해야 함.</p><hr id="8bb720e4-6f49-830d-a94f-817af1a335cf" dir="auto"/><h2 id="df7720e4-6f49-82b5-9c2c-81d43d1e8cf1" class="" dir="auto">3. Source 단계</h2><h3 id="049720e4-6f49-82ad-829d-01451229f6db" class="" dir="auto">3.1 Source 단계의 의미</h3><p id="25d720e4-6f49-822b-a50b-81730a6df715" class="" dir="auto">Source 단계는 파이프라인의 출발점이다.</p><p id="aef720e4-6f49-83e9-b0cf-01eb0ef69e5f" class="" dir="auto">일반적으로 Git 저장소에 코드 변경이 발생하면 파이프라인이 시작된다.</p><p id="810720e4-6f49-82bb-811b-81879c3344cb" class="" dir="auto">주요 이벤트는 다음과 같음.</p><ul id="e58720e4-6f49-83b4-8055-0159be0f26e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>push</code></li></ul><ul id="3b6720e4-6f49-82b6-9125-0104d5b54f98" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>pull request</code></li></ul><ul id="9cd720e4-6f49-8336-beca-015930163a77" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>merge</code></li></ul><ul id="4dd720e4-6f49-8338-b9e4-016cdc041a67" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>tag 생성</code></li></ul><ul id="80d720e4-6f49-8273-9f3b-81f81c3413af" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>release 생성</code></li></ul><p id="cfb720e4-6f49-8392-b438-01a0f0c97e67" class="" dir="auto">즉, 파이프라인은 &quot;누가 언제 어떤 변경을 저장소에 반영했는가&quot;를 기준으로 동작하는 경우가 많음.</p><hr id="358720e4-6f49-83bb-83ec-81e1a69f5178" dir="auto"/><h3 id="661720e4-6f49-833a-af12-81eae45026e2" class="" dir="auto">3.2 Source 단계에서 중요한 요소</h3><h3 id="aec720e4-6f49-832f-a82c-8108020f3105" class="" dir="auto">1) 형상관리 시스템</h3><p id="646720e4-6f49-83e0-8a6d-81b1fcae27a1" class="" dir="auto">보통 GitHub, GitLab, Bitbucket 같은 Git 기반 저장소를 사용함.</p><h3 id="5ac720e4-6f49-82d9-b720-01dc919bee69" class="" dir="auto">2) 브랜치 전략</h3><p id="38a720e4-6f49-8283-91f2-01a5f9925d67" class="" dir="auto">어느 브랜치에 변경이 반영되었는지에 따라 파이프라인 동작이 달라질 수 있음.</p><p id="828720e4-6f49-82dc-931d-01b82ef8290c" class="" dir="auto">예:</p><ul id="a4e720e4-6f49-829c-8177-01115936158c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>feature/*</code> 브랜치: 빌드와 단위 테스트만 수행</li></ul><ul id="fa9720e4-6f49-82ca-98c7-0187a8b6dead" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>develop</code> 브랜치: 통합 테스트 수행</li></ul><ul id="08e720e4-6f49-822b-bff0-01b50b3932af" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>main</code> 브랜치: 운영 배포 후보 생성</li></ul><ul id="eef720e4-6f49-8367-ba60-01845007bc82" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>tag</code>: 릴리스용 아티팩트 생성</li></ul><h3 id="e0c720e4-6f49-8205-9437-81d131c4fdcc" class="" dir="auto">3) 트리거 방식</h3><p id="653720e4-6f49-824b-802c-81328f4134c8" class="" dir="auto">저장소 변경이 생겼을 때 파이프라인을 어떻게 시작할지 결정해야 함.</p><ul id="56c720e4-6f49-830e-8704-01883ca30e45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Polling 방식 : 저장소를 주기적으로 확인함</li></ul><ul id="7bf720e4-6f49-8266-8af8-81aa17847112" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Webhook 방식 : 저장소에서 변경을 통지함</li></ul><ul id="2c3720e4-6f49-82b8-8e27-016f7d562d72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">수동 실행</li></ul><ul id="22c720e4-6f49-82f3-b4f6-01cf120895ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일정 기반 실행</li></ul><p id="1ec720e4-6f49-8251-9013-016f016570b3" class="" dir="auto">실무에서는 대부분 Webhook 기반으로 많이 구성함.</p><hr id="340720e4-6f49-8294-b1eb-813973dd634a" dir="auto"/><h3 id="232720e4-6f49-8366-ba0c-817d28d749bd" class="" dir="auto">3.3 Source 단계의 산출물</h3><p id="f68720e4-6f49-82d2-8394-813a7f72debb" class="" dir="auto">Source 단계의 출력은 보통 다음과 같음.</p><ul id="a73720e4-6f49-82c5-8b2a-8129fdcacbe7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 커밋 해시(commit SHA)</li></ul><ul id="256720e4-6f49-822d-8c79-01f43a1c564d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브랜치 이름</li></ul><ul id="5da720e4-6f49-8329-9ff6-012722854e69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 이름</li></ul><ul id="0d3720e4-6f49-83c0-bebd-81108d4fe5b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변경된 소스코드 작업 디렉터리</li></ul><p id="0f3720e4-6f49-822c-a3de-813813ffc0df" class="" dir="auto">즉, 아직 &quot;배포 결과물&quot;이 나온 것은 아님.</p><p id="f1a720e4-6f49-825f-81c6-01edf9093ef4" class="" dir="auto">단지 &quot;이번 파이프라인이 어떤 소스 버전을 기준으로 동작하는가&quot;가 정해진 상태다.</p><hr id="563720e4-6f49-82c5-aff0-016419751698" dir="auto"/><h2 id="d63720e4-6f49-832f-8ec4-0152940f21dc" class="" dir="auto">4. Build 단계</h2><h3 id="1ea720e4-6f49-8327-acec-81821461d070" class="" dir="auto">4.1 Build 단계의 의미</h3><p id="128720e4-6f49-822a-92a6-01ab1cbd31b6" class="" dir="auto">Build는 소스코드를 실행 가능하거나 배포 가능한 형태로 변환하는 단계다.</p><p id="fe0720e4-6f49-8342-bc33-818b52a6b2ba" class="" dir="auto">프로그래밍 언어와 애플리케이션 종류에 따라 Build의 의미는 조금씩 다를 수 있음.</p><p id="13a720e4-6f49-8311-98fe-019bd655c9d2" class="" dir="auto">예를 들면:</p><ul id="dab720e4-6f49-83e2-acdc-81de64c41794" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Java: <code>compile</code>, <code>package</code></li></ul><ul id="b2e720e4-6f49-838a-9603-81643e42e4bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Node.js: 정적 파일 번들링</li></ul><ul id="d4e720e4-6f49-82cd-965a-01e75d7c459f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python: 의존성 설치 및 패키징 준비</li></ul><ul id="70c720e4-6f49-83ec-a407-81aa5a032cd6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Go: 바이너리 생성</li></ul><ul id="fb2720e4-6f49-822f-bb4f-019b91a5b8d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 기반 애플리케이션: 이미지 빌드</li></ul><p id="390720e4-6f49-826b-be51-8116236af9cb" class="" dir="auto">즉, Build 단계는 단순히 &quot;컴파일&quot;만 의미하는 것이 아니라, <strong>배포 가능한 산출물을 만들기 위한 준비 과정 전체</strong>로 이해하는 것이 좋음.</p><hr id="be9720e4-6f49-8360-89bc-016b28c363b5" dir="auto"/><h3 id="d5d720e4-6f49-83a7-8e3d-01497a0ecd12" class="" dir="auto">4.2 Build 단계에서 수행되는 대표 작업</h3><ul id="97f720e4-6f49-83bb-b1b7-817362849b84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소스코드 체크아웃</li></ul><ul id="fb9720e4-6f49-824f-9f08-018e47bc62dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">의존성 다운로드</li></ul><ul id="749720e4-6f49-834a-bded-017c57df84fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컴파일</li></ul><ul id="7c6720e4-6f49-833d-a93a-01285d5b7033" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 리소스 번들링</li></ul><ul id="a51720e4-6f49-82fa-b76a-81a25f615ffd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패키징</li></ul><ul id="ca7720e4-6f49-8317-8a69-81ca98ce2ee6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 이미지 생성</li></ul><hr id="097720e4-6f49-834e-9c45-81f5e72bde04" dir="auto"/><h3 id="8b2720e4-6f49-824d-8719-01c10364581c" class="" dir="auto">4.3 Build 단계가 중요한 이유</h3><p id="798720e4-6f49-838f-ab4a-0132aabb1cb9" class="" dir="auto">Build 단계는 코드가 문법적으로나 구조적으로 최소한 실행 가능한 상태인지 확인하는 첫 번째 관문이다.</p><p id="58c720e4-6f49-8338-807a-81e92b6323f5" class="" dir="auto">예를 들어:</p><ul id="d8a720e4-6f49-8365-9c3d-81706648d883" class="bulleted-list" dir="auto"><li style="list-style-type:disc">import 오류</li></ul><ul id="9fd720e4-6f49-832f-a636-01771e47d0a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">dependency 충돌</li></ul><ul id="06b720e4-6f49-83e1-b63f-01ac0bc9c80f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컴파일 실패</li></ul><ul id="2ad720e4-6f49-82b9-a5da-817ecce67bfa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dockerfile 빌드 실패</li></ul><p id="ff0720e4-6f49-83f7-b574-01c56df42fb3" class="" dir="auto">이런 오류는 Build 단계에서 빨리 발견돼야 함.</p><p id="563720e4-6f49-820f-9a33-815d1bdbc30d" class="" dir="auto">여기서 실패한 결과물이 뒤 단계로 넘어가면 안 됨.</p><hr id="99e720e4-6f49-820a-b41e-01a0d3860bc5" dir="auto"/><h3 id="d75720e4-6f49-823a-9b7e-011908ea9e64" class="" dir="auto">4.4 Build 단계의 산출물</h3><p id="335720e4-6f49-835d-83eb-010c891b9646" class="" dir="auto">대표적인 산출물은 다음과 같음.</p><ul id="7f2720e4-6f49-82e9-b0af-8194e78c401c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>.jar</code>, <code>.war</code></li></ul><ul id="617720e4-6f49-83c0-8971-816e2180b5a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 바이너리</li></ul><ul id="1ec720e4-6f49-829d-9032-812cd0da85a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 웹 파일</li></ul><ul id="876720e4-6f49-82d1-8f3c-81aff7734994" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python package</li></ul><ul id="f5a720e4-6f49-83f0-b68e-013e6bb6385e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker image</li></ul><p id="ea8720e4-6f49-83a1-aa22-011ee10cc36d" class="" dir="auto">이 산출물은 이후 Test 또는 Publish 단계의 입력이 됨.</p><hr id="73f720e4-6f49-8276-89a2-8107b361889f" dir="auto"/><h2 id="733720e4-6f49-8279-ad85-816220f76c23" class="" dir="auto">5. Test 단계</h2><h3 id="14d720e4-6f49-8367-9f2d-8133f960331e" class="" dir="auto">5.1 Test 단계의 의미</h3><p id="cef720e4-6f49-8247-97f2-81b3977b3165" class="" dir="auto">Test 단계는 빌드 결과물이나 애플리케이션 소스가 기대한 대로 동작하는지 검증하는 단계다.</p><p id="775720e4-6f49-835f-a302-012c2d2ca565" class="" dir="auto">CI/CD에서 가장 중요한 품질 보증 단계 중 하나라고 볼 수 있음.</p><p id="45b720e4-6f49-83c6-86a1-014a3fef206d" class="" dir="auto">자동화된 테스트가 없다면 파이프라인은 단순한 &quot;자동 빌드 시스템&quot;에 가까워짐.</p><p id="0d7720e4-6f49-8383-b9bc-811765f7fe24" class="" dir="auto">즉, CI/CD의 품질 가치는 Test 단계에서 크게 결정됨.</p><hr id="bdc720e4-6f49-83d5-8491-8166f8dc601a" dir="auto"/><h3 id="5d5720e4-6f49-828d-8406-810e170b381c" class="" dir="auto">5.2 Test의 종류</h3><h3 id="732720e4-6f49-8203-ae8f-81f54d26dc02" class="" dir="auto">1) Unit Test</h3><p id="1c3720e4-6f49-82fd-8766-81dcda805c7e" class="" dir="auto">가장 작은 단위의 함수나 모듈을 검증함.</p><p id="5ba720e4-6f49-8230-8b64-81dbc222f52c" class="" dir="auto">속도가 빠르고 문제 위치를 빨리 찾기 쉬움.</p><h3 id="1f9720e4-6f49-83f8-851f-0198190167db" class="" dir="auto">2) Integration Test</h3><p id="5a2720e4-6f49-83be-bcb4-816010fc0f86" class="" dir="auto">여러 모듈 또는 서비스 간 상호작용을 검증함.</p><p id="1e7720e4-6f49-8335-97cb-01ce76a8ffaa" class="" dir="auto">예를 들어 애플리케이션과 데이터베이스 연결, API 호출 등을 테스트할 수 있음.</p><h3 id="a88720e4-6f49-835d-9784-019936360171" class="" dir="auto">3) End-to-End Test</h3><p id="4f2720e4-6f49-837a-ab8e-81fa54779831" class="" dir="auto">사용자 관점에서 전체 흐름을 검증함.</p><p id="e9b720e4-6f49-8395-9c01-01d6476ee0a8" class="" dir="auto">비용이 높고 시간이 오래 걸리므로 모든 커밋마다 수행하지 않는 경우도 많음.</p><h3 id="848720e4-6f49-8311-8e68-0143a6d675bb" class="" dir="auto">4) Lint / Static Analysis</h3><p id="f97720e4-6f49-828a-91e9-01a31ce1d20f" class="" dir="auto">코드 스타일, 잠재적 오류, 보안 취약 패턴 등을 점검함.</p><h3 id="6f4720e4-6f49-8383-9608-0152fd333cc1" class="" dir="auto">5) Security Scan</h3><p id="e87720e4-6f49-83cb-823a-813c15628842" class="" dir="auto">오픈소스 의존성 취약점, 이미지 취약점, 시크릿 노출 여부 등을 검사할 수 있음.</p><hr id="16c720e4-6f49-83dd-a9ec-015667994791" dir="auto"/><h3 id="b6b720e4-6f49-82c3-887f-01446e1bedc9" class="" dir="auto">5.3 Test 단계가 중요한 이유</h3><p id="0d8720e4-6f49-8215-9a97-01c63d92da99" class="" dir="auto">테스트를 파이프라인에 포함하지 않으면 다음 문제가 생김.</p><ul id="caf720e4-6f49-8313-856b-01fd9c8d2fbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드는 빌드되지만 실제 기능이 깨져 있을 수 있음</li></ul><ul id="b3b720e4-6f49-83d6-83ef-81e6992cb403" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 리뷰만으로 발견하기 어려운 오류가 운영까지 갈 수 있음</li></ul><ul id="ae3720e4-6f49-82fc-9c89-81b56c7eb31f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 속도는 빨라져도 품질은 오히려 떨어질 수 있음</li></ul><p id="be4720e4-6f49-8334-a232-810c6f18cad5" class="" dir="auto">즉, DevOps에서 중요한 것은 &quot;빠르게 배포&quot;가 아니라</p><p id="e51720e4-6f49-82b8-9f42-81057004f2ff" class="" dir="auto"><strong>빠르면서도 검증된 변경만 반영하는 것</strong>이다.</p><hr id="a16720e4-6f49-8211-93b3-81b980241570" dir="auto"/><h3 id="eb3720e4-6f49-8328-93b2-8175b10a5c0b" class="" dir="auto">5.4 품질 게이트(Quality Gate)</h3><p id="404720e4-6f49-82d6-abc8-010ca698e7f3" class="" dir="auto">품질 게이트는 특정 기준을 통과해야 다음 단계로 넘어가도록 하는 제어 지점이다.</p><p id="350720e4-6f49-8206-8571-01cd72388f7e" class="" dir="auto">예:</p><ul id="bb5720e4-6f49-83cd-82ad-81b1263abdd6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 실패율 0%</li></ul><ul id="69e720e4-6f49-8206-a2cc-81aacba2a253" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 커버리지 최소 80%</li></ul><ul id="0bf720e4-6f49-8335-86a3-018b332535ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">취약점 High 이상 0건</li></ul><ul id="cb7720e4-6f49-8353-98b3-0160df6ebec9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lint 오류 0건</li></ul><p id="b9e720e4-6f49-83d7-adb2-8110081fc4d6" class="" dir="auto">이 기준을 넘지 못하면 파이프라인은 중단됨.</p><p id="118720e4-6f49-829e-ab03-01b6135e5fcd" class="" dir="auto">즉, 파이프라인은 단순 전달 시스템이 아니라 <strong>통제 시스템</strong>이기도 함.</p><hr id="7a3720e4-6f49-8251-bfaa-01d6bfcea445" dir="auto"/><h2 id="fef720e4-6f49-82d5-b6a5-811dac5c4517" class="" dir="auto">6. Package / Artifact 단계</h2><h3 id="662720e4-6f49-830f-b6f9-81ab1d38ada4" class="" dir="auto">6.1 패키징의 의미</h3><p id="03b720e4-6f49-82cc-9ff7-0179d8fc4037" class="" dir="auto">Package 단계는 Build 결과물을 배포 가능한 단위로 정리하는 과정이다.</p><p id="f15720e4-6f49-8360-9da0-01cf704ec711" class="" dir="auto">이 결과물을 보통 <strong>Artifact</strong>라고 부른다.</p><p id="a92720e4-6f49-8243-8213-81bf9f710ec4" class="" dir="auto">Artifact는 다시 빌드하지 않고도 동일한 결과를 다른 환경에 배포할 수 있게 해주는 핵심 개념이다.</p><p id="768720e4-6f49-83cf-b627-811fa9709ef1" class="" dir="auto">즉, dev 환경에서 테스트한 바로 그 결과물을 stage나 prod에 동일하게 전달할 수 있어야 함.</p><hr id="758720e4-6f49-8335-a959-019400a2ba09" dir="auto"/><h3 id="ca7720e4-6f49-83bf-ad98-814267c64bc8" class="" dir="auto">6.2 Artifact의 예</h3><ul id="f5b720e4-6f49-82bc-8907-0160df7f00e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Java의 JAR / WAR</li></ul><ul id="ecd720e4-6f49-83e7-a70e-8106211189a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python wheel 파일</li></ul><ul id="244720e4-6f49-83d4-a3ca-810d8f810d6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Node.js 빌드 결과물</li></ul><ul id="621720e4-6f49-8357-abd9-0108aa15abf5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker image</li></ul><ul id="d43720e4-6f49-8226-8f39-8184cd3f313e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Helm chart</li></ul><ul id="219720e4-6f49-821a-91cd-018b26e1422b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">압축 패키지(zip, tar.gz)</li></ul><hr id="726720e4-6f49-831c-bd27-01ad9cc868cc" dir="auto"/><h3 id="d97720e4-6f49-837c-9e26-0101bfa89643" class="" dir="auto">6.3 왜 Artifact가 중요한가</h3><p id="179720e4-6f49-832f-9018-015ed0c84d0b" class="" dir="auto">Artifact가 없으면 환경마다 다시 빌드해야 할 수 있음.</p><p id="cc2720e4-6f49-82b6-b65d-01f09f7c09d4" class="" dir="auto">이 경우 다음 문제가 생김.</p><ul id="a78720e4-6f49-8213-98d6-81a1ecec5432" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 소스라도 빌드 시점에 따라 결과가 달라질 수 있음</li></ul><ul id="788720e4-6f49-83dd-8f4b-0127f45c538d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경 차이로 인해 dev에서는 되는데 prod에서는 실패할 수 있음</li></ul><ul id="c4c720e4-6f49-829f-b51b-81a724f0f829" class="bulleted-list" dir="auto"><li style="list-style-type:disc">검증한 결과물과 실제 배포한 결과물이 달라질 수 있음</li></ul><p id="4a0720e4-6f49-825d-b214-816cf8c17a79" class="" dir="auto">따라서 파이프라인에서는 보통</p><p id="e54720e4-6f49-8225-b12d-81ddfa84ef9a" class="" dir="auto"><strong>한 번 생성한 Artifact를 여러 환경으로 승격(promote)하는 구조</strong>를 지향함.</p><hr id="9c1720e4-6f49-82ff-a4d6-01eda14d8aaf" dir="auto"/><h2 id="e6c720e4-6f49-8310-99c5-8185f203c74d" class="" dir="auto">7. Publish 단계</h2><h3 id="89b720e4-6f49-82e3-83be-0108b9228fa8" class="" dir="auto">7.1 Publish 단계의 의미</h3><p id="d93720e4-6f49-83e5-8456-013425a1d805" class="" dir="auto">Publish는 생성된 Artifact를 저장소나 레지스트리에 업로드하는 단계다.</p><p id="20f720e4-6f49-824d-bc2a-8193884775cc" class="" dir="auto">이 단계가 있어야 배포 시스템이나 다른 파이프라인이 동일한 결과물을 참조할 수 있음.</p><hr id="043720e4-6f49-83be-a0cb-01350bff1b33" dir="auto"/><h3 id="970720e4-6f49-8211-80b3-816cd80a3d3e" class="" dir="auto">7.2 Publish 대상의 예</h3><ul id="684720e4-6f49-83fd-986a-81d592725cf7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maven Repository</li></ul><ul id="ee2720e4-6f49-836d-abf2-81f6ddcc251d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">npm Registry</li></ul><ul id="922720e4-6f49-823d-9745-811f45085200" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub</li></ul><ul id="491720e4-6f49-8357-a83a-0156ad06fd8a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub Container Registry</li></ul><ul id="29c720e4-6f49-825f-bb76-014156ddd19d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon ECR</li></ul><ul id="978720e4-6f49-838c-a292-01325a44146d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Nexus Repository</li></ul><ul id="a62720e4-6f49-82d0-a816-01a843bb9fd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JFrog Artifactory</li></ul><ul id="5f7720e4-6f49-82b6-a80a-015fbcf0ba46" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷</li></ul><hr id="a50720e4-6f49-832f-b5d1-01a415b64962" dir="auto"/><h3 id="fed720e4-6f49-838e-9822-8133d73cb541" class="" dir="auto">7.3 Publish 단계에서 관리해야 할 것</h3><h3 id="03a720e4-6f49-8245-b1cd-01f1ffe6c48e" class="" dir="auto">1) 버전</h3><p id="c60720e4-6f49-8222-a797-0145c104190a" class="" dir="auto">Artifact는 버전 식별이 가능해야 함.</p><p id="4ce720e4-6f49-83ce-8d63-81b9de5a5d9d" class="" dir="auto">예:</p><ul id="72d720e4-6f49-823a-b71f-810292db38bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>1.0.0</code></li></ul><ul id="54f720e4-6f49-83c6-9ef3-01df66201ff3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>1.0.1</code></li></ul><ul id="74e720e4-6f49-83f7-95ff-810a0948f416" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>20260317-001</code></li></ul><ul id="662720e4-6f49-828f-b0e1-017291ed6326" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>commit-sha 기반 태그</code></li></ul><h3 id="1a9720e4-6f49-822d-b0bd-8126e4997265" class="" dir="auto">2) 무결성</h3><p id="5ef720e4-6f49-836e-900a-019c171a20b1" class="" dir="auto">업로드된 결과물이 손상되지 않았는지 확인해야 함.</p><h3 id="746720e4-6f49-8301-91cb-0198ccbdf1fe" class="" dir="auto">3) 추적성</h3><p id="ffb720e4-6f49-82f5-b082-0103a95f0ca0" class="" dir="auto">어떤 커밋에서 생성된 아티팩트인지 확인 가능해야 함.</p><h3 id="378720e4-6f49-82c1-99a5-01ba67cdff0a" class="" dir="auto">4) 재사용성</h3><p id="5ee720e4-6f49-8300-bf0a-011a369ea905" class="" dir="auto">동일한 Artifact를 여러 환경에 재사용할 수 있어야 함.</p><hr id="a5e720e4-6f49-8261-a166-81242b40c321" dir="auto"/><h2 id="057720e4-6f49-836e-93aa-810e819b4e4e" class="" dir="auto">8. Deploy 단계</h2><h3 id="7ee720e4-6f49-8287-b636-81029af05af0" class="" dir="auto">8.1 Deploy 단계의 의미</h3><p id="aaf720e4-6f49-8231-ba7b-0118c99f40c7" class="" dir="auto">Deploy는 Publish된 Artifact를 실제 실행 환경에 반영하는 단계다.</p><p id="d0e720e4-6f49-834b-af9c-814f4e2d806e" class="" dir="auto">이 단계부터는 &quot;코드 검증&quot;이 아니라 &quot;서비스 반영&quot;의 영역으로 넘어감.</p><p id="19c720e4-6f49-8274-a5a0-816079c1fe30" class="" dir="auto">Deploy 대상은 다음과 같을 수 있음.</p><ul id="068720e4-6f49-8275-8d83-8148ed16b7c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가상머신</li></ul><ul id="ca2720e4-6f49-83bc-b5ab-81083def4f1a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">물리 서버</li></ul><ul id="667720e4-6f49-83d4-a792-01681083808c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 플랫폼</li></ul><ul id="312720e4-6f49-83b9-8d29-81c3a482feb1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes</li></ul><ul id="445720e4-6f49-8385-83f9-819e182dcd74" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버리스 환경</li></ul><ul id="4cc720e4-6f49-82dc-bc65-8179abbf7059" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CDN / 정적 호스팅 환경</li></ul><hr id="4f2720e4-6f49-823a-9dbd-018b7fc3f6b4" dir="auto"/><h3 id="3af720e4-6f49-820b-94cf-81dfa366fc00" class="" dir="auto">8.2 배포 환경 분리</h3><p id="eda720e4-6f49-8399-9a3e-01a77abdbfaa" class="" dir="auto">보통 하나의 환경만 쓰지 않고 여러 환경을 분리해 운영함.</p><h3 id="738720e4-6f49-82e6-b4b4-01d22200cdea" class="" dir="auto">대표 환경 예시</h3><ul id="23a720e4-6f49-8255-81d4-01af5c237217" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>dev</strong>: 개발자 확인용</li></ul><ul id="3bd720e4-6f49-822e-ab1c-011e80dcfc3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>test</strong>: 테스트 자동화 및 QA용</li></ul><ul id="3d0720e4-6f49-8273-94e5-81f63988843f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>stage</strong>: 운영과 유사한 사전 검증용</li></ul><ul id="961720e4-6f49-8342-9d58-012f10670aeb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>prod</strong>: 실제 사용자 서비스 환경</li></ul><p id="efd720e4-6f49-8377-a4f4-013ad6b86ba7" class="" dir="auto">환경 분리는 매우 중요함.</p><p id="475720e4-6f49-8382-83a4-019006c9f1c2" class="" dir="auto">운영 반영 전에 충분한 검증 단계를 거치기 위함이다.</p><hr id="d5a720e4-6f49-837a-94c0-817f785ef945" dir="auto"/><h3 id="159720e4-6f49-83bb-99f5-81424ba05b3d" class="" dir="auto">8.3 배포 방식 예시</h3><h3 id="2f9720e4-6f49-831d-af2a-819b8cd1b2de" class="" dir="auto">1) In-place Deployment</h3><p id="cc4720e4-6f49-8376-9d7c-814d221fa547" class="" dir="auto">기존 애플리케이션을 직접 교체함.</p><p id="39a720e4-6f49-838e-98cb-01c62bb65324" class="" dir="auto">구조는 단순하지만 실패 시 영향이 큼.</p><h3 id="a79720e4-6f49-82a8-8b38-8198886cccb2" class="" dir="auto">2) Rolling Deployment</h3><p id="171720e4-6f49-83b6-a8d2-81d0fda3a955" class="" dir="auto">인스턴스를 하나씩 순차적으로 교체함.</p><p id="7e8720e4-6f49-8359-8387-811350001648" class="" dir="auto">무중단에 가까운 배포가 가능함.</p><h3 id="579720e4-6f49-83b6-8b1a-015edf676ce0" class="" dir="auto">3) Blue/Green Deployment</h3><p id="85a720e4-6f49-82d9-b670-0185a7eb3264" class="" dir="auto">기존 버전과 새 버전을 동시에 두고 전환함.</p><p id="2ec720e4-6f49-83d2-a3d0-815e36a638ea" class="" dir="auto">롤백이 쉬움.</p><h3 id="0ae720e4-6f49-82bf-9bbc-018888f9ac2e" class="" dir="auto">4) Canary Deployment</h3><p id="e6f720e4-6f49-8224-8696-81d801ff8048" class="" dir="auto">일부 트래픽에만 새 버전을 먼저 적용함.</p><p id="b93720e4-6f49-8259-8850-018df13ce0c9" class="" dir="auto">리스크를 낮출 수 있음.</p><hr id="f3b720e4-6f49-834a-b3ff-01cc8efe75eb" dir="auto"/><h2 id="c1c720e4-6f49-83db-b988-0150ebf62ad4" class="" dir="auto">9. Verify 단계</h2><h3 id="e4a720e4-6f49-8394-8210-01c0ecde7fe2" class="" dir="auto">9.1 Verify 단계의 의미</h3><p id="356720e4-6f49-8379-adfb-012af8fa8436" class="" dir="auto">배포가 끝났다고 해서 작업이 완료된 것은 아님.</p><p id="7d6720e4-6f49-83fb-9f4f-81c5e4206732" class="" dir="auto">실제 환경에서 서비스가 정상적으로 동작하는지 확인하는 절차가 필요함.</p><p id="4f9720e4-6f49-83c7-852e-0196993c0575" class="" dir="auto">이 단계가 Verify다.</p><p id="f23720e4-6f49-825f-824a-011b1ec08180" class="" dir="auto">즉, Deploy가 &quot;반영&quot;이라면 Verify는 &quot;반영 후 검증&quot;이다.</p><hr id="5dd720e4-6f49-83a7-ac05-81e54cd37313" dir="auto"/><h3 id="6ce720e4-6f49-8246-81a7-81576bb27e09" class="" dir="auto">9.2 Verify 단계에서 확인하는 것</h3><ul id="854720e4-6f49-8301-8893-814b47ec5cce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 프로세스 정상 기동 여부</li></ul><ul id="6c3720e4-6f49-83a6-8f70-81d3c3c905d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">헬스체크 API 응답 여부</li></ul><ul id="436720e4-6f49-83e9-b81c-01de5fcaa6ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주요 페이지 응답 여부</li></ul><ul id="f6a720e4-6f49-83f4-b569-01a3b5105895" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 기능 동작 여부</li></ul><ul id="d59720e4-6f49-8345-8004-810b0a2e55ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오류 로그 증가 여부</li></ul><ul id="7a3720e4-6f49-828a-ba15-0170bf08dd1b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모니터링 지표 변화 여부</li></ul><hr id="689720e4-6f49-828d-9728-01dd1f92274e" dir="auto"/><h3 id="64a720e4-6f49-8268-8f77-019f2fe2629e" class="" dir="auto">9.3 왜 Verify가 필요한가</h3><p id="665720e4-6f49-828e-bcb2-81bcbb92ecdd" class="" dir="auto">배포가 성공했다고 표시되더라도 실제 서비스는 실패 상태일 수 있음.</p><p id="b3d720e4-6f49-83b1-9c7a-01196a271ae7" class="" dir="auto">예:</p><ul id="8ff720e4-6f49-832a-8aea-815165760cea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로세스는 떠 있지만 DB 연결 실패</li></ul><ul id="7ab720e4-6f49-83d5-9637-01b94c477c83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP 포트는 열렸지만 핵심 API 오류</li></ul><ul id="0a2720e4-6f49-82d4-aaaf-012f72bcda44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정 파일은 반영됐지만 인증 토큰이 잘못됨</li></ul><p id="69b720e4-6f49-83a2-a470-8194541f0e8f" class="" dir="auto">따라서 Deploy와 Verify는 반드시 구분해야 함.</p><hr id="0fa720e4-6f49-831b-9ad6-811f1ea1bbbc" dir="auto"/><h2 id="5ea720e4-6f49-83ba-b92d-81e1fcbdd3ab" class="" dir="auto">10. 파이프라인에서의 실패 처리</h2><h3 id="6eb720e4-6f49-82ff-8b80-013d580f72d4" class="" dir="auto">10.1 실패는 정상적인 상황이다</h3><p id="cc0720e4-6f49-83a7-a386-015b7f7eb4ed" class="" dir="auto">파이프라인을 설계할 때 중요한 전제 중 하나는 <strong>실패가 반드시 발생한다</strong>는 것이다.</p><p id="90e720e4-6f49-82da-817e-81d8c2e54878" class="" dir="auto">즉, 실패를 예외적인 사건으로 보는 것이 아니라, 파이프라인 내에서 잘 처리해야 할 기본 상황으로 봐야 함.</p><hr id="4e6720e4-6f49-824e-bd08-01d825c35bb4" dir="auto"/><h3 id="2d9720e4-6f49-82c1-be02-01f9785e64b3" class="" dir="auto">10.2 실패 처리 원칙</h3><h3 id="131720e4-6f49-8399-8ffa-8190cbb02bea" class="" dir="auto">1) 조기 실패(Fail Fast)</h3><p id="059720e4-6f49-83d9-b6ec-01b6d2da9538" class="" dir="auto">문제가 발견되면 가능한 한 빨리 멈춰야 함.</p><p id="ae4720e4-6f49-829c-854c-8149523fdfdb" class="" dir="auto">예를 들어 Build 실패 상태에서 Deploy까지 가면 안 됨.</p><h3 id="390720e4-6f49-822b-a1e2-014273a7e943" class="" dir="auto">2) 명확한 로그</h3><p id="bb2720e4-6f49-8225-b79f-0118e37b595c" class="" dir="auto">어디서 왜 실패했는지 추적 가능해야 함.</p><h3 id="bd4720e4-6f49-835d-bc53-81e6160fcf15" class="" dir="auto">3) 알림</h3><p id="050720e4-6f49-82d8-897f-017afe86f5e8" class="" dir="auto">실패 시 담당자가 즉시 인지할 수 있어야 함.</p><h3 id="b1d720e4-6f49-8322-b4b1-014f37c854f8" class="" dir="auto">4) 재실행 가능성</h3><p id="f0e720e4-6f49-82e7-88e9-81618a4cb37c" class="" dir="auto">일시적 오류는 재시도 가능하게 설계할 수 있음.</p><h3 id="25b720e4-6f49-82ee-baad-816944d44e14" class="" dir="auto">5) 롤백 고려</h3><p id="aa0720e4-6f49-839f-b6df-01d2516a9269" class="" dir="auto">운영 반영 후 Verify 실패 시 이전 버전으로 되돌릴 수 있어야 함.</p><hr id="f14720e4-6f49-826c-8bf8-0160378ce698" dir="auto"/><h2 id="90d720e4-6f49-8394-a0a9-8194c520e766" class="" dir="auto">11. 승인 지점과 자동화 범위</h2><h3 id="38e720e4-6f49-832f-888e-01d153f61e56" class="" dir="auto">11.1 모든 단계를 무조건 자동화해야 하는 것은 아님</h3><p id="20e720e4-6f49-8256-b907-8150828630cf" class="" dir="auto">CI/CD를 구성할 때 흔한 오해 중 하나는</p><p id="f16720e4-6f49-82f6-bdc9-819182d306d2" class="" dir="auto">&quot;전부 자동화해야 선진적이다&quot;라는 생각이다.</p><p id="c01720e4-6f49-83ee-b1ea-8171d7adb155" class="" dir="auto">실제로는 조직 성숙도와 서비스 특성에 따라 승인 지점을 둘 수 있음.</p><hr id="ef0720e4-6f49-8227-8948-81c1f6100f45" dir="auto"/><h3 id="19e720e4-6f49-8338-a012-81a871266d91" class="" dir="auto">11.2 승인 지점의 예</h3><ul id="5b9720e4-6f49-8290-b0b8-818f730549d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 배포 직전 수동 승인</li></ul><ul id="8d9720e4-6f49-821f-bfd0-81157d251af0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 점검 결과 확인 후 승인</li></ul><ul id="145720e4-6f49-8374-a03c-01e11c2f9e10" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변경관리 회의 이후 승인</li></ul><ul id="834720e4-6f49-8351-bcd8-01f75bef5ae1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 시간대에만 배포 허용</li></ul><p id="d36720e4-6f49-8279-8fa1-01a3dfbb04c1" class="" dir="auto">즉, 자동화와 통제는 서로 반대 개념이 아님.</p><p id="230720e4-6f49-83b6-994f-016088b5a6a9" class="" dir="auto">적절한 위치에 승인 지점을 두면 더 안전한 파이프라인이 됨.</p><hr id="0de720e4-6f49-8280-ae10-81ca98690d73" dir="auto"/><h2 id="827720e4-6f49-836c-b430-81bde6bb3af5" class="" dir="auto">12. 브랜치 전략과 파이프라인 관계</h2><p id="007720e4-6f49-820a-aaf2-8108457ed78a" class="" dir="auto">파이프라인은 저장소 구조와 밀접하게 연결됨.</p><p id="3fb720e4-6f49-83b1-9421-01d38b43ca1a" class="" dir="auto">브랜치 전략이 정리되지 않으면 파이프라인도 혼란스러워짐.</p><hr id="c8b720e4-6f49-8298-ac4f-81fa97cc559a" dir="auto"/><h3 id="5ca720e4-6f49-83b3-9a1f-81167927f23e" class="" dir="auto">12.1 대표적인 연결 방식</h3><h3 id="a39720e4-6f49-83dc-92a2-81013d5cd451" class="" dir="auto">feature branch</h3><ul id="ddf720e4-6f49-825e-ad2a-01f53666a7a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드</li></ul><ul id="0e2720e4-6f49-8284-8917-818f284836b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단위 테스트</li></ul><ul id="db7720e4-6f49-8369-aa91-01f9650d042b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">간단한 코드 검사</li></ul><h3 id="b39720e4-6f49-832d-a528-015d28014fbd" class="" dir="auto">develop branch</h3><ul id="e6b720e4-6f49-8335-814e-81a068102aeb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">통합 테스트</li></ul><ul id="cad720e4-6f49-8208-9d91-811071c2d14d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패키징</li></ul><ul id="55e720e4-6f49-8278-8ce6-81b45f38fa3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 환경 배포</li></ul><h3 id="fbc720e4-6f49-820a-b3e5-81f47e9d1efb" class="" dir="auto">main branch</h3><ul id="ef0720e4-6f49-8397-8563-01998f838b2e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">릴리스 아티팩트 생성</li></ul><ul id="959720e4-6f49-8292-884b-811b867ffd5e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 배포 후보 생성</li></ul><h3 id="b07720e4-6f49-82c6-b813-818b55070f11" class="" dir="auto">tag</h3><ul id="b73720e4-6f49-8243-a9b5-01a1275c5e70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정식 버전 릴리스</li></ul><ul id="e89720e4-6f49-830b-a854-01f1025b910f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로덕션 배포</li></ul><hr id="414720e4-6f49-8344-ae58-01ae098223a5" dir="auto"/><h3 id="b69720e4-6f49-8373-be70-01cd06e0500a" class="" dir="auto">12.2 왜 브랜치 전략이 중요한가</h3><p id="59f720e4-6f49-83c5-885e-01ff0f7b610d" class="" dir="auto">같은 파이프라인을 모든 브랜치에 동일하게 적용하면 비효율이 생길 수 있음.</p><p id="735720e4-6f49-822c-9d3a-817ff56faf45" class="" dir="auto">예:</p><ul id="03c720e4-6f49-8275-945a-813fbfcd6ac0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">feature 브랜치마다 무거운 운영 배포 파이프라인 실행</li></ul><ul id="0e4720e4-6f49-833f-a945-8151def111db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치인데 테스트가 너무 약함</li></ul><ul id="eb2720e4-6f49-8371-ad60-81416c503ed2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">tag 릴리스인데 버전 관리가 안 됨</li></ul><p id="32f720e4-6f49-830d-ad33-81d18dc51d04" class="" dir="auto">따라서 브랜치 목적에 따라 파이프라인 수준도 달라져야 함.</p><hr id="b24720e4-6f49-836f-b251-81a3aa87f118" dir="auto"/><h2 id="6c7720e4-6f49-8252-880c-012f5f07e9f4" class="" dir="auto">13. 환경 승격(Promotion) 개념</h2><p id="e68720e4-6f49-82de-af69-01354ba3c623" class="" dir="auto">환경 승격은 동일한 Artifact를 더 높은 환경으로 이동시키는 개념이다.</p><p id="96b720e4-6f49-8247-9dce-81ef50760527" class="" dir="auto">예:</p><ul id="18b720e4-6f49-83f2-916a-81534af79671" class="bulleted-list" dir="auto"><li style="list-style-type:disc">dev에서 검증</li></ul><ul id="9c0720e4-6f49-831a-9e98-0189febe256b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">test에서 검증</li></ul><ul id="db8720e4-6f49-826a-82ca-01016b5ab812" class="bulleted-list" dir="auto"><li style="list-style-type:disc">stage에서 검증</li></ul><ul id="0d4720e4-6f49-835e-826a-81b253b051d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">prod 반영</li></ul><p id="04e720e4-6f49-8210-a238-014e3c542405" class="" dir="auto">여기서 중요한 점은 <strong>매 환경마다 다시 빌드하지 않는 것</strong>이다.</p><p id="106720e4-6f49-8317-8c16-813a2158a5a2" class="" dir="auto">같은 Artifact를 검증된 상태 그대로 다음 환경으로 올리는 것이 이상적이다.</p><p id="5bd720e4-6f49-8296-a7a6-019746154fce" class="" dir="auto">이 구조가 중요한 이유는 다음과 같음.</p><ul id="4d7720e4-6f49-83f0-8582-81c64459c0bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">검증한 결과물과 배포한 결과물이 같아짐</li></ul><ul id="3ce720e4-6f49-8283-a90e-814cfdbde206" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재현성이 높아짐</li></ul><ul id="50b720e4-6f49-82c4-b23b-011a8770be92" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문제 추적이 쉬워짐</li></ul><hr id="a1d720e4-6f49-8346-8774-01277510fa71" dir="auto"/><h2 id="7f2720e4-6f49-822e-b53a-8100eacc07ed" class="" dir="auto">14. 아키텍처 관점에서 본 전체 흐름</h2><p id="cf8720e4-6f49-83fd-adf1-81c829b16d14" class="" dir="auto">CI/CD 파이프라인을 아키텍처 관점에서 보면 다음과 같이 정리할 수 있음.</p><pre id="837720e4-6f49-82d5-90ab-017c64e449d9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Developer
+   ↓
+Git Repository
+   ↓
+CI Pipeline Trigger
+   ↓
+Build / Test
+   ↓
+Artifact Repository or Container Registry
+   ↓
+Deployment Target
+   ↓
+Verification / Monitoring</code></pre><p id="68f720e4-6f49-824a-a53c-812575fc26d5" class="" dir="auto">여기서 핵심 구성요소는 다음과 같음.</p><ul id="16f720e4-6f49-8236-9de2-01496f865bf0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">형상관리 시스템</li></ul><ul id="d41720e4-6f49-83e1-9e92-81c679596367" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CI 엔진</li></ul><ul id="028720e4-6f49-8282-9d59-81b73e31ce4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Artifact 저장소</li></ul><ul id="bf3720e4-6f49-82e0-9fbe-01be2a039023" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 대상 환경</li></ul><ul id="33b720e4-6f49-820a-9d18-8118429fa24b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모니터링 시스템</li></ul><p id="b78720e4-6f49-8344-92d4-01329931050c" class="" dir="auto">즉, 파이프라인은 단일 도구가 아니라 여러 구성요소가 연결된 운영 체계다.</p><hr id="61c720e4-6f49-8215-a314-01fe30f6dc6f" dir="auto"/><h2 id="b3b720e4-6f49-83cb-b856-8134cb9fdaa5" class="" dir="auto">15. 실무 적용 포인트</h2><h3 id="b72720e4-6f49-8240-ae27-81af29391c23" class="" dir="auto">15.1 파이프라인은 코드만 다루지 않음</h3><p id="030720e4-6f49-82a8-8f19-8198049ab7ee" class="" dir="auto">애플리케이션 코드뿐 아니라 설정 파일, 인프라 정의, 배포 매니페스트도 파이프라인 대상이 될 수 있음.</p><h3 id="9ce720e4-6f49-833b-b4b1-014273ee52a5" class="" dir="auto">15.2 빠른 파이프라인과 무거운 파이프라인을 구분해야 함</h3><p id="13f720e4-6f49-8212-acde-81ba9572df3c" class="" dir="auto">모든 검증을 매 커밋마다 수행하면 시간이 너무 오래 걸릴 수 있음.</p><p id="2fc720e4-6f49-8284-895d-01e726de5208" class="" dir="auto">따라서 빠른 검증과 느리지만 정밀한 검증을 분리하는 설계가 필요함.</p><h3 id="8c7720e4-6f49-82db-b1e3-8167166b8dfe" class="" dir="auto">15.3 Artifact 중심 사고가 중요함</h3><p id="eaa720e4-6f49-82af-8c09-81deeae6e47d" class="" dir="auto">소스를 다시 빌드하는 것이 아니라, 검증된 결과물을 이동시키는 구조가 더 안정적임.</p><h3 id="830720e4-6f49-82ae-a37d-0193e114386e" class="" dir="auto">15.4 Deploy와 Release는 구분될 수 있음</h3><p id="62e720e4-6f49-836a-805f-0154571c5d50" class="" dir="auto">배포가 됐다고 해서 모든 사용자에게 즉시 공개되는 것은 아닐 수 있음.</p><p id="e9f720e4-6f49-828a-a2e3-015db3d3022f" class="" dir="auto">기능 플래그, 카나리 배포 등으로 실제 릴리스 시점을 조절할 수 있음.</p><h3 id="d5f720e4-6f49-8290-861a-81c1d49f2b4e" class="" dir="auto">15.5 Verify와 Monitoring을 약하게 보면 안 됨</h3><p id="804720e4-6f49-82b6-a29c-01021bb9a0d5" class="" dir="auto">운영 반영 이후 확인이 없으면 사실상 배포 완료라고 보기 어려움.</p><hr id="f77720e4-6f49-8316-974e-01940863c3bd" dir="auto"/><h2 id="f62720e4-6f49-82de-a248-01fed654c054" class="" dir="auto">요약</h2><ul id="555720e4-6f49-8326-a02f-81f6287c229c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파이프라인은 소스 변경부터 배포 후 검증까지를 연결한 자동화 흐름임</li></ul><ul id="030720e4-6f49-82a4-b75f-01b5acdd4772" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 단계는 Source, Build, Test, Package, Publish, Deploy, Verify로 볼 수 있음</li></ul><ul id="8a6720e4-6f49-826c-bba7-012a524dadaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Artifact는 검증된 결과물을 여러 환경에 재사용하게 해주는 핵심 요소임</li></ul><ul id="ebc720e4-6f49-83f7-90b9-813427a3c993" class="bulleted-list" dir="auto"><li style="list-style-type:disc">품질 게이트와 승인 지점은 파이프라인 통제에 중요함</li></ul><ul id="7e8720e4-6f49-8296-ba68-01f75e3f1a65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브랜치 전략, 환경 분리, 승격 구조는 실무 파이프라인 설계의 핵심임</li></ul><ul id="7de720e4-6f49-83d7-b331-01071908d800" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 성공과 서비스 정상 동작은 다르므로 Verify가 반드시 필요함</li></ul><hr id="646720e4-6f49-821b-86a1-01005ec1a626" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

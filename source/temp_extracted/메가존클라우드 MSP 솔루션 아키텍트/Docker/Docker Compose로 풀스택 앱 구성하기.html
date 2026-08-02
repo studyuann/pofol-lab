@@ -1,0 +1,2299 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Docker Compose로 풀스택 앱 구성하기</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="212720e4-6f49-833c-8198-01a38126f79b" class="page sans"><header><h1 class="page-title" dir="auto">Docker Compose로 풀스택 앱 구성하기</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="d32720e4-6f49-82a9-849c-0173a8904198" class="" dir="auto">📋 학습 목표</h2><ul id="361720e4-6f49-8269-897f-81ba407d441a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">풀스택 애플리케이션의 구조와 구성 요소를 이해한다</li></ul><ul id="4c3720e4-6f49-8394-a4a8-011f1d7d98d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Compose로 복잡한 멀티 서비스 환경을 구축한다</li></ul><ul id="e54720e4-6f49-8239-9edf-81523b8b114c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프런트엔드, 백엔드, 데이터베이스를 통합한 완전한 시스템을 만든다</li></ul><ul id="c52720e4-6f49-8390-8128-011216ab834d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 간 통신과 데이터 흐름을 설계한다</li></ul><ul id="662720e4-6f49-825e-ace5-81957768bd47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발부터 배포까지의 전체 워크플로우를 구현한다</li></ul><hr id="eea720e4-6f49-832f-8326-81e5561ba401" dir="auto"/><h2 id="9e8720e4-6f49-82a2-aa8c-01b04696860f" class="" dir="auto">1. 풀스택 애플리케이션 아키텍처 이해</h2><h3 id="336720e4-6f49-8209-83cf-8171e4685ec5" class="" dir="auto">1.1 풀스택 애플리케이션이란?</h3><h3 id="97b720e4-6f49-8205-8ced-81e9f938491c" class="" dir="auto">🏗️ 풀스택 구성 요소</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="68e720e4-6f49-83ac-9194-013e6957f932" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Frontend      │    │    Backend      │    │   Database      │
+│   (React/Vue)   │◄──►│   (Node.js)     │◄──►│   (MySQL)       │
+│   Port: 3000    │    │   Port: 5000    │    │   Port: 3306    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         │                       │                       │
+┌───────────────────────────────────────────────────────────────┐
+│                         Docker Network                        │
+└───────────────────────────────────────────────────────────────┘
+</code></pre><p id="ec1720e4-6f49-83cf-8f4a-019ffcec78ba" class="" dir="auto"><strong>주요 구성 요소:</strong></p><ul id="663720e4-6f49-838c-9151-813a355f612f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Frontend</strong>: 사용자 인터페이스 (React, Vue, Angular)</li></ul><ul id="882720e4-6f49-825a-908a-812a59409a29" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Backend</strong>: API 서버 (Node.js, Python, Java)</li></ul><ul id="6e2720e4-6f49-82f3-9454-81a699e69750" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Database</strong>: 데이터 저장소 (MySQL, PostgreSQL, MongoDB)</li></ul><ul id="790720e4-6f49-83cf-b96f-019979ef6255" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Cache</strong>: 성능 향상 (Redis)</li></ul><ul id="aa6720e4-6f49-832f-b182-815f9ab9a7c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Proxy</strong>: 리버스 프록시 (Nginx)</li></ul><h3 id="5c2720e4-6f49-8322-92e4-815853751bdd" class="" dir="auto">1.2 우리가 만들 풀스택 앱 - &quot;할 일 관리 시스템&quot;</h3><h3 id="d9e720e4-6f49-8234-bace-01b7a7bb0e40" class="" dir="auto">🎯 프로젝트 개요</h3><ul id="a2d720e4-6f49-8249-9e73-0142dcc6ff7b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Frontend</strong>: React 기반 SPA</li></ul><ul id="5e7720e4-6f49-83d5-82d7-81a4520f61e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Backend</strong>: Node.js + Express API</li></ul><ul id="8f7720e4-6f49-8209-8b1c-0153dc0a9290" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Database</strong>: MySQL</li></ul><ul id="5f5720e4-6f49-83ce-9e5f-8193d7a03905" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Cache</strong>: Redis</li></ul><ul id="41d720e4-6f49-83b1-9926-0130de23f76d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Proxy</strong>: Nginx</li></ul><h3 id="906720e4-6f49-8282-b0d0-8162abc86486" class="" dir="auto">기능 요구사항</h3><ul id="363720e4-6f49-830c-89d9-01f79a518edd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 회원가입/로그인</li></ul><ul id="d57720e4-6f49-8369-a61a-01c7e8b481c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">할 일 CRUD (생성, 조회, 수정, 삭제)</li></ul><ul id="03f720e4-6f49-833e-9b75-8175c1eb75c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실시간 업데이트</li></ul><ul id="736720e4-6f49-833d-8cef-8177618f1656" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반응형 웹 디자인</li></ul><hr id="5f8720e4-6f49-82e9-a8e5-811fb6ba7376" dir="auto"/><h2 id="553720e4-6f49-83b2-ba98-814737856249" class="" dir="auto">2. 프로젝트 구조 설계</h2><h3 id="2fa720e4-6f49-8262-b765-010ffe088116" class="" dir="auto">2.1 디렉토리 구조</h3><pre id="fb9720e4-6f49-82b8-8ec3-81752de6ac60" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">fullstack-todo/
+├── compose.yml                # Docker Compose 설정
+├── .env                       # 환경변수
+├── nginx/
+│   ├── Dockerfile
+│   └── nginx.conf
+├── frontend/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── public/
+|   |     |- index.html 
+│   └── src/
+│       ├── App.js
+│       ├── App.css
+|       |-- index.js 
+|       |-- index.css 
+│       ├── components/
+│       └── services/
+├── backend/
+│   ├── Dockerfile
+│   ├── package.json
+│   ├── src/
+│   │   ├── app.js
+│   │   ├── routes/
+│   │   ├── models/
+│   │   └── middleware/
+│   └── init-db/
+│       └── schema.sql
+└── data/                      # 데이터 지속성을 위한 폴더
+</code></pre><h3 id="888720e4-6f49-83f7-ae04-01e4f295c87d" class="" dir="auto">2.2 Docker Compose 메인 설정</h3><h3 id="00e720e4-6f49-839d-91da-8149ac3e0f4a" class="" dir="auto">compose.yml</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="e1e720e4-6f49-822a-898a-81155ff68977" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">services:
+  # Nginx 리버스 프록시
+  nginx:
+    build: ./nginx
+    ports:
+      - &quot;80:80&quot;
+    depends_on:
+      - frontend
+      - backend
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # React 프런트엔드
+  frontend:
+    build:
+      context: ./frontend
+      target: development
+    volumes:
+      - ./frontend/src:/app/src
+      - ./frontend/public:/app/public
+      - /app/node_modules
+    environment:
+      - REACT_APP_API_URL=/api
+      - CHOKIDAR_USEPOLLING=true
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # Node.js 백엔드
+  backend:
+    build: ./backend
+    volumes:
+      - ./backend/src:/app/src
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=database
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_NAME=${DB_NAME}
+      - REDIS_HOST=redis
+      - JWT_SECRET=${JWT_SECRET}
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  # MySQL 데이터베이스
+  database:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/init-db:/docker-entrypoint-initdb.d
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: [&quot;CMD&quot;, &quot;mysqladmin&quot;, &quot;ping&quot;, &quot;-h&quot;, &quot;localhost&quot;]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Redis 캐시
+  redis:
+    image: redis:7-alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: [&quot;CMD&quot;, &quot;redis-cli&quot;, &quot;ping&quot;]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Adminer (데이터베이스 관리 도구)
+  adminer:
+    image: adminer:latest
+    ports:
+      - &quot;8080:8080&quot;
+    networks:
+      - app-network
+    restart: unless-stopped
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mysql_data:
+  redis_data:
+</code></pre><h3 id="12e720e4-6f49-83d9-bdeb-0161e8f426e8" class="" dir="auto">2.3 환경 변수 설정</h3><h3 id="df6720e4-6f49-820a-93ae-01906803af7d" class="" dir="auto">.env</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="d8a720e4-6f49-82ad-8ddc-81fa744ba02e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 데이터베이스 설정
+DB_ROOT_PASSWORD=rootpassword123
+DB_NAME=todoapp
+DB_USER=todouser
+DB_PASSWORD=todopassword123
+
+# JWT 시크릿
+JWT_SECRET=your-super-secret-jwt-key-here
+
+# 환경 설정
+NODE_ENV=development
+REACT_APP_API_URL=http://localhost/api
+</code></pre><hr id="b85720e4-6f49-8327-9b1c-817647d3a296" dir="auto"/><h2 id="8ac720e4-6f49-8365-935e-81c1e066e85e" class="" dir="auto">3. Nginx 리버스 프록시 설정</h2><h3 id="cc4720e4-6f49-8394-aeea-81fbf3ea5186" class="" dir="auto">3.1 Nginx Dockerfile</h3><h3 id="afb720e4-6f49-8284-a3b5-81a7b5152776" class="" dir="auto">nginx/Dockerfile</h3><pre id="7ea720e4-6f49-839f-bf84-016c7a2ef24f" class="code code-wrap" data-notion-code-syntax="docker"><code class="language-docker" style="white-space:pre-wrap;word-break:break-all">FROM nginx:alpine
+
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+
+CMD [&quot;nginx&quot;, &quot;-g&quot;, &quot;daemon off;&quot;]
+</code></pre><h3 id="508720e4-6f49-8202-ad6e-81cd4944d33e" class="" dir="auto">3.2 Nginx 설정 파일</h3><h3 id="c9c720e4-6f49-839d-bd49-8119639896b3" class="" dir="auto">nginx/nginx.conf</h3><pre id="5f7720e4-6f49-825e-b926-81060ba23bc0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">events {
+    worker_connections 1024;
+}
+
+http {
+    upstream frontend {
+        server frontend:3000;
+    }
+
+    upstream backend {
+        server backend:5000;
+    }
+
+    server {
+        listen 80;
+        server_name localhost;
+
+        # 정적 파일 설정
+        location / {
+            proxy_pass http://frontend;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # WebSocket 지원 (React 개발 서버용)
+            proxy_http_version 1.1;
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection &quot;upgrade&quot;;
+
+            # 타임아웃 설정
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+        }
+
+        # API 라우팅
+        location /api/ {
+            proxy_pass http://backend/;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            # CORS 헤더
+            add_header Access-Control-Allow-Origin *;
+            add_header Access-Control-Allow-Methods &quot;GET, POST, PUT, DELETE, OPTIONS&quot;;
+            add_header Access-Control-Allow-Headers &quot;Content-Type, Authorization&quot;;
+
+            # 타임아웃 설정
+            proxy_connect_timeout 60s;
+            proxy_send_timeout 60s;
+            proxy_read_timeout 60s;
+
+            if ($request_method = &#x27;OPTIONS&#x27;) {
+                return 204;
+            }
+        }
+
+        # 헬스체크 엔드포인트
+        location /health {
+            access_log off;
+            return 200 &quot;healthy\n&quot;;
+            add_header Content-Type text/plain;
+        }
+    }
+}</code></pre><hr id="121720e4-6f49-8361-9c92-0196dfcc4b95" dir="auto"/><h2 id="27c720e4-6f49-830e-81e0-016f10cb31a2" class="" dir="auto">4. 백엔드 API 서버 구현</h2><h3 id="52b720e4-6f49-83bb-8207-0108beae9756" class="" dir="auto">4.1 Backend Dockerfile</h3><h3 id="920720e4-6f49-82cf-9676-0115e1d002dd" class="" dir="auto">backend/Dockerfile</h3><pre id="6e7720e4-6f49-8289-a5e5-81699c762675" class="code code-wrap" data-notion-code-syntax="docker"><code class="language-docker" style="white-space:pre-wrap;word-break:break-all">FROM node:18-alpine
+
+WORKDIR /app
+
+# 의존성 설치를 위한 package.json 복사
+COPY package*.json ./
+RUN npm ci
+
+# 애플리케이션 코드 복사
+COPY . .
+
+EXPOSE 5000
+
+# 개발 모드로 실행 (nodemon 사용)
+CMD [&quot;npm&quot;, &quot;run&quot;, &quot;dev&quot;]
+
+
+</code></pre><h3 id="d4e720e4-6f49-8318-934f-01b06f8b8882" class="" dir="auto">4.2 Package.json 설정</h3><h3 id="766720e4-6f49-8369-baac-01a91a0d3a5d" class="" dir="auto">backend/package.json</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="b56720e4-6f49-8332-ade3-8127e05c41a7" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;name&quot;: &quot;todo-backend&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;description&quot;: &quot;Todo App Backend API&quot;,
+  &quot;main&quot;: &quot;src/app.js&quot;,
+  &quot;scripts&quot;: {
+    &quot;start&quot;: &quot;node src/app.js&quot;,
+    &quot;dev&quot;: &quot;nodemon src/app.js&quot;,
+    &quot;test&quot;: &quot;jest&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;express&quot;: &quot;^4.18.0&quot;,
+    &quot;cors&quot;: &quot;^2.8.5&quot;,
+    &quot;mysql2&quot;: &quot;^3.6.0&quot;,
+    &quot;redis&quot;: &quot;^4.6.0&quot;,
+    &quot;bcryptjs&quot;: &quot;^2.4.3&quot;,
+    &quot;jsonwebtoken&quot;: &quot;^9.0.0&quot;,
+    &quot;joi&quot;: &quot;^17.9.0&quot;,
+    &quot;helmet&quot;: &quot;^7.0.0&quot;,
+    &quot;express-rate-limit&quot;: &quot;^6.8.0&quot;,
+    &quot;dotenv&quot;: &quot;^16.0.0&quot;
+  },
+  &quot;devDependencies&quot;: {
+    &quot;nodemon&quot;: &quot;^3.0.0&quot;,
+    &quot;jest&quot;: &quot;^29.0.0&quot;
+  }
+}</code></pre><p id="382720e4-6f49-828b-962c-818c039b6fc7" class="" dir="auto">이미지 생성전에 npm install 실행</p><h3 id="764720e4-6f49-82a7-b678-81c6bc41e783" class="" dir="auto">4.3 Express 애플리케이션</h3><h3 id="74b720e4-6f49-833e-a4f0-81d6c1bcb9fe" class="" dir="auto">backend/src/app.js</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js" integrity="sha512-m3JYEI6gx5fh9jF10FjGoMzVKcV2N6nchcDcqPCdI1L3R2WQV7br2XVNR8iTLb2daOMRl3zldbcfT40xU2ntVw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="d92720e4-6f49-82b9-a34c-01847b7d317a" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">require(&#x27;dotenv&#x27;).config();
+const express = require(&#x27;express&#x27;);
+const cors = require(&#x27;cors&#x27;);
+const helmet = require(&#x27;helmet&#x27;);
+const rateLimit = require(&#x27;express-rate-limit&#x27;);
+const mysql = require(&#x27;mysql2/promise&#x27;);
+const redis = require(&#x27;redis&#x27;);
+
+const app = express();
+const PORT = process.env.PORT || 5000;
+
+// 미들웨어 설정
+app.use(helmet());
+app.use(cors({
+  origin: process.env.FRONTEND_URL || &#x27;http://localhost:3000&#x27;,
+  credentials: true
+}));
+app.use(express.json());
+
+// Rate Limiting
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15분
+  max: 100 // 최대 100 요청
+});
+app.use(limiter);
+
+// 데이터베이스 연결 설정
+const dbConfig = {
+  host: process.env.DB_HOST || &#x27;localhost&#x27;,
+  user: process.env.DB_USER || &#x27;root&#x27;,
+  password: process.env.DB_PASSWORD || &#x27;password&#x27;,
+  database: process.env.DB_NAME || &#x27;todoapp&#x27;,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0
+};
+
+let db;
+let redisClient;
+
+// 데이터베이스 연결
+async function initializeDatabase() {
+  try {
+    db = mysql.createPool(dbConfig);
+    console.log(&#x27;✅ MySQL connected successfully&#x27;);
+  } catch (error) {
+    console.error(&#x27;❌ MySQL connection failed:&#x27;, error);
+    process.exit(1);
+  }
+}
+
+// Redis 연결
+async function initializeRedis() {
+  try {
+    redisClient = redis.createClient({
+      url: `redis://${process.env.REDIS_HOST || &#x27;localhost&#x27;}:6379`
+    });
+
+    await redisClient.connect();
+    console.log(&#x27;✅ Redis connected successfully&#x27;);
+  } catch (error) {
+    console.error(&#x27;❌ Redis connection failed:&#x27;, error);
+  }
+}
+
+// 라우트 정의
+app.get(&#x27;/health&#x27;, (req, res) =&gt; {
+  res.json({
+    status: &#x27;healthy&#x27;,
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// 할 일 목록 조회
+app.get(&#x27;/todos&#x27;, async (req, res) =&gt; {
+  try {
+    // Redis 캐시 확인
+    const cached = await redisClient?.get(&#x27;todos&#x27;);
+    if (cached) {
+      return res.json(JSON.parse(cached));
+    }
+
+    // 데이터베이스에서 조회
+    const [rows] = await db.execute(
+      &#x27;SELECT id, title, description, completed, created_at, updated_at FROM todos ORDER BY created_at DESC&#x27;
+    );
+
+    // Redis에 캐시 저장 (5분)
+    await redisClient?.setEx(&#x27;todos&#x27;, 300, JSON.stringify(rows));
+
+    res.json(rows);
+  } catch (error) {
+    console.error(&#x27;Error fetching todos:&#x27;, error);
+    res.status(500).json({ error: &#x27;Internal server error&#x27; });
+  }
+});
+
+// 할 일 생성
+app.post(&#x27;/todos&#x27;, async (req, res) =&gt; {
+  try {
+    const { title, description = &#x27;&#x27; } = req.body;
+
+    if (!title || title.trim().length === 0) {
+      return res.status(400).json({ error: &#x27;Title is required&#x27; });
+    }
+
+    const [result] = await db.execute(
+      &#x27;INSERT INTO todos (title, description) VALUES (?, ?)&#x27;,
+      [title.trim(), description.trim()]
+    );
+
+    // 캐시 무효화
+    await redisClient?.del(&#x27;todos&#x27;);
+
+    res.status(201).json({
+      id: result.insertId,
+      title: title.trim(),
+      description: description.trim(),
+      completed: false,
+      created_at: new Date()
+    });
+  } catch (error) {
+    console.error(&#x27;Error creating todo:&#x27;, error);
+    res.status(500).json({ error: &#x27;Internal server error&#x27; });
+  }
+});
+
+// 할 일 수정
+app.put(&#x27;/todos/:id&#x27;, async (req, res) =&gt; {
+  try {
+    const { id } = req.params;
+    const { title, description, completed } = req.body;
+
+    const [result] = await db.execute(
+      &#x27;UPDATE todos SET title = ?, description = ?, completed = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?&#x27;,
+      [title, description, completed, id]
+    );
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: &#x27;Todo not found&#x27; });
+    }
+
+    // 캐시 무효화
+    await redisClient?.del(&#x27;todos&#x27;);
+
+    res.json({ message: &#x27;Todo updated successfully&#x27; });
+  } catch (error) {
+    console.error(&#x27;Error updating todo:&#x27;, error);
+    res.status(500).json({ error: &#x27;Internal server error&#x27; });
+  }
+});
+
+// 할 일 삭제
+app.delete(&#x27;/todos/:id&#x27;, async (req, res) =&gt; {
+  try {
+    const { id } = req.params;
+
+    const [result] = await db.execute(&#x27;DELETE FROM todos WHERE id = ?&#x27;, [id]);
+
+    if (result.affectedRows === 0) {
+      return res.status(404).json({ error: &#x27;Todo not found&#x27; });
+    }
+
+    // 캐시 무효화
+    await redisClient?.del(&#x27;todos&#x27;);
+
+    res.json({ message: &#x27;Todo deleted successfully&#x27; });
+  } catch (error) {
+    console.error(&#x27;Error deleting todo:&#x27;, error);
+    res.status(500).json({ error: &#x27;Internal server error&#x27; });
+  }
+});
+
+// 에러 핸들링 미들웨어
+app.use((err, req, res, next) =&gt; {
+  console.error(err.stack);
+  res.status(500).json({ error: &#x27;Something went wrong!&#x27; });
+});
+
+// 404 핸들러
+app.use((req, res) =&gt; {
+  res.status(404).json({ error: &#x27;Route not found&#x27; });
+});
+
+// 서버 시작
+async function startServer() {
+  await initializeDatabase();
+  await initializeRedis();
+
+  app.listen(PORT, &#x27;0.0.0.0&#x27;, () =&gt; {
+    console.log(`🚀 Server running on port ${PORT}`);
+    console.log(`📊 Health check: http://localhost:${PORT}/health`);
+  });
+}
+
+// Graceful shutdown
+process.on(&#x27;SIGTERM&#x27;, async () =&gt; {
+  console.log(&#x27;SIGTERM received, shutting down gracefully&#x27;);
+  await db?.end();
+  await redisClient?.disconnect();
+  process.exit(0);
+});
+
+process.on(&#x27;SIGINT&#x27;, async () =&gt; {
+  console.log(&#x27;SIGINT received, shutting down gracefully&#x27;);
+  await db?.end();
+  await redisClient?.disconnect();
+  process.exit(0);
+});
+
+startServer().catch(console.error);
+
+</code></pre><h3 id="645720e4-6f49-83ba-9e91-817382a3ba80" class="" dir="auto">4.4 데이터베이스 스키마</h3><h3 id="c4b720e4-6f49-82e7-82e7-814524574eaf" class="" dir="auto">backend/init-db/schema.sql</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" integrity="sha512-sijCOJblSCXYYmXdwvqV0tak8QJW5iy2yLB1wAbbLc3OOIueqymizRFWUS/mwKctnzPKpNdPJV3aK1zlDMJmXQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="a42720e4-6f49-8319-be17-81cb3c54e0ab" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">-- 할 일 테이블 생성
+CREATE TABLE IF NOT EXISTS todos (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    completed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 사용자 테이블 (향후 확장용)
+CREATE TABLE IF NOT EXISTS users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- 샘플 데이터 삽입
+INSERT INTO todos (title, description, completed) VALUES
+(&#x27;Docker Compose 학습하기&#x27;, &#x27;Docker Compose로 풀스택 애플리케이션 구성 방법 익히기&#x27;, false),
+(&#x27;React 앱 개발&#x27;, &#x27;할 일 관리 시스템 프런트엔드 개발&#x27;, false),
+(&#x27;API 서버 구축&#x27;, &#x27;Node.js와 Express로 REST API 구현&#x27;, true),
+(&#x27;데이터베이스 설계&#x27;, &#x27;MySQL을 사용한 데이터 모델링&#x27;, true);
+
+-- 인덱스 생성
+CREATE INDEX idx_todos_created_at ON todos(created_at);
+CREATE INDEX idx_todos_completed ON todos(completed);
+</code></pre><hr id="f2d720e4-6f49-8372-b4d9-015acf720fe2" dir="auto"/><h2 id="b87720e4-6f49-8235-bf24-81bd39240172" class="" dir="auto">5. 프런트엔드 React 애플리케이션</h2><h3 id="f77720e4-6f49-8326-b38e-01734a9e7a88" class="" dir="auto">5.1 Frontend Dockerfile</h3><h3 id="df3720e4-6f49-820f-bfaf-81d6055cb3d3" class="" dir="auto">frontend/Dockerfile</h3><pre id="f69720e4-6f49-83db-b4c7-81c7254d130b" class="code code-wrap" data-notion-code-syntax="docker"><code class="language-docker" style="white-space:pre-wrap;word-break:break-all"># 개발 환경용 멀티스테이지 빌드
+FROM node:18-alpine AS base
+
+WORKDIR /app
+
+# 의존성 설치
+COPY package*.json ./
+RUN npm ci
+
+# 개발 스테이지
+FROM base AS development
+WORKDIR /app
+COPY . .
+EXPOSE 3000
+ENV WATCHPACK_POLLING=true
+CMD [&quot;npm&quot;, &quot;start&quot;]
+
+# 프로덕션 빌드 스테이지
+FROM base AS builder
+WORKDIR /app
+COPY . .
+RUN npm run build
+
+# 프로덕션 스테이지
+FROM nginx:alpine AS production
+COPY --from=builder /app/build /usr/share/nginx/html
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+EXPOSE 80
+CMD [&quot;nginx&quot;, &quot;-g&quot;, &quot;daemon off;&quot;]
+
+</code></pre><h3 id="3f5720e4-6f49-8259-bff9-014e4c98dcf6" class="" dir="auto">5.2 Package.json 설정</h3><h3 id="1b5720e4-6f49-8239-9c71-81450c3c2353" class="" dir="auto">frontend/package.json</h3><pre id="4a7720e4-6f49-82dd-bc09-014ad9a879d3" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;name&quot;: &quot;todo-frontend&quot;,
+  &quot;version&quot;: &quot;1.0.0&quot;,
+  &quot;private&quot;: true,
+  &quot;dependencies&quot;: {
+    &quot;react&quot;: &quot;^18.2.0&quot;,
+    &quot;react-dom&quot;: &quot;^18.2.0&quot;,
+    &quot;react-scripts&quot;: &quot;5.0.1&quot;,
+    &quot;axios&quot;: &quot;^1.5.0&quot;,
+    &quot;react-query&quot;: &quot;^3.39.0&quot;,
+    &quot;react-hot-toast&quot;: &quot;^2.4.0&quot;
+  },
+  &quot;scripts&quot;: {
+    &quot;start&quot;: &quot;react-scripts start&quot;,
+    &quot;build&quot;: &quot;react-scripts build&quot;,
+    &quot;test&quot;: &quot;react-scripts test&quot;,
+    &quot;eject&quot;: &quot;react-scripts eject&quot;
+  },
+  &quot;browserslist&quot;: {
+    &quot;production&quot;: [
+      &quot;&gt;0.2%&quot;,
+      &quot;not dead&quot;,
+      &quot;not op_mini all&quot;
+    ],
+    &quot;development&quot;: [
+      &quot;last 1 chrome version&quot;,
+      &quot;last 1 firefox version&quot;,
+      &quot;last 1 safari version&quot;
+    ]
+  },
+  &quot;proxy&quot;: &quot;http://backend:5000&quot;
+}
+</code></pre><p id="44b720e4-6f49-820b-87a5-0177dc5d3a51" class="" dir="auto">이미지 생성 전에 npm install 실행</p><h3 id="aa3720e4-6f49-824b-80e6-01004f1d54a9" class="" dir="auto">5.3 메인 React 컴포넌트</h3><p id="e51720e4-6f49-8269-b49a-81aafe75a477" class="" dir="auto">
+</p><h3 id="46c720e4-6f49-82a6-84bc-01f17ecdcee4" class="" dir="auto">public/index.html</h3><pre id="0fd720e4-6f49-820f-a71a-0135cd26b934" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ko&quot;&gt;
+  &lt;head&gt;
+    &lt;meta charset=&quot;utf-8&quot; /&gt;
+    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1&quot; /&gt;
+    &lt;meta name=&quot;theme-color&quot; content=&quot;#000000&quot; /&gt;
+    &lt;meta
+      name=&quot;description&quot;
+      content=&quot;Docker Compose 풀스택 할 일 관리 애플리케이션&quot;
+    /&gt;
+    &lt;title&gt;할 일 관리 - Todo App&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;noscript&gt;이 애플리케이션을 실행하려면 JavaScript를 활성화해야 합니다.&lt;/noscript&gt;
+    &lt;div id=&quot;root&quot;&gt;&lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre><h3 id="58d720e4-6f49-826f-bf85-813ca1773508" class="" dir="auto">frontend/src/App.js</h3><pre id="ae4720e4-6f49-83b4-9b67-0198fdc573bb" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">import React, { useState, useEffect } from &#x27;react&#x27;;
+import axios from &#x27;axios&#x27;;
+import toast, { Toaster } from &#x27;react-hot-toast&#x27;;
+import &#x27;./App.css&#x27;;
+
+const API_URL = process.env.REACT_APP_API_URL || &#x27;/api&#x27;;
+
+// API 클라이언트 설정
+const api = axios.create({
+  baseURL: API_URL,
+  timeout: 10000,
+});
+
+function App() {
+  const [todos, setTodos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [newTodo, setNewTodo] = useState({ title: &#x27;&#x27;, description: &#x27;&#x27; });
+
+  // 할 일 목록 조회
+  const fetchTodos = async () =&gt; {
+    try {
+      setLoading(true);
+      const response = await api.get(&#x27;/todos&#x27;);
+      setTodos(response.data);
+    } catch (error) {
+      console.error(&#x27;Failed to fetch todos:&#x27;, error);
+      toast.error(&#x27;할 일 목록을 불러오는데 실패했습니다.&#x27;);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 할 일 추가
+  const addTodo = async (e) =&gt; {
+    e.preventDefault();
+
+    if (!newTodo.title.trim()) {
+      toast.error(&#x27;제목을 입력해주세요.&#x27;);
+      return;
+    }
+
+    try {
+      const response = await api.post(&#x27;/todos&#x27;, newTodo);
+      setTodos([response.data, ...todos]);
+      setNewTodo({ title: &#x27;&#x27;, description: &#x27;&#x27; });
+      toast.success(&#x27;할 일이 추가되었습니다.&#x27;);
+    } catch (error) {
+      console.error(&#x27;Failed to add todo:&#x27;, error);
+      toast.error(&#x27;할 일 추가에 실패했습니다.&#x27;);
+    }
+  };
+
+  // 할 일 완료 상태 변경
+  const toggleTodo = async (id, completed) =&gt; {
+    try {
+      const todo = todos.find(t =&gt; t.id === id);
+      await api.put(`/todos/${id}`, {
+        ...todo,
+        completed: !completed
+      });
+
+      setTodos(todos.map(todo =&gt;
+        todo.id === id ? { ...todo, completed: !completed } : todo
+      ));
+
+      toast.success(completed ? &#x27;할 일을 미완료로 변경했습니다.&#x27; : &#x27;할 일을 완료했습니다.&#x27;);
+    } catch (error) {
+      console.error(&#x27;Failed to toggle todo:&#x27;, error);
+      toast.error(&#x27;할 일 상태 변경에 실패했습니다.&#x27;);
+    }
+  };
+
+  // 할 일 삭제
+  const deleteTodo = async (id) =&gt; {
+    if (!window.confirm(&#x27;정말로 삭제하시겠습니까?&#x27;)) {
+      return;
+    }
+
+    try {
+      await api.delete(`/todos/${id}`);
+      setTodos(todos.filter(todo =&gt; todo.id !== id));
+      toast.success(&#x27;할 일이 삭제되었습니다.&#x27;);
+    } catch (error) {
+      console.error(&#x27;Failed to delete todo:&#x27;, error);
+      toast.error(&#x27;할 일 삭제에 실패했습니다.&#x27;);
+    }
+  };
+
+  // 컴포넌트 마운트 시 할 일 목록 조회
+  useEffect(() =&gt; {
+    fetchTodos();
+  }, []);
+
+  return (
+    &lt;div className=&quot;App&quot;&gt;
+      &lt;Toaster position=&quot;top-right&quot; /&gt;
+
+      &lt;header className=&quot;App-header&quot;&gt;
+        &lt;h1&gt;📝 할 일 관리&lt;/h1&gt;
+        &lt;p&gt;Docker Compose로 구성한 풀스택 애플리케이션&lt;/p&gt;
+      &lt;/header&gt;
+
+      &lt;main className=&quot;main-content&quot;&gt;
+        {/* 할 일 추가 폼 */}
+        &lt;section className=&quot;add-todo-section&quot;&gt;
+          &lt;h2&gt;새 할 일 추가&lt;/h2&gt;
+          &lt;form onSubmit={addTodo} className=&quot;add-todo-form&quot;&gt;
+            &lt;div className=&quot;form-group&quot;&gt;
+              &lt;input
+                type=&quot;text&quot;
+                placeholder=&quot;할 일 제목을 입력하세요&quot;
+                value={newTodo.title}
+                onChange={(e) =&gt; setNewTodo({ ...newTodo, title: e.target.value })}
+                className=&quot;form-input&quot;
+              /&gt;
+            &lt;/div&gt;
+            &lt;div className=&quot;form-group&quot;&gt;
+              &lt;textarea
+                placeholder=&quot;상세 설명 (선택사항)&quot;
+                value={newTodo.description}
+                onChange={(e) =&gt; setNewTodo({ ...newTodo, description: e.target.value })}
+                className=&quot;form-textarea&quot;
+                rows=&quot;3&quot;
+              /&gt;
+            &lt;/div&gt;
+            &lt;button type=&quot;submit&quot; className=&quot;btn btn-primary&quot;&gt;
+              추가하기
+            &lt;/button&gt;
+          &lt;/form&gt;
+        &lt;/section&gt;
+
+        {/* 할 일 목록 */}
+        &lt;section className=&quot;todos-section&quot;&gt;
+          &lt;h2&gt;할 일 목록 ({todos.length}개)&lt;/h2&gt;
+
+          {loading ? (
+            &lt;div className=&quot;loading&quot;&gt;로딩 중...&lt;/div&gt;
+          ) : todos.length === 0 ? (
+            &lt;div className=&quot;empty-state&quot;&gt;
+              &lt;p&gt;할 일이 없습니다. 새로운 할 일을 추가해보세요!&lt;/p&gt;
+            &lt;/div&gt;
+          ) : (
+            &lt;div className=&quot;todos-grid&quot;&gt;
+              {todos.map(todo =&gt; (
+                &lt;div
+                  key={todo.id}
+                  className={`todo-card ${todo.completed ? &#x27;completed&#x27; : &#x27;&#x27;}`}
+                &gt;
+                  &lt;div className=&quot;todo-content&quot;&gt;
+                    &lt;h3 className=&quot;todo-title&quot;&gt;{todo.title}&lt;/h3&gt;
+                    {todo.description &amp;&amp; (
+                      &lt;p className=&quot;todo-description&quot;&gt;{todo.description}&lt;/p&gt;
+                    )}
+                    &lt;div className=&quot;todo-meta&quot;&gt;
+                      &lt;span className=&quot;todo-date&quot;&gt;
+                        생성일: {new Date(todo.created_at).toLocaleDateString(&#x27;ko-KR&#x27;)}
+                      &lt;/span&gt;
+                      {todo.updated_at !== todo.created_at &amp;&amp; (
+                        &lt;span className=&quot;todo-date&quot;&gt;
+                          수정일: {new Date(todo.updated_at).toLocaleDateString(&#x27;ko-KR&#x27;)}
+                        &lt;/span&gt;
+                      )}
+                    &lt;/div&gt;
+                  &lt;/div&gt;
+
+                  &lt;div className=&quot;todo-actions&quot;&gt;
+                    &lt;button
+                      onClick={() =&gt; toggleTodo(todo.id, todo.completed)}
+                      className={`btn ${todo.completed ? &#x27;btn-warning&#x27; : &#x27;btn-success&#x27;}`}
+                    &gt;
+                      {todo.completed ? &#x27;미완료&#x27; : &#x27;완료&#x27;}
+                    &lt;/button&gt;
+                    &lt;button
+                      onClick={() =&gt; deleteTodo(todo.id)}
+                      className=&quot;btn btn-danger&quot;
+                    &gt;
+                      삭제
+                    &lt;/button&gt;
+                  &lt;/div&gt;
+                &lt;/div&gt;
+              ))}
+            &lt;/div&gt;
+          )}
+        &lt;/section&gt;
+      &lt;/main&gt;
+
+      &lt;footer className=&quot;App-footer&quot;&gt;
+        &lt;p&gt;🐳 Docker Compose 풀스택 애플리케이션 예제&lt;/p&gt;
+        &lt;div className=&quot;tech-stack&quot;&gt;
+          &lt;span&gt;React&lt;/span&gt;
+          &lt;span&gt;Node.js&lt;/span&gt;
+          &lt;span&gt;MySQL&lt;/span&gt;
+          &lt;span&gt;Redis&lt;/span&gt;
+          &lt;span&gt;Nginx&lt;/span&gt;
+        &lt;/div&gt;
+      &lt;/footer&gt;
+    &lt;/div&gt;
+  );
+}
+
+export default App;
+</code></pre><h3 id="f68720e4-6f49-834e-8997-81b52ba4a97b" class="" dir="auto">frontend/src/index.js</h3><pre id="dd6720e4-6f49-820b-b478-01539a212172" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">import React from &#x27;react&#x27;;
+import ReactDOM from &#x27;react-dom/client&#x27;;
+import &#x27;./index.css&#x27;;
+import App from &#x27;./App&#x27;;
+
+const root = ReactDOM.createRoot(document.getElementById(&#x27;root&#x27;));
+root.render(
+  &lt;React.StrictMode&gt;
+    &lt;App /&gt;
+  &lt;/React.StrictMode&gt;
+);</code></pre><h3 id="93a720e4-6f49-8281-8c48-0124f1762ba1" class="" dir="auto">frontend/src/index.css</h3><pre id="97f720e4-6f49-8277-930b-8130b42f2baa" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, &#x27;Segoe UI&#x27;, &#x27;Roboto&#x27;, &#x27;Oxygen&#x27;,
+    &#x27;Ubuntu&#x27;, &#x27;Cantarell&#x27;, &#x27;Fira Sans&#x27;, &#x27;Droid Sans&#x27;, &#x27;Helvetica Neue&#x27;,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #f5f7fa;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, &#x27;Courier New&#x27;,
+    monospace;
+}
+
+* {
+  box-sizing: border-box;
+}</code></pre><h3 id="846720e4-6f49-82ad-9797-81d72222e066" class="" dir="auto">5.4 CSS 스타일링</h3><h3 id="dcf720e4-6f49-83d7-b2bf-01c6dac31206" class="" dir="auto">frontend/src/App.css</h3><pre id="3ea720e4-6f49-83e4-a659-01375b190d79" class="code code-wrap" data-notion-code-syntax="css"><code class="language-css" style="white-space:pre-wrap;word-break:break-all">.App {
+  text-align: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: &#x27;Segoe UI&#x27;, Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.App-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 40px 20px;
+  border-radius: 15px;
+  color: white;
+  margin-bottom: 40px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+}
+
+.App-header h1 {
+  margin: 0 0 10px 0;
+  font-size: 2.5rem;
+  font-weight: 600;
+}
+
+.App-header p {
+  margin: 0;
+  opacity: 0.9;
+  font-size: 1.1rem;
+}
+
+.main-content {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.add-todo-section {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  margin-bottom: 40px;
+}
+
+.add-todo-section h2 {
+  margin-bottom: 20px;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.add-todo-form {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.form-group {
+  text-align: left;
+}
+
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 16px;
+  font-family: inherit;
+  transition: border-color 0.3s ease;
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.btn {
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+}
+
+.btn-success {
+  background: #28a745;
+  color: white;
+}
+
+.btn-success:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.btn-warning {
+  background: #ffc107;
+  color: #212529;
+}
+
+.btn-warning:hover {
+  background: #e0a800;
+  transform: translateY(-1px);
+}
+
+.btn-danger {
+  background: #dc3545;
+  color: white;
+}
+
+.btn-danger:hover {
+  background: #c82333;
+  transform: translateY(-1px);
+}
+
+.todos-section {
+  background: white;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.todos-section h2 {
+  margin-bottom: 25px;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.loading {
+  padding: 40px;
+  color: #666;
+  font-size: 18px;
+}
+
+.empty-state {
+  padding: 60px 20px;
+  color: #666;
+}
+
+.empty-state p {
+  font-size: 18px;
+  margin: 0;
+}
+
+.todos-grid {
+  display: grid;
+  gap: 20px;
+}
+
+.todo-card {
+  background: #f8f9fa;
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  transition: all 0.3s ease;
+}
+
+.todo-card:hover {
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
+}
+
+.todo-card.completed {
+  opacity: 0.7;
+  border-color: #28a745;
+  background: #f8fff8;
+}
+
+.todo-card.completed .todo-title {
+  text-decoration: line-through;
+  color: #666;
+}
+
+.todo-content {
+  flex: 1;
+  text-align: left;
+}
+
+.todo-title {
+  margin: 0 0 8px 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.todo-description {
+  margin: 0 0 12px 0;
+  color: #666;
+  line-height: 1.5;
+}
+
+.todo-meta {
+  font-size: 0.85rem;
+  color: #999;
+}
+
+.todo-date {
+  margin-right: 15px;
+}
+
+.todo-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.todo-actions .btn {
+  padding: 8px 16px;
+  font-size: 14px;
+}
+
+.App-footer {
+  margin-top: 50px;
+  padding: 30px;
+  background: #f8f9fa;
+  border-radius: 15px;
+  color: #666;
+}
+
+.App-footer p {
+  margin: 0 0 15px 0;
+  font-size: 1.1rem;
+}
+
+.tech-stack {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.tech-stack span {
+  background: #667eea;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .App {
+    padding: 15px;
+  }
+
+  .App-header {
+    padding: 30px 20px;
+  }
+
+  .App-header h1 {
+    font-size: 2rem;
+  }
+
+  .add-todo-section,
+  .todos-section {
+    padding: 20px;
+  }
+
+  .todo-card {
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .todo-actions {
+    align-self: stretch;
+  }
+
+  .todo-actions .btn {
+    flex: 1;
+  }
+
+  .tech-stack {
+    gap: 10px;
+  }
+}
+</code></pre><hr id="514720e4-6f49-82ad-b495-8147d6f57f65" dir="auto"/><h2 id="819720e4-6f49-823f-b12a-0103b6cd17a2" class="" dir="auto">6. 서비스 간 통신 및 데이터 흐름</h2><h3 id="c93720e4-6f49-8334-b14c-811d480aaab9" class="" dir="auto">6.1 데이터 흐름 다이어그램</h3><pre id="dfc720e4-6f49-8258-934c-01c787d0aced" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 브라우저
+    ↓ HTTP Request (포트 80)
+Nginx (리버스 프록시)
+    ↓ /api/* → Backend (포트 5000)
+    ↓ /* → Frontend (포트 3000)
+Node.js API 서버
+    ↓ SQL Query (포트 3306)
+    ↓ Cache Check (포트 6379)
+MySQL Database ←→ Redis Cache
+</code></pre><h3 id="8ae720e4-6f49-8218-85e1-01170ba583ea" class="" dir="auto">6.2 환경별 설정 파일</h3><h3 id="852720e4-6f49-82e4-afaf-0173c5922f80" class="" dir="auto">개발환경 오버라이드 (compose.override.yml)</h3><pre id="f38720e4-6f49-8235-9a7f-817538e6a63c" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all"># 개발 환경용 오버라이드 설정
+services:
+  frontend:
+    build:
+      target: development
+    volumes:
+      - ./frontend/src:/app/src
+      - /app/node_modules
+    environment:
+      - FAST_REFRESH=false
+      - CHOKIDAR_USEPOLLING=true
+
+  backend:
+    volumes:
+      - ./backend/src:/app/src
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev
+
+  database:
+    ports:
+      - &quot;3306:3306&quot;  # 개발시 직접 접근 가능
+    environment:
+      MYSQL_GENERAL_LOG: 1
+
+  redis:
+    ports:
+      - &quot;6379:6379&quot;  # 개발시 직접 접근 가능
+</code></pre><h3 id="7c2720e4-6f49-83e7-a7bf-01ca5ec77fe5" class="" dir="auto">프로덕션 설정 (compose.prod.yml)</h3><pre id="356720e4-6f49-8359-8069-81297e3a4c29" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all"># 프로덕션 환경 설정
+services:
+  nginx:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: &#x27;0.5&#x27;
+          memory: 256M
+
+  frontend:
+    build:
+      target: production
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: &#x27;0.5&#x27;
+          memory: 256M
+
+  backend:
+    environment:
+      - NODE_ENV=production
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: &#x27;1.0&#x27;
+          memory: 512M
+    # 개발용 볼륨 마운트 제거
+
+  database:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: &#x27;1.0&#x27;
+          memory: 1G
+    volumes:
+      - /opt/mysql-data:/var/lib/mysql  # 외부 스토리지
+    # 포트 노출 제거 (보안)
+
+  redis:
+    restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: &#x27;0.3&#x27;
+          memory: 256M
+    # 포트 노출 제거 (보안)
+
+  adminer:
+    profiles:
+      - tools  # 프로덕션에서는 기본적으로 비활성화
+
+volumes:
+  mysql_data:
+    external: true
+  redis_data:
+    external: true
+</code></pre><hr id="137720e4-6f49-82b0-b7d6-81df044178e2" dir="auto"/><h2 id="996720e4-6f49-8369-ba4b-81cfde066f3e" class="" dir="auto">7. 실습 과제</h2><h3 id="37e720e4-6f49-823c-89d0-010dbebf7335" class="" dir="auto">📝 기본 실습</h3><h3 id="a09720e4-6f49-8299-995c-810817de1edd" class="" dir="auto">실습 1: 풀스택 애플리케이션 구축</h3><p id="e12720e4-6f49-839e-8549-814a7dd8a2ed" class="" dir="auto"><strong>목표:</strong> 제공된 코드로 완전한 할 일 관리 시스템 구축</p><pre id="6ed720e4-6f49-8391-b411-8188372d1e3e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 1단계: 프로젝트 디렉토리 생성
+mkdir fullstack-todo
+cd fullstack-todo
+
+# 2단계: 디렉토리 구조 생성
+mkdir -p nginx frontend/src backend/src backend/init-db
+
+# 3단계: 각 파일들 생성 (위에서 제공된 코드 사용)
+# - compose.yml
+# - .env
+# - nginx/Dockerfile, nginx/nginx.conf
+# - frontend/Dockerfile, frontend/package.json, frontend/src/App.js, frontend/src/App.css
+# - backend/Dockerfile, backend/package.json, backend/src/app.js, backend/init-db/schema.sql
+
+frontend와 backend 디렉토리에서 npm init -y ,  npm install 수행
+# 4단계: 전체 스택 실행
+docker compose up -d
+
+# 5단계: 서비스 상태 확인
+docker compose ps
+curl http://localhost/api/health
+curl http://localhost/api/todos
+
+# 6단계: 브라우저에서 http://localhost 접속하여 기능 테스트
+</code></pre><h3 id="bb3720e4-6f49-8379-af40-81bb6767ee30" class="" dir="auto">실습 2: 기능 확장</h3><p id="60e720e4-6f49-83e9-a5da-019aea3b4019" class="" dir="auto"><strong>목표:</strong> 할 일 우선순위 및 마감일 기능 추가</p><pre id="1d5720e4-6f49-8300-ba1d-01c0a974fae4" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">-- 데이터베이스 스키마 수정
+ALTER TABLE todos ADD COLUMN priority ENUM(&#x27;low&#x27;, &#x27;medium&#x27;, &#x27;high&#x27;) DEFAULT &#x27;medium&#x27;;
+ALTER TABLE todos ADD COLUMN due_date DATE NULL;
+
+-- 인덱스 추가
+CREATE INDEX idx_todos_priority ON todos(priority);
+CREATE INDEX idx_todos_due_date ON todos(due_date);
+</code></pre><h3 id="9e5720e4-6f49-82ca-a073-018f28dbbc7c" class="" dir="auto">🚀 심화 실습</h3><h3 id="3c2720e4-6f49-82ae-8034-015984114a09" class="" dir="auto">실습 3: 사용자 인증 시스템</h3><p id="e4d720e4-6f49-836e-8331-0179df0d5f03" class="" dir="auto"><strong>목표:</strong> JWT 기반 회원가입/로그인 구현</p><pre id="b67720e4-6f49-8246-8899-819c2f81ba27" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">// 백엔드에 인증 미들웨어 추가
+const jwt = require(&#x27;jsonwebtoken&#x27;);
+const bcrypt = require(&#x27;bcryptjs&#x27;);
+
+// 회원가입 API
+app.post(&#x27;/auth/register&#x27;, async (req, res) =&gt; {
+  const { email, password, name } = req.body;
+
+  try {
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const [result] = await db.execute(
+      &#x27;INSERT INTO users (email, password_hash, name) VALUES (?, ?, ?)&#x27;,
+      [email, hashedPassword, name]
+    );
+
+    const token = jwt.sign(
+      { userId: result.insertId, email },
+      process.env.JWT_SECRET,
+      { expiresIn: &#x27;7d&#x27; }
+    );
+
+    res.status(201).json({
+      token,
+      user: { id: result.insertId, email, name }
+    });
+  } catch (error) {
+    res.status(400).json({ error: &#x27;Registration failed&#x27; });
+  }
+});
+
+// 로그인 API
+app.post(&#x27;/auth/login&#x27;, async (req, res) =&gt; {
+  const { email, password } = req.body;
+
+  try {
+    const [users] = await db.execute(
+      &#x27;SELECT * FROM users WHERE email = ?&#x27;,
+      [email]
+    );
+
+    if (users.length === 0) {
+      return res.status(401).json({ error: &#x27;Invalid credentials&#x27; });
+    }
+
+    const user = users[0];
+    const validPassword = await bcrypt.compare(password, user.password_hash);
+
+    if (!validPassword) {
+      return res.status(401).json({ error: &#x27;Invalid credentials&#x27; });
+    }
+
+    const token = jwt.sign(
+      { userId: user.id, email: user.email },
+      process.env.JWT_SECRET,
+      { expiresIn: &#x27;7d&#x27; }
+    );
+
+    res.json({
+      token,
+      user: { id: user.id, email: user.email, name: user.name }
+    });
+  } catch (error) {
+    res.status(500).json({ error: &#x27;Login failed&#x27; });
+  }
+});
+</code></pre><hr id="fab720e4-6f49-8217-8403-010f4a63ab5e" dir="auto"/><h2 id="83a720e4-6f49-82aa-8547-01b1ed71d4bc" class="" dir="auto">8. 모니터링 및 로깅</h2><h3 id="d2d720e4-6f49-83b1-bbf5-81490dfcba8b" class="" dir="auto">8.1 헬스체크 구현</h3><h3 id="0d0720e4-6f49-83d3-a075-8131e0935d6f" class="" dir="auto">종합 헬스체크 엔드포인트</h3><pre id="9ab720e4-6f49-83b5-8478-0130e11002f9" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">// backend/src/app.js에 추가
+app.get(&#x27;/health/detailed&#x27;, async (req, res) =&gt; {
+  const healthCheck = {
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString(),
+    status: &#x27;healthy&#x27;,
+    checks: {
+      database: &#x27;unknown&#x27;,
+      redis: &#x27;unknown&#x27;,
+      memory: &#x27;unknown&#x27;
+    }
+  };
+
+  try {
+    // 데이터베이스 연결 확인
+    await db.execute(&#x27;SELECT 1&#x27;);
+    healthCheck.checks.database = &#x27;healthy&#x27;;
+  } catch (error) {
+    healthCheck.checks.database = &#x27;unhealthy&#x27;;
+    healthCheck.status = &#x27;unhealthy&#x27;;
+  }
+
+  try {
+    // Redis 연결 확인
+    await redisClient?.ping();
+    healthCheck.checks.redis = &#x27;healthy&#x27;;
+  } catch (error) {
+    healthCheck.checks.redis = &#x27;unhealthy&#x27;;
+  }
+
+  // 메모리 사용량 확인
+  const memUsage = process.memoryUsage();
+  const memUsagePercent = (memUsage.rss / 1024 / 1024 / 1024).toFixed(2);
+
+  healthCheck.checks.memory = memUsagePercent &lt; 1 ? &#x27;healthy&#x27; : &#x27;warning&#x27;;
+  healthCheck.memory = {
+    rss: `${memUsagePercent}GB`,
+    heapUsed: `${(memUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`,
+    heapTotal: `${(memUsage.heapTotal / 1024 / 1024).toFixed(2)}MB`
+  };
+
+  const statusCode = healthCheck.status === &#x27;healthy&#x27; ? 200 : 503;
+  res.status(statusCode).json(healthCheck);
+});
+</code></pre><h3 id="6f8720e4-6f49-8206-9c26-014d39fe3844" class="" dir="auto">8.2 모니터링 스택 추가</h3><h3 id="672720e4-6f49-824e-9ea5-8170e2596de4" class="" dir="auto">compose.monitoring.yml</h3><pre id="947720e4-6f49-8262-8028-813ce97c5aca" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all"># 모니터링 서비스 추가
+services:
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - &quot;9090:9090&quot;
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - app-network
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - &quot;3001:3000&quot;
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+    volumes:
+      - grafana_data:/var/lib/grafana
+    networks:
+      - app-network
+    restart: unless-stopped
+
+volumes:
+  prometheus_data:
+  grafana_data:
+</code></pre><hr id="517720e4-6f49-8399-bd78-012a92f8d3ba" dir="auto"/><h2 id="913720e4-6f49-8282-8541-014c681e96e4" class="" dir="auto">9. 운영 환경 배포</h2><h3 id="e18720e4-6f49-83ca-9403-815dded102a9" class="" dir="auto">9.1 프로덕션 배포 스크립트</h3><h3 id="c06720e4-6f49-822c-bdc7-01f32011d35a" class="" dir="auto">deploy.sh</h3><pre id="aff720e4-6f49-8250-aaf6-01e30bc79bad" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+set -e
+
+echo &quot;🚀 Starting production deployment...&quot;
+
+# 환경 설정
+ENVIRONMENT=${1:-production}
+VERSION=$(git rev-parse --short HEAD)
+
+# 1. 이미지 빌드
+echo &quot;🔨 Building production images...&quot;
+docker compose -f compose.yml -f compose.prod.yml build
+
+# 2. 데이터베이스 백업 (기존 데이터가 있는 경우)
+echo &quot;💾 Creating database backup...&quot;
+if docker compose ps database | grep -q &quot;Up&quot;; then
+    docker compose exec database mysqldump -u root -p${DB_ROOT_PASSWORD} --all-databases &gt; backup_$(date +%Y%m%d_%H%M%S).sql
+fi
+
+# 3. 프로덕션 배포
+echo &quot;🎯 Deploying to production...&quot;
+docker compose -f compose.yml -f compose.prod.yml up -d
+
+# 4. 헬스체크
+echo &quot;❤️ Running health checks...&quot;
+sleep 30
+
+for i in {1..5}; do
+    if curl -f http://localhost/api/health; then
+        echo &quot;✅ Deployment successful!&quot;
+        break
+    else
+        echo &quot;⏳ Waiting for services... (attempt $i/5)&quot;
+        if [ $i -eq 5 ]; then
+            echo &quot;❌ Deployment failed! Rolling back...&quot;
+            docker compose -f compose.yml -f compose.prod.yml down
+            exit 1
+        fi
+        sleep 10
+    fi
+done
+
+echo &quot;🎉 Production deployment completed!&quot;
+</code></pre><hr id="20d720e4-6f49-822e-8fd8-01fc19101e88" dir="auto"/><h2 id="676720e4-6f49-826b-b1ea-8139aee18f00" class="" dir="auto">10. 트러블슈팅 가이드</h2><h3 id="4fc720e4-6f49-8399-bb58-01696ebf7e3b" class="" dir="auto">10.1 자주 발생하는 문제들</h3><h3 id="c3e720e4-6f49-8363-925d-81356fb61e54" class="" dir="auto">서비스 간 통신 문제</h3><pre id="bff720e4-6f49-8217-8bfe-818c9bdc465b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 네트워크 연결 확인
+docker compose exec frontend ping backend
+docker compose exec backend ping database
+
+# DNS 해결 확인
+docker compose exec frontend nslookup backend
+
+# 포트 확인
+docker compose exec backend netstat -tulpn
+</code></pre><h3 id="74d720e4-6f49-820e-b012-817c6b445074" class="" dir="auto">데이터베이스 연결 문제</h3><pre id="fb7720e4-6f49-82ad-8849-815734275f07" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># MySQL 상태 확인
+docker compose exec database mysqladmin -u root -p status
+
+# 연결 테스트
+docker compose exec database mysql -u todouser -ptodopassword123 todoapp -e &quot;SELECT 1;&quot;
+
+# 로그 확인
+docker compose logs database
+</code></pre><h3 id="ded720e4-6f49-839d-9bec-8153edcbd7d7" class="" dir="auto">10.2 종합 진단 스크립트</h3><pre id="07a720e4-6f49-83cb-b223-81ba880c67de" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+# debug.sh
+
+echo &quot;🔍 Full Stack Application Diagnosis&quot;
+echo &quot;=================================&quot;
+
+# 1. 서비스 상태
+echo &quot;📊 Service Status:&quot;
+docker compose ps
+
+# 2. 네트워크 연결
+echo -e &quot;\n🌐 Network Connectivity:&quot;
+docker compose exec -T frontend ping -c 2 backend 2&gt;/dev/null &amp;&amp; echo &quot;✅ Frontend → Backend&quot; || echo &quot;❌ Frontend → Backend&quot;
+docker compose exec -T backend ping -c 2 database 2&gt;/dev/null &amp;&amp; echo &quot;✅ Backend → Database&quot; || echo &quot;❌ Backend → Database&quot;
+docker compose exec -T backend ping -c 2 redis 2&gt;/dev/null &amp;&amp; echo &quot;✅ Backend → Redis&quot; || echo &quot;❌ Backend → Redis&quot;
+
+# 3. 헬스체크
+echo -e &quot;\n❤️ Health Checks:&quot;
+curl -s http://localhost/api/health &gt; /dev/null &amp;&amp; echo &quot;✅ API Health&quot; || echo &quot;❌ API Health&quot;
+curl -s http://localhost &gt; /dev/null &amp;&amp; echo &quot;✅ Frontend&quot; || echo &quot;❌ Frontend&quot;
+
+# 4. 리소스 사용량
+echo -e &quot;\n💾 Resource Usage:&quot;
+docker stats --no-stream --format &quot;table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsage}}&quot;
+
+# 5. 로그 오류 검사
+echo -e &quot;\n📜 Recent Errors:&quot;
+docker compose logs --tail=20 | grep -i error || echo &quot;No errors found&quot;
+</code></pre><hr id="f2e720e4-6f49-8216-8b8b-81311d2d5738" dir="auto"/><h2 id="ef0720e4-6f49-83f1-ad36-81e6c70e3929" class="" dir="auto">11. 베스트 프랙티스</h2><h3 id="818720e4-6f49-83db-bebc-0115dd463f3c" class="" dir="auto">11.1 개발 효율성 팁</h3><pre id="179720e4-6f49-82a7-b354-81cdbf1e288f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 자주 사용하는 명령어 별칭
+alias dcup=&#x27;docker compose up -d&#x27;
+alias dcdown=&#x27;docker compose down&#x27;
+alias dclogs=&#x27;docker compose logs -f&#x27;
+alias dcbuild=&#x27;docker compose build&#x27;
+alias dcrestart=&#x27;docker compose restart&#x27;
+
+# 전체 스택 재시작 스크립트
+#!/bin/bash
+# restart-stack.sh
+echo &quot;🔄 Restarting full stack...&quot;
+docker compose down
+docker compose build
+docker compose up -d
+echo &quot;✅ Stack restarted successfully!&quot;
+</code></pre><h3 id="08c720e4-6f49-827f-a6be-01ecb5a520c6" class="" dir="auto">11.2 보안 고려사항</h3><pre id="5da720e4-6f49-83a3-894c-8189077fc8f1" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">// 입력 검증 강화
+const Joi = require(&#x27;joi&#x27;);
+
+const todoSchema = Joi.object({
+  title: Joi.string().min(1).max(255).required(),
+  description: Joi.string().max(1000).allow(&#x27;&#x27;),
+  completed: Joi.boolean(),
+  priority: Joi.string().valid(&#x27;low&#x27;, &#x27;medium&#x27;, &#x27;high&#x27;).default(&#x27;medium&#x27;)
+});
+
+// Rate Limiting 세분화
+const createLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1시간
+  max: 10, // 생성은 시간당 10개로 제한
+  message: &#x27;너무 많은 할 일을 생성했습니다. 잠시 후 다시 시도해주세요.&#x27;
+});
+</code></pre><h3 id="b88720e4-6f49-83dd-8912-81d1de88fc0f" class="" dir="auto">11.3 성능 최적화</h3><pre id="99b720e4-6f49-83f8-9041-01d26f361e33" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">// React 성능 최적화
+import React, { memo, useCallback, useMemo } from &#x27;react&#x27;;
+
+const TodoItem = memo(({ todo, onToggle, onDelete }) =&gt; {
+  const handleToggle = useCallback(() =&gt; {
+    onToggle(todo.id, todo.completed);
+  }, [todo.id, todo.completed, onToggle]);
+
+  const formattedDate = useMemo(() =&gt; {
+    return new Date(todo.created_at).toLocaleDateString(&#x27;ko-KR&#x27;);
+  }, [todo.created_at]);
+
+  return (
+    &lt;div className={`todo-card ${todo.completed ? &#x27;completed&#x27; : &#x27;&#x27;}`}&gt;
+      {/* 컴포넌트 내용 */}
+    &lt;/div&gt;
+  );
+});
+</code></pre><hr id="da8720e4-6f49-824c-87e6-810837ff3d54" dir="auto"/><h3 id="dcf720e4-6f49-828f-bd33-010ab1b25fc7" class="" dir="auto">유용한 명령어 모음</h3><pre id="898720e4-6f49-832c-818c-01ba1549200a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 개발 워크플로우
+alias ddev=&#x27;docker compose up -d &amp;&amp; docker compose logs -f&#x27;
+alias dprod=&#x27;docker compose -f compose.yml -f compose.prod.yml up -d&#x27;
+alias dtest=&#x27;docker compose exec backend npm test &amp;&amp; docker compose exec frontend npm test&#x27;
+alias dclean=&#x27;docker compose down -v &amp;&amp; docker system prune -f&#x27;
+
+# 디버깅
+alias dlogs=&#x27;docker compose logs -f --tail=100&#x27;
+alias dshell-backend=&#x27;docker compose exec backend sh&#x27;
+alias dshell-frontend=&#x27;docker compose exec frontend sh&#x27;
+alias dmysql=&#x27;docker compose exec database mysql -u todouser -ptodopassword123 todoapp&#x27;
+</code></pre><hr id="9ca720e4-6f49-83ee-9af7-014f89463f8e" dir="auto"/><h2 id="53d720e4-6f49-82ca-8800-819e45f9b44d" class="" dir="auto">💡 마무리</h2><p id="613720e4-6f49-82af-b2dc-01efbbc6770b" class="" dir="auto">
+</p><ul id="808720e4-6f49-8365-a9e6-81f6dbe0c5e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✅ 5-tier 아키텍처 (Nginx + React + Node.js + MySQL + Redis) 구축</li></ul><ul id="2a0720e4-6f49-8211-9f12-012222793c00" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✅ 서비스 간 통신과 데이터 흐름 설계 및 구현</li></ul><ul id="7cb720e4-6f49-825f-96fe-81ca0c53bd94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✅ 개발과 운영 환경의 설정 분리</li></ul><ul id="d0e720e4-6f49-832c-9a24-81f27a75cf89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✅ 모니터링, 로깅, 헬스체크 시스템 구현</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

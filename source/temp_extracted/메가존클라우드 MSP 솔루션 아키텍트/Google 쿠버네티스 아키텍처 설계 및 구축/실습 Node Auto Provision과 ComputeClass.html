@@ -1,0 +1,865 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. Node Auto Provision과 ComputeClass</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="47e720e4-6f49-836a-b93f-01331fcbd22f" class="page sans"><header><h1 class="page-title" dir="auto">실습. Node Auto Provision과 ComputeClass</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h1 id="482720e4-6f49-8381-9585-81a018add078" class="" dir="auto">1. 실습 목표</h1><ul id="8b0720e4-6f49-8397-90d5-81fd70c81de9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE Standard 클러스터에서 <strong>Node Auto Provisioning(NAP)</strong> 을 활성화한다.</li></ul><ul id="ed7720e4-6f49-827f-aaca-81b4512b1cac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 노드로는 수용되지 않는 워크로드를 배포해서 <strong>Pending 상태</strong>를 만든다.</li></ul><ul id="8d8720e4-6f49-8283-aece-01d117a49d43" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE가 자동으로 <strong>새 노드풀을 생성</strong>하는지 확인한다.</li></ul><ul id="af8720e4-6f49-836b-b7f8-01ed90396b63" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ComputeClass</strong> 를 생성해서 특정 머신 패밀리 또는 우선순위를 선언적으로 지정한다.</li></ul><ul id="e68720e4-6f49-828d-ba47-81615d4a19c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ComputeClass를 사용하는 워크로드를 배포해서 <strong>ComputeClass 기반 노드 생성</strong> 흐름을 확인한다. </li></ul><hr id="6a4720e4-6f49-83fe-b457-814bcba6e00e" dir="auto"/><h1 id="ade720e4-6f49-823c-b247-81fad6837631" class="" dir="auto">2. 실습 개요</h1><h2 id="daf720e4-6f49-82ac-a4c5-8104bd958633" class="" dir="auto">2.1 1단계: 클러스터 수준 Node Auto Provisioning 확인</h2><ul id="32b720e4-6f49-8357-9518-0117f1691509" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소형 기본 노드풀로 클러스터 생성</li></ul><ul id="426720e4-6f49-822a-a9fe-81e2a32e58e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAP 활성화</li></ul><ul id="3d5720e4-6f49-8271-a15b-01ebd7fe4cda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU/메모리 요청이 큰 Deployment 배포</li></ul><ul id="ee8720e4-6f49-82bd-b9f0-8101ccf3c826" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod가 Pending 상태가 되면 GKE가 새 노드풀 생성</li></ul><ul id="77f720e4-6f49-8247-9702-81756f9229f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드풀 목록과 노드 목록 확인</li></ul><h2 id="76c720e4-6f49-8203-ad36-01a1eef1c10b" class="" dir="auto">2.2 2단계: ComputeClass 기반 자동 노드 생성 확인</h2><ul id="af8720e4-6f49-822e-8623-011a8d7a1b9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">custom ComputeClass 생성</li></ul><ul id="466720e4-6f49-83b8-b13a-010890684fce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ComputeClass에 우선순위 규칙 정의</li></ul><ul id="42a720e4-6f49-8313-a428-019afba6ae9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>nodePoolAutoCreation.enabled: true</code> 설정</li></ul><ul id="56d720e4-6f49-836b-b354-0192711ed82d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">워크로드에서 ComputeClass 선택</li></ul><ul id="b45720e4-6f49-82e5-8d97-81e664405242" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 ComputeClass 특성에 맞는 노드풀 생성 확인</li></ul><hr id="5cf720e4-6f49-82f3-8371-81f62e7d4ada" dir="auto"/><h1 id="da2720e4-6f49-8276-b17a-81fb74ad43f7" class="" dir="auto">3. 실습 환경</h1><ul id="3a1720e4-6f49-826b-b5ab-81bb01caba45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Google Cloud 프로젝트 1개</li></ul><ul id="8bd720e4-6f49-824d-a542-81975f550231" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud</code>, <code>kubectl</code> 사용 가능</li></ul><ul id="cde720e4-6f49-829f-a205-81248f6a1ffa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전 예시: <code>asia-northeast3</code></li></ul><ul id="30c720e4-6f49-8252-84cf-0145d1e3f2cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 이름 예시: <code>gke-nap-lab</code></li></ul><ul id="9f8720e4-6f49-8218-b7b3-8134b826b841" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE Standard 클러스터 사용</li></ul><hr id="2a8720e4-6f49-822d-8a2c-81305a29a0a4" dir="auto"/><h1 id="6c1720e4-6f49-8319-ac10-011c28f90bbb" class="" dir="auto">4. 사전 준비</h1><h2 id="640720e4-6f49-82d9-b7ba-01fea7d80586" class="" dir="auto">4.1 프로젝트 설정</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="2c3720e4-6f49-83d3-83aa-819ec803ab24" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config set project 프로젝트ID</code></pre><h2 id="ff9720e4-6f49-838b-84d4-81ce961b1de3" class="" dir="auto">4.2 API 활성화</h2><pre id="8b3720e4-6f49-8306-ab8a-0127f5d7c9ed" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services enable container.googleapis.com
+gcloud services enable compute.googleapis.com
+gcloud services enable monitoring.googleapis.com
+gcloud services enable logging.googleapis.com</code></pre><h2 id="5e0720e4-6f49-8273-b902-816bef834bde" class="" dir="auto">4.3 환경 변수 지정</h2><pre id="aa1720e4-6f49-82bf-95c1-815a7eaff3d7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export PROJECT_ID=$(gcloud config get-value project)
+export REGION=asia-northeast3
+export CLUSTER_NAME=gke-nap-lab</code></pre><hr id="3d9720e4-6f49-8239-a29b-01c808682075" dir="auto"/><h1 id="8f9720e4-6f49-8358-8de6-0168e05b750b" class="" dir="auto">5. 클러스터 생성</h1><p id="150720e4-6f49-8315-ba2c-010040edef4e" class="" dir="auto">일부러 <strong>작은 기본 노드풀</strong>로 시작한다. 그래야 큰 워크로드를 넣었을 때 기존 노드에 스케줄되지 못하고, NAP가 새 노드풀을 생성하는 장면을 재현하기 쉽다.</p><h2 id="5ae720e4-6f49-8214-9492-0104612a10eb" class="" dir="auto">5.1 NAP 활성화 포함 클러스터 생성</h2><pre id="07e720e4-6f49-83a6-a941-81b1751cda8e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters create $CLUSTER_NAME \
+  --region=$REGION \
+  --release-channel=regular \
+  --machine-type=e2-standard-2 \
+  --num-nodes=1 \
+  --enable-ip-alias \
+  --enable-autoprovisioning \
+  --min-cpu=2 \
+  --min-memory=8 \
+  --max-cpu=20 \
+  --max-memory=80 \
+  --autoprovisioning-scopes=https://www.googleapis.com/auth/logging.write,https://www.googleapis.com/auth/monitoring,https://www.googleapis.com/auth/devstorage.read_only</code></pre><h3 id="909720e4-6f49-8282-99aa-8190b2907a4d" class="" dir="auto">명령 설명</h3><ul id="499720e4-6f49-830a-a120-81b7206e2ed2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--machine-type=e2-standard-2</code><ul id="483720e4-6f49-836c-8d95-01df7ce8ddb4" class="bulleted-list" dir="auto"><li style="list-style-type:circle">기본 노드를 작게 시작한다.</li></ul><ul id="7a6720e4-6f49-8249-8697-010a1a4495fc" class="bulleted-list" dir="auto"><li style="list-style-type:circle">CPU 2 vCPU, 메모리 8GiB 수준이라 큰 요청을 가진 Pod가 바로 안 올라가게 만들기 좋다.</li></ul></li></ul><ul id="f0e720e4-6f49-8294-a186-01b7a0473849" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--num-nodes=1</code><ul id="9e2720e4-6f49-8343-9a5f-815245ade61c" class="bulleted-list" dir="auto"><li style="list-style-type:circle">기본 노드풀을 최소로 구성한다.</li></ul><ul id="36c720e4-6f49-82c7-bfbb-819c4a652849" class="bulleted-list" dir="auto"><li style="list-style-type:circle">기존 노드에 배치될 여지를 줄여서 Pending 재현이 쉬워진다.</li></ul></li></ul><ul id="715720e4-6f49-8388-8b36-01274cc6bc77" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--enable-autoprovisioning</code><ul id="30c720e4-6f49-83d6-8c53-818cf48fb75f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">클러스터 수준 node auto-provisioning 활성화다.</li></ul><ul id="f02720e4-6f49-82da-8fc0-014253a7672a" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Pending workload를 보고 GKE가 새 노드풀을 만들 수 있게 한다.</li></ul></li></ul><ul id="eff720e4-6f49-8388-a4e7-81960cd61c3d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--min-cpu</code>, <code>--min-memory</code>, <code>--max-cpu</code>, <code>--max-memory</code><ul id="736720e4-6f49-83a4-a48d-816dd3b1a914" class="bulleted-list" dir="auto"><li style="list-style-type:circle"> NAP 활성화 시 CPU와 memory 제한 설정이 필요하다.</li></ul></li></ul><h2 id="614720e4-6f49-83e8-80e6-81fa7c9f9a64" class="" dir="auto">5.2 클러스터 인증 정보 가져오기</h2><pre id="ae2720e4-6f49-8230-ac65-01bd26f99577" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION</code></pre><h2 id="579720e4-6f49-82fc-8401-810bcc72cb33" class="" dir="auto">5.3 기본 상태 확인</h2><pre id="e19720e4-6f49-82af-9e3c-81f1977ef4a2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes
+gcloud container node-pools list --cluster=$CLUSTER_NAME --region=$REGION</code></pre><h3 id="527720e4-6f49-821c-8ed7-011d706fac37" class="" dir="auto">기대 결과</h3><ul id="ea2720e4-6f49-82ab-8038-0129a137edf7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드는 보통 1개 또는 리전 특성상 여러 존에 분산된 형태로 보일 수 있음</li></ul><ul id="438720e4-6f49-831f-9c03-0109d09c28ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">node pool 목록은 기본 생성된 풀만 보임</li></ul><hr id="b7f720e4-6f49-83da-b503-01970b35bf94" dir="auto"/><h1 id="fc9720e4-6f49-832c-b53f-012a6ae62e52" class="" dir="auto">6. 1단계 실습: Pending Pod로 NAP 동작 확인</h1><h2 id="e06720e4-6f49-82a6-97fa-81ef4ab8f961" class="" dir="auto">6.1 실습용 네임스페이스 생성</h2><pre id="825720e4-6f49-82dc-9eb2-815e7e0bcb23" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create namespace nap-lab</code></pre><h2 id="bd5720e4-6f49-8306-94f9-815a8025bf6e" class="" dir="auto">6.2 큰 리소스를 요청하는 Deployment 작성</h2><p id="4e9720e4-6f49-837f-aa87-8167fb01f0e0" class="" dir="auto">기존 기본 노드는 <code>e2-standard-2</code> 이므로 큰 CPU/메모리 요청을 가진 Pod는 바로 올라가기 어렵다. 이걸 이용해서 Pending을 유도한다.</p><pre id="169720e4-6f49-8304-a981-017d72718f1d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cat &lt;&lt;&#x27;EOF&#x27; &gt; big-workload.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: big-workload
+  namespace: nap-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: big-workload
+  template:
+    metadata:
+      labels:
+        app: big-workload
+    spec:
+      containers:
+      - name: pause
+        image: registry.k8s.io/pause:3.9
+        resources:
+          requests:
+            cpu: &quot;4&quot;
+            memory: &quot;12Gi&quot;
+          limits:
+            cpu: &quot;4&quot;
+            memory: &quot;12Gi&quot;
+EOF</code></pre><h3 id="83c720e4-6f49-8396-93f1-81160a7ffbf8" class="" dir="auto">왜 이렇게 설정하는가</h3><ul id="032720e4-6f49-83ac-b17e-819f83b0441c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 하나가 CPU 4, 메모리 12Gi를 요청한다.</li></ul><ul id="0d4720e4-6f49-8207-82c3-010bee7df735" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 노드 <code>e2-standard-2</code> 로는 수용이 불가능하다.</li></ul><ul id="ef5720e4-6f49-8261-a7ee-0156af467861" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과적으로 스케줄러는 Pod를 Pending으로 두고, cluster autoscaler / NAP가 적절한 노드 구성을 찾게 된다.</li></ul><h2 id="40f720e4-6f49-8241-802d-018136ba7524" class="" dir="auto">6.3 워크로드 배포</h2><pre id="804720e4-6f49-8375-bbfb-0159e5e70f51" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f big-workload.yaml</code></pre><h2 id="3eb720e4-6f49-83bf-bc8e-0125e458cd3a" class="" dir="auto">6.4 Pod 상태 확인</h2><pre id="c73720e4-6f49-8307-9029-01a3fcc1b1e2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -n nap-lab -o wide
+kubectl describe pod -n nap-lab -l app=big-workload</code></pre><h3 id="2af720e4-6f49-839f-9c38-01a0e03fd7e4" class="" dir="auto">확인 포인트</h3><ul id="27b720e4-6f49-82eb-8536-01c2f752e212" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Pending</code></li></ul><ul id="909720e4-6f49-820d-bddb-8190d876555b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트에 <code>Insufficient cpu</code></li></ul><ul id="249720e4-6f49-8241-9650-0168dfe70c93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트에 <code>Insufficient memory</code></li></ul><ul id="620720e4-6f49-83a8-8e18-01ee6bae4ee0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">또는 적절한 노드가 없다는 메시지</li></ul><p id="7f3720e4-6f49-827c-8820-01eb6f78cf7f" class="" dir="auto">이 상태가 정상이다. 바로 실패가 아니라, <strong>“기존 노드에는 못 올리지만 새 노드가 생기면 올라갈 수 있음”</strong> 상태다.</p><h2 id="f41720e4-6f49-8258-8d4a-817dd72da8bb" class="" dir="auto">6.5 노드풀 자동 생성 확인</h2><pre id="35a720e4-6f49-83b1-b13d-81b1edba329a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container node-pools list --cluster=$CLUSTER_NAME --region=$REGION</code></pre><p id="575720e4-6f49-8295-86ed-8136ccbdcd48" class="" dir="auto">몇 분 지나면서 새 auto-created node pool이 보이면 정상이다.</p><h2 id="5fa720e4-6f49-83f0-8279-012f15875a33" class="" dir="auto">6.6 노드 생성 확인</h2><pre id="5eb720e4-6f49-83a7-84e1-01154ed5b973" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes
+kubectl get pods -n nap-lab -o wide</code></pre><h3 id="4d4720e4-6f49-83e8-a5cc-819cc7c0e5e4" class="" dir="auto">기대 결과</h3><ul id="2d1720e4-6f49-824b-9232-81e87cc8a829" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존보다 더 큰 머신 타입의 노드가 생김</li></ul><ul id="a71720e4-6f49-82e9-b9f3-017351248e97" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pending이던 Pod가 <code>ContainerCreating</code> 또는 <code>Running</code> 으로 바뀜</li></ul><ul id="711720e4-6f49-8351-9870-015205346c89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod가 새 노드에 스케줄됨</li></ul><p id="11c720e4-6f49-8271-868a-812ac1212d16" class="" dir="auto">이 실습은 “Pod autoscaling”이 아니라 “<strong>노드풀 자체가 자동 생성</strong>되는 것”을 확인하는 실습이다.</p><p id="3c3720e4-6f49-82b3-9eba-017757e3ad7e" class="" dir="auto"><strong>현재 워크로드 요구사항에 맞는 새 종류의 노드풀을 만드는 것</strong>이 핵심이다. </p><hr id="983720e4-6f49-82e3-8b06-81c65432c09a" dir="auto"/><h1 id="edd720e4-6f49-83ac-baa2-81e251b0b248" class="" dir="auto">7. 1단계 결과 분석</h1><h2 id="6c0720e4-6f49-8291-8d3f-811bf7ac445a" class="" dir="auto">7.1 어떤 일이 일어났는가</h2><ol type="1" id="611720e4-6f49-8391-abce-017dc85a68f9" class="numbered-list" start="1" dir="auto"><li>기본 노드풀은 작았음</li></ol><ol type="1" id="586720e4-6f49-83dc-abb2-01a6fb4e8ab2" class="numbered-list" start="2" dir="auto"><li>큰 리소스를 요구하는 Pod가 들어왔음</li></ol><ol type="1" id="fbf720e4-6f49-83cc-869b-018dd158f6d1" class="numbered-list" start="3" dir="auto"><li>기존 노드에는 배치 불가능했음</li></ol><ol type="1" id="8af720e4-6f49-834e-8dc0-81f9051db8ec" class="numbered-list" start="4" dir="auto"><li>GKE가 새로운 조건의 노드풀 생성 필요성을 판단했음</li></ol><ol type="1" id="730720e4-6f49-8338-92f9-01650e00cf22" class="numbered-list" start="5" dir="auto"><li>새 노드풀과 노드를 만들었음</li></ol><ol type="1" id="f25720e4-6f49-8326-9c45-018de33e6bd0" class="numbered-list" start="6" dir="auto"><li>Pending Pod가 새 노드로 올라갔음</li></ol><h2 id="d4a720e4-6f49-82bd-86a1-813b0a61518b" class="" dir="auto">7.2 확인</h2><ul id="615720e4-6f49-83c6-9388-81bcae75b5d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HPA는 Pod 수를 늘리는 기능</li></ul><ul id="97d720e4-6f49-83a5-afaa-01090c6c31ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cluster Autoscaler는 기존 노드풀의 노드 수를 늘리거나 줄이는 기능</li></ul><ul id="847720e4-6f49-825d-844f-01fa60b2bfbe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Node Auto Provisioning은 <strong>새 노드풀 자체를 만들 수 있는 기능</strong></li></ul><hr id="99b720e4-6f49-83d1-accc-81e45b1e3cd7" dir="auto"/><h1 id="eef720e4-6f49-8353-851d-81ad377df3ac" class="" dir="auto">8. 2단계 실습: ComputeClass로 노드 특성 제어</h1><p id="37e720e4-6f49-8377-8bf0-8172c69f9246" class="" dir="auto"><strong>특정 성격의 노드</strong>를 우선 사용하도록 선언한다.</p><h2 id="bc9720e4-6f49-835d-986f-812c96cdd94f" class="" dir="auto">8.1 ComputeClass 생성</h2><p id="d42720e4-6f49-8286-b0a6-81d5b6fa3d07" class="" dir="auto">문서 예시에는 <code>machineFamily: n4</code>, <code>spot: true/false</code>, <code>nodePoolAutoCreation.enabled: true</code> 를 사용한다. </p><pre id="44c720e4-6f49-82ea-8bc7-0175f912b060" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cat &lt;&lt;&#x27;EOF&#x27; &gt; compute-class.yaml
+apiVersion: cloud.google.com/v1
+kind: ComputeClass
+metadata:
+  name: lab-n4-priority
+spec:
+  priorities:
+  - machineFamily: n4
+    spot: true
+  - machineFamily: n4
+    spot: false
+  nodePoolAutoCreation:
+    enabled: true
+EOF</code></pre><h2 id="123720e4-6f49-8351-86b5-81759c40cf20" class="" dir="auto">8.2 ComputeClass 적용</h2><pre id="bef720e4-6f49-837c-afdb-014230733800" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f compute-class.yaml</code></pre><h2 id="66d720e4-6f49-82ab-82d8-81789f568aee" class="" dir="auto">8.3 ComputeClass 확인</h2><pre id="016720e4-6f49-825e-9148-0172e6af3422" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get computeclass
+kubectl get computeclass lab-n4-priority -o yaml</code></pre><hr id="a6e720e4-6f49-82e4-b4be-01f97248f631" dir="auto"/><h1 id="e21720e4-6f49-8242-85bc-8144d1245cca" class="" dir="auto">9. ComputeClass를 요청하는 워크로드 배포</h1><p id="ddc720e4-6f49-83ed-a4fc-81fec8d41fab" class="" dir="auto">workload manifest에서는 <code>nodeSelector</code> 에 <code>cloud.google.com/compute-class: COMPUTE_CLASS_NAME</code> 형식으로 ComputeClass를 선택한다.</p><h2 id="447720e4-6f49-8396-823c-817d0b11359a" class="" dir="auto">9.1 새 워크로드 manifest 작성</h2><pre id="471720e4-6f49-827a-b523-01255df39325" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cat &lt;&lt;&#x27;EOF&#x27; &gt; cc-workload.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cc-workload
+  namespace: nap-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: cc-workload
+  template:
+    metadata:
+      labels:
+        app: cc-workload
+    spec:
+      nodeSelector:
+        cloud.google.com/compute-class: lab-n4-priority
+      containers:
+      - name: pause
+        image: registry.k8s.io/pause:3.9
+        resources:
+          requests:
+            cpu: &quot;1500m&quot;
+            memory: &quot;4Gi&quot;
+          limits:
+            cpu: &quot;1500m&quot;
+            memory: &quot;4Gi&quot;
+EOF</code></pre><h3 id="909720e4-6f49-8356-bb9f-01c4614c7b8b" class="" dir="auto">manifest 설명</h3><ul id="680720e4-6f49-837b-bcbf-016ae1ccc96e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>nodeSelector.cloud.google.com/compute-class</code><ul id="d6b720e4-6f49-828e-b377-011d7ffc9a8d" class="bulleted-list" dir="auto"><li style="list-style-type:circle">이 Pod는 <code>lab-n4-priority</code> ComputeClass를 사용하겠다는 뜻이다.</li></ul><ul id="553720e4-6f49-837c-88f1-010cf50e4b1a" class="bulleted-list" dir="auto"><li style="list-style-type:circle">GKE autoscaler는 이 ComputeClass의 우선순위 규칙을 참고해서 노드 생성 방향을 잡는다.</li></ul></li></ul><ul id="789720e4-6f49-83a7-999c-811e49a20e5b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>requests</code><ul id="d78720e4-6f49-83b5-bd52-015717307825" class="bulleted-list" dir="auto"><li style="list-style-type:circle">적당한 크기로 설정함.</li></ul></li></ul><h2 id="99a720e4-6f49-83bf-9d48-81287779b19b" class="" dir="auto">9.2 배포</h2><pre id="e86720e4-6f49-828c-a744-8149c0427d06" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f cc-workload.yaml</code></pre><h2 id="5f6720e4-6f49-8257-aaaf-813f0f8bf276" class="" dir="auto">9.3 상태 확인</h2><pre id="1a4720e4-6f49-833c-b6a7-01d662343a55" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -n nap-lab -o wide
+kubectl describe pod -n nap-lab -l app=cc-workload
+gcloud container node-pools list --cluster=$CLUSTER_NAME --region=$REGION
+kubectl get nodes --show-labels</code></pre><h3 id="613720e4-6f49-83b9-89ce-81a74e12252d" class="" dir="auto">기대 결과</h3><ul id="683720e4-6f49-8317-92af-81d90650f509" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 노드에 맞지 않거나 ComputeClass 요구를 충족할 노드가 없으면 새 node pool 생성 시도가 일어남</li></ul><ul id="608720e4-6f49-823e-93cd-0174532cfbd4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새 노드풀 또는 노드가 생성됨</li></ul><ul id="06f720e4-6f49-83e3-8768-018d6b16e1dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod가 해당 노드에 올라감</li></ul><hr id="793720e4-6f49-8332-840a-016bce031a76" dir="auto"/><h1 id="f33720e4-6f49-82ce-bd83-01f1990a7e46" class="" dir="auto">10. ComputeClass 실습 해설</h1><h2 id="c6b720e4-6f49-8216-9b3d-810c8b0ab5fc" class="" dir="auto">10.1 priorities의 의미</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="878720e4-6f49-8394-a80e-8165c9e7aae4" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">priorities:
+- machineFamily: n4
+  spot: true
+- machineFamily: n4
+  spot: false</code></pre><p id="17b720e4-6f49-82ab-be74-818903e4ce99" class="" dir="auto">이 설정은 아래 의미다.</p><ol type="1" id="04a720e4-6f49-82dd-8be3-01d5985a3a6a" class="numbered-list" start="1" dir="auto"><li>먼저 N4 계열 Spot VM으로 시도</li></ol><ol type="1" id="95c720e4-6f49-83fa-b084-815942cf4270" class="numbered-list" start="2" dir="auto"><li>Spot 자원이 없거나 조건이 안 맞으면</li></ol><ol type="1" id="f5e720e4-6f49-82e8-a03a-013f81762b7e" class="numbered-list" start="3" dir="auto"><li>N4 계열 일반 VM으로 시도</li></ol><p id="c64720e4-6f49-83ee-a63d-016b242771d9" class="" dir="auto">즉, ComputeClass는 단순 라벨이 아니라 <strong>“노드 생성 전략”</strong> 에 가깝다. </p><h2 id="16f720e4-6f49-83fa-8646-81b623cc9e9a" class="" dir="auto">10.2 nodePoolAutoCreation.enabled 의 의미</h2><pre id="262720e4-6f49-83a4-82d6-012004785039" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">nodePoolAutoCreation:
+  enabled: true</code></pre><p id="ea5720e4-6f49-8200-b39d-81812f506f22" class="" dir="auto">이 옵션은 해당 ComputeClass를 사용하는 Pod 때문에 필요할 경우 <strong>새 node pool 생성까지 허용</strong>한다는 뜻이다. </p><hr id="f1b720e4-6f49-825b-9c68-814e214c3acd" dir="auto"/><h1 id="071720e4-6f49-82b6-8230-016141edc718" class="" dir="auto">14. 정리</h1><ul id="2ac720e4-6f49-834e-b59e-019c85bd0848" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Node Auto Provisioning</strong><ul id="b08720e4-6f49-83c5-a399-81de4b8c3e57" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Pending workload를 보고</li></ul><ul id="cf9720e4-6f49-8322-a98b-81bc177d16d3" class="bulleted-list" dir="auto"><li style="list-style-type:circle">기존 노드풀만 늘리는 것이 아니라</li></ul><ul id="53e720e4-6f49-839f-8780-818c50d09b91" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><strong>새 node pool 자체를 만들 수 있음</strong> (<a href="https://docs.cloud.google.com/kubernetes-engine/docs/how-to/node-auto-provisioning">Google Cloud Documentation</a>)</li></ul></li></ul><ul id="f4f720e4-6f49-8295-a421-01ae6af13875" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ComputeClass</strong><ul id="9a3720e4-6f49-83c8-9250-8120dbecac97" class="bulleted-list" dir="auto"><li style="list-style-type:circle">autoscaling 시 사용할 노드 속성을 선언적으로 정의하는 프로필임</li></ul><ul id="708720e4-6f49-83dc-b875-81f95c27ea4e" class="bulleted-list" dir="auto"><li style="list-style-type:circle">workload에서 <code>cloud.google.com/compute-class</code> 로 요청함</li></ul><ul id="472720e4-6f49-83df-bdbb-813cd0af0ff6" class="bulleted-list" dir="auto"><li style="list-style-type:circle">priorities 순서대로 후보를 시도함 </li></ul></li></ul><hr id="a38720e4-6f49-8247-8432-0100017cf6be" dir="auto"/><h1 id="001720e4-6f49-82df-bcd0-01eeb0ae2403" class="" dir="auto">15. 실습 정리 명령</h1><h2 id="0f9720e4-6f49-83a5-879f-012df92f39a5" class="" dir="auto">15.1 워크로드 삭제</h2><pre id="908720e4-6f49-827a-9750-01a10e07e434" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete -f cc-workload.yaml
+kubectl delete -f big-workload.yaml
+kubectl delete -f compute-class.yaml
+kubectl delete namespace nap-lab</code></pre><h2 id="c68720e4-6f49-8223-ba19-010156df5037" class="" dir="auto">15.2 클러스터 삭제</h2><pre id="8b2720e4-6f49-8396-87c3-8171ffc921bb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters delete $CLUSTER_NAME --region $REGION</code></pre><hr id="cd2720e4-6f49-83a0-8fd9-8125539e587d" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

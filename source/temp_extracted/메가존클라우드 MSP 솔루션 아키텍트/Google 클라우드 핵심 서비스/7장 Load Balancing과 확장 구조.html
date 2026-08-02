@@ -1,0 +1,769 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>7장. Load Balancing과 확장 구조</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="fff720e4-6f49-820a-90aa-81285806d710" class="page sans"><header><h1 class="page-title" dir="auto">7장. Load Balancing과 확장 구조</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="e6d720e4-6f49-822c-91e0-812854acc7b1" class="" dir="auto">1. 장 개요</h2><p id="87c720e4-6f49-83af-a22d-816b7f3b3d52" class="" dir="auto">앞 장에서 Compute Engine과 Cloud SQL을 각각 봤다면, 이제는 단일 VM 기반 구조에서 한 단계 올라가 <strong>여러 VM에 트래픽을 분산하고, 장애를 자동으로 우회하고, 수요에 따라 확장하는 구조</strong>를 이해하는 단계다.</p><p id="358720e4-6f49-829b-9345-81fb3ff5c1b8" class="" dir="auto">AWS를 먼저 학습한 상태라면 보통 다음 감각이 익숙하다.</p><ul id="293720e4-6f49-826b-b63a-01bf2938b928" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB/NLB 같은 로드밸런서를 둔다</li></ul><ul id="6ad720e4-6f49-82d4-ae70-819989fd8b45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling Group으로 인스턴스를 늘리고 줄인다</li></ul><ul id="c78720e4-6f49-83b1-8915-0188805a3956" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check로 비정상 인스턴스를 제외한다</li></ul><ul id="196720e4-6f49-820c-a2e9-81004589c32f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 계층을 다중 인스턴스로 구성한다</li></ul><p id="4df720e4-6f49-83dd-a228-81636ff2bbce" class="" dir="auto">GCP에서도 큰 흐름은 비슷하지만, 특히 주목해야 할 부분이 있다.</p><ul id="979720e4-6f49-83c9-b878-0193b94abba5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP의 Cloud Load Balancing은 <strong>단일 anycast IP</strong>와 <strong>글로벌 프런트엔드</strong> 개념이 강하다.</li></ul><ul id="fd9720e4-6f49-8344-8990-01572d27801f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 Application Load Balancer는 <strong>프록시 기반 L7 로드밸런서</strong>로 동작한다.</li></ul><ul id="62b720e4-6f49-833d-ad84-81a90f9ea61a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드로 Managed Instance Group을 연결하고, Health Check를 통해 정상 인스턴스만 서비스할 수 있다. 백엔드 서비스에서 인스턴스 그룹이나 zonal NEG(Network Endpoint Group)를 사용할 때는 Health Check가 필요하다.</li></ul><ul id="8eb720e4-6f49-8372-9be8-01d09cbfa610" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MIG는 Autoscaling과 Autohealing을 지원한다. Autoscaling은 부하에 따라 VM 수를 자동 조정하고, Autohealing은 애플리케이션 기반 Health Check를 토대로 비정상 인스턴스를 재생성할 수 있다.</li></ul><hr id="4ae720e4-6f49-82b9-b9a2-81a6eed38883" dir="auto"/><h2 id="e87720e4-6f49-8355-ba9e-01f83d8c09dc" class="" dir="auto">2. 학습 목표</h2><ul id="162720e4-6f49-8291-9b29-8186ee00abc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP Load Balancing의 기본 개념을 설명할 수 있음</li></ul><ul id="764720e4-6f49-829e-96a6-816365d620f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">글로벌 프런트엔드와 단일 anycast IP 개념을 설명할 수 있음</li></ul><ul id="63c720e4-6f49-83d9-89e2-014fc2e72e43" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External Application Load Balancer의 역할을 설명할 수 있음</li></ul><ul id="8c4720e4-6f49-8221-9fad-81fa55f9501b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check의 목적과 동작 방식을 설명할 수 있음</li></ul><ul id="58c720e4-6f49-8214-a84b-81c92db192fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Managed Instance Group의 역할을 설명할 수 있음</li></ul><ul id="e54720e4-6f49-8379-a8ed-019a94688361" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MIG의 Autoscaling과 Autohealing 개념을 설명할 수 있음</li></ul><ul id="110720e4-6f49-828f-b003-0104e3c1886c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS ALB / Auto Scaling Group과 GCP 구조를 비교할 수 있음</li></ul><ul id="7e1720e4-6f49-8255-a1a4-81a302072e12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장 가능한 웹 계층 아키텍처를 설명할 수 있음</li></ul><hr id="8d9720e4-6f49-82a5-8258-81aec2ca9838" dir="auto"/><h2 id="419720e4-6f49-83a9-96c4-8113c84cad36" class="" dir="auto">3. 핵심 키워드</h2><ul id="774720e4-6f49-824d-9e99-8130010cfba5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Load Balancing</li></ul><ul id="dcb720e4-6f49-822f-8fbd-0193f32e535e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External Application Load Balancer</li></ul><ul id="1f1720e4-6f49-833e-b8e6-8131574b07f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Anycast IP</li></ul><ul id="dde720e4-6f49-825d-89eb-817b29a0007e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Global Frontend</li></ul><ul id="118720e4-6f49-835a-b27d-8142ee270a2b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backend Service</li></ul><ul id="f86720e4-6f49-83e8-a166-01d33451f240" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check</li></ul><ul id="f92720e4-6f49-825f-9554-81019d7ed670" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Managed Instance Group</li></ul><ul id="f89720e4-6f49-8390-a327-0172e4f231af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Instance Template</li></ul><ul id="bc4720e4-6f49-820a-881e-0146995aaa72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autoscaling</li></ul><ul id="acb720e4-6f49-838f-9e99-015fb720b638" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autohealing</li></ul><ul id="f56720e4-6f49-83e7-af7a-0155c1ec6bbf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Capacity</li></ul><ul id="eed720e4-6f49-82ba-9104-013bc42adfbb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP Load Balancer</li></ul><hr id="eac720e4-6f49-837d-aa46-8133102e85ce" dir="auto"/><h1 id="ee5720e4-6f49-8271-b8c3-0106c48ae0d7" class="" dir="auto">4. GCP Load Balancing이란 무엇인가</h1><p id="370720e4-6f49-8380-aa60-019a50b8c67a" class="" dir="auto">Cloud Load Balancing은 Google Cloud의 관리형 로드밸런싱 서비스다. Cloud Load Balancing은 단일 anycast IP를 프런트엔드로 사용하고, 사용자·트래픽·백엔드 상태 변화에 즉시 반응하는 관리형 서비스이다. </p><h2 id="e26720e4-6f49-83d2-a19e-811746e85410" class="" dir="auto">쉽게 이해하면</h2><ul id="d7e720e4-6f49-8214-82a2-81f4f8e4fbfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS의 ELB 계열과 대응되는 서비스</li></ul><ul id="e25720e4-6f49-8391-a5a6-812c64b139d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드 서버 여러 대에 트래픽을 분산</li></ul><ul id="7d1720e4-6f49-834b-9c47-010c9e0fb579" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비정상 서버를 자동으로 제외</li></ul><ul id="53b720e4-6f49-8345-b112-8181fac3e144" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장 구조와 함께 동작</li></ul><h2 id="fd8720e4-6f49-83d9-b305-81dcf5c5bf70" class="" dir="auto">왜 필요한가</h2><p id="365720e4-6f49-821f-9852-81430e78cb3c" class="" dir="auto">단일 VM 한 대만 서비스하면 아래 문제가 생긴다.</p><ul id="a75720e4-6f49-83d8-b04a-01143b284692" class="bulleted-list" dir="auto"><li style="list-style-type:disc">트래픽 증가 시 처리량 한계</li></ul><ul id="6f1720e4-6f49-82f1-bda1-8196c2fe9bb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 장애 시 서비스 중단</li></ul><ul id="0f8720e4-6f49-83a6-927c-81723c49c510" class="bulleted-list" dir="auto"><li style="list-style-type:disc">유지보수 시 무중단 처리 어려움</li></ul><p id="0f6720e4-6f49-8369-a5be-81a29ab773f5" class="" dir="auto">로드밸런서는 이 문제를 해결하는 출발점이다.</p><hr id="766720e4-6f49-8310-8365-019b68683d47" dir="auto"/><h1 id="589720e4-6f49-837c-9ee5-01a355afb30f" class="" dir="auto">5. GCP에서 로드밸런싱이 중요한 이유</h1><p id="840720e4-6f49-83b0-b7dd-01700d3f8cc4" class="" dir="auto">GCP는 특히 <strong>글로벌 네트워크와 글로벌 프런트엔드</strong> 감각이 강하다. 외부 Application Load Balancer는 글로벌 외부 모드와 리전 외부 모드가 있으며, 글로벌 외부 Application Load Balancer는 Google Front Ends(GFEs) 상의 관리형 서비스로 구현된다. GFEs는 Google의 글로벌 네트워크와 제어 평면 위에서 동작한다.</p><ul id="14a720e4-6f49-8241-87c6-81e0ef7ce3c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단일 anycast IP</li></ul><ul id="d3a720e4-6f49-8211-bc9f-018d269ced90" class="bulleted-list" dir="auto"><li style="list-style-type:disc">글로벌 프런트엔드</li></ul><ul id="9d5720e4-6f49-83cf-9797-014578e78165" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다중 리전 백엔드 확장 가능성</li></ul><ul id="13d720e4-6f49-8275-aa06-019092ccf8db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 멀티리전 페일오버</li></ul><p id="da0720e4-6f49-8312-88b0-01a418795e04" class="" dir="auto">Cloud Load Balancing은 단일 anycast IP를 사용하며, 여러 리전 백엔드에 대한 크로스리전 로드밸런싱과 자동 멀티리전 페일오버를 지원한다.</p><hr id="da9720e4-6f49-8306-bd03-01f710911380" dir="auto"/><h1 id="68e720e4-6f49-8327-8d9d-8177abd206f2" class="" dir="auto">6. External Application Load Balancer</h1><p id="076720e4-6f49-8337-884e-015f7af903a5" class="" dir="auto">외부 Application Load Balancer는 HTTP/HTTPS 트래픽을 처리하는 <strong>프록시 기반 Layer 7 로드밸런서</strong>다. 단일 외부 IP 주소 뒤에서 서비스를 실행하고 확장할 수 있게 해준다.</p><h2 id="dab720e4-6f49-82bf-b5cd-01d59e04a6d1" class="" dir="auto">6.1 특징</h2><ul id="1e3720e4-6f49-8290-9b31-8142663f930f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP/HTTPS 처리</li></ul><ul id="789720e4-6f49-8311-bf22-0104634461d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단일 외부 IP 제공</li></ul><ul id="28a720e4-6f49-824d-b637-813359cbb292" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드 서비스로 트래픽 전달</li></ul><ul id="1a1720e4-6f49-8262-a1eb-012792d5e523" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다양한 백엔드 유형 지원</li></ul><ul id="dc8720e4-6f49-826d-bf97-814a6a375387" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고급 트래픽 제어 기능 지원 가능</li></ul><hr id="561720e4-6f49-835c-ab8f-81e5ac8e0598" dir="auto"/><h1 id="809720e4-6f49-83a2-9cab-01cf02cde518" class="" dir="auto">7. GCP 로드밸런서 구성 요소</h1><p id="016720e4-6f49-83eb-90bb-817cfa5c0506" class="" dir="auto">웹 계층 기준으로 보면 보통 아래 순서로 이해하면 된다.</p><ol type="1" id="b43720e4-6f49-8297-be6e-018e4d77e01e" class="numbered-list" start="1" dir="auto"><li>Frontend</li></ol><ol type="1" id="b7b720e4-6f49-8267-967d-81e16a325327" class="numbered-list" start="2" dir="auto"><li>URL Map / Listener 개념</li></ol><ol type="1" id="ac0720e4-6f49-8236-b552-0155544d355f" class="numbered-list" start="3" dir="auto"><li>Backend Service</li></ol><ol type="1" id="43c720e4-6f49-8207-959a-81035febd013" class="numbered-list" start="4" dir="auto"><li>Health Check</li></ol><ol type="1" id="633720e4-6f49-832c-ac6b-01b79fb6e9c8" class="numbered-list" start="5" dir="auto"><li>Backend Instance Group</li></ol><p id="ba8720e4-6f49-82ed-b82b-01334e6b5afc" class="" dir="auto">
+</p><ul id="d25720e4-6f49-82fc-bb56-01874fa5fb7d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 외부 IP로 접속</li></ul><ul id="081720e4-6f49-83dc-85d6-8167e83d6761" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로드밸런서가 요청을 받음</li></ul><ul id="922720e4-6f49-82a2-b293-01864f524597" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드 서비스가 트래픽을 어떤 서버 그룹으로 보낼지 결정</li></ul><ul id="25e720e4-6f49-836c-9a67-01492afd4ccf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check가 정상 서버만 대상으로 유지</li></ul><ul id="d2c720e4-6f49-82d3-a0df-81a4744f67e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MIG가 실제 VM 집합을 제공</li></ul><p id="39c720e4-6f49-8377-9855-017a8c522c5c" class="" dir="auto">백엔드 서비스는 인스턴스 그룹을 백엔드로 사용할 수 있고, 이 경우 Health Check가 필요하다.</p><hr id="c9a720e4-6f49-83e8-9286-8167eadde415" dir="auto"/><h1 id="4d8720e4-6f49-8294-b99b-81c44a079f0a" class="" dir="auto">8. Health Check</h1><p id="054720e4-6f49-820f-8394-01c73741e25e" class="" dir="auto">Health Check는 백엔드 인스턴스가 정상인지 판단하는 메커니즘이다.</p><p id="508720e4-6f49-8238-9830-018d56100514" class="" dir="auto">백엔드 서비스가 인스턴스 그룹 또는 zonal NEG를 사용하는 경우 Health Check를 연결해야 한다.</p><h2 id="cee720e4-6f49-8297-86c8-81417e3833a6" class="" dir="auto">왜 필요한가</h2><p id="68c720e4-6f49-824f-b507-81295b21c816" class="" dir="auto">로드밸런서는 단순히 서버가 살아 있는지만 보는 것이 아니라,</p><p id="014720e4-6f49-8251-9a9f-810aa5877996" class="" dir="auto"><strong>서비스 가능한 상태인지</strong>를 알아야 한다.</p><p id="2e3720e4-6f49-82da-a56a-81717fc13a27" class="" dir="auto">예를 들어</p><ul id="1d3720e4-6f49-83f6-9c9b-819085142d2a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM은 살아 있음</li></ul><ul id="458720e4-6f49-82c8-8e07-814ea0d68f0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하지만 nginx는 죽어 있음</li></ul><p id="134720e4-6f49-8291-b09e-011d9a3e9ccf" class="" dir="auto">이 경우 Health Check가 없으면 사용자는 계속 장애 서버로 트래픽을 받을 수 있다.</p><hr id="4ee720e4-6f49-828e-a5be-81054dac4882" dir="auto"/><h1 id="695720e4-6f49-8391-8274-01dda23cf4eb" class="" dir="auto">9. Managed Instance Group(MIG)</h1><p id="fa7720e4-6f49-8378-bb76-8133606183f6" class="" dir="auto">Managed Instance Group은 동일한 템플릿으로 관리되는 VM 인스턴스 집합이다. </p><h2 id="2f3720e4-6f49-839f-ab5c-0196b5f6f909" class="" dir="auto">9.1 왜 필요한가</h2><p id="446720e4-6f49-835b-ae8c-81313fbf6df9" class="" dir="auto">VM 여러 대를 손으로 각각 만들고 관리하면 일관성이 깨지고 운영이 어려워진다.</p><p id="a61720e4-6f49-83b4-ade2-8189dc0746de" class="" dir="auto">MIG를 사용하면 같은 템플릿으로 복수 인스턴스를 자동 관리할 수 있다.</p><h2 id="f7a720e4-6f49-83a4-b09e-014152fd203b" class="" dir="auto">9.2 핵심 구성</h2><ul id="11a720e4-6f49-8321-856b-01ade9be7e27" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Instance Template</li></ul><ul id="0a6720e4-6f49-8222-b4cb-0177c3645bbf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상 인스턴스 수</li></ul><ul id="5e1720e4-6f49-831c-993e-8105b40bb7ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autoscaling 정책</li></ul><ul id="960720e4-6f49-8317-aa8a-813a5edc8e1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autohealing 정책</li></ul><ul id="17d720e4-6f49-8292-9468-018332cc6fca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 위치(단일 존 또는 다중 존)</li></ul><h2 id="753720e4-6f49-8364-a36f-01b38fd66086" class="" dir="auto">AWS 비교</h2><ul id="2ba720e4-6f49-83ea-8601-01bd743d28ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Auto Scaling Group과 가장 유사한 개념으로 이해하면 된다.</li></ul><hr id="4f1720e4-6f49-8384-84e6-01066e6a15d5" dir="auto"/><h1 id="d34720e4-6f49-835c-aa29-0133ea238469" class="" dir="auto">10. Instance Template</h1><p id="c67720e4-6f49-825a-b186-8191a233cb7c" class="" dir="auto">MIG는 인스턴스를 직접 하나씩 정의하지 않고, <strong>Instance Template</strong> 을 기반으로 만든다.</p><p id="de0720e4-6f49-821c-8be3-81bdfe9c3c9b" class="" dir="auto">템플릿에는 VM의 표준 사양이 들어간다.</p><p id="5a4720e4-6f49-8308-b4b4-012c79634082" class="" dir="auto">예시</p><ul id="203720e4-6f49-83d1-9170-818abd3470cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">머신 타입</li></ul><ul id="7c8720e4-6f49-82a9-955f-01fb5523a300" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OS 이미지</li></ul><ul id="fe5720e4-6f49-82b8-80f8-0133e6e1d5a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부팅 디스크</li></ul><ul id="4a6720e4-6f49-833f-897a-01d0531dad4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크</li></ul><ul id="bd4720e4-6f49-83af-8125-017e42ec95a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그</li></ul><ul id="ed4720e4-6f49-83c6-9450-0111c041b980" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service Account</li></ul><ul id="ded720e4-6f49-828c-b5b1-81f56dfd3e56" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Startup Script</li></ul><hr id="36c720e4-6f49-839c-acdc-014862bfef0a" dir="auto"/><h1 id="6d7720e4-6f49-83cb-8b83-0170743e765a" class="" dir="auto">11. Autoscaling</h1><p id="72d720e4-6f49-8217-abf2-819f1e1a095d" class="" dir="auto">MIG는 Autoscaling을 지원하며, 부하 증가나 감소에 따라 VM 수를 자동 조정할 수 있다. </p><h2 id="c71720e4-6f49-823a-9539-812e7b909c5e" class="" dir="auto">11.1 어떤 기준으로 확장하는가</h2><p id="34d720e4-6f49-831c-90df-012aebee91ee" class="" dir="auto">대표 예시</p><ul id="ca4720e4-6f49-82af-8e63-01e16d22973a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU 사용률</li></ul><ul id="2c6720e4-6f49-828a-92a2-81f26b88c0f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로드밸런서 기반 용량</li></ul><ul id="32d720e4-6f49-833b-ab32-81062458007c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스케줄 기반</li></ul><ul id="19f720e4-6f49-823e-ac1b-817b0824f6ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">커스텀 모니터링 지표</li></ul><h2 id="2f5720e4-6f49-83d1-958a-81555c26b1c9" class="" dir="auto">11.2 왜 중요한가</h2><ul id="3f4720e4-6f49-82dc-b2ff-01d36c26dbf2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">피크 시간에는 인스턴스를 늘림</li></ul><ul id="55c720e4-6f49-828a-98db-8131bf26fc87" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한가할 때는 인스턴스를 줄임</li></ul><ul id="8a3720e4-6f49-8324-a447-8120f2b7d06d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">성능과 비용 사이 균형을 맞춤</li></ul><h2 id="80c720e4-6f49-82c8-bba6-01d8624df718" class="" dir="auto">AWS 비교</h2><ul id="480720e4-6f49-83b2-80f5-8128a23eae05" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Auto Scaling Group의 정책 기반 확장과 같은 감각으로 이해하면 된다.</li></ul><hr id="9ca720e4-6f49-828f-80d1-81d44131bd98" dir="auto"/><h1 id="fce720e4-6f49-838d-abd2-815bb54d4980" class="" dir="auto">12. Autohealing</h1><p id="7d0720e4-6f49-8296-8f2e-817b32143d38" class="" dir="auto">Autohealing은 비정상 인스턴스를 자동으로 교체하거나 복구하는 기능이다.</p><p id="504720e4-6f49-83fd-adf0-8129cce7b0da" class="" dir="auto">MIG에 Health Check 기반 Autohealing 정책을 연결할 수 있다.</p><h2 id="328720e4-6f49-827d-809c-812d4317eaf6" class="" dir="auto">왜 필요한가</h2><p id="85d720e4-6f49-827a-a705-0159a9d6ed1a" class="" dir="auto">단순히 트래픽을 우회하는 것만으로는 충분하지 않다.</p><p id="aac720e4-6f49-8245-bd51-011b23408fcd" class="" dir="auto">문제가 있는 인스턴스를 계속 남겨두면 전체 풀의 건강성이 나빠진다.</p><p id="0f5720e4-6f49-8360-8534-01756caca15e" class="" dir="auto">Autohealing은 아래 흐름으로 이해하면 된다.</p><ul id="c6a720e4-6f49-830e-8b6f-81fedd9d805f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check 실패</li></ul><ul id="afb720e4-6f49-8385-986a-8172db4548d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스가 비정상으로 판단됨</li></ul><ul id="717720e4-6f49-8260-a9e7-817bd1baad01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MIG가 해당 인스턴스를 재생성하거나 교체</li></ul><p id="9ed720e4-6f49-82bd-b244-811b5db6a269" class="" dir="auto">
+</p><p id="4b5720e4-6f49-835c-9019-011a40a2a41f" class="" dir="auto">로드밸런서의 Health Check와 MIG의 Autohealing Health Check는 목적이 비슷해 보여도 운영 관점이 다르다.</p><ul id="0a8720e4-6f49-82fb-8a66-81e10475c0d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로드밸런서 Health Check: 트래픽을 어디로 보낼지 판단</li></ul><ul id="846720e4-6f49-8275-a184-01b4237e2621" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autohealing Health Check: 어떤 인스턴스를 복구/재생성할지 판단</li></ul><hr id="7fa720e4-6f49-83bc-b8af-01d9aedcc5b3" dir="auto"/><h1 id="b91720e4-6f49-83e7-a1bd-81a67c3bf42f" class="" dir="auto">13. 확장 가능한 웹 계층 구조</h1><ul id="ddf720e4-6f49-821a-a6dc-01bcab057874" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External Application Load Balancer</li></ul><ul id="7c5720e4-6f49-8292-bea3-819da8db5ec1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backend Service</li></ul><ul id="3ec720e4-6f49-83a4-9f82-8126d62ef2e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check</li></ul><ul id="c0f720e4-6f49-8372-8344-81cfb9cf8d3a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Managed Instance Group</li></ul><ul id="088720e4-6f49-8364-aa5b-817a73bf76de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 VM 인스턴스</li></ul><ul id="602720e4-6f49-8294-9b2a-8109cc491f15" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요 시 Cloud SQL 연결</li></ul><h2 id="fbe720e4-6f49-8361-b5ec-81783afc6701" class="" dir="auto">구조 흐름</h2><ol type="1" id="4b1720e4-6f49-82e6-92ca-819b3c5854bc" class="numbered-list" start="1" dir="auto"><li>사용자는 단일 외부 IP로 접속</li></ol><ol type="1" id="b31720e4-6f49-83f7-bfa5-81c8fad38136" class="numbered-list" start="2" dir="auto"><li>로드밸런서가 요청을 받음</li></ol><ol type="1" id="5cb720e4-6f49-837f-985a-01cd6e36d89c" class="numbered-list" start="3" dir="auto"><li>Health Check 결과를 참고해 정상 백엔드로 전달</li></ol><ol type="1" id="359720e4-6f49-82ff-8adb-81f0cda8a30a" class="numbered-list" start="4" dir="auto"><li>MIG가 백엔드 VM을 관리</li></ol><ol type="1" id="ae5720e4-6f49-8368-ab4c-81fbc8727256" class="numbered-list" start="5" dir="auto"><li>Autoscaling으로 트래픽 증가 대응</li></ol><ol type="1" id="741720e4-6f49-8213-949c-013cc5d15d56" class="numbered-list" start="6" dir="auto"><li>Autohealing으로 비정상 VM 자동 복구</li></ol><p id="7ec720e4-6f49-83a3-b280-81554166bc12" class="" dir="auto">이 구조는 소규모 단일 VM 실습에서 운영형 웹 계층 구조로 넘어가는 가장 기본적인 패턴이다.</p><hr id="ed5720e4-6f49-82be-ae61-01dac5a6e830" dir="auto"/><h1 id="f42720e4-6f49-8349-a502-013f6c49fc94" class="" dir="auto">14. AWS와의 비교</h1><h2 id="53e720e4-6f49-83fd-b263-8138b7f5f790" class="" dir="auto">AWS 쪽 감각</h2><ul id="a0c720e4-6f49-83a7-bc6c-01c66309174f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB</li></ul><ul id="152720e4-6f49-8314-b8a8-01cce8f20be7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Target Group</li></ul><ul id="754720e4-6f49-825b-ad51-815540a9e602" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check</li></ul><ul id="748720e4-6f49-82d2-a136-01fbc93e915f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling Group</li></ul><ul id="94d720e4-6f49-8271-ae10-01d6514a4de8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Launch Template</li></ul><h2 id="bbe720e4-6f49-836a-9e7f-01bd039fb02c" class="" dir="auto">GCP 쪽 감각</h2><ul id="2d0720e4-6f49-825a-adf3-01f4e05d26c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External Application Load Balancer</li></ul><ul id="a27720e4-6f49-8300-a303-8158ad64b2ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backend Service</li></ul><ul id="85d720e4-6f49-83fa-972a-81dc609fa154" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check</li></ul><ul id="c92720e4-6f49-82b3-ada5-8144715b6d91" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Managed Instance Group</li></ul><ul id="046720e4-6f49-8283-9338-0196cbd8bf7b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Instance Template</li></ul><p id="77a720e4-6f49-831b-9749-012ab7ed9ca7" class="" dir="auto"><strong>AWS는 ALB + Target Group + ASG 조합으로 익히는 경우가 많고, GCP는 Load Balancer + Backend Service + MIG 조합으로 익히는 흐름이 강함</strong></p><hr id="2cd720e4-6f49-8228-9d88-01b33577cbfd" dir="auto"/><h1 id="d5b720e4-6f49-8318-8e4f-01b088cc8b8b" class="" dir="auto">15. 장 요약</h1><ul id="e7a720e4-6f49-834e-b200-813692a3f60b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Load Balancing은 관리형 로드밸런싱 서비스이며, 단일 anycast IP와 글로벌 프런트엔드 개념이 중요하다.</li></ul><ul id="b4d720e4-6f49-83fd-9d2b-814eff700ed7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External Application Load Balancer는 HTTP/HTTPS용 프록시 기반 L7 로드밸런서다.</li></ul><ul id="964720e4-6f49-83d7-b54c-01db4e5a7779" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 그룹을 백엔드로 쓰는 경우 Health Check가 필요하다.</li></ul><ul id="1f3720e4-6f49-8360-8d04-81110c71a377" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Managed Instance Group은 동일 템플릿 기반 VM 집합을 관리하며 Autoscaling을 지원한다.</li></ul><ul id="9d3720e4-6f49-82ae-9e09-810e4ba6d4c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MIG는 Health Check 기반 Autohealing도 구성할 수 있다.</li></ul><ul id="01f720e4-6f49-83cb-bca5-810d0cc42251" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 구조를 통해 단일 VM 기반 서비스에서 확장 가능한 웹 계층 구조로 발전할 수 있다.</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

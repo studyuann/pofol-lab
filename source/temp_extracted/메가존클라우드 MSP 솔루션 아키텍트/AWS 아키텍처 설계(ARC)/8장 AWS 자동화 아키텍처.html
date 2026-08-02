@@ -1,0 +1,772 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>8장 AWS 자동화 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="dc2720e4-6f49-82db-88e7-8146a3b9e5bc" class="page sans"><header><h1 class="page-title" dir="auto">8장 AWS 자동화 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="8ab720e4-6f49-8270-a361-8171d787cca1" class="" dir="auto">CloudFormation, Elastic Beanstalk, AWS SDK</h2><hr id="b52720e4-6f49-829d-ad85-81710d9ce70c" dir="auto"/><h1 id="693720e4-6f49-8306-a7a0-015d115383ba" class="" dir="auto">8.1 자동화의 필요성</h1><p id="0b6720e4-6f49-82e2-b1d5-81d877920b02" class="" dir="auto">AWS에서는 리소스를 콘솔에서 직접 생성할 수 있음.</p><p id="06a720e4-6f49-83a4-83b0-01a75aa12c41" class="" dir="auto">초기 학습이나 빠른 테스트에는 이 방식이 편리함.</p><p id="ba2720e4-6f49-822e-9c42-015e7f2e92f3" class="" dir="auto">하지만 운영 환경이나 반복적인 배포 환경에서는 수작업 방식에 분명한 한계가 있음.</p><p id="4c8720e4-6f49-8328-8c67-8157df53d58b" class="" dir="auto">예를 들어 수작업 방식에서는 다음 문제가 자주 발생함.</p><ul id="4f7720e4-6f49-83bc-9664-012150b016af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 환경을 다시 만들 때 설정이 달라짐</li></ul><ul id="84a720e4-6f49-8227-b00b-815133407c75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누가 어떤 값을 넣었는지 추적하기 어려움</li></ul><ul id="d2b720e4-6f49-82ab-849f-014a88838256" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실수로 잘못된 리소스를 생성할 수 있음</li></ul><ul id="31a720e4-6f49-832b-aec0-0133f90ebeea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경과 개발 환경이 서로 달라질 수 있음</li></ul><ul id="534720e4-6f49-8283-bd65-81a680344eb1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재현성과 일관성이 떨어짐</li></ul><ul id="30f720e4-6f49-8225-8a3a-01f18f32bfc5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복구 시간이 길어짐</li></ul><p id="b2f720e4-6f49-839f-8e1a-81fa0866aa12" class="" dir="auto">즉, 사람 손으로 하나씩 만드는 방식은 처음에는 쉬워 보여도, 규모가 커질수록 품질과 속도에서 한계가 뚜렷해짐.</p><p id="d4b720e4-6f49-832f-af1f-013faf5c920e" class="" dir="auto">그래서 AWS 아키텍처에서는 자동화를 매우 중요하게 봄.</p><p id="8ae720e4-6f49-835c-937a-0182eb09f55c" class="" dir="auto">자동화는 단순 편의 기능이 아니라 <strong>운영 품질과 일관성을 확보하는 핵심 원칙</strong>임.</p><hr id="185720e4-6f49-82ee-99eb-017f8b1a67b4" dir="auto"/><h1 id="2e3720e4-6f49-82e9-b65e-01d86881a070" class="" dir="auto">8.2 자동화의 핵심 목적</h1><p id="fc6720e4-6f49-8269-9530-81073fcbb257" class="" dir="auto">자동화는 다음 목적을 위해 사용함.</p><h3 id="136720e4-6f49-8336-9e39-018e5c502d90" class="" dir="auto">1. 반복 가능한 환경 구축</h3><p id="6c2720e4-6f49-83ff-b723-8158aa3dca8b" class="" dir="auto">같은 인프라를 여러 번 만들어도 결과가 같아야 함.</p><h3 id="08c720e4-6f49-8316-9867-014f6821ab7c" class="" dir="auto">2. 일관성 유지</h3><p id="ee7720e4-6f49-8388-84ba-01ca942d76eb" class="" dir="auto">개발, 테스트, 운영 환경이 최대한 동일한 구조를 가져야 함.</p><h3 id="137720e4-6f49-82bc-90ae-811aab2ddb9b" class="" dir="auto">3. 배포 속도 향상</h3><p id="066720e4-6f49-8250-a7ec-01e2629e5b57" class="" dir="auto">수작업보다 훨씬 빠르게 환경을 구성하고 변경할 수 있음.</p><h3 id="fca720e4-6f49-8317-af5c-8180b750d595" class="" dir="auto">4. 오류 감소</h3><p id="c0b720e4-6f49-825f-94fb-81bed4c62c1c" class="" dir="auto">사람이 클릭하면서 발생하는 실수를 줄일 수 있음.</p><h3 id="414720e4-6f49-83d8-98b9-01f527c5c4b1" class="" dir="auto">5. 변경 이력 관리</h3><p id="108720e4-6f49-8298-9c66-81de87da437e" class="" dir="auto">코드나 템플릿으로 남기면 누가 언제 무엇을 바꿨는지 추적하기 쉬움.</p><p id="d92720e4-6f49-835e-a35e-014d25465632" class="" dir="auto">즉, 자동화는 “편하다”가 아니라</p><p id="98e720e4-6f49-825c-b584-81246c110622" class="" dir="auto"><strong>신뢰할 수 있는 인프라 운영 방식</strong>이라는 점이 중요함.</p><hr id="094720e4-6f49-8319-bcd2-819d55c09bfc" dir="auto"/><h1 id="d2a720e4-6f49-8356-b555-812bd09f6e7e" class="" dir="auto">8.3 AWS 자동화 방식 개요</h1><p id="351720e4-6f49-823f-a309-0160b3fc0e90" class="" dir="auto">AWS에서는 자동화를 여러 수준에서 수행할 수 있음.</p><p id="e25720e4-6f49-82cd-98d2-818f0ddf4514" class="" dir="auto">대표적인 방식</p><ul id="363720e4-6f49-838b-8b54-013f2c100ea5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>CloudFormation</strong> : 인프라 자체를 코드로 정의</li></ul><ul id="1f0720e4-6f49-8230-a484-01e6fc533ff0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Elastic Beanstalk</strong> : 애플리케이션 배포 자동화</li></ul><ul id="3d4720e4-6f49-83cd-9a1b-8148b90222be" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>AWS SDK</strong> : 코드에서 AWS 서비스 직접 제어</li></ul><p id="9a3720e4-6f49-8307-ac2c-81727ad614a0" class="" dir="auto">이 3가지는 자동화라는 공통점이 있지만 해결하는 문제가 다름.</p><table id="dab720e4-6f49-82db-b008-019f53316006" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="a60720e4-6f49-837d-94f1-81dc33e4952a" dir="ltr"><th id="Sg{t" class="simple-table-header-color simple-table-header">서비스</th><th id="UIU=" class="simple-table-header-color simple-table-header">자동화 대상</th><th id="b\={" class="simple-table-header-color simple-table-header">관점</th></tr></thead><tbody><tr id="bf1720e4-6f49-822b-91f1-0130f43541d1" dir="ltr"><td id="Sg{t" class="">CloudFormation</td><td id="UIU=" class="">인프라</td><td id="b\={" class="">환경 생성과 구성</td></tr><tr id="d32720e4-6f49-838a-a1e1-81be5e7197ce" dir="ltr"><td id="Sg{t" class="">Elastic Beanstalk</td><td id="UIU=" class="">애플리케이션 배포</td><td id="b\={" class="">플랫폼 관리 단순화</td></tr><tr id="204720e4-6f49-8215-b4f7-0172605e867b" dir="ltr"><td id="Sg{t" class="">AWS SDK</td><td id="UIU=" class="">서비스 제어 로직</td><td id="b\={" class="">애플리케이션 내부 연동</td></tr></tbody></table><p id="993720e4-6f49-83f2-baf5-011d1485d1b8" class="" dir="auto">즉, 자동화라고 해서 모두 같은 층위의 자동화는 아님.</p><p id="a41720e4-6f49-82a6-b195-81b6ca929013" class="" dir="auto">어떤 것은 인프라 자동화이고, 어떤 것은 애플리케이션 배포 자동화이며, 어떤 것은 애플리케이션 코드 차원의 자동화임.</p><hr id="0e3720e4-6f49-83e3-806c-01a1af66644b" dir="auto"/><h1 id="8e3720e4-6f49-83e0-ad1b-0132d6244f03" class="" dir="auto">8.4 Infrastructure as Code 개념</h1><p id="f87720e4-6f49-83ed-a874-01bef11a592a" class="" dir="auto">CloudFormation을 이해하려면 먼저 <strong>Infrastructure as Code(IaC)</strong> 개념을 이해해야 함.</p><p id="53e720e4-6f49-837c-a2dc-8154907feed3" class="" dir="auto">IaC는 인프라 구성을 콘솔 클릭이 아니라 <strong>코드나 선언문 형태로 정의하는 방식</strong>임.</p><p id="ddc720e4-6f49-8315-9525-01c4aed0c471" class="" dir="auto">예를 들어 다음과 같은 리소스를 생각해보면</p><ul id="e68720e4-6f49-82e3-8b2d-81597e98b9d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC</li></ul><ul id="165720e4-6f49-82b5-ba76-813c6e526ebf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet</li></ul><ul id="775720e4-6f49-832f-9e46-818f2242cbaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway</li></ul><ul id="b57720e4-6f49-82f3-a9ab-815aeda6afdc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2</li></ul><ul id="e74720e4-6f49-823d-9eee-016d31f80863" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group</li></ul><ul id="833720e4-6f49-83b7-9b84-81c58873640f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS</li></ul><p id="969720e4-6f49-8303-818c-8199fe1c6e64" class="" dir="auto">이것을 사람이 콘솔에서 하나씩 생성하는 대신, 템플릿 파일에 정의해 두고 같은 방식으로 반복 배포할 수 있음.</p><p id="5d6720e4-6f49-82b6-acbe-8170696d3cc4" class="" dir="auto">IaC의 핵심 장점</p><ul id="217720e4-6f49-8375-a61d-81ece5690109" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재현 가능함</li></ul><ul id="aec720e4-6f49-8263-8296-81fec0daf484" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버전 관리 가능함</li></ul><ul id="580720e4-6f49-8287-83c1-01c534f072bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리뷰 가능함</li></ul><ul id="c05720e4-6f49-8348-84ca-8107d984a584" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 배포 가능함</li></ul><ul id="47d720e4-6f49-83f2-9b46-81959c7083b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">표준화 가능함</li></ul><p id="e2d720e4-6f49-829e-ad11-013368bda8c5" class="" dir="auto">즉, IaC는 인프라를 “문서”가 아니라 “실행 가능한 정의서”로 바꾸는 개념임.</p><hr id="6c6720e4-6f49-837a-8524-01b95bea7ceb" dir="auto"/><h1 id="ba1720e4-6f49-8383-8c26-81012b78deb4" class="" dir="auto">8.5 Amazon CloudFormation 개요</h1><p id="cda720e4-6f49-82b8-b50f-01e118599c47" class="" dir="auto">CloudFormation은 AWS 리소스를 템플릿 파일로 정의하고, 그 템플릿을 바탕으로 인프라를 자동 생성·수정·삭제할 수 있게 해주는 서비스임.</p><p id="fc7720e4-6f49-8244-9608-01b2099d20dc" class="" dir="auto">쉽게 말하면 다음과 같음.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="198720e4-6f49-8279-b403-011154b91d7e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">원하는 인프라 구조를 템플릿에 적는다.
+CloudFormation이 그 구조대로 AWS 리소스를 만든다.</code></pre><p id="8a6720e4-6f49-8384-9a22-01524fc9f0d6" class="" dir="auto">즉, CloudFormation은 AWS에서 제공하는 대표적인 IaC 도구임.</p><p id="a7d720e4-6f49-828f-8dfe-819635afa66f" class="" dir="auto">CloudFormation이 다룰 수 있는 대상 예</p><ul id="811720e4-6f49-830b-b791-01306e306817" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC</li></ul><ul id="f47720e4-6f49-82f9-97e0-813254df8071" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet</li></ul><ul id="231720e4-6f49-83a6-a4f2-015f81c0f00e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table</li></ul><ul id="c70720e4-6f49-8280-be57-0195c9c72e0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group</li></ul><ul id="1c1720e4-6f49-83cf-aa0a-814e13c3c165" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2</li></ul><ul id="746720e4-6f49-8265-a97f-81a0e8dccd77" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB</li></ul><ul id="9f1720e4-6f49-8392-a682-013de7fabecf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling</li></ul><ul id="f33720e4-6f49-830c-a842-8111e5f2556e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS</li></ul><ul id="b06720e4-6f49-83eb-81c8-817bf4298906" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="287720e4-6f49-836d-a07b-01484907fd09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 일부 리소스</li></ul><p id="2fc720e4-6f49-82dc-9085-81cf37eec017" class="" dir="auto">즉, AWS 아키텍처를 구성하는 대부분의 핵심 리소스를 코드화할 수 있음.</p><hr id="0d5720e4-6f49-830c-9056-01d717d10ac0" dir="auto"/><h1 id="0e8720e4-6f49-82c8-8115-01418251ccc7" class="" dir="auto">8.6 CloudFormation의 기본 구조</h1><p id="ca2720e4-6f49-83e5-bb44-01a691825880" class="" dir="auto">CloudFormation은 보통 <strong>템플릿(template)</strong> 과 <strong>스택(stack)</strong> 개념으로 이해하면 됨.</p><h3 id="23d720e4-6f49-83d6-9306-01fc0ca533b9" class="" dir="auto">템플릿</h3><p id="7db720e4-6f49-8308-b7cf-0127ae232510" class="" dir="auto">리소스를 어떻게 만들지 정의하는 설계 문서임.</p><p id="c59720e4-6f49-8258-8e20-01831f5e3cde" class="" dir="auto">YAML 또는 JSON 형식으로 작성함.</p><h3 id="0a8720e4-6f49-828f-8db5-0127003df0a8" class="" dir="auto">스택</h3><p id="5c0720e4-6f49-824b-8237-81504c3cf6c4" class="" dir="auto">템플릿을 실제로 실행해서 만들어진 리소스 집합임.</p><p id="01e720e4-6f49-83f1-83b8-019ccea17f08" class="" dir="auto">즉,</p><ul id="dee720e4-6f49-8395-88d7-81eb9fb40730" class="bulleted-list" dir="auto"><li style="list-style-type:disc">템플릿은 설계도</li></ul><ul id="8a8720e4-6f49-828b-b723-8142da100b13" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스택은 그 설계도로 실제 생성된 결과물</li></ul><p id="cb6720e4-6f49-836b-b647-8128b87df962" class="" dir="auto">이라고 보면 됨.</p><p id="c9e720e4-6f49-826e-9cc6-816cd2fd0293" class="" dir="auto">예를 들어 하나의 템플릿에 다음이 정의되어 있을 수 있음.</p><ul id="1d0720e4-6f49-831c-a59f-81998c319d5e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 1개</li></ul><ul id="36a720e4-6f49-8368-b84b-81ae335cb400" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public Subnet 2개</li></ul><ul id="1e5720e4-6f49-82e3-bf1d-01cc57ab98b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Subnet 2개</li></ul><ul id="af8720e4-6f49-8205-90d3-81eebffad4ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway 1개</li></ul><ul id="4b1720e4-6f49-8381-bb3e-01bb7e66db75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table 2개</li></ul><ul id="16f720e4-6f49-8368-9f10-0189aa1aacf2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 2대</li></ul><p id="d15720e4-6f49-823d-a70c-816ea85df7f8" class="" dir="auto">이 템플릿을 실행하면 하나의 스택이 생성되고, 그 안에서 모든 리소스가 관리됨.</p><hr id="a5e720e4-6f49-8249-a393-0187a5d90b83" dir="auto"/><h1 id="186720e4-6f49-83ee-976f-81ae8f2b0025" class="" dir="auto">8.7 CloudFormation의 장점</h1><h3 id="c97720e4-6f49-8254-bc57-015dfcbb0c3f" class="" dir="auto">1. 재현성</h3><p id="a67720e4-6f49-82f1-9286-01f16e83bc95" class="" dir="auto">같은 템플릿을 사용하면 같은 환경을 반복 생성할 수 있음.</p><h3 id="38d720e4-6f49-8222-baa3-81408bc2c755" class="" dir="auto">2. 일관성</h3><p id="bf5720e4-6f49-83ba-a85e-8175b638f542" class="" dir="auto">개발/테스트/운영 환경의 편차를 줄일 수 있음.</p><h3 id="dd1720e4-6f49-832f-9be9-01495b98cdd1" class="" dir="auto">3. 버전 관리</h3><p id="e76720e4-6f49-8324-8df2-814715726f61" class="" dir="auto">템플릿 파일을 Git 같은 형상관리 도구에 저장할 수 있음.</p><h3 id="f19720e4-6f49-837b-96af-01362f3a72ca" class="" dir="auto">4. 추적 가능성</h3><p id="df4720e4-6f49-821f-96ba-013e10cb53c1" class="" dir="auto">어떤 리소스가 어떤 스택에 의해 생성되었는지 파악 가능함.</p><h3 id="80c720e4-6f49-82b1-aac3-81e682ed078d" class="" dir="auto">5. 변경 자동화</h3><p id="a01720e4-6f49-8294-ae3b-011cd615368d" class="" dir="auto">수정된 템플릿을 반영해 환경을 업데이트할 수 있음.</p><p id="073720e4-6f49-83be-a5ce-01edf3b1e96e" class="" dir="auto">즉, CloudFormation은 리소스를 더 빨리 만드는 도구이기도 하지만,</p><p id="a23720e4-6f49-834b-850e-0151cecf2fd8" class="" dir="auto">그보다 더 중요한 것은 <strong>환경의 품질과 일관성을 높이는 도구</strong>라는 점임.</p><hr id="60d720e4-6f49-8380-9fb9-817ce1b01767" dir="auto"/><h1 id="7cd720e4-6f49-8257-b48b-819aee622723" class="" dir="auto">8.8 CloudFormation 템플릿 구성 요소</h1><p id="595720e4-6f49-83be-a674-01e1e4e9b433" class="" dir="auto">CloudFormation 템플릿은 여러 섹션으로 구성됨.</p><p id="c6e720e4-6f49-8384-b560-81ab04e77636" class="" dir="auto">이 장에서는 문법 전체를 다루기보다 개념 중심으로 이해하는 것이 중요함.</p><p id="f45720e4-6f49-82fc-a8a4-011a019c9e28" class="" dir="auto">대표 섹션</p><ul id="289720e4-6f49-822d-9f41-014b463137c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWSTemplateFormatVersion</li></ul><ul id="ff2720e4-6f49-8370-bfa6-81dff07095eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Description</li></ul><ul id="5b2720e4-6f49-8325-8d41-012bb12bdbbf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Parameters</li></ul><ul id="191720e4-6f49-83bb-9b69-8109fd9daedc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Resources</li></ul><ul id="5e1720e4-6f49-8209-ac39-81e11af02dfd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Outputs</li></ul><ul id="488720e4-6f49-8391-9064-01f13b901ab3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Mappings</li></ul><ul id="8ca720e4-6f49-82e9-8fcd-81b9e6cd96b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Conditions</li></ul><p id="8dc720e4-6f49-82bf-8505-0142c5f7dc37" class="" dir="auto">이 중 가장 중요한 것은 다음 3개임.</p><h3 id="043720e4-6f49-830a-a9e8-01d1110d2856" class="" dir="auto">Parameters</h3><p id="4b1720e4-6f49-8320-9b41-0154f725679f" class="" dir="auto">실행 시 입력받는 값</p><h3 id="8a7720e4-6f49-83f6-bdd8-010fe6788105" class="" dir="auto">Resources</h3><p id="c82720e4-6f49-831b-9e4e-814c06e1f99c" class="" dir="auto">실제로 생성할 AWS 리소스 정의</p><h3 id="548720e4-6f49-8359-9561-0146734abebd" class="" dir="auto">Outputs</h3><p id="0ed720e4-6f49-821b-bf69-810141db533f" class="" dir="auto">생성 결과로 외부에 보여줄 값</p><p id="0d7720e4-6f49-8346-bb2e-818f3067c425" class="" dir="auto">즉, 템플릿은</p><p id="a50720e4-6f49-822f-859d-0122242da973" class="" dir="auto">“입력값을 받아서 리소스를 만들고, 필요한 결과를 출력하는 구조”</p><p id="d65720e4-6f49-8307-a0bf-01caddc40435" class="" dir="auto">로 이해하면 됨.</p><hr id="996720e4-6f49-8385-839d-01f90b4bfdc1" dir="auto"/><h1 id="8f2720e4-6f49-830f-8b2e-01c0de433532" class="" dir="auto">8.9 Parameters의 의미</h1><p id="e4f720e4-6f49-83df-869d-01515dae9c0f" class="" dir="auto">Parameters는 템플릿을 더 유연하게 만들어줌.</p><p id="39e720e4-6f49-82aa-8733-01d9967511ce" class="" dir="auto">만약 모든 값을 템플릿에 고정해 두면 재사용성이 떨어짐.</p><p id="386720e4-6f49-837e-b523-81302715a305" class="" dir="auto">예를 들어 다음 항목은 환경마다 달라질 수 있음.</p><ul id="dad720e4-6f49-820f-8126-8159d02dbb0d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC CIDR</li></ul><ul id="a0a720e4-6f49-8226-81df-01deff00569f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 타입</li></ul><ul id="1a5720e4-6f49-8214-bfee-01346d5f42e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">키 페어 이름</li></ul><ul id="7b9720e4-6f49-82e7-bbf6-8190b1326447" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DB 비밀번호</li></ul><ul id="b7d720e4-6f49-8212-9f40-812dba4a8b80" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전별 AMI ID</li></ul><ul id="941720e4-6f49-82ff-adef-81ebe165091d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경 이름(dev/prod)</li></ul><p id="0fa720e4-6f49-832b-91fe-817a06831e1a" class="" dir="auto">이런 값을 Parameters로 분리하면 같은 템플릿을 여러 환경에서 재사용할 수 있음.</p><p id="5b4720e4-6f49-839e-9eeb-01597133f7ef" class="" dir="auto">즉, Parameters는 템플릿을 “고정된 설계도”가 아니라</p><p id="b24720e4-6f49-82ae-9022-018eadab8bcb" class="" dir="auto"><strong>입력값에 따라 변형 가능한 설계도</strong>로 만들어줌.</p><hr id="52b720e4-6f49-837a-a35e-0139d94f35d1" dir="auto"/><h1 id="73e720e4-6f49-837e-beca-01486f572d21" class="" dir="auto">8.10 Outputs의 의미</h1><p id="f37720e4-6f49-8319-b002-816dd7b71d54" class="" dir="auto">Outputs는 스택 생성 후 필요한 값을 외부에 보여주는 기능임.</p><p id="414720e4-6f49-82ea-b714-81c680f3654e" class="" dir="auto">예를 들어 다음 값은 생성 후 자주 확인해야 함.</p><ul id="fd4720e4-6f49-826d-84c3-811f6bbe8db6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB DNS 이름</li></ul><ul id="ba8720e4-6f49-827f-b9c4-015fdd6b1f39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 Public IP</li></ul><ul id="178720e4-6f49-82c8-8b91-01f50d8f9e83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS Endpoint</li></ul><ul id="52d720e4-6f49-823f-9ac0-0143f9636153" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC ID</li></ul><ul id="818720e4-6f49-8244-a720-0149bf64ff63" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet ID</li></ul><p id="269720e4-6f49-8223-8970-81969a13a243" class="" dir="auto">이런 값을 Outputs로 지정해 두면 스택 생성 결과를 쉽게 확인할 수 있음.</p><p id="6ed720e4-6f49-83bb-aadf-01cd862a6c28" class="" dir="auto">즉, Outputs는 생성된 인프라의 중요한 결과값을 정리해주는 기능임.</p><hr id="ced720e4-6f49-821b-8271-81cf27d0f89c" dir="auto"/><h1 id="b9e720e4-6f49-8259-a3cc-8146cccde509" class="" dir="auto">8.11 CloudFormation의 동작 방식</h1><p id="432720e4-6f49-82d2-902a-81fa67d83fc6" class="" dir="auto">CloudFormation은 템플릿을 읽고 리소스 간 의존 관계를 파악한 뒤, 순서에 맞게 리소스를 생성함.</p><p id="924720e4-6f49-824d-93e2-01357e036965" class="" dir="auto">예를 들어</p><ul id="9be720e4-6f49-8203-983a-01ce8fd96821" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet은 VPC가 먼저 있어야 생성 가능함</li></ul><ul id="f07720e4-6f49-8357-943e-81f43ef2f246" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2는 Security Group과 Subnet이 있어야 생성 가능함</li></ul><ul id="be5720e4-6f49-826b-b886-810da0b80c58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAT Gateway는 Public Subnet과 Elastic IP가 있어야 함</li></ul><p id="bb1720e4-6f49-8347-88f4-8169d26a4ef3" class="" dir="auto">CloudFormation은 이런 관계를 바탕으로 생성 순서를 조정함.</p><p id="b14720e4-6f49-833f-aeb4-81299afb7830" class="" dir="auto">이 의미는 매우 중요함.</p><p id="844720e4-6f49-83dd-9e72-817fd94dfc1a" class="" dir="auto">CloudFormation은 단순한 스크립트 실행기가 아니라,</p><p id="095720e4-6f49-825d-9b3d-01630408b862" class="" dir="auto"><strong>리소스 관계를 이해하고 상태를 관리하는 선언형 도구</strong>임.</p><hr id="b14720e4-6f49-82fa-8b95-817b9800a1ea" dir="auto"/><h1 id="59f720e4-6f49-8381-89d9-01e0bc9dfb1e" class="" dir="auto">8.12 선언형 자동화와 절차형 자동화</h1><p id="0ec720e4-6f49-8380-9352-01fbafd3012b" class="" dir="auto">CloudFormation을 설명할 때 종종 중요한 개념이 <strong>선언형(Declarative)</strong> 과 <strong>절차형(Imperative)</strong> 의 차이임.</p><h3 id="ee2720e4-6f49-82ef-b26f-81a273930102" class="" dir="auto">선언형</h3><p id="394720e4-6f49-82a2-8a52-0130049084af" class="" dir="auto">“무엇을 만들고 싶은가”를 정의함.</p><p id="730720e4-6f49-8348-86ad-01267abc835b" class="" dir="auto">예</p><ul id="c6d720e4-6f49-8264-b43f-81a68badee1b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 1개</li></ul><ul id="171720e4-6f49-8347-a4d1-018880ce451d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public Subnet 2개</li></ul><ul id="f8c720e4-6f49-8293-b0d7-81e9835aaa24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 2대</li></ul><h3 id="748720e4-6f49-8277-a82d-0157c2dd4ce4" class="" dir="auto">절차형</h3><p id="aa8720e4-6f49-83ef-8e79-819f8d8be8dc" class="" dir="auto">“어떤 순서로 어떻게 만들 것인가”를 명령함.</p><p id="e5e720e4-6f49-8251-b270-81c62c2362ae" class="" dir="auto">CloudFormation은 선언형 방식에 가까움.</p><p id="ee0720e4-6f49-8349-8026-01297a75f307" class="" dir="auto">즉 사용자는 원하는 최종 상태를 정의하고, 실제 생성 과정과 순서는 CloudFormation이 관리함.</p><p id="4bd720e4-6f49-83e5-a3b1-81738b98f404" class="" dir="auto">이 점 때문에 대규모 인프라 자동화에서 매우 유리함.</p><hr id="28b720e4-6f49-836c-9b0c-81e57099ab68" dir="auto"/><h1 id="6ef720e4-6f49-837f-b0bc-01615134edf9" class="" dir="auto">8.13 CloudFormation 변경 관리</h1><p id="8ab720e4-6f49-82bd-aa69-8164e73b427d" class="" dir="auto">인프라는 한 번 만들고 끝나는 것이 아니라 계속 변경됨.</p><p id="e10720e4-6f49-8340-ad67-81f84a7b3060" class="" dir="auto">예</p><ul id="6e7720e4-6f49-82a6-80a7-015f988528d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 타입 변경</li></ul><ul id="afd720e4-6f49-822c-9d89-815e61f70cfa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷 추가</li></ul><ul id="a73720e4-6f49-83a0-ba3c-817121d2826c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 수정</li></ul><ul id="761720e4-6f49-8314-a1d6-81d3f0b76fac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹 규칙 변경</li></ul><ul id="50d720e4-6f49-83ae-bf5b-813cfb5979d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB 추가</li></ul><p id="072720e4-6f49-8390-9776-016a86c8d825" class="" dir="auto">이때 CloudFormation은 기존 스택과 수정된 템플릿의 차이를 비교하여 필요한 변경을 적용함.</p><p id="3c8720e4-6f49-8269-956b-81930f1a299c" class="" dir="auto">즉, CloudFormation은 단순 생성만 하는 것이 아니라</p><p id="3d3720e4-6f49-836e-a7dc-81cb1c9673a1" class="" dir="auto"><strong>인프라의 변경 lifecycle까지 관리하는 도구</strong>임.</p><p id="12e720e4-6f49-8278-9cd4-01f8ccd05980" class="" dir="auto">이 점이 IaC 도구로서 중요한 이유임.</p><hr id="030720e4-6f49-8309-86bd-0163d5b4a559" dir="auto"/><h1 id="b88720e4-6f49-8246-bd79-810899eab59d" class="" dir="auto">8.14 CloudFormation의 한계와 주의점</h1><p id="b4a720e4-6f49-8240-8407-019d6f1b0e15" class="" dir="auto">CloudFormation이 매우 강력한 도구이지만 만능은 아님.</p><h3 id="e24720e4-6f49-8321-90ad-01f723421ad3" class="" dir="auto">1. 템플릿 복잡도 증가</h3><p id="2ef720e4-6f49-82ac-ae6a-81517620fc09" class="" dir="auto">구조가 커질수록 템플릿이 길고 복잡해짐.</p><h3 id="832720e4-6f49-8295-b372-01f36e21cbb0" class="" dir="auto">2. 오류 원인 파악이 어려울 수 있음</h3><p id="f90720e4-6f49-836e-95a6-815d19b059ba" class="" dir="auto">리소스 간 의존 관계 때문에 실패 원인 분석이 쉽지 않은 경우가 있음.</p><h3 id="b87720e4-6f49-829e-a328-016c507c1137" class="" dir="auto">3. 잘못된 설계가 반복될 수 있음</h3><p id="f0d720e4-6f49-8211-983c-810a2a240a49" class="" dir="auto">자동화는 좋은 설계를 빠르게 반복할 수도 있지만, 잘못된 설계도 빠르게 반복할 수 있음.</p><p id="8f5720e4-6f49-83e4-b8b3-01b64b95239a" class="" dir="auto">즉, 자동화가 중요하지만 자동화 이전에 <strong>아키텍처 설계 자체가 올바른지</strong>가 먼저임.</p><hr id="a88720e4-6f49-82ff-b204-016c9bbbbc1a" dir="auto"/><h1 id="994720e4-6f49-827f-b397-816141ee3e51" class="" dir="auto">8.15 Elastic Beanstalk 개요</h1><p id="593720e4-6f49-82aa-b0f9-014329438072" class="" dir="auto">Elastic Beanstalk는 애플리케이션을 쉽게 배포하고 운영할 수 있도록 도와주는 AWS 서비스임.</p><p id="9b0720e4-6f49-82ae-94b2-01dd4a17ae12" class="" dir="auto">쉽게 말하면 다음과 같음.</p><pre id="7dc720e4-6f49-8302-88bf-01354e638780" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">코드를 올리면,
+애플리케이션 실행에 필요한 인프라를 AWS가 비교적 자동으로 구성해 준다.</code></pre><p id="0dc720e4-6f49-83a5-8901-811ff117ec49" class="" dir="auto">즉, Beanstalk는</p><p id="09f720e4-6f49-831b-be10-018b55b22d74" class="" dir="auto">“인프라를 아주 세밀하게 직접 설계하기보다, 애플리케이션 실행 환경을 빠르게 마련하고 싶을 때”</p><p id="17a720e4-6f49-838e-a1f2-01b4bdd9b1a9" class="" dir="auto">유용한 서비스임.</p><p id="699720e4-6f49-8382-b142-01fda9b26c5f" class="" dir="auto">지원 예시</p><ul id="4f0720e4-6f49-83ed-a21d-0126ccce3e10" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Java</li></ul><ul id="d5f720e4-6f49-8215-abde-81a77e9a9443" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Node.js</li></ul><ul id="f68720e4-6f49-8250-8c35-8120a0dbcc11" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python</li></ul><ul id="7e8720e4-6f49-8289-9f15-01af641a937a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PHP</li></ul><ul id="86a720e4-6f49-83c2-b069-01cd00bb2c6b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">.NET</li></ul><ul id="b93720e4-6f49-8326-99b8-8170f2c1044b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker</li></ul><p id="8a5720e4-6f49-820e-b1a8-812b51c212b0" class="" dir="auto">즉, 개발자가 애플리케이션 코드에 더 집중할 수 있게 해주는 관리형 배포 플랫폼에 가까움.</p><hr id="493720e4-6f49-83a2-8bec-81598dcfcbe8" dir="auto"/><h1 id="31b720e4-6f49-8364-b1ce-014def408802" class="" dir="auto">8.16 Elastic Beanstalk의 역할</h1><p id="b3a720e4-6f49-821b-9e9a-019e0177c869" class="" dir="auto">Beanstalk는 내부적으로 여러 AWS 리소스를 조합해 애플리케이션 실행 환경을 구성함.</p><p id="746720e4-6f49-8240-b36b-8140b9078713" class="" dir="auto">예를 들어 상황에 따라 다음이 포함될 수 있음.</p><ul id="ef7720e4-6f49-8257-9bb1-01575388e9b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2</li></ul><ul id="149720e4-6f49-82bd-bc55-81c55e19c687" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling</li></ul><ul id="dbe720e4-6f49-8398-9919-01134ba7a867" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Load Balancer</li></ul><ul id="d23720e4-6f49-82ff-bf6c-81b9b6fa1862" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group</li></ul><ul id="d03720e4-6f49-82d0-833a-019941733b4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch</li></ul><ul id="dd7720e4-6f49-83ff-baa2-01e953763946" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><p id="7ca720e4-6f49-8362-83c3-81776d6cd1b3" class="" dir="auto">사용자는 직접 각 리소스를 하나씩 만들지 않아도, 비교적 높은 수준의 설정만으로 전체 실행 환경을 구성할 수 있음.</p><p id="3e5720e4-6f49-832e-9808-81f11876323e" class="" dir="auto">즉, Beanstalk는</p><p id="c8a720e4-6f49-83f0-b6b8-01a8d54026d4" class="" dir="auto"><strong>애플리케이션 플랫폼 자동화 서비스</strong></p><p id="4d6720e4-6f49-8367-a170-81fb554fb3b5" class="" dir="auto">라고 보는 것이 적절함.</p><hr id="3e7720e4-6f49-8367-a56d-81b197197ab9" dir="auto"/><h1 id="65b720e4-6f49-8225-aaa9-8176ee5461ca" class="" dir="auto">8.17 Beanstalk가 적합한 경우</h1><h3 id="a58720e4-6f49-83fb-b8eb-8173400d2156" class="" dir="auto">1. 빠르게 애플리케이션을 배포하고 싶을 때</h3><p id="ed7720e4-6f49-8355-ab60-81ef4d427d6f" class="" dir="auto">복잡한 인프라 세부 설정보다, 실행 환경을 빠르게 준비하는 것이 중요할 때 적합함.</p><h3 id="85d720e4-6f49-8243-9118-81c150908ca5" class="" dir="auto">2. 인프라보다 애플리케이션 개발에 집중할 때</h3><p id="da8720e4-6f49-8334-9a1f-816021eef590" class="" dir="auto">개발팀이 인프라 세부 조정보다 코드 배포에 더 집중하고 싶은 경우 유용함.</p><h3 id="65e720e4-6f49-8363-aae0-81b58a6e8171" class="" dir="auto">3. 표준적인 웹 애플리케이션 배포</h3><p id="71f720e4-6f49-82c9-9208-812024ea6b12" class="" dir="auto">일반적인 웹앱 구조에서는 충분히 편리한 선택이 될 수 있음.</p><p id="a89720e4-6f49-82d2-af1c-811966b8c672" class="" dir="auto">즉, Beanstalk는 “쉽고 빠른 배포”에 강점이 있음.</p><hr id="b17720e4-6f49-82e5-9df9-81faed27d102" dir="auto"/><h1 id="199720e4-6f49-834d-8a25-01ccc304466c" class="" dir="auto">8.18 Beanstalk의 한계</h1><p id="cb9720e4-6f49-8363-b223-810f9895d6da" class="" dir="auto">Beanstalk는 편리하지만, 아키텍처를 세밀하게 통제하고 싶을 때는 제약이 생길 수 있음.</p><p id="233720e4-6f49-8289-bd34-818c64e2dfb2" class="" dir="auto">예를 들어</p><ul id="9cb720e4-6f49-8257-a651-81b0f3354250" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세부 네트워크 구조를 정교하게 제어하고 싶을 때</li></ul><ul id="717720e4-6f49-8263-bdbc-0178e896dd96" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복잡한 멀티티어 구성이 필요할 때</li></ul><ul id="31a720e4-6f49-82d3-8dfd-812ac387c9c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스를 세밀하게 표준화하고 싶을 때</li></ul><ul id="217720e4-6f49-83e0-942c-0174dd238ec9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대규모 엔터프라이즈 IaC 체계에 맞추고 싶을 때</li></ul><p id="afe720e4-6f49-8304-ab35-81f9c8326433" class="" dir="auto">이 경우에는 CloudFormation이나 다른 IaC 도구가 더 적합할 수 있음.</p><p id="418720e4-6f49-839c-b514-818195b2eb3d" class="" dir="auto">즉, Beanstalk는 편의성이 높은 대신 세밀한 제어력은 상대적으로 낮을 수 있음.</p><hr id="b8c720e4-6f49-82ea-aefd-812704fca0d7" dir="auto"/><h1 id="1e6720e4-6f49-833b-ab06-0163b6d67603" class="" dir="auto">8.19 CloudFormation과 Beanstalk의 차이</h1><p id="0c9720e4-6f49-83fa-9138-0194f54960f2" class="" dir="auto">이 둘은 종종 같이 언급되지만 역할이 다름.</p><table id="df2720e4-6f49-8378-a116-01a907de7e5e" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="77c720e4-6f49-8399-9f47-014551ffdc8d" dir="ltr"><th id="`xqh" class="simple-table-header-color simple-table-header">항목</th><th id="QlR{" class="simple-table-header-color simple-table-header">CloudFormation</th><th id="sS_N" class="simple-table-header-color simple-table-header">Elastic Beanstalk</th></tr></thead><tbody><tr id="fc5720e4-6f49-821a-aaeb-81e634980798" dir="ltr"><td id="`xqh" class="">중심 대상</td><td id="QlR{" class="">인프라 전체</td><td id="sS_N" class="">애플리케이션 실행 환경</td></tr><tr id="a8c720e4-6f49-8327-987f-0115baa48a8b" dir="ltr"><td id="`xqh" class="">제어 수준</td><td id="QlR{" class="">매우 높음</td><td id="sS_N" class="">비교적 추상화됨</td></tr><tr id="dc0720e4-6f49-8211-9afa-013029df61bc" dir="ltr"><td id="`xqh" class="">목적</td><td id="QlR{" class="">리소스 정의와 관리</td><td id="sS_N" class="">배포 단순화</td></tr><tr id="e1a720e4-6f49-835c-a8f7-81389552d3ce" dir="ltr"><td id="`xqh" class="">사용 관점</td><td id="QlR{" class="">플랫폼/인프라 엔지니어</td><td id="sS_N" class="">애플리케이션 배포 중심</td></tr></tbody></table><p id="f89720e4-6f49-8273-85aa-8115399744c2" class="" dir="auto">즉,</p><ul id="6a7720e4-6f49-82d2-b394-816e47f5e43f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>CloudFormation은 인프라 설계와 표준화에 강함</strong></li></ul><ul id="752720e4-6f49-83fa-9de6-016af3bce68d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Beanstalk는 애플리케이션 배포 편의성에 강함</strong></li></ul><p id="f53720e4-6f49-82c7-b280-819ef0f5918f" class="" dir="auto">으로 구분하면 됨.</p><hr id="10e720e4-6f49-8350-822c-01db0441e52d" dir="auto"/><h1 id="682720e4-6f49-83da-8ac3-8196afc8011c" class="" dir="auto">8.20 AWS SDK 개요</h1><p id="6b8720e4-6f49-83d3-a0c1-01e97763a32e" class="" dir="auto">AWS SDK는 프로그래밍 언어에서 AWS 서비스를 직접 호출할 수 있게 해주는 개발 도구 모음임.</p><p id="52b720e4-6f49-83f7-9b48-01647af541f4" class="" dir="auto">예를 들어 애플리케이션 코드에서 다음 작업을 수행할 수 있음.</p><ul id="d15720e4-6f49-834c-92fe-8126a7e391cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3에 파일 업로드</li></ul><ul id="728720e4-6f49-8397-b918-0130c53003a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB에 데이터 저장</li></ul><ul id="c11720e4-6f49-834f-ad76-81bf52e8d4a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQS에 메시지 전송</li></ul><ul id="cf6720e4-6f49-837e-9815-01cd78d24641" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SNS로 알림 발송</li></ul><ul id="680720e4-6f49-830b-ac50-81ce02d77881" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 호출</li></ul><ul id="56f720e4-6f49-83b9-a72d-814728e2ffed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 정보 조회</li></ul><p id="9b6720e4-6f49-82e1-acd1-0129234b1c58" class="" dir="auto">즉, SDK는 콘솔이나 CLI가 아니라 <strong>애플리케이션 내부 로직에서 AWS 서비스를 제어하는 수단</strong>임.</p><p id="92f720e4-6f49-830b-8108-817452118b8f" class="" dir="auto">AWS는 다양한 언어용 SDK를 제공함.</p><p id="512720e4-6f49-8398-873c-0152e25001bf" class="" dir="auto">예</p><ul id="040720e4-6f49-8216-89cd-01c7bb99ac72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python (boto3)</li></ul><ul id="12c720e4-6f49-826b-aeaa-8103e165d0b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Java</li></ul><ul id="a14720e4-6f49-8373-984c-014655b8e5a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JavaScript</li></ul><ul id="694720e4-6f49-82c2-aacb-81b3d3e61798" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Go</li></ul><ul id="4bb720e4-6f49-82d9-88aa-81c6ccf71dd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">.NET</li></ul><ul id="609720e4-6f49-821f-98ad-018671e78dcf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PHP</li></ul><hr id="9a0720e4-6f49-822b-b413-016891a7d04d" dir="auto"/><h1 id="2c3720e4-6f49-836c-998b-8190578ddd84" class="" dir="auto">8.21 SDK가 필요한 이유</h1><p id="b44720e4-6f49-82c7-904a-014a932505a2" class="" dir="auto">콘솔은 사람이 직접 조작할 때 쓰고, CLI는 터미널에서 명령할 때 사용함.</p><p id="f48720e4-6f49-829c-b4f9-8124515fbf44" class="" dir="auto">하지만 애플리케이션은 사람 손이 아니라 코드 안에서 AWS 서비스를 호출해야 함.</p><p id="ddf720e4-6f49-82ed-af7d-81c9280a79dc" class="" dir="auto">예를 들어 사용자가 웹 페이지에서 이미지를 업로드했다고 가정하면, 애플리케이션은 다음 흐름을 수행할 수 있음.</p><ul id="e39720e4-6f49-83d2-ace1-81486074a6a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업로드 파일 수신</li></ul><ul id="5b1720e4-6f49-838f-82a8-81a7503da855" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3에 저장</li></ul><ul id="206720e4-6f49-831b-8c39-81d188adc4cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">저장 위치를 DB에 기록</li></ul><ul id="5ea720e4-6f49-8311-a2d4-01580bdec1f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업로드 완료 메시지 반환</li></ul><p id="906720e4-6f49-83eb-8bac-010da1b640ef" class="" dir="auto">이 흐름은 콘솔이 아니라 코드 안에서 처리되어야 하며, 그때 SDK가 사용됨.</p><p id="239720e4-6f49-83dc-8f23-0107d873148f" class="" dir="auto">즉, SDK는 <strong>애플리케이션과 AWS 서비스 사이의 프로그래밍 인터페이스</strong>임.</p><hr id="1ed720e4-6f49-836b-b174-8181792a36f3" dir="auto"/><h1 id="fa9720e4-6f49-8252-8f72-01d0ee7b170b" class="" dir="auto">8.22 SDK와 API의 관계</h1><p id="612720e4-6f49-835d-8d1e-01ad7d4ae71d" class="" dir="auto">AWS 서비스는 결국 API를 통해 동작함.</p><p id="60d720e4-6f49-83f3-8951-0193062c49e5" class="" dir="auto">콘솔도 내부적으로는 API를 호출하고, CLI도 API를 호출함.</p><p id="8a5720e4-6f49-820a-8990-819c4a36756e" class="" dir="auto">SDK 역시 마찬가지로 API 호출을 개발자가 쉽게 사용할 수 있도록 감싼 도구임.</p><p id="9fa720e4-6f49-8237-8725-01697c66b7f0" class="" dir="auto">즉,</p><pre id="912720e4-6f49-82e1-abf2-01641779acae" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">콘솔, CLI, SDK는 모두 결국 AWS API를 사용한다.</code></pre><p id="c5a720e4-6f49-83a2-ba39-8100906a36be" class="" dir="auto">차이는 사용 방식임.</p><ul id="367720e4-6f49-837c-b4a3-01d296978eb7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">콘솔 : 사람이 화면에서 사용</li></ul><ul id="350720e4-6f49-8305-b31c-017b38714899" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CLI : 사람이 터미널에서 사용</li></ul><ul id="a16720e4-6f49-82ff-a57d-018af12e481d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SDK : 애플리케이션 코드에서 사용</li></ul><p id="b93720e4-6f49-82c9-915d-01c8279ca14d" class="" dir="auto">이 구조를 이해하면 AWS 서비스 제어 방식 전체를 체계적으로 볼 수 있음.</p><hr id="424720e4-6f49-823f-827a-81330c03c46c" dir="auto"/><h1 id="7f4720e4-6f49-82b4-a3f6-01036cd10d73" class="" dir="auto">8.23 SDK 사용 시 인증 구조</h1><p id="964720e4-6f49-826c-88b4-8197c830f542" class="" dir="auto">애플리케이션이 SDK로 AWS 서비스를 호출하려면 인증 정보가 필요함.</p><p id="090720e4-6f49-8264-929f-8143d7fbf9bc" class="" dir="auto">이때 가장 중요한 원칙은 <strong>애플리케이션 코드에 Access Key를 직접 넣지 않는 것</strong>임.</p><p id="6d0720e4-6f49-838e-b99f-01ae7f2dbcf8" class="" dir="auto">운영 환경에서는 보통 IAM Role을 사용함.</p><p id="6e3720e4-6f49-8227-b55d-010dbb74e391" class="" dir="auto">예</p><ul id="97d720e4-6f49-8361-95d7-81554ff30037" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2에 IAM Role 연결</li></ul><ul id="869720e4-6f49-82b1-9f92-81039aeff3bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 실행 역할 사용</li></ul><ul id="2a3720e4-6f49-830e-b22e-81aa610fa8bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ECS Task Role 사용</li></ul><p id="f63720e4-6f49-82aa-890a-81a42ebd71fa" class="" dir="auto">즉, 애플리케이션은 실행 환경에 부여된 역할을 통해 안전하게 AWS API를 호출해야 함.</p><p id="452720e4-6f49-8315-9c7d-81439e26be70" class="" dir="auto">이 부분은 자동화와 보안이 만나는 지점이라서 매우 중요함.</p><hr id="e7f720e4-6f49-830f-aba1-81f985f3083b" dir="auto"/><h1 id="c95720e4-6f49-8234-b0b0-01a18556f5b4" class="" dir="auto">8.24 자동화 수준별 구분</h1><p id="cc3720e4-6f49-820f-9643-017c6c2a8cf4" class="" dir="auto">자동화를 구조적으로 보면 다음처럼 정리할 수 있음.</p><h3 id="533720e4-6f49-837a-927d-0166c6d18996" class="" dir="auto">인프라 자동화</h3><ul id="8f9720e4-6f49-82a9-ac45-81cff60d472f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC</li></ul><ul id="dda720e4-6f49-82fa-bf15-01853c376411" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet</li></ul><ul id="819720e4-6f49-834f-ad02-81862ac8cdb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2</li></ul><ul id="9ef720e4-6f49-83f6-a2c3-81a0ca3cb9e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB</li></ul><ul id="06c720e4-6f49-83ea-834a-01b7b0fd2423" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS</li></ul><ul id="3a4720e4-6f49-8227-b1fc-814d18dec3c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 일부</li></ul><p id="9e2720e4-6f49-82b5-9a1d-81258baf5d87" class="" dir="auto">대표 도구</p><ul id="349720e4-6f49-83a0-b316-01b2e6797b82" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFormation</li></ul><h3 id="97e720e4-6f49-8244-957c-81c2ec817ef2" class="" dir="auto">플랫폼/배포 자동화</h3><ul id="866720e4-6f49-82ce-86ae-01398ba63b74" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 실행 환경 준비</li></ul><ul id="8e7720e4-6f49-8308-bb77-01419d717c09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버전 배포</li></ul><ul id="bda720e4-6f49-838c-82ef-8179e220576c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경 관리</li></ul><p id="136720e4-6f49-8397-9b56-8161abb578fa" class="" dir="auto">대표 도구</p><ul id="ace720e4-6f49-837f-8c98-819239c99d08" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Elastic Beanstalk</li></ul><h3 id="e53720e4-6f49-82fb-ad55-81e232aa75d9" class="" dir="auto">애플리케이션 로직 자동화</h3><ul id="643720e4-6f49-82a2-b18b-01e32f18b0ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드에서 AWS 서비스 호출</li></ul><ul id="905720e4-6f49-8301-b767-813f7246bb22" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비즈니스 흐름에 AWS 기능 포함</li></ul><p id="7c8720e4-6f49-83ac-9cb0-013b34cd7f81" class="" dir="auto">대표 도구</p><ul id="7be720e4-6f49-82b3-b2aa-018c8fb6b586" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS SDK</li></ul><p id="640720e4-6f49-8366-b96f-01472e25655e" class="" dir="auto">이 구분을 명확히 해 두면 학생들이 서비스 역할을 헷갈리지 않음.</p><hr id="57d720e4-6f49-825a-9982-011f3d56a136" dir="auto"/><h1 id="8a4720e4-6f49-8334-8e28-81c2b2eeffa3" class="" dir="auto">8.25 자동화와 운영 품질의 관계</h1><p id="962720e4-6f49-8252-b587-01a34c10b14d" class="" dir="auto">자동화는 단지 “사람 일을 줄여준다”가 아님.</p><p id="69c720e4-6f49-8343-b2a5-01df07f6ba1d" class="" dir="auto">실제로는 운영 품질과 직결됨.</p><h3 id="af3720e4-6f49-82b0-b91f-0158c4030735" class="" dir="auto">1. 일관된 환경</h3><p id="cf2720e4-6f49-82f9-8a5e-815abc0f1121" class="" dir="auto">같은 코드로 같은 환경을 생성하므로 편차가 줄어듦.</p><h3 id="e6b720e4-6f49-8387-a422-81dee9d1fe02" class="" dir="auto">2. 빠른 복구</h3><p id="a29720e4-6f49-8236-9cde-01a7792c7998" class="" dir="auto">문제가 생긴 환경을 다시 빠르게 재구성할 수 있음.</p><h3 id="25f720e4-6f49-827a-91a8-01816c2fe3b2" class="" dir="auto">3. 변경 추적</h3><p id="bcc720e4-6f49-83d2-8f8a-012335296808" class="" dir="auto">변경 이력을 코드로 남길 수 있음.</p><h3 id="372720e4-6f49-83f1-9520-81cff442c9ab" class="" dir="auto">4. 표준화</h3><p id="a50720e4-6f49-82d1-87d5-01d0440123dd" class="" dir="auto">여러 팀이 같은 기준으로 리소스를 생성할 수 있음.</p><p id="7b7720e4-6f49-83fb-8398-812074aaca27" class="" dir="auto">즉, 자동화는 아키텍처 설계 원칙 중</p><p id="49e720e4-6f49-82b9-ae67-011c27a51f6d" class="" dir="auto"><strong>운영 우수성(Operational Excellence)</strong> 과 깊게 연결됨.</p><hr id="917720e4-6f49-828a-81d5-01a7a354704e" dir="auto"/><h1 id="074720e4-6f49-82e3-8656-81f54e5175ec" class="" dir="auto">8.26 멀티 티어 아키텍처와 자동화의 연결</h1><p id="361720e4-6f49-8382-912e-81ef31817dbd" class="" dir="auto">ARC 과정에서는 최종적으로 멀티 티어 아키텍처를 구성하게 됨.</p><p id="6d9720e4-6f49-820d-a0c2-81e3f30159b7" class="" dir="auto">이때 자동화가 없으면 다음 리소스를 수작업으로 모두 만들어야 함.</p><ul id="b55720e4-6f49-82c2-bfb7-81ac56b42c62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC</li></ul><ul id="6d3720e4-6f49-83f3-93ad-81460bde13ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet</li></ul><ul id="bf9720e4-6f49-835b-9e71-01f001c83005" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table</li></ul><ul id="719720e4-6f49-82ff-885b-015249667d24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway</li></ul><ul id="2d0720e4-6f49-8330-b0ae-014a2b477d7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAT Gateway</li></ul><ul id="ab6720e4-6f49-8205-b97e-013f23d913fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group</li></ul><ul id="8c1720e4-6f49-83ca-9f27-01764a9db06c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB</li></ul><ul id="19e720e4-6f49-82e1-9f6f-01aeac0d1ec7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling Group</li></ul><ul id="c64720e4-6f49-8268-849f-01978b7c6584" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2</li></ul><ul id="ac7720e4-6f49-828c-99b4-01e899ffef18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS</li></ul><ul id="c67720e4-6f49-8387-8545-018962915e71" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><p id="730720e4-6f49-822a-8229-0186b472b713" class="" dir="auto">이 구조를 수작업으로 반복 구축하는 것은 매우 비효율적임.</p><p id="5ec720e4-6f49-8386-85e1-01b74eaa6408" class="" dir="auto">따라서 실제 교육 흐름에서는 자동화를 통해 다음을 가능하게 해야 함.</p><ul id="9ac720e4-6f49-8334-bb2a-010130382adb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동일한 실습 환경 반복 생성</li></ul><ul id="863720e4-6f49-82d1-a199-019d14481154" class="bulleted-list" dir="auto"><li style="list-style-type:disc">학생별 환경 표준화</li></ul><ul id="f9f720e4-6f49-8335-ba3c-01fa628b4df4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최종 종합 아키텍처 재현</li></ul><ul id="4a3720e4-6f49-830b-9ba3-011755153a50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변경 및 삭제의 일관성 확보</li></ul><p id="732720e4-6f49-833f-bf51-01bc950b7332" class="" dir="auto">즉, 자동화는 후반부 종합 아키텍처 실습을 가능하게 만드는 핵심 기반임.</p><hr id="60c720e4-6f49-8373-be04-019ac387ad95" dir="auto"/><h1 id="1c7720e4-6f49-8318-ba3b-01caaceb390b" class="" dir="auto">8.27 핵심 비교 정리</h1><h2 id="a68720e4-6f49-83c2-b41f-81e5320de89f" class="" dir="auto">CloudFormation</h2><ul id="911720e4-6f49-8228-89da-01dd5f2a8089" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인프라를 코드로 정의함</li></ul><ul id="57e720e4-6f49-834a-9653-010b91081cbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재현성과 표준화에 강함</li></ul><ul id="f2f720e4-6f49-8314-a83a-0107e91c1356" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS IaC의 대표 도구임</li></ul><h2 id="2f3720e4-6f49-83d5-baef-01b6b9fa6035" class="" dir="auto">Elastic Beanstalk</h2><ul id="344720e4-6f49-824a-b38d-01bbe5e4e7b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 배포와 운영 환경 구성을 단순화함</li></ul><ul id="8a1720e4-6f49-83c8-9cda-818d13c2b937" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빠른 웹 애플리케이션 배포에 적합함</li></ul><ul id="b1e720e4-6f49-8295-a9ac-011e28bdc68f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세밀한 제어보다는 편의성에 강점이 있음</li></ul><h2 id="197720e4-6f49-83ab-af14-813186595ff0" class="" dir="auto">AWS SDK</h2><ul id="9d7720e4-6f49-8258-a72c-814dd01230fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 코드에서 AWS 서비스를 직접 호출함</li></ul><ul id="fbd720e4-6f49-82e0-a1bb-011bcc36f86d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 업로드, DynamoDB 저장, SQS 전송 같은 기능 구현에 사용함</li></ul><ul id="6ca720e4-6f49-8314-885c-81bafc3a2a8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 로직과 AWS 서비스를 연결하는 핵심 수단임</li></ul><hr id="794720e4-6f49-827b-afea-81235649ae80" dir="auto"/><h1 id="23e720e4-6f49-8333-a2cc-81daf1e8a94d" class="" dir="auto">8.28 장 요약</h1><p id="bc1720e4-6f49-82fb-b62b-01aa1571cb69" class="" dir="auto">이번 장에서 학습한 핵심 내용</p><ul id="4f3720e4-6f49-83b0-b0b1-01f9653a6670" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화가 필요한 이유</li></ul><ul id="ac8720e4-6f49-8299-bfda-016b6da73a9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Infrastructure as Code 개념</li></ul><ul id="8aa720e4-6f49-836f-8304-81ef7d2a8d5c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFormation의 역할과 구조</li></ul><ul id="608720e4-6f49-8206-8bca-01455bc26d2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">템플릿, 스택, 파라미터, 출력 개념</li></ul><ul id="07f720e4-6f49-83c7-aff9-015c2a3d4498" class="bulleted-list" dir="auto"><li style="list-style-type:disc">선언형 자동화의 의미</li></ul><ul id="05d720e4-6f49-8329-8fff-81de131c5963" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Elastic Beanstalk의 역할과 한계</li></ul><ul id="201720e4-6f49-8341-91e4-81b896329995" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFormation과 Beanstalk의 차이</li></ul><ul id="f70720e4-6f49-8375-bdc3-012b34f26bd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS SDK의 역할과 사용 목적</li></ul><ul id="4db720e4-6f49-82e9-9465-81e620210067" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 수준별 구분</li></ul><ul id="1f9720e4-6f49-822c-9dde-015741eda940" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화와 운영 품질의 관계</li></ul><hr id="0f9720e4-6f49-821a-8f9c-81b0068c00b6" dir="auto"/><h1 id="c47720e4-6f49-825b-9ca2-01a34525b3b1" class="" dir="auto">8.29 한 줄 정리</h1><pre id="521720e4-6f49-827a-8c70-0116f321248c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CloudFormation은 인프라를 코드로 만든다.
+Elastic Beanstalk는 애플리케이션 배포를 단순화한다.
+AWS SDK는 애플리케이션 코드에서 AWS 서비스를 제어한다.
+세 도구는 자동화의 대상과 수준이 서로 다르다.</code></pre><hr id="22e720e4-6f49-83af-a52d-01b6b4178664" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,851 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>PostgreSQL JSONB 실습 워크북</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="0fc720e4-6f49-82bd-98fa-01f2fbe020b4" class="page sans"><header><h1 class="page-title" dir="auto">PostgreSQL JSONB 실습 워크북</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="b99720e4-6f49-8219-9aa0-0190e512c94d" dir="auto"/><h3 id="737720e4-6f49-831e-8b5f-0167a7de5b07" class="" dir="auto">실습 DB: <code>bootcamp_json</code></h3><hr id="0cf720e4-6f49-834b-aa7e-01f5877fd5f1" dir="auto"/><h2 id="6ee720e4-6f49-8256-a975-81137972d89b" class="" dir="auto">1. 실습 환경 준비</h2><h3 id="8cf720e4-6f49-8284-bf5b-016e9f9e9ff8" class="" dir="auto">1-1. DB 생성</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" integrity="sha512-sijCOJblSCXYYmXdwvqV0tak8QJW5iy2yLB1wAbbLc3OOIueqymizRFWUS/mwKctnzPKpNdPJV3aK1zlDMJmXQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="4ba720e4-6f49-8389-b5f9-01723a132af3" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE DATABASE bootcamp_json;
+CREATE USER bootcamp_json_user WITH PASSWORD &#x27;json1234&#x27;;
+GRANT ALL PRIVILEGES ON DATABASE bootcamp_json TO bootcamp_json_user;</code></pre><p id="524720e4-6f49-83da-b6e9-0156ce6e6f01" class="" dir="auto">접속:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="fd8720e4-6f49-8395-9dcf-011b3d1bc8da" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">psql -U bootcamp_json_user -d bootcamp_json</code></pre><p id="9e9720e4-6f49-8376-a21f-01bbf0260429" class="" dir="auto">확인:</p><pre id="967720e4-6f49-83dc-89ef-81b1d9206a2b" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT current_database();</code></pre><hr id="9e1720e4-6f49-8318-9e9e-015529afd882" dir="auto"/><h2 id="4aa720e4-6f49-8257-9328-01d598eb06c2" class="" dir="auto">2. 테이블 생성 (JSONB 실습 전용)</h2><h3 id="c99720e4-6f49-826a-82e3-8186f96330f3" class="" dir="auto">2-1. users – 설정/프로필(JSONB)</h3><pre id="c7a720e4-6f49-8306-89f3-019a4c0d8378" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE TABLE users (
+  user_id     BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  email       TEXT NOT NULL UNIQUE,
+  name        TEXT NOT NULL,
+  created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  profile     JSONB NOT NULL DEFAULT &#x27;{}&#x27;::jsonb
+);</code></pre><h3 id="77f720e4-6f49-8261-a5db-012595cef31d" class="" dir="auto">2-2. events – 로그/이벤트(JSONB)</h3><pre id="aa5720e4-6f49-8390-9333-012f5e1487ea" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE TABLE events (
+  event_id   BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  user_id    BIGINT,
+  event_type TEXT NOT NULL,
+  payload    JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre><h3 id="575720e4-6f49-8367-8b47-0132a33514c6" class="" dir="auto">2-3. payments_raw – 외부 API Raw(JSONB)</h3><pre id="848720e4-6f49-83e5-a962-812a22ff70cc" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE TABLE payments_raw (
+  payment_id BIGINT GENERATED BY DEFAULT AS IDENTITY PRIMARY KEY,
+  provider   TEXT NOT NULL,
+  payload    JSONB NOT NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);</code></pre><p id="334720e4-6f49-83af-bc31-01ba2240d52d" class="" dir="auto">테이블 확인:</p><pre id="c30720e4-6f49-8348-ba8e-815d2d6dffe5" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">\dt
+\d users</code></pre><hr id="04e720e4-6f49-82c2-b4ed-0122c48fac65" dir="auto"/><h2 id="07b720e4-6f49-8246-abce-01819bd2e660" class="" dir="auto">3. 실습용 데이터 입력</h2><h3 id="202720e4-6f49-83dd-8fe4-816daf2e2b6d" class="" dir="auto">3-1. users 데이터</h3><pre id="1eb720e4-6f49-83e1-9f95-815f7d5958cb" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">INSERT INTO users (email, name, created_at, profile) VALUES
+(&#x27;minsu@example.com&#x27;,&#x27;김민수&#x27;,NOW()-INTERVAL &#x27;30 days&#x27;,
+ &#x27;{&quot;tier&quot;:&quot;gold&quot;,&quot;marketing&quot;:{&quot;email_opt_in&quot;:true,&quot;sms_opt_in&quot;:true},&quot;tags&quot;:[&quot;vip&quot;,&quot;keyboard&quot;],&quot;ui&quot;:{&quot;theme&quot;:&quot;dark&quot;,&quot;lang&quot;:&quot;ko&quot;}}&#x27;),
+(&#x27;jiyoon@example.com&#x27;,&#x27;박지윤&#x27;,NOW()-INTERVAL &#x27;20 days&#x27;,
+ &#x27;{&quot;tier&quot;:&quot;silver&quot;,&quot;marketing&quot;:{&quot;email_opt_in&quot;:true},&quot;tags&quot;:[&quot;new&quot;],&quot;ui&quot;:{&quot;theme&quot;:&quot;light&quot;,&quot;lang&quot;:&quot;ko&quot;}}&#x27;),
+(&#x27;seojun@example.com&#x27;,&#x27;이서준&#x27;,NOW()-INTERVAL &#x27;10 days&#x27;,
+ &#x27;{&quot;tier&quot;:&quot;gold&quot;,&quot;marketing&quot;:{&quot;sms_opt_in&quot;:true},&quot;tags&quot;:[&quot;vip&quot;,&quot;monitor&quot;],&quot;ui&quot;:{&quot;theme&quot;:&quot;dark&quot;,&quot;lang&quot;:&quot;en&quot;}}&#x27;),
+(&#x27;yuna@example.com&#x27;,&#x27;최유나&#x27;,NOW()-INTERVAL &#x27;5 days&#x27;,
+ &#x27;{&quot;tier&quot;:&quot;bronze&quot;,&quot;tags&quot;:[&quot;new&quot;],&quot;ui&quot;:{&quot;theme&quot;:&quot;light&quot;}}&#x27;),
+(&#x27;dohyuk@example.com&#x27;,&#x27;정도혁&#x27;,NOW()-INTERVAL &#x27;2 days&#x27;,
+ &#x27;{&quot;tier&quot;:&quot;silver&quot;,&quot;tags&quot;:[&quot;early-adopter&quot;]}&#x27;);
+</code></pre><h3 id="07b720e4-6f49-8384-bcb0-816aff463db6" class="" dir="auto">3-2. events 데이터</h3><pre id="10c720e4-6f49-8339-8a33-010886f695b8" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">INSERT INTO events (user_id,event_type,created_at,payload) VALUES
+(1,&#x27;LOGIN&#x27;,NOW()-INTERVAL &#x27;3 days&#x27;,&#x27;{&quot;ip&quot;:&quot;10.0.0.1&quot;,&quot;device&quot;:&quot;mobile&quot;}&#x27;),
+(1,&#x27;ORDER_CREATED&#x27;,NOW()-INTERVAL &#x27;2 days&#x27;,&#x27;{&quot;order_id&quot;:1001,&quot;amount&quot;:198000}&#x27;),
+(2,&#x27;LOGIN&#x27;,NOW()-INTERVAL &#x27;1 day&#x27;,&#x27;{&quot;ip&quot;:&quot;10.0.0.2&quot;,&quot;device&quot;:&quot;pc&quot;}&#x27;),
+(3,&#x27;ORDER_PAID&#x27;,NOW()-INTERVAL &#x27;12 hours&#x27;,&#x27;{&quot;order_id&quot;:1002,&quot;amount&quot;:279000,&quot;method&quot;:&quot;CARD&quot;}&#x27;),
+(3,&#x27;LOGOUT&#x27;,NOW()-INTERVAL &#x27;1 hour&#x27;,&#x27;{&quot;duration_sec&quot;:3600}&#x27;);</code></pre><h3 id="145720e4-6f49-8338-88b2-01e53c801975" class="" dir="auto">3-3. payments_raw 데이터</h3><pre id="68b720e4-6f49-8362-8d69-01b8f78bccbd" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">INSERT INTO payments_raw (provider,created_at,payload) VALUES
+(&#x27;KCP&#x27;,NOW()-INTERVAL &#x27;5 days&#x27;,
+ &#x27;{&quot;tid&quot;:&quot;TID-10001&quot;,&quot;result&quot;:{&quot;code&quot;:&quot;0000&quot;,&quot;message&quot;:&quot;APPROVED&quot;},&quot;amount&quot;:198000}&#x27;),
+(&#x27;KCP&#x27;,NOW()-INTERVAL &#x27;3 days&#x27;,
+ &#x27;{&quot;tid&quot;:&quot;TID-10002&quot;,&quot;result&quot;:{&quot;code&quot;:&quot;9999&quot;,&quot;message&quot;:&quot;DENIED&quot;},&quot;amount&quot;:279000,&quot;error&quot;:{&quot;reason&quot;:&quot;LIMIT_EXCEEDED&quot;}}&#x27;),
+(&#x27;NAVERPAY&#x27;,NOW()-INTERVAL &#x27;1 day&#x27;,
+ &#x27;{&quot;tid&quot;:&quot;NP-20001&quot;,&quot;result&quot;:{&quot;code&quot;:&quot;0000&quot;,&quot;message&quot;:&quot;OK&quot;},&quot;amount&quot;:59000}&#x27;);</code></pre><hr id="309720e4-6f49-837f-86d3-01fc5e588fe3" dir="auto"/><h2 id="75e720e4-6f49-8290-bccb-013a21e91696" class="" dir="auto">4. JSONB 기본 조회 실습</h2><h3 id="5b1720e4-6f49-83ad-92ce-8129e3270b12" class="" dir="auto">4-1. JSON 값 조회</h3><pre id="3f2720e4-6f49-83f5-a4dc-01475a7e6299" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT user_id, profile-&gt;&gt;&#x27;tier&#x27; AS tier
+FROM users;</code></pre><h3 id="858720e4-6f49-83a1-8624-81ccca4ddb28" class="" dir="auto">4-2. 중첩 JSON 조회</h3><pre id="316720e4-6f49-82c4-8938-01af7f512dc9" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT user_id, profile-&gt;&#x27;marketing&#x27;-&gt;&gt;&#x27;email_opt_in&#x27;
+FROM users;</code></pre><hr id="f84720e4-6f49-82a1-8091-01bd7853c479" dir="auto"/><h2 id="77e720e4-6f49-837a-871d-81e0b3edadab" class="" dir="auto">5. JSONB 필터 실습</h2><pre id="e31720e4-6f49-8370-b2d5-010cce7c8c48" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">-- tier = gold
+SELECT user_id, name
+FROM users
+WHERE profile-&gt;&gt;&#x27;tier&#x27; = &#x27;gold&#x27;;
+
+-- tags에 vip 포함
+SELECT user_id, name
+FROM users
+WHERE profile-&gt;&#x27;tags&#x27; @&gt; &#x27;[&quot;vip&quot;]&#x27;::jsonb;
+
+-- marketing 키 존재
+SELECT user_id, name
+FROM users
+WHERE profile ? &#x27;marketing&#x27;;</code></pre><hr id="5d5720e4-6f49-8239-8e8c-8164be98f3b3" dir="auto"/><h2 id="5cf720e4-6f49-8376-943e-01a678e90b30" class="" dir="auto">6. JSONB 배열 처리</h2><h3 id="0c0720e4-6f49-828d-8351-8154333a10be" class="" dir="auto">6-1. 배열 펼치기</h3><pre id="15b720e4-6f49-8265-8d07-01578641af20" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT user_id, jsonb_array_elements_text(profile-&gt;&#x27;tags&#x27;) AS tag
+FROM users;</code></pre><h3 id="4c4720e4-6f49-82ea-94c3-814f54adbfca" class="" dir="auto">6-2. 배열 기반 필터</h3><pre id="b5f720e4-6f49-8299-a705-01f3d8af3e51" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT user_id, name
+FROM users
+WHERE profile-&gt;&#x27;tags&#x27; ? &#x27;vip&#x27;;</code></pre><hr id="303720e4-6f49-8252-ad65-811b95ec9d07" dir="auto"/><h2 id="bbd720e4-6f49-83d6-9f0c-8126f1cb67fe" class="" dir="auto">7. JSONB 수정(Update) 실습</h2><h3 id="b98720e4-6f49-8272-ae99-813fc0abe706" class="" dir="auto">7-1. 키 추가</h3><pre id="2d1720e4-6f49-83d4-b962-817b9d4ccb62" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">UPDATE users
+SET profile = profile || jsonb_build_object(&#x27;last_login&#x27;, NOW())
+WHERE user_id = 1;</code></pre><h3 id="701720e4-6f49-829f-8257-811e00b6c751" class="" dir="auto">7-2. 중첩 키 수정</h3><pre id="8e3720e4-6f49-832f-921c-01177329d9a7" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">UPDATE users
+SET profile = jsonb_set(profile,&#x27;{ui,theme}&#x27;,&#x27;&quot;dark&quot;&#x27;::jsonb,true)
+WHERE user_id = 2;</code></pre><hr id="e0f720e4-6f49-8399-b656-819cfd195a9e" dir="auto"/><h2 id="256720e4-6f49-82e1-9ed8-81d530e9d7f2" class="" dir="auto">8. JSONPath 실습 (PostgreSQL 12+)</h2><pre id="b44720e4-6f49-83c2-bac1-015f1b56120d" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">-- gold 사용자
+SELECT user_id, name
+FROM users
+WHERE profile @? &#x27;$.tier ? (@ == &quot;gold&quot;)&#x27;;
+
+-- 결제 성공
+SELECT payment_id, provider
+FROM payments_raw
+WHERE payload @? &#x27;$.result.code ? (@ == &quot;0000&quot;)&#x27;;</code></pre><hr id="778720e4-6f49-8386-9787-81ad3ff5c5d8" dir="auto"/><h2 id="689720e4-6f49-83dc-b95c-81f732d52efd" class="" dir="auto">9. JSONB 인덱스 실습</h2><h3 id="35c720e4-6f49-82e3-bac2-81b2980808f5" class="" dir="auto">9-1. GIN 인덱스(Generalized Inverted Index)</h3><p id="e08720e4-6f49-82a2-8e2d-01cd5f8213b8" class="" dir="auto"> <strong>GIN</strong>은 PostgreSQL에서 복합 값(배열·JSONB·전문검색)을 빠르게 찾기 위한 <strong>특수 인덱스</strong></p><pre id="4c2720e4-6f49-82f9-a8d2-81b62208fa15" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE INDEX idx_users_profile_gin
+ON users USING GIN (profile);</code></pre><h3 id="083720e4-6f49-821d-b29f-01bb555a55dd" class="" dir="auto">9-2. 표현식 인덱스</h3><pre id="0f7720e4-6f49-82c9-bf12-81501958ce35" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE INDEX idx_users_tier
+ON users ((profile-&gt;&gt;&#x27;tier&#x27;));</code></pre><h3 id="f57720e4-6f49-83aa-860d-01e1eb21ab12" class="" dir="auto">9-3. 인덱스 확인</h3><pre id="62d720e4-6f49-83a9-9d3d-819c58503413" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">EXPLAIN ANALYZE
+SELECT user_id FROM users
+WHERE profile-&gt;&gt;&#x27;tier&#x27; = &#x27;gold&#x27;;
+</code></pre><hr id="5fe720e4-6f49-82cd-8171-0131cd4f2520" dir="auto"/><h2 id="f74720e4-6f49-82c2-b28b-01909844a03a" class="" dir="auto">10. 설계 판단 실습 (중요)</h2><h3 id="80f720e4-6f49-827b-8a4d-012a7b041be5" class="" dir="auto">JSONB에 두는 게 적절한 것</h3><ul id="bd3720e4-6f49-833a-bc9c-81dcb09cca0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정</li></ul><ul id="389720e4-6f49-83c9-9199-81c3fccaa42b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">옵션</li></ul><ul id="76f720e4-6f49-82ce-80f4-013ca78fad05" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그</li></ul><ul id="adf720e4-6f49-83b7-85eb-818b7ea68fef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 API 응답</li></ul><ul id="b85720e4-6f49-83fb-bb2c-0102eda09e9e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그</li></ul><h3 id="6a6720e4-6f49-82cb-ba2d-811d12833d87" class="" dir="auto">컬럼으로 승격해야 할 신호</h3><ul id="dff720e4-6f49-83bf-9ace-816f79ec7155" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WHERE / JOIN / GROUP BY에 자주 등장</li></ul><ul id="275720e4-6f49-83a7-8a15-01743598bfc6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인덱스 필수</li></ul><ul id="205720e4-6f49-8391-9279-8189104348c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비즈니스 핵심 로직 의존</li></ul><pre id="3a9720e4-6f49-823b-8f02-81ef83ce6d36" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">-- 승격 예시
+ALTER TABLE users
+ADD COLUMN tier TEXT
+GENERATED ALWAYS AS (profile-&gt;&gt;&#x27;tier&#x27;) STORED;
+</code></pre><hr id="a69720e4-6f49-8346-acb9-81eec707fead" dir="auto"/><h2 id="814720e4-6f49-83cd-93e0-813086bb1de2" class="" dir="auto">11. 실습 마무리 체크</h2><pre id="6cc720e4-6f49-831d-81ad-816a2185a396" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT COUNT(*) FROM users;
+SELECT COUNT(*) FROM events;
+SELECT COUNT(*) FROM payments_raw;
+</code></pre><hr id="899720e4-6f49-8382-8358-8169bb8a1234" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

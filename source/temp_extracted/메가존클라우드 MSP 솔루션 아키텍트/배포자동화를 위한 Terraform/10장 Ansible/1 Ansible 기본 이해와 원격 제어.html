@@ -1,0 +1,818 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>1. Ansible 기본 이해와 원격 제어</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="61d720e4-6f49-832f-8bd7-8171403422a3" class="page sans"><header><h1 class="page-title" dir="auto">1. Ansible 기본 이해와 원격 제어</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="e2c720e4-6f49-8341-b368-018bff95e49c" class="" dir="auto">1.1 Ansible 개요</h2><p id="d8b720e4-6f49-838c-9012-81a23563df53" class="" dir="auto">Ansible은 여러 대의 서버를 일관된 방식으로 관리하기 위한 자동화 도구임.</p><p id="b1a720e4-6f49-8342-9f99-01d5bfb29f09" class="" dir="auto">서버 운영 환경에서는 동일한 작업을 여러 서버에 반복해서 수행해야 하는 경우가 매우 많음. 예를 들어 웹서버 3대에 동일한 패키지를 설치하고, 같은 설정파일을 배포하고, 서비스를 시작해야 하는 상황이 자주 발생함. 이런 작업을 사람이 직접 한 대씩 접속해서 처리하면 시간이 오래 걸리고, 설정 누락이나 오타 같은 실수가 발생하기 쉬움.</p><p id="fa8720e4-6f49-83b2-b8e2-81ad3f72adde" class="" dir="auto">Ansible은 이러한 반복 작업을 자동화하기 위해 사용함.</p><p id="87e720e4-6f49-82bc-9f41-01796b2ab709" class="" dir="auto">관리 대상 서버에 직접 접속해서 명령을 수행하고, 패키지를 설치하고, 파일을 복사하고, 서비스를 제어하는 작업을 한 번에 처리할 수 있음. 단순히 명령을 여러 서버에 동시에 전달하는 수준을 넘어서, 서버가 <strong>원하는 상태</strong>가 되도록 관리하는 데 목적이 있음.</p><p id="e5e720e4-6f49-821d-92cb-013264b52276" class="" dir="auto">예를 들어 다음과 같은 상태를 만들고 싶다고 가정함.</p><ul id="bd4720e4-6f49-83b4-98d5-0116b0069279" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 웹서버에 nginx가 설치되어 있어야 함</li></ul><ul id="794720e4-6f49-83c2-8e78-81604c37a048" class="bulleted-list" dir="auto"><li style="list-style-type:disc">nginx 서비스가 실행 중이어야 함</li></ul><ul id="af6720e4-6f49-8299-8dc9-812dbfb6bcd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 index.html 파일이 배포되어 있어야 함</li></ul><p id="33c720e4-6f49-82bd-ab65-01c2fa8b5448" class="" dir="auto">이때 Ansible은 “명령을 실행했다”는 수준이 아니라 “해당 서버가 원하는 상태가 되었는가”를 기준으로 동작함.</p><p id="1f7720e4-6f49-8346-bbca-8101288f7b0f" class="" dir="auto">이 점이 단순 원격 명령 실행과 Ansible을 구분하는 핵심임.</p><hr id="b90720e4-6f49-82fb-abee-01245ca83f95" dir="auto"/><h2 id="521720e4-6f49-83fe-b96d-016b21e9b073" class="" dir="auto">1.2 자동화가 필요한 이유</h2><p id="a17720e4-6f49-8333-b57c-818b82c9e825" class="" dir="auto">서버 운영 업무에서 반복 작업은 매우 흔함.</p><p id="cef720e4-6f49-83b6-9f40-01faa9ef7798" class="" dir="auto">대표적인 예시는 다음과 같음.</p><ul id="60f720e4-6f49-8301-bd63-8166d68a3349" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 서버에 동일 패키지 설치</li></ul><ul id="409720e4-6f49-82bf-9d1e-01e6557169d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 계정 일괄 생성</li></ul><ul id="e7f720e4-6f49-8231-9711-014c74959fd5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정파일 배포</li></ul><ul id="26e720e4-6f49-8299-a62e-8183b25b734a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 디렉터리 생성</li></ul><ul id="fd2720e4-6f49-82ca-8bbf-01aa5ed579ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 시작 및 자동 시작 등록</li></ul><ul id="e02720e4-6f49-83a6-ac72-01ff99cb5727" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 설정 일괄 반영</li></ul><p id="b66720e4-6f49-831b-83c6-0181ecb33a33" class="" dir="auto">이런 작업을 수작업으로 수행하면 다음과 같은 문제가 생김.</p><h3 id="c74720e4-6f49-83cb-9077-01b3559ee2bb" class="" dir="auto">1.2.1 반복 작업으로 인한 비효율</h3><p id="6de720e4-6f49-835c-b300-81661bc54e1a" class="" dir="auto">서버 수가 적을 때는 직접 접속해서 작업하는 것이 가능해 보일 수 있음.</p><p id="442720e4-6f49-83f8-bcbc-81523572111b" class="" dir="auto">하지만 서버가 5대, 10대, 20대로 늘어나면 같은 작업을 반복하는 데 많은 시간이 소모됨.</p><h3 id="7fd720e4-6f49-8204-ac57-01c983e5967b" class="" dir="auto">1.2.2 설정 불일치</h3><p id="29f720e4-6f49-8217-9ad1-81327b6dd01f" class="" dir="auto">한 서버에는 패키지를 설치했지만 다른 서버에는 빠뜨릴 수 있음.</p><p id="fb9720e4-6f49-82df-8e7e-01a1d9e99c3a" class="" dir="auto">어떤 서버는 설정파일을 수정했지만 어떤 서버는 이전 설정이 남아 있을 수도 있음.</p><p id="b83720e4-6f49-822a-9a2d-012c658e1bd8" class="" dir="auto">이런 상태는 운영 표준을 깨뜨리고 장애 원인이 되기도 함.</p><h3 id="a34720e4-6f49-8380-805c-010e25114a3d" class="" dir="auto">1.2.3 작업 이력 추적 어려움</h3><p id="45e720e4-6f49-831c-a17e-812e4dfd55b1" class="" dir="auto">사람이 직접 명령을 입력하면 누가 언제 어떤 명령을 실행했는지 추적하기 어려움.</p><p id="db0720e4-6f49-8249-b4e9-01bfbd8ca30c" class="" dir="auto">반면 자동화 도구를 사용하면 playbook이나 명령 기록을 통해 작업 내용을 비교적 명확하게 확인할 수 있음.</p><h3 id="36c720e4-6f49-83a2-958a-01cd21dc5896" class="" dir="auto">1.2.4 재현성 부족</h3><p id="8b9720e4-6f49-82da-85df-811e2b606423" class="" dir="auto">한 번은 성공했지만 같은 작업을 다시 반복하려고 할 때, 이전 작업 순서를 정확히 기억하지 못하는 경우가 많음.</p><p id="fdc720e4-6f49-83f5-8785-81e00c1ce052" class="" dir="auto">자동화는 이러한 문제를 줄이고 동일한 작업을 반복 가능하게 만듦.</p><hr id="bc7720e4-6f49-82f3-b234-01b733fdc800" dir="auto"/><h2 id="fc9720e4-6f49-82fe-96aa-01a5a7a53450" class="" dir="auto">1.3 Ansible의 특징</h2><p id="e21720e4-6f49-83f7-a2aa-011ecaa0b030" class="" dir="auto">Ansible은 여러 자동화 도구 중에서도 비교적 배우기 쉽고 빠르게 적용할 수 있는 도구로 평가됨.</p><p id="f1e720e4-6f49-83fc-9528-014f84c79c5c" class="" dir="auto">주요 특징은 다음과 같음.</p><h3 id="db5720e4-6f49-8303-9323-019c60e88c48" class="" dir="auto">1.3.1 Agentless 구조</h3><p id="b6e720e4-6f49-8360-8b00-01c78a238f5f" class="" dir="auto">Ansible은 관리 대상 서버에 별도 에이전트를 설치하지 않아도 됨.</p><p id="0ad720e4-6f49-8210-a111-013823bd92a5" class="" dir="auto">보통 SSH를 이용해 대상 서버에 접속한 후 필요한 작업을 수행함.</p><p id="07a720e4-6f49-82d6-b4e9-01db243eb8db" class="" dir="auto">즉, 제어 노드에만 Ansible이 설치되어 있으면 관리 대상 서버에는 SSH 접속만 가능하면 됨.</p><p id="7a1720e4-6f49-83bc-9e37-810bf03647e0" class="" dir="auto">이 구조의 장점은 다음과 같음.</p><ul id="2b8720e4-6f49-8333-9ce5-016f7e617d9b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">초기 구축이 비교적 단순함</li></ul><ul id="2bf720e4-6f49-83dd-81db-81075776ddd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상 서버에 추가 소프트웨어를 설치하지 않아도 됨</li></ul><ul id="4ab720e4-6f49-829c-8a4c-01bd8c75b1a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경 부담이 적음</li></ul><h3 id="2de720e4-6f49-83d8-9fe2-814d73cb2036" class="" dir="auto">1.3.2 SSH 기반 동작</h3><p id="d64720e4-6f49-833c-97c5-816d24cf6a1c" class="" dir="auto">대부분의 리눅스 서버는 SSH를 통해 원격 접속이 가능함.</p><p id="5b5720e4-6f49-8390-ac89-01f85922995b" class="" dir="auto">Ansible은 이 SSH를 기반으로 원격 명령 실행, 파일 복사, 패키지 설치, 서비스 제어를 수행함.</p><p id="e0f720e4-6f49-83f5-bbea-0166b46c032b" class="" dir="auto">즉, Ansible은 완전히 새로운 통신 체계를 만드는 것이 아니라, 이미 서버 관리에서 널리 사용하는 SSH를 그대로 활용함.</p><h3 id="153720e4-6f49-83b2-9a1f-01e9618a05c4" class="" dir="auto">1.3.3 YAML 기반 플레이북</h3><p id="22d720e4-6f49-83f5-bc77-811f7130a701" class="" dir="auto">Ansible은 자동화 작업을 YAML 형식의 playbook으로 작성함.</p><p id="291720e4-6f49-82df-b0e6-01ef4932b594" class="" dir="auto">YAML은 사람이 읽기 쉬운 구조를 가지기 때문에 복잡한 스크립트 언어에 비해 가독성이 좋고 학습 진입장벽이 낮은 편임.</p><p id="4c7720e4-6f49-82cd-9ca1-01597e1f587c" class="" dir="auto">예를 들어 다음과 같은 형태로 작업을 기술함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="622720e4-6f49-8303-9d77-01ea3f6e9dcc" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">---
+- name: Install nginx
+  hosts: web
+  become: true
+
+  tasks:
+    - name: Install nginx package
+      ansible.builtin.apt:
+        name: nginx
+        state: present</code></pre><p id="b77720e4-6f49-83fe-958b-81c3ec591f4d" class="" dir="auto">이러한 형식 덕분에 자동화 흐름을 문서처럼 읽을 수 있음.</p><h3 id="ebe720e4-6f49-8259-bc53-01f3ded9565d" class="" dir="auto">1.3.4 멱등성 기반 작업</h3><p id="ca6720e4-6f49-8225-b988-01c7fd086776" class="" dir="auto">Ansible의 중요한 특징 중 하나는 <strong>멱등성(idempotence)</strong> 개념임.</p><p id="288720e4-6f49-830a-911a-81c133e1f764" class="" dir="auto">멱등성이란 같은 작업을 여러 번 실행해도 결과가 동일하게 유지되는 성질을 의미함.</p><p id="231720e4-6f49-82c9-8829-817ca3e1bc75" class="" dir="auto">예를 들어 nginx가 이미 설치되어 있는 서버에 다시 “nginx를 설치하라”는 playbook을 실행하더라도, 이미 원하는 상태라면 불필요한 재설치를 하지 않음.</p><p id="049720e4-6f49-8334-877a-0183db36b8a7" class="" dir="auto">이 점은 반복 실행이 잦은 운영 환경에서 매우 중요함.</p><hr id="122720e4-6f49-827e-8bda-013a62ca877d" dir="auto"/><h2 id="4c9720e4-6f49-8260-84f7-817b0f744e3d" class="" dir="auto">1.4 Ansible의 기본 구성 요소</h2><p id="f87720e4-6f49-8214-987b-816e52718fb8" class="" dir="auto">Ansible을 이해하려면 먼저 주요 구성 요소를 구분해야 함.</p><p id="f0d720e4-6f49-8373-8b08-01dd65cc0b5c" class="" dir="auto">초기 단계에서는 아래 개념을 정확히 구분하는 것이 중요함.</p><h3 id="447720e4-6f49-828e-aa93-8194a2591b67" class="" dir="auto">1.4.1 Control Node</h3><p id="5b3720e4-6f49-8284-a6fc-81027459552a" class="" dir="auto">Ansible이 설치되어 있고, 명령을 실행하는 중심 서버 또는 작업 PC를 의미함.</p><p id="070720e4-6f49-8366-a1a9-818f9c7960ea" class="" dir="auto">이 노드에서 inventory를 읽고, 플레이북을 실행하고, 관리 대상 서버에 접속함.</p><p id="7c8720e4-6f49-827d-9ffb-8132235fa08d" class="" dir="auto">일반적으로 실습 환경에서는 교육생의 리눅스 VM 또는 WSL 환경이 control node 역할을 맡음.</p><h3 id="02c720e4-6f49-83e2-9ffc-811b11e5253d" class="" dir="auto">1.4.2 Managed Node</h3><p id="a65720e4-6f49-822b-84d7-0166fdd1b0d3" class="" dir="auto">Ansible이 접속해서 작업을 수행할 대상 서버를 의미함.</p><p id="9a6720e4-6f49-82de-b161-012e73107b68" class="" dir="auto">보통 리눅스 서버이며, SSH 접속이 가능해야 함.</p><p id="ab1720e4-6f49-8203-b7cb-8117db046ed5" class="" dir="auto">예를 들어 Ubuntu VM 2대가 있다면, 이 2대는 managed node가 됨.</p><h3 id="f4b720e4-6f49-823d-98af-81dc3dc09115" class="" dir="auto">1.4.3 Inventory</h3><p id="145720e4-6f49-8233-ba73-0199cc4b77f0" class="" dir="auto">Ansible이 어느 서버를 대상으로 작업할지 정의하는 목록임.</p><p id="7f9720e4-6f49-8375-ad42-81ee6259d146" class="" dir="auto">호스트 주소, 그룹명, 접속 계정, SSH 키 경로 등을 담을 수 있음.</p><p id="237720e4-6f49-82ee-b24f-812124304f0c" class="" dir="auto">예를 들면 다음과 같음.</p><pre id="7ca720e4-6f49-8245-8633-01bb7b4243a6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[web]
+10.10.10.11
+10.10.10.12
+
+[app]
+10.10.10.21</code></pre><h3 id="727720e4-6f49-837a-8a8e-0174ba10ccfc" class="" dir="auto">1.4.4 Module</h3><p id="b26720e4-6f49-8331-bdec-0194e1dfa4c5" class="" dir="auto">Ansible이 실제 작업을 수행할 때 사용하는 기능 단위임.</p><p id="c91720e4-6f49-82f9-8c84-81052a793b9a" class="" dir="auto">예를 들어 다음과 같은 모듈이 있음.</p><ul id="996720e4-6f49-831f-bcf7-012f06391606" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ping</code> : 연결 확인</li></ul><ul id="365720e4-6f49-8227-8786-01686730c57c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>apt</code> : 패키지 설치</li></ul><ul id="280720e4-6f49-8391-8d7c-8196f726bfeb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>service</code> : 서비스 제어</li></ul><ul id="696720e4-6f49-83fe-9784-0139287ea325" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>copy</code> : 파일 복사</li></ul><ul id="cf2720e4-6f49-8316-a6c1-81435a6aa631" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>file</code> : 파일/디렉터리 상태 관리</li></ul><p id="97e720e4-6f49-822d-b37c-8129a775fa34" class="" dir="auto">즉, Ansible은 모듈을 조합해 작업을 수행함.</p><h3 id="19f720e4-6f49-832b-bb8b-01f0edad58c3" class="" dir="auto">1.4.5 Playbook</h3><p id="ff8720e4-6f49-828c-ad51-8109fb4bfe30" class="" dir="auto">자동화 절차를 YAML 형식으로 작성한 파일임.</p><p id="f30720e4-6f49-82aa-b299-81178212c12f" class="" dir="auto">여러 태스크를 순서대로 정의하여 반복 가능한 자동화 작업을 만들 수 있음.</p><hr id="751720e4-6f49-8293-9786-017dfecdedf0" dir="auto"/><h2 id="9fc720e4-6f49-8372-9a2b-81d4ef73520e" class="" dir="auto">1.5 Control Node와 Managed Node 구조</h2><p id="d16720e4-6f49-827c-9897-01e8f649799d" class="" dir="auto">Ansible의 기본 구조는 다음과 같음.</p><pre id="ead720e4-6f49-8208-b9f4-01011978235a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[Control Node]
+  ├─ Ansible 설치
+  ├─ Inventory 보관
+  ├─ Playbook 작성
+  └─ SSH로 대상 서버 접속
+
+        │
+        │ SSH
+        ▼
+
+[Managed Node 1]
+[Managed Node 2]
+[Managed Node 3]</code></pre><p id="dc1720e4-6f49-82ff-a7ff-81ae61b39f3c" class="" dir="auto">이 구조를 보면 알 수 있듯이, 제어 노드는 관리 대상 서버에 일괄적으로 접속하여 동일한 작업을 수행할 수 있음.</p><p id="f29720e4-6f49-8387-8e79-811781866ac5" class="" dir="auto">예를 들어 3대의 서버에 nginx를 설치해야 한다면, 제어 노드에서 Ansible 명령 한 줄 또는 playbook 실행 한 번으로 처리가 가능함.</p><p id="9e2720e4-6f49-83c0-9f29-01baf517003e" class="" dir="auto">여기서 중요한 점은, managed node에 Ansible 패키지가 반드시 설치되어 있을 필요는 없다는 점임.</p><p id="4de720e4-6f49-8357-81ad-016e1ee1ef45" class="" dir="auto">대신 다음 조건은 충족되어야 함.</p><ul id="144720e4-6f49-8246-835f-81e70a1b09cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH 접속 가능</li></ul><ul id="a60720e4-6f49-82b7-a8c5-81c67020e8f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원격 계정 사용 가능</li></ul><ul id="419720e4-6f49-834c-b82f-01e9039bf0b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python 실행 가능<ul id="5db720e4-6f49-82ac-b46b-81069c89a4d4" class="bulleted-list" dir="auto"><li style="list-style-type:circle">대부분의 일반적인 리눅스 서버는 Python을 기본 또는 쉽게 설치 가능한 형태로 제공함</li></ul></li></ul><hr id="43d720e4-6f49-82f3-ba50-01f4afa8e01c" dir="auto"/><h2 id="e29720e4-6f49-8303-a2f5-81958de7cbf1" class="" dir="auto">1.6 실습 환경 준비</h2><p id="e48720e4-6f49-826b-8f88-015aa8199f14" class="" dir="auto">이 장에서는 실습 환경이 이미 준비되어 있다고 가정함.</p><p id="7c9720e4-6f49-82de-ba60-81a336887246" class="" dir="auto">실습에 필요한 기본 요소는 다음과 같음.</p><ul id="0cf720e4-6f49-827f-bbda-810caf7336f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">제어 노드 1대</li></ul><ul id="187720e4-6f49-8350-95c5-819206eed1d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리 대상 서버 2대 이상</li></ul><ul id="1d7720e4-6f49-820b-b67a-0138481337db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH 키 파일</li></ul><ul id="b77720e4-6f49-839f-98fa-01922ba69498" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 서버의 IP 주소</li></ul><ul id="7d9720e4-6f49-82d3-9259-016f9775ea74" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ansible 설치 완료</li></ul><p id="508720e4-6f49-82fb-80c4-011ae1847a81" class="" dir="auto">실습 디렉터리는 아래와 같은 구조로 구성함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="01e720e4-6f49-8336-83cf-018d2b6e18ec" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible-lab/
+├─ inventory.ini
+└─ playbooks/</code></pre><p id="27b720e4-6f49-826f-8cc2-0127e3522a97" class="" dir="auto">실습을 위해 디렉터리를 생성함.</p><pre id="179720e4-6f49-834d-8902-01976cea88e1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">mkdir -p ~/ansible-lab/playbooks
+cd ~/ansible-lab</code></pre><hr id="292720e4-6f49-8223-9f66-01f151536f94" dir="auto"/><h2 id="6a7720e4-6f49-82b9-8ae0-81392bac2628" class="" dir="auto">1.7 Ansible 설치 및 버전 확인</h2><p id="86b720e4-6f49-83d2-8866-818115c00c7d" class="" dir="auto">Ansible 설치</p><p id="636720e4-6f49-8264-8518-016e253077fb" class="" dir="auto">Ansible은 일반적으로 <strong>제어 노드(control node)</strong> 에 설치한다.</p><p id="0f5720e4-6f49-82a7-aa30-016b4c36636e" class="" dir="auto">즉, 관리 대상 서버에 설치하는 것이 아니라,</p><p id="faf720e4-6f49-833b-a4ed-018f591788f4" class="" dir="auto">명령을 실행할 내 로컬 PC나 관리용 Linux 서버에 설치한다.</p><p id="2f8720e4-6f49-82b6-ade6-011f2da24837" class="" dir="auto">여기서는 학습용으로 많이 사용하는 Linux 환경 기준과 macOS 기준을 함께 정리한다.</p><p id="bca720e4-6f49-838d-ae5d-01dc789ec96c" class="" dir="auto">Windows 사용자는 보통 WSL2 환경에서 설치하는 방식이 가장 무난하다.</p><hr id="00a720e4-6f49-838c-a5af-816742ec32d7" dir="auto"/><h2 id="34e720e4-6f49-8362-8506-813f0b6ce706" class="" dir="auto">Linux에서 설치</h2><p id="267720e4-6f49-8235-93ff-017cb4bcd97b" class="" dir="auto">배포판에 따라 방식이 조금 다를 수 있지만,</p><p id="082720e4-6f49-8375-bb7d-81deb562c56b" class="" dir="auto">가장 무난한 방법은 Python 패키지 관리자 <code>pip</code>를 사용하는 것이다.</p><h3 id="9bc720e4-6f49-825d-9f8e-018c2f514cb6" class="" dir="auto">Python 및 pip 확인</h3><pre id="53d720e4-6f49-83dd-89d6-81081950a069" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python3 --version
+pip3 --version</code></pre><p id="730720e4-6f49-8214-8fe3-0148f0de3b04" class="" dir="auto">Python 3와 pip가 준비되어 있어야 한다.</p><hr id="76b720e4-6f49-83e7-b082-81380dd4fabc" dir="auto"/><h3 id="592720e4-6f49-82c4-afdc-816f72562c55" class="" dir="auto">pip로 Ansible 설치</h3><pre id="31c720e4-6f49-839d-bec6-019d66ef0518" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pip3 install ansible</code></pre><p id="471720e4-6f49-8332-88d4-81ce75c9e371" class="" dir="auto">환경에 따라 <code>--user</code> 옵션을 함께 쓸 수도 있다.</p><pre id="b20720e4-6f49-839c-804f-8172a9b68e2f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pip3 install --user ansible</code></pre><hr id="523720e4-6f49-82ad-b812-0117693cb95c" dir="auto"/><h3 id="964720e4-6f49-8379-aaa3-81889860856c" class="" dir="auto">설치 확인</h3><pre id="067720e4-6f49-836d-8cfe-8140c74d172b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ansible --version</code></pre><p id="7fe720e4-6f49-8222-8c13-01c8c08446d1" class="" dir="auto">정상 설치되었다면 Ansible 버전, Python 버전 등의 정보가 출력된다.</p><hr id="3da720e4-6f49-8284-b56f-0171a5ffcefa" dir="auto"/><h2 id="3aa720e4-6f49-82db-9f0a-81d5b251b107" class="" dir="auto">macOS에서 설치</h2><p id="4c9720e4-6f49-833f-941d-016f98d43f30" class="" dir="auto">macOS에서는 Homebrew를 쓰는 경우가 많다.</p><h3 id="36f720e4-6f49-8252-8ed7-0126fcb64ec7" class="" dir="auto">Homebrew로 설치</h3><pre id="3f4720e4-6f49-83ba-9b97-81ff4f47940f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">brew install ansible</code></pre><hr id="853720e4-6f49-8272-be00-81208ac29c43" dir="auto"/><h3 id="2ae720e4-6f49-8311-8b65-811a0d5a0a02" class="" dir="auto">설치 확인</h3><pre id="05d720e4-6f49-82bd-bbe2-01004807a762" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ansible --version</code></pre><hr id="f8b720e4-6f49-824f-96aa-813e0d5d17ba" dir="auto"/><p id="699720e4-6f49-8325-8ce5-01fc23573b85" class="" dir="auto">정상적으로 설치되어 있다면 다음과 비슷한 출력이 나타남.</p><pre id="a70720e4-6f49-82a7-b651-8198101341a4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible [core 2.x.x]
+  config file = None
+  configured module search path = ...
+  ansible python module location = ...
+  executable location = /usr/bin/ansible
+  python version = 3.x.x</code></pre><p id="f2f720e4-6f49-83c8-8378-01e7a5e90127" class="" dir="auto">이 출력에서 확인할 수 있는 내용은 다음과 같음.</p><ul id="d0c720e4-6f49-8201-b8a0-01b8cfea5376" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ansible 코어 버전</li></ul><ul id="d14720e4-6f49-831d-80f5-81596b686d50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 파일 경로</li></ul><ul id="b68720e4-6f49-83b5-af75-8143e3b286d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python 버전</li></ul><ul id="774720e4-6f49-824f-ac04-01fe5c26ceac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 설정 파일 위치</li></ul><p id="b2d720e4-6f49-8207-b870-016cd2ff6c42" class="" dir="auto">버전 확인은 단순 정보 조회처럼 보이지만, 실습 환경 문제를 진단할 때 매우 중요함.</p><p id="436720e4-6f49-83ff-a5d3-01aaf71c405e" class="" dir="auto">특히 버전에 따라 모듈 동작 차이가 있을 수 있으므로, 교육 초반에 반드시 확인하는 것이 좋음.</p><hr id="ef9720e4-6f49-8243-9370-810afb65b8bf" dir="auto"/><h2 id="479720e4-6f49-833e-944d-818bcbb9e164" class="" dir="auto">1.8 SSH 접속 확인</h2><p id="800720e4-6f49-823c-972d-81f81215107d" class="" dir="auto">Ansible은 기본적으로 SSH를 통해 관리 대상 서버에 접속하므로, 우선 사람이 직접 SSH 접속이 가능한지 확인하는 것이 좋음.</p><p id="97b720e4-6f49-8377-81bc-01e764580e99" class="" dir="auto">예시:</p><pre id="dc2720e4-6f49-8208-b6cc-8173051326c0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ssh -i ~/.ssh/lab.pem ubuntu@10.10.10.11</code></pre><p id="5ec720e4-6f49-82c0-9d4c-01e9d26382a5" class="" dir="auto">이 명령의 의미는 다음과 같음.</p><ul id="8bc720e4-6f49-8281-813e-815f0e1ed515" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ssh</code> : 원격 서버 접속 명령</li></ul><ul id="559720e4-6f49-8331-bffe-01e07b7b76de" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>i ~/.ssh/lab.pem</code> : 사용할 개인키 파일 지정</li></ul><ul id="816720e4-6f49-83a2-98d1-81b77cde8ca1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ubuntu@10.10.10.11</code> : 원격 접속 계정과 대상 IP</li></ul><p id="6e8720e4-6f49-82af-888d-01405a8a67d3" class="" dir="auto">정상적으로 접속되면 관리 대상 서버에 로그인됨.</p><p id="e0c720e4-6f49-83a7-8e4d-01315efeda16" class="" dir="auto">이 단계에서 접속이 되지 않으면 Ansible도 정상 동작하지 않음.</p><p id="d6d720e4-6f49-821f-8970-01b5741d5cfa" class="" dir="auto">SSH 접속이 실패하는 대표적인 원인은 다음과 같음.</p><ul id="7bc720e4-6f49-82e7-a761-019aab12a3e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 IP 주소</li></ul><ul id="5d1720e4-6f49-8207-a691-810831f80b2a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 사용자 계정</li></ul><ul id="507720e4-6f49-82ed-8104-017c8ad9ec37" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH 키 파일 경로 오류</li></ul><ul id="ca7720e4-6f49-8386-b42d-816f7a213aea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">키 파일 권한 문제</li></ul><ul id="483720e4-6f49-8382-a6b0-81c867436f63" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방화벽 또는 보안그룹 문제</li></ul><p id="757720e4-6f49-82c4-a1f8-8146b7c918e6" class="" dir="auto">키 파일 권한이 너무 넓게 열려 있으면 SSH가 거부될 수 있음.</p><p id="cfc720e4-6f49-83b4-b730-812d46dd50de" class="" dir="auto">이 경우 다음 명령으로 권한을 조정함.</p><pre id="0d8720e4-6f49-82d9-9a96-81c75a08fabf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">chmod 400 ~/.ssh/lab.pem</code></pre><hr id="711720e4-6f49-827b-a66a-01949665d194" dir="auto"/><h2 id="fd7720e4-6f49-8313-bd43-0154198309d2" class="" dir="auto">1.9 Inventory 작성</h2><p id="4a8720e4-6f49-8259-b4f7-8168cf1a4c58" class="" dir="auto">Ansible은 inventory를 통해 관리 대상 서버를 인식함.</p><p id="e4b720e4-6f49-82b5-9361-0176ab7f7ca5" class="" dir="auto">이 장에서는 가장 기본적인 정적 inventory 파일을 작성함.</p><p id="5cf720e4-6f49-82f7-bc6f-81f81a6ac92f" class="" dir="auto"><code>inventory.ini</code> 파일을 아래처럼 작성함.</p><pre id="432720e4-6f49-82a7-b2c7-815c86fd8b9a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[web]
+10.10.10.11 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/lab.pem
+10.10.10.12 ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/lab.pem</code></pre><p id="235720e4-6f49-83bf-b700-018e4d82866e" class="" dir="auto">이 파일의 의미를 자세히 보면 다음과 같음.</p><h3 id="b46720e4-6f49-83cd-8519-8167040fd4b6" class="" dir="auto"><code>[web]</code></h3><ul id="0c1720e4-6f49-829b-8447-01410a387234" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>web</code>이라는 그룹을 정의함</li></ul><ul id="26f720e4-6f49-831c-82a6-81dc5ddd2b2f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 그룹 아래에 속한 호스트들은 이후 <code>hosts: web</code> 또는 <code>ansible ... web ...</code> 형태로 지정 가능함</li></ul><h3 id="660720e4-6f49-83e4-b65a-81c34284e93f" class="" dir="auto"><code>10.10.10.11</code></h3><ul id="370720e4-6f49-83aa-8197-81615ac99dd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리 대상 서버의 IP 주소임</li></ul><h3 id="5fd720e4-6f49-8201-aac0-01e734ee8650" class="" dir="auto"><code>ansible_user=ubuntu</code></h3><ul id="460720e4-6f49-829a-9a0f-01f660e4e4f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">접속 시 사용할 원격 계정을 의미함</li></ul><ul id="231720e4-6f49-8337-bbce-013cc45eb25f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ubuntu 이미지에서는 기본 계정이 <code>ubuntu</code>인 경우가 많음</li></ul><h3 id="d18720e4-6f49-82c3-b877-0161659c50c8" class="" dir="auto"><code>ansible_ssh_private_key_file=~/.ssh/lab.pem</code></h3><ul id="0cc720e4-6f49-83fa-b3eb-01e067689a7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">접속에 사용할 개인키 파일 경로를 의미함</li></ul><p id="2a1720e4-6f49-8370-9563-81f1e7942198" class="" dir="auto">이처럼 inventory는 단순한 IP 목록이 아니라, 실제 접속에 필요한 정보를 함께 담을 수 있음.</p><hr id="75a720e4-6f49-8274-b1b3-010f614c82cd" dir="auto"/><h2 id="ccb720e4-6f49-8230-9684-01fbb305216e" class="" dir="auto">1.10 Inventory 확인</h2><p id="01c720e4-6f49-8203-a1ff-012283633397" class="" dir="auto">작성한 inventory가 올바르게 인식되는지 확인하기 위해 다음 명령을 사용함.</p><pre id="779720e4-6f49-821d-ac5b-01a051a0276f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible-inventory -i inventory.ini --list</code></pre><p id="313720e4-6f49-8274-a565-0174f2b96902" class="" dir="auto">이 명령은 inventory를 JSON 형태로 상세 출력함.</p><p id="2e5720e4-6f49-83f7-b9b8-819f18a0093b" class="" dir="auto">처음에는 다소 복잡해 보일 수 있지만, 그룹 구조와 호스트 목록이 제대로 들어갔는지 확인할 수 있음.</p><p id="2f9720e4-6f49-8325-931c-01bacaf400cd" class="" dir="auto">좀 더 시각적으로 간단히 확인하려면 다음 명령을 사용함.</p><pre id="7de720e4-6f49-83b1-b4b5-816ab2ca39f1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible-inventory -i inventory.ini --graph</code></pre><p id="9f4720e4-6f49-820a-96f3-81e6f0f333b8" class="" dir="auto">예상 출력 예시는 다음과 같음.</p><pre id="984720e4-6f49-8286-9067-81106ebbbed5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">@all:
+  |--@ungrouped:
+  |--@web:
+  |  |--10.10.10.11
+  |  |--10.10.10.12</code></pre><p id="f2d720e4-6f49-8374-a513-81abf5f84e89" class="" dir="auto">이 결과를 통해 다음을 확인할 수 있음.</p><ul id="1da720e4-6f49-820c-b2b1-81b5e21ced50" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>web</code> 그룹이 생성되었는가</li></ul><ul id="371720e4-6f49-832e-8263-019364d02d88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 그룹 아래에 서버가 포함되었는가</li></ul><ul id="0eb720e4-6f49-82cf-8d1f-01634f33cb4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">inventory 문법 오류는 없는가</li></ul><hr id="f10720e4-6f49-834f-980b-81f3f807ea70" dir="auto"/><h2 id="520720e4-6f49-83e4-856e-01d0a07dae44" class="" dir="auto">1.11 Ad-hoc Command 개요</h2><p id="51e720e4-6f49-83d9-8380-01edee3b647a" class="" dir="auto">Ansible에는 playbook 외에도 빠른 1회성 작업을 수행하는 방식이 있음.</p><p id="e54720e4-6f49-82d5-a5db-81a94b3d2b12" class="" dir="auto">이를 <strong>ad-hoc command</strong>라고 함.</p><p id="77e720e4-6f49-835b-b348-81ab6375ca26" class="" dir="auto">ad-hoc command는 다음과 같은 상황에 유용함.</p><ul id="026720e4-6f49-83f7-87e3-81293e6fccd9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 연결 상태 확인</li></ul><ul id="421720e4-6f49-83e0-aef9-8113c1309f57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">간단한 명령 실행</li></ul><ul id="28b720e4-6f49-83c7-a997-81f3a667da94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패키지 1회 설치</li></ul><ul id="d3a720e4-6f49-835f-a55c-01eb2ce48039" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 존재 여부 점검</li></ul><ul id="65c720e4-6f49-83c0-acd7-019dacd70639" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 상태 빠른 확인</li></ul><p id="953720e4-6f49-83c0-aaf5-012b00e15540" class="" dir="auto">즉, playbook을 작성하기 전에 가볍게 테스트하거나, 운영 중 즉시 확인해야 하는 작업에 적합함.</p><p id="8fe720e4-6f49-82ff-aeb2-81028c36bd30" class="" dir="auto">기본 형식은 다음과 같음.</p><pre id="fda720e4-6f49-8339-bf2e-819a0ae441bb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini 대상그룹 -m 모듈명 -a &quot;모듈 인수&quot;</code></pre><p id="c00720e4-6f49-839e-8276-01be183e2403" class="" dir="auto">여기서 각 요소의 의미는 다음과 같음.</p><ul id="153720e4-6f49-82ac-878c-8195d05b692a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ansible</code> : ad-hoc command 실행 명령</li></ul><ul id="ac6720e4-6f49-8386-9e8b-01438adf57df" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>i inventory.ini</code> : 사용할 inventory 파일 지정</li></ul><ul id="ee0720e4-6f49-8222-a80d-01863fc82e6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>대상그룹</code> : <code>all</code>, <code>web</code>, 특정 호스트 등</li></ul><ul id="fce720e4-6f49-8237-b02f-012e8c678048" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>m</code> : 사용할 모듈 지정</li></ul><ul id="945720e4-6f49-830c-8382-812c334d1be9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>a</code> : 모듈에 전달할 인수 지정</li></ul><hr id="7bb720e4-6f49-83a3-8a57-8185b5f2710a" dir="auto"/><h2 id="bdd720e4-6f49-82e0-bf57-018976074e3e" class="" dir="auto">1.12 연결 테스트: ping 모듈</h2><p id="98c720e4-6f49-82dc-aae2-813d1633c2ae" class="" dir="auto">가장 먼저 해볼 실습은 대상 서버와의 연결 확인임.</p><pre id="283720e4-6f49-83ac-baf1-81339e6dcadd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini all -m ping</code></pre><p id="eb8720e4-6f49-8384-9520-8103148550f4" class="" dir="auto">이 명령에서:</p><ul id="1f8720e4-6f49-826c-b47d-817a2b69371d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>all</code> : inventory에 등록된 모든 서버 대상</li></ul><ul id="54b720e4-6f49-8265-8494-01326a5a0c39" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>m ping</code> : ping 모듈 사용</li></ul><p id="f38720e4-6f49-82ab-a5e0-814652d7293f" class="" dir="auto">여기서 ping은 일반 네트워크 ICMP ping과는 다름.</p><p id="f21720e4-6f49-8211-9fb9-01fb54ec09ca" class="" dir="auto">Ansible의 ping 모듈은 관리 대상 서버에 접속해서 Python 실행이 가능한지, Ansible 통신이 되는지를 확인하는 용도임.</p><p id="d28720e4-6f49-8267-87e6-81892a5b461a" class="" dir="auto">정상 결과 예시는 다음과 같음.</p><pre id="2f3720e4-6f49-8390-913a-01e9d6307950" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.10.10.11 | SUCCESS =&gt; {
+    &quot;changed&quot;: false,
+    &quot;ping&quot;: &quot;pong&quot;
+}
+10.10.10.12 | SUCCESS =&gt; {
+    &quot;changed&quot;: false,
+    &quot;ping&quot;: &quot;pong&quot;
+}</code></pre><p id="8a1720e4-6f49-8266-9231-01db2f203e6f" class="" dir="auto"><code>SUCCESS</code>와 <code>&quot;ping&quot;: &quot;pong&quot;</code>이 보이면 연결이 정상인 것임.</p><hr id="b81720e4-6f49-82e9-90c9-81d9cea9fce6" dir="auto"/><h2 id="964720e4-6f49-82cf-9522-01c15623a9f1" class="" dir="auto">1.13 원격 명령 실행: command 모듈</h2><p id="615720e4-6f49-8320-9415-81ae16785780" class="" dir="auto">이제 실제로 원격 명령을 실행해봄.</p><p id="7f6720e4-6f49-820c-9ab2-818e690f1d91" class="" dir="auto">가장 기본적인 예로 호스트명을 확인함.</p><pre id="568720e4-6f49-82eb-a108-01fa6c474acc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini all -m command -a &quot;hostname&quot;</code></pre><p id="316720e4-6f49-821a-aa76-01454a4e1c44" class="" dir="auto">이 명령은 inventory에 등록된 모든 서버에서 <code>hostname</code> 명령을 실행함.</p><p id="8e5720e4-6f49-82d9-a304-01b68139458b" class="" dir="auto">예상 출력:</p><pre id="848720e4-6f49-8380-af0d-813179e00fb6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.10.10.11 | CHANGED | rc=0 &gt;&gt;
+web-01
+10.10.10.12 | CHANGED | rc=0 &gt;&gt;
+web-02</code></pre><p id="51c720e4-6f49-8246-aec5-816eb4dfed7e" class="" dir="auto">이 결과를 통해:</p><ul id="13b720e4-6f49-829e-94e6-0186c239c7c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 서버에 실제로 접속해서 명령이 수행되었는지</li></ul><ul id="7e8720e4-6f49-8255-9e69-8124cd4c70a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버별로 다른 결과가 나오는지</li></ul><ul id="2a6720e4-6f49-8383-9ae6-0136654c78dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상 서버가 올바른지</li></ul><p id="b5c720e4-6f49-8305-8cd3-01e02114382f" class="" dir="auto">확인할 수 있음.</p><h3 id="fab720e4-6f49-826b-8e68-01616bd4dfe9" class="" dir="auto"><code>command</code> 모듈 특징</h3><p id="b3d720e4-6f49-8331-81bc-817afd9b11cf" class="" dir="auto"><code>command</code> 모듈은 셸을 거치지 않고 명령을 실행함.</p><p id="c71720e4-6f49-82ef-88cf-017c1721a53a" class="" dir="auto">따라서 파이프(<code>|</code>), 리다이렉션(<code>&gt;</code>), 변수 확장 같은 셸 문법은 기본적으로 사용할 수 없음.</p><p id="c9b720e4-6f49-827c-b705-014582e48045" class="" dir="auto">즉, 단순 명령 실행에는 <code>command</code>가 더 안전하고 명확함.</p><hr id="13c720e4-6f49-8224-99b5-0158c4e5e267" dir="auto"/><h2 id="e4d720e4-6f49-828d-9d20-818008dc3119" class="" dir="auto">1.14 원격 명령 실행: shell 모듈</h2><p id="504720e4-6f49-8384-b25b-81ed0fee000b" class="" dir="auto">셸 기능이 필요한 경우에는 <code>shell</code> 모듈을 사용함.</p><p id="eda720e4-6f49-8291-aa82-01a0bce49c2e" class="" dir="auto">예:</p><pre id="a89720e4-6f49-83d0-847a-01bfe581943e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini all -m shell -a &quot;free -h | grep Mem&quot;</code></pre><p id="f15720e4-6f49-8372-bec4-01e4ffe5d4d3" class="" dir="auto">이 명령은 각 서버의 메모리 정보를 출력함.</p><p id="b55720e4-6f49-827d-96e0-01e9b51e3fcd" class="" dir="auto"><code>shell</code> 모듈은 셸을 통해 명령을 실행하므로, 파이프나 리다이렉션 같은 기능 사용이 가능함.</p><p id="b16720e4-6f49-826d-8803-0190f816c447" class="" dir="auto">다만 그만큼 예기치 않은 동작 가능성도 있으므로, 단순 명령에는 <code>command</code>, 셸 기능이 필요할 때만 <code>shell</code>을 쓰는 습관이 좋음.</p><hr id="477720e4-6f49-83f0-9a76-81ccb3968cfc" dir="auto"/><h2 id="edf720e4-6f49-82b8-881b-018c516e8bd1" class="" dir="auto">1.15 권한 상승 옵션 <code>-b</code></h2><p id="01e720e4-6f49-82b3-8d29-01c6f3973626" class="" dir="auto">패키지 설치나 서비스 제어처럼 관리자 권한이 필요한 작업은 일반 사용자 권한으로 수행할 수 없음.</p><p id="9e4720e4-6f49-82ea-b83b-816075c27f03" class="" dir="auto">이때 사용하는 옵션이 <code>-b</code>임.</p><ul id="b1b720e4-6f49-82e7-97d7-016fbf9879a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-b</code>는 <code>become</code>의 약자이며, 보통 sudo 권한 상승을 의미함.</li></ul><p id="8ec720e4-6f49-820f-b6d1-01d69908bc20" class="" dir="auto">예:</p><pre id="264720e4-6f49-839d-a023-01441d0e2fd3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini web -m apt -a &quot;name=nginx state=present update_cache=true&quot; -b</code></pre><p id="9e0720e4-6f49-821b-8c9a-819c1b1b6b40" class="" dir="auto">이 명령은 <code>web</code> 그룹 서버에 대해 관리자 권한으로 nginx 패키지를 설치함.</p><p id="7d6720e4-6f49-83c0-b7e9-81b12869e34f" class="" dir="auto">옵션 의미를 자세히 보면:</p><ul id="baf720e4-6f49-82d3-b9b2-0111553f3a31" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>web</code> : web 그룹 대상</li></ul><ul id="fc7720e4-6f49-8212-8551-815068b0cde9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>m apt</code> : apt 모듈 사용</li></ul><ul id="1f1720e4-6f49-8244-a283-01bdaf1127aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>name=nginx</code> : nginx 패키지 지정</li></ul><ul id="072720e4-6f49-83d5-8a72-01b03e44dcbb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>state=present</code> : 설치된 상태 보장</li></ul><ul id="b2e720e4-6f49-83ab-b606-810481a9fe3a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>update_cache=true</code> : 패키지 목록 갱신</li></ul><ul id="ba0720e4-6f49-8283-9680-81fcfdb3695b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>b</code> : sudo 권한으로 실행</li></ul><hr id="394720e4-6f49-82ed-8a14-811dca8eeb96" dir="auto"/><h2 id="562720e4-6f49-8285-b0b9-81d21c217201" class="" dir="auto">1.16 서비스 제어: service 모듈</h2><p id="b52720e4-6f49-8206-9905-01a6ecf06916" class="" dir="auto">서비스 시작과 자동 시작 설정도 ad-hoc command로 가능함.</p><pre id="32b720e4-6f49-82da-8d1a-811547b25aba" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini web -m service -a &quot;name=nginx state=started enabled=yes&quot; -b</code></pre><p id="13b720e4-6f49-82df-be22-01ba65e30087" class="" dir="auto">이 명령은 다음 의미를 가짐.</p><ul id="a3c720e4-6f49-830f-915c-01408f14cf64" class="bulleted-list" dir="auto"><li style="list-style-type:disc">nginx 서비스가 실행 중이어야 함</li></ul><ul id="1ab720e4-6f49-835d-adfc-016cfc785c6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">시스템 재부팅 후에도 자동 시작되도록 설정함</li></ul><p id="cdb720e4-6f49-821a-a08e-8180e912f783" class="" dir="auto">여기서 중요한 점은 Ansible이 단순히 <code>systemctl start nginx</code>를 실행하는 것이 아니라, 서비스가 <strong>시작된 상태인지</strong>를 기준으로 처리한다는 점임.</p><hr id="6f6720e4-6f49-823b-9913-01c960d2468d" dir="auto"/><h2 id="8a4720e4-6f49-826f-a465-014d228dfac6" class="" dir="auto">1.17 실습: 첫 번째 원격 제어 흐름</h2><p id="e49720e4-6f49-82ec-805d-0125a3f225ba" class="" dir="auto">이 절에서는 제1장에서 배운 내용을 묶어 간단한 흐름으로 실습함.</p><h3 id="a8a720e4-6f49-82e1-a83f-81c543a9b784" class="" dir="auto">실습 순서</h3><h3 id="f66720e4-6f49-83b6-8dc9-012511188234" class="" dir="auto">1단계. 실습 디렉터리로 이동</h3><pre id="d9b720e4-6f49-82e3-a576-016150346a64" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cd ~/ansible-lab</code></pre><h3 id="960720e4-6f49-82b5-8887-8194ea080517" class="" dir="auto">2단계. inventory 확인</h3><pre id="722720e4-6f49-82b7-8f41-8145cd618807" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible-inventory -i inventory.ini --graph</code></pre><h3 id="a77720e4-6f49-8316-bdca-013bdf0df5b7" class="" dir="auto">3단계. 연결 테스트</h3><pre id="6f4720e4-6f49-824e-a437-01c77b36fd11" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini all -m ping</code></pre><h3 id="bd8720e4-6f49-8246-b66a-8195d426ed46" class="" dir="auto">4단계. 호스트명 확인</h3><pre id="463720e4-6f49-82f2-aec9-81104732a95a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini all -m command -a &quot;hostname&quot;</code></pre><h3 id="1be720e4-6f49-8235-b78a-8150c0f9ce0a" class="" dir="auto">5단계. web 그룹에 nginx 설치</h3><pre id="29b720e4-6f49-835a-8fcc-014d1094f055" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini web -m apt -a &quot;name=nginx state=present update_cache=true&quot; -b</code></pre><h3 id="5e7720e4-6f49-82bb-b4cc-81ff18fd56e8" class="" dir="auto">6단계. nginx 서비스 시작</h3><pre id="f1d720e4-6f49-8381-a847-81dbea6e7b9f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ansible -i inventory.ini web -m service -a &quot;name=nginx state=started enabled=yes&quot; -b</code></pre><h3 id="57b720e4-6f49-837a-bffb-0186707fa438" class="" dir="auto">실습 목적</h3><p id="537720e4-6f49-83b1-8abd-01dcf724b50e" class="" dir="auto"> 플레이북 작성 전 단계에서 Ansible이 어떻게 여러 서버를 원격 제어하는지 체감하는 데 목적이 있음.</p><ul id="eae720e4-6f49-825b-96b7-81ac008af1c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">inventory로 대상 서버를 정의함</li></ul><ul id="278720e4-6f49-83bc-8fc2-01dfe58bc142" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ansible 명령으로 여러 서버에 동시에 접속함</li></ul><ul id="414720e4-6f49-82e1-aa85-81631040e550" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈을 통해 서버 상태를 변경함</li></ul><ul id="ae9720e4-6f49-8294-8be2-016d05ed683f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리자 권한이 필요한 작업은 <code>b</code>로 처리함</li></ul><hr id="b6f720e4-6f49-833f-bb3e-813527baad01" dir="auto"/><h2 id="63d720e4-6f49-820e-9347-01728f63f3d4" class="" dir="auto">1.19 장 정리</h2><p id="55f720e4-6f49-8369-9dfd-01be1ce1eb44" class="" dir="auto">이 장에서는 Ansible의 개념과 구조, 그리고 가장 기본적인 원격 제어 흐름을 학습했음.</p><p id="b56720e4-6f49-8205-a467-811a5e478137" class="" dir="auto">핵심 정리:</p><ul id="bb5720e4-6f49-835f-9085-81e34e0a8480" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ansible은 여러 서버를 일관되게 자동화하기 위한 도구임</li></ul><ul id="46e720e4-6f49-83b3-b6d1-81a6679ff8a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리 대상 서버에 에이전트를 설치하지 않고 SSH 기반으로 동작함</li></ul><ul id="385720e4-6f49-82ac-bcb1-81fa63776e20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">control node와 managed node 구조를 사용함</li></ul><ul id="d79720e4-6f49-83fa-8666-813a8df7aaef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">inventory를 통해 대상 서버를 정의함</li></ul><ul id="58b720e4-6f49-835d-be17-8181c8900fe8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ad-hoc command로 연결 확인과 간단한 작업을 수행할 수 있음</li></ul><ul id="d1b720e4-6f49-8345-a1b4-01df4117bec6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ping</code>, <code>command</code>, <code>shell</code>, <code>apt</code>, <code>service</code> 모듈을 사용해 기본 원격 제어가 가능함</li></ul><ul id="2f1720e4-6f49-8276-a395-014c0ca4ba82" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리자 권한이 필요한 작업은 <code>-b</code> 옵션을 사용함</li></ul><hr id="cf9720e4-6f49-8225-b457-01d10d549335" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

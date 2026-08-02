@@ -1,0 +1,1058 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습 1.  Amazon Bedrock Knowledge Base를 이용한 지식기반 챗봇</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="d39720e4-6f49-828e-98fb-0135cec4555d" class="page sans"><header><h1 class="page-title" dir="auto">실습 1.  Amazon Bedrock Knowledge Base를 이용한 지식기반 챗봇</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="237720e4-6f49-8242-a0c2-0126c0eee2d8" dir="auto"/><h2 id="97d720e4-6f49-82cb-a5d5-818644f7f585" class="" dir="auto">1. 실습 개요</h2><p id="671720e4-6f49-83de-bb46-0127488936c3" class="" dir="auto">이 실습에서는 Amazon Bedrock Knowledge Base를 사용하여 정적인 운영 문서를 기반으로 답변하는 지식기반 챗봇을 구현한다.</p><p id="2d0720e4-6f49-8270-99d0-016bdc6899a6" class="" dir="auto">일반적인 생성형 AI 모델은 이미 학습된 범용 지식을 기반으로 답변한다. 하지만 회사 내부 운영 매뉴얼, 장애 대응 가이드, 패치 일정, 서버 점검 문서처럼 외부에 공개되지 않은 문서는 모델이 기본적으로 알 수 없다.</p><p id="df8720e4-6f49-82e9-9307-8188f38b102e" class="" dir="auto">이런 문제를 해결하기 위해 RAG 방식을 사용한다.</p><p id="2a9720e4-6f49-82f2-a77c-81630835f0f5" class="" dir="auto">RAG는 사용자의 질문이 들어왔을 때 먼저 관련 문서를 검색하고, 검색된 문서 내용을 기반으로 생성형 AI가 답변을 생성하는 구조이다. Amazon Bedrock Knowledge Bases는 사용자의 데이터 소스에서 관련 정보를 검색하고, 검색된 내용을 바탕으로 답변을 생성하며, 응답에 출처를 포함할 수 있다.</p><p id="19f720e4-6f49-828d-9876-018e4f1f2590" class="" dir="auto">이번 실습에서는 다음 흐름을 구성한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="fdb720e4-6f49-83a5-b00e-0154dda654b3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영 문서 준비
+        ↓
+S3 버킷에 문서 업로드
+        ↓
+Amazon Bedrock Knowledge Base 생성
+        ↓
+Embedding 모델 선택
+        ↓
+Vector Store 생성
+        ↓
+S3 문서 동기화
+        ↓
+Bedrock 콘솔에서 질문 테스트
+        ↓
+출처 기반 답변 확인</code></pre><hr id="4bd720e4-6f49-82ec-9849-8196a8844569" dir="auto"/><h2 id="736720e4-6f49-8223-bcbb-8149c7e08536" class="" dir="auto">2. 실습 목표</h2><ul id="459720e4-6f49-83ba-837b-01e0bb95d942" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RAG의 기본 동작 흐름을 설명할 수 있다.</li></ul><ul id="a1f720e4-6f49-8368-9fcd-81af50f54898" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon Bedrock Knowledge Base의 역할을 설명할 수 있다.</li></ul><ul id="3a3720e4-6f49-831c-880c-0192e6ba106a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3를 Knowledge Base의 데이터 소스로 연결할 수 있다.</li></ul><ul id="b85720e4-6f49-8258-8335-811de297e14f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문서 데이터를 벡터화하여 검색 가능한 형태로 저장할 수 있다.</li></ul><ul id="ef1720e4-6f49-831e-aead-0109b1e8689f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Embedding 모델의 역할을 설명할 수 있다.</li></ul><ul id="7e5720e4-6f49-8216-ad59-0182887cee4f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OpenSearch Serverless 기반 Vector Store를 생성할 수 있다.</li></ul><ul id="815720e4-6f49-828a-aa6e-017a8024f048" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bedrock 콘솔에서 Knowledge Base를 테스트할 수 있다.</li></ul><ul id="503720e4-6f49-82e1-ba4f-8190ed557da1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">답변에 사용된 원본 문서 출처를 확인할 수 있다.</li></ul><hr id="c4d720e4-6f49-8283-950f-0157089a2968" dir="auto"/><h2 id="b4d720e4-6f49-8281-be83-0174e0485b38" class="" dir="auto">3. 실습 아키텍처</h2><p id="cfe720e4-6f49-82e8-ab0b-8173230448c8" class="" dir="auto">이번 실습의 전체 구조는 다음과 같다.</p><pre id="810720e4-6f49-83b4-937e-81e70707d8e3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[사용자 질문]
+     ↓
+Amazon Bedrock Knowledge Base
+     ↓
+관련 문서 검색
+     ↓
+OpenSearch Serverless Vector Store
+     ↑
+문서 벡터 저장
+     ↑
+Embedding Model
+     ↑
+S3 운영 문서</code></pre><p id="0f5720e4-6f49-8315-b383-014bd9730086" class="" dir="auto">각 구성요소의 역할은 다음과 같다.</p><table id="e3c720e4-6f49-82c6-b4c0-010f28eb135c" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="533720e4-6f49-83d0-9a24-01f23abc1105" dir="ltr"><th id="sP^K" class="simple-table-header-color simple-table-header">구성요소</th><th id="Ys]^" class="simple-table-header-color simple-table-header" style="width:323.00001525878906px">역할</th></tr></thead><tbody><tr id="fe7720e4-6f49-832e-82eb-017b288c4291" dir="ltr"><td id="sP^K" class="">S3</td><td id="Ys]^" class="" style="width:323.00001525878906px">운영 매뉴얼, 장애 대응 문서, 패치 일정 파일 저장</td></tr><tr id="f92720e4-6f49-83bc-951e-81d6987fc76b" dir="ltr"><td id="sP^K" class="">Amazon Bedrock Knowledge Base</td><td id="Ys]^" class="" style="width:323.00001525878906px">문서 검색과 답변 생성을 연결하는 RAG 관리 서비스</td></tr><tr id="1d0720e4-6f49-83d6-b600-81549566e4a5" dir="ltr"><td id="sP^K" class="">Embedding Model</td><td id="Ys]^" class="" style="width:323.00001525878906px">문서와 질문을 벡터로 변환</td></tr><tr id="a27720e4-6f49-8281-9713-81d3ea75fd1e" dir="ltr"><td id="sP^K" class="">Vector Store</td><td id="Ys]^" class="" style="width:323.00001525878906px">벡터화된 문서 조각을 저장하고 유사도 검색 수행</td></tr><tr id="fc6720e4-6f49-8319-83c6-81e95faace46" dir="ltr"><td id="sP^K" class="">OpenSearch Serverless</td><td id="Ys]^" class="" style="width:323.00001525878906px">실습에서 사용할 벡터 저장소</td></tr><tr id="8fe720e4-6f49-8218-ab22-8164acdf7c48" dir="ltr"><td id="sP^K" class="">Foundation Model</td><td id="Ys]^" class="" style="width:323.00001525878906px">검색된 문서 내용을 바탕으로 자연어 답변 생성</td></tr></tbody></table><hr id="576720e4-6f49-835c-8568-013d4f8e4d98" dir="auto"/><h2 id="102720e4-6f49-837d-a544-8141ae254290" class="" dir="auto">4. RAG 동작 원리 이해</h2><h2 id="722720e4-6f49-8230-a334-012988139252" class="" dir="auto">4.1 일반 생성형 AI 답변 방식</h2><p id="548720e4-6f49-821d-b2a9-81f189e8d195" class="" dir="auto">일반적인 생성형 AI 사용 흐름은 다음과 같다.</p><pre id="7c8720e4-6f49-82e1-a361-81aff88640e5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 질문
+    ↓
+Foundation Model
+    ↓
+답변 생성</code></pre><p id="5ad720e4-6f49-83e2-8149-81b16a157b5f" class="" dir="auto">예를 들어 사용자가 다음과 같이 질문한다고 하자.</p><pre id="16f720e4-6f49-8268-9343-81c0051b10f2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">서버 패치 작업은 매월 언제 수행하나요?</code></pre><p id="108720e4-6f49-82d7-97e3-010ecfebc64b" class="" dir="auto">일반 모델은 회사 내부 패치 일정을 알지 못한다.</p><p id="d88720e4-6f49-83fe-a90d-01b4db5c9ea5" class="" dir="auto">따라서 추측하거나 일반적인 답변을 생성할 수 있다.</p><hr id="c11720e4-6f49-833e-88ca-011cb3c07685" dir="auto"/><h2 id="766720e4-6f49-8373-b0e2-01854d29a1fd" class="" dir="auto">4.2 RAG 기반 답변 방식</h2><p id="67f720e4-6f49-82a3-b3e5-01dd5275893f" class="" dir="auto">RAG 기반 흐름은 다르다.</p><pre id="e4c720e4-6f49-83b9-bbb7-0163ca32d529" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 질문
+    ↓
+질문과 관련된 문서 검색
+    ↓
+검색된 문서 내용을 프롬프트에 포함
+    ↓
+Foundation Model 답변 생성
+    ↓
+출처 포함 답변 반환</code></pre><p id="858720e4-6f49-822b-812e-816eb84aa783" class="" dir="auto">예를 들어 S3에 다음 문서가 있다고 하자.</p><pre id="470720e4-6f49-8315-b754-0162914851f6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">정기 서버 패치 작업은 매월 둘째 주 화요일 22:00에 수행한다.
+패치 작업 전에는 대상 서버의 스냅샷을 생성해야 한다.</code></pre><p id="0ad720e4-6f49-827e-981c-018b5fb51858" class="" dir="auto">사용자가 질문한다.</p><pre id="f5d720e4-6f49-831a-bf57-0188c506acd2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">서버 패치 작업 전에 무엇을 해야 하나요?</code></pre><p id="2dc720e4-6f49-822c-903b-0109cfa8781b" class="" dir="auto">Knowledge Base는 관련 문서 조각을 검색하고, 모델은 검색된 내용을 기반으로 다음처럼 답변할 수 있다.</p><pre id="7b8720e4-6f49-8227-ba71-015686ed4003" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">서버 패치 작업 전에는 대상 서버의 스냅샷을 생성해야 한다.</code></pre><p id="1d9720e4-6f49-83e5-9b12-814d320fef8e" class="" dir="auto">이처럼 RAG는 모델이 모르는 내부 문서를 검색해서 답변에 활용하는 방식이다.</p><hr id="63d720e4-6f49-8373-84a8-01aafae1c3c6" dir="auto"/><h1 id="35a720e4-6f49-82bf-95b4-818fbdff2227" class="" dir="auto">5. 사전 준비</h1><p id="29f720e4-6f49-831f-8393-81955c06de8d" class="" dir="auto">이번 실습에는 다음 항목이 필요하다.</p><h2 id="a75720e4-6f49-83bb-a996-8142638d9aa6" class="" dir="auto">5.1 AWS 계정</h2><p id="6b2720e4-6f49-8241-9750-012ac7800884" class="" dir="auto">AWS 콘솔에 로그인할 수 있어야 한다.</p><p id="c27720e4-6f49-823e-b97d-8152f20036df" class="" dir="auto">실습 계정에는 다음 서비스에 대한 사용 권한이 필요하다.</p><ul id="607720e4-6f49-82a1-852c-81a3c8640d41" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon S3</li></ul><ul id="c1b720e4-6f49-8314-9766-0182d6d96b31" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon Bedrock</li></ul><ul id="97a720e4-6f49-8382-8ffd-81116a76dd9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM</li></ul><ul id="82f720e4-6f49-83eb-ae0d-810a1b5edeec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OpenSearch Serverless</li></ul><hr id="5de720e4-6f49-8260-8eb5-01c577501eb0" dir="auto"/><h2 id="496720e4-6f49-8217-aeb9-01661e6de5ba" class="" dir="auto">5.2 리전 선택</h2><p id="24d720e4-6f49-8321-bd01-01a47a5eab93" class="" dir="auto">Amazon Bedrock은 리전별로 지원 모델과 기능이 다를 수 있다.</p><p id="c3f720e4-6f49-83b8-abab-81291661a792" class="" dir="auto">실습 전에는 사용하는 리전에서 Knowledge Base, Embedding 모델, 답변 생성 모델이 사용 가능한지 확인해야 한다.</p><p id="181720e4-6f49-83c5-b03a-8134bd04aa9d" class="" dir="auto">실습에서는 예시로 다음 리전을 사용한다.</p><pre id="00d720e4-6f49-825c-9b8a-81e2d13ef768" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-2</code></pre><p id="8f9720e4-6f49-8388-833b-010cd3d32863" class="" dir="auto">다만 실습 계정에서 해당 리전에 필요한 모델이 보이지 않으면 다음 리전을 사용할 수 있다.</p><pre id="61b720e4-6f49-8252-8c35-81aa6c13f3a8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">us-east-1
+us-west-2
+ap-northeast-1</code></pre><p id="45a720e4-6f49-8223-985d-818f4ac1cdb6" class="" dir="auto">Amazon Bedrock Knowledge Bases는 문서를 벡터 임베딩으로 변환하기 위해 Embedding 모델을 사용한다. AWS 공식 문서에서도 Knowledge Base가 Embedding 모델을 사용해 데이터를 벡터 임베딩으로 변환하고 벡터 데이터베이스에 저장한다고 설명한다.</p><hr id="33a720e4-6f49-828c-afae-014cc18b549a" dir="auto"/><h2 id="fa8720e4-6f49-8384-86a6-81d7f8222093" class="" dir="auto">5.3 모델 접근 권한 확인</h2><p id="fa9720e4-6f49-821c-b7be-01a75b34d20e" class="" dir="auto">Amazon Bedrock에서 모델을 사용하려면 모델 접근 권한이 필요하다.</p><p id="d6c720e4-6f49-8219-ad8e-81c04221bbae" class="" dir="auto">AWS 콘솔에서 다음 메뉴로 이동한다.</p><pre id="79a720e4-6f49-8203-83ae-01582e0e79e2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon Bedrock
+→ Model access</code></pre><p id="107720e4-6f49-8272-9ecc-0113e4222d70" class="" dir="auto">실습에 사용할 모델 접근 권한을 활성화한다.</p><p id="2c1720e4-6f49-83fd-af0f-81a4ff62cb40" class="" dir="auto">예시 모델은 다음과 같다.</p><table id="277720e4-6f49-8270-b642-012384ff981b" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="0f0720e4-6f49-8245-b315-0105f5b67a52" dir="ltr"><th id="@Trc" class="simple-table-header-color simple-table-header">용도</th><th id="bjZZ" class="simple-table-header-color simple-table-header">모델 예시</th></tr></thead><tbody><tr id="1b0720e4-6f49-823d-aee1-8153cb282a4b" dir="ltr"><td id="@Trc" class="">Embedding 모델</td><td id="bjZZ" class="">Amazon Titan Text Embeddings V2</td></tr><tr id="028720e4-6f49-82d9-bd4e-8109f24d2528" dir="ltr"><td id="@Trc" class="">답변 생성 모델</td><td id="bjZZ" class="">Anthropic Claude, Amazon Nova, Meta Llama 등 계정에서 사용 가능한 모델</td></tr></tbody></table><p id="938720e4-6f49-83cc-bd51-814243c570b2" class="" dir="auto">Titan Text Embeddings V2는 검색 작업에 적합한 Amazon의 2세대 텍스트 임베딩 모델이며, 출력 차원을 설정할 수 있다.</p><hr id="a88720e4-6f49-836b-bb91-01a8ccd94bbf" dir="auto"/><h1 id="ebb720e4-6f49-8202-b3ff-01eb95b1c61d" class="" dir="auto">6. 실습 데이터 준비</h1><p id="77c720e4-6f49-83bb-ae60-01f438784505" class="" dir="auto">이번 실습에서는 운영 지식 문서를 직접 만들어 S3에 업로드한다.</p><h2 id="934720e4-6f49-833b-a141-81df11b8e600" class="" dir="auto">6.1 실습 문서 구성</h2><p id="4a0720e4-6f49-8250-80a5-81bb6bef5cbe" class="" dir="auto">학생들이 테스트하기 쉽도록 다음 3개의 문서를 준비한다.</p><pre id="191720e4-6f49-8210-9aa0-81e38d8ccb43" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">manual/
+├── server_operation_guide.md
+├── patch_schedule.md
+└── incident_response_guide.md</code></pre><hr id="9aa720e4-6f49-82b5-87e7-812bfa3769e1" dir="auto"/><h2 id="ed6720e4-6f49-8288-ba14-81ca94178247" class="" dir="auto">6.2 운영 매뉴얼 문서 작성</h2><p id="761720e4-6f49-830d-a81b-015c876c94e3" class="" dir="auto">파일명: <code>server_operation_guide.md</code></p><pre id="415720e4-6f49-838c-a24a-01d00e9209a4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all"># 서버 운영 매뉴얼
+
+## EC2 인스턴스 점검 기준
+
+운영 중인 EC2 인스턴스는 매일 오전 9시에 상태를 점검한다.
+
+점검 항목은 다음과 같다.
+
+- 인스턴스 상태가 running인지 확인한다.
+- CPU 사용률이 80% 이상인지 확인한다.
+- 메모리 사용률이 85% 이상인지 확인한다.
+- 디스크 사용률이 90% 이상인지 확인한다.
+- 최근 24시간 동안 재부팅 이력이 있는지 확인한다.
+
+## CPU 사용률 대응 기준
+
+CPU 사용률이 80% 이상이고 10분 이상 지속되면 담당자에게 알림을 전송한다.
+
+CPU 사용률이 90% 이상이고 5분 이상 지속되면 즉시 원인 분석을 수행한다.
+
+원인 분석 시 다음 항목을 확인한다.
+
+- 비정상 프로세스 존재 여부
+- 최근 배포 여부
+- 트래픽 급증 여부
+- Auto Scaling 정책 동작 여부
+
+## 디스크 사용률 대응 기준
+
+디스크 사용률이 90% 이상이면 불필요한 로그 파일을 정리한다.
+
+디스크 사용률이 95% 이상이면 긴급 조치 대상으로 분류한다.
+
+긴급 조치 시 다음 순서로 작업한다.
+
+1. 로그 디렉터리 사용량을 확인한다.
+2. 오래된 로그 파일을 압축하거나 삭제한다.
+3. 필요 시 EBS 볼륨 확장을 검토한다.
+4. 조치 내용을 운영 기록에 남긴다.</code></pre><hr id="f32720e4-6f49-82d5-8aef-01f757a0136d" dir="auto"/><h2 id="234720e4-6f49-8391-b825-012e20a6dd01" class="" dir="auto">6.3 패치 일정 문서 작성</h2><p id="a8d720e4-6f49-8359-b2c5-81ecc937cc79" class="" dir="auto">파일명: <code>patch_schedule.md</code></p><pre id="30c720e4-6f49-83a6-9911-81962531e16f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all"># 서버 패치 일정
+
+## 정기 패치 일정
+
+정기 서버 패치 작업은 매월 둘째 주 화요일 22:00에 수행한다.
+
+패치 작업 시간은 기본적으로 22:00부터 23:30까지이다.
+
+서비스 영향이 예상되는 경우 최소 3일 전에 공지한다.
+
+## 패치 전 준비 사항
+
+패치 작업 전에는 다음 항목을 확인한다.
+
+1. 대상 서버 목록을 확인한다.
+2. 각 서버의 현재 상태가 running인지 확인한다.
+3. 패치 전 EBS 스냅샷을 생성한다.
+4. 최근 배포 작업이 있었는지 확인한다.
+5. 서비스 담당자에게 작업 시작을 알린다.
+
+## 패치 후 확인 사항
+
+패치 작업 후에는 다음 항목을 확인한다.
+
+1. 서버가 정상적으로 부팅되었는지 확인한다.
+2. 주요 서비스 프로세스가 실행 중인지 확인한다.
+3. 헬스체크 URL이 정상 응답하는지 확인한다.
+4. 최근 10분간 5xx 오류가 증가했는지 확인한다.
+5. 패치 결과를 운영 기록에 남긴다.
+
+## 긴급 패치 기준
+
+보안 취약점이 공개되었고 위험도가 높음 이상이면 긴급 패치를 검토한다.
+
+긴급 패치는 보안 담당자, 서비스 담당자, 인프라 담당자의 승인 후 진행한다.</code></pre><hr id="dbe720e4-6f49-82ba-8cbf-0125f544caf4" dir="auto"/><h2 id="a06720e4-6f49-8316-b88d-81a160c45611" class="" dir="auto">6.4 장애 대응 가이드 문서 작성</h2><p id="1d3720e4-6f49-82d1-a5a7-01eb9ba30a98" class="" dir="auto">파일명: <code>incident_response_guide.md</code></p><pre id="35a720e4-6f49-8313-bae6-0105f84beb98" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all"># 장애 대응 가이드
+
+## 장애 등급
+
+장애 등급은 서비스 영향도에 따라 구분한다.
+
+### SEV-1
+
+전체 서비스가 중단되었거나 핵심 기능이 동작하지 않는 상태이다.
+
+SEV-1 발생 시 즉시 장애 대응 채널을 생성하고, 인프라 담당자와 서비스 담당자를 호출한다.
+
+### SEV-2
+
+일부 기능에 장애가 있거나 특정 사용자 그룹에 영향이 있는 상태이다.
+
+SEV-2 발생 시 담당 팀에 알림을 전송하고 원인 분석을 시작한다.
+
+### SEV-3
+
+서비스 영향은 제한적이지만 반복적인 오류나 성능 저하가 확인되는 상태이다.
+
+SEV-3 발생 시 운영 기록에 남기고 정기 점검 항목에 포함한다.
+
+## 500 오류 증가 시 대응 절차
+
+최근 10분간 500 오류가 평소보다 2배 이상 증가하면 장애 의심 상태로 분류한다.
+
+대응 절차는 다음과 같다.
+
+1. 최근 배포 이력을 확인한다.
+2. 애플리케이션 로그에서 ERROR 로그를 확인한다.
+3. 데이터베이스 연결 오류가 있는지 확인한다.
+4. 외부 API 호출 실패 여부를 확인한다.
+5. 필요 시 직전 버전으로 롤백한다.
+
+## 데이터베이스 연결 장애 대응
+
+데이터베이스 연결 실패 로그가 반복되면 다음을 확인한다.
+
+1. 데이터베이스 인스턴스 상태를 확인한다.
+2. 보안 그룹 인바운드 규칙을 확인한다.
+3. 애플리케이션의 연결 문자열을 확인한다.
+4. 커넥션 풀 고갈 여부를 확인한다.
+5. 최근 네트워크 변경 사항을 확인한다.</code></pre><hr id="04f720e4-6f49-8206-8ba1-01115865694d" dir="auto"/><h2 id="463720e4-6f49-823d-bc8b-8151ac102237" class="" dir="auto">6.5 확인 질문</h2><p id="8f4720e4-6f49-82e7-895b-8114ffa5fe96" class="" dir="auto">문서를 만든 뒤 학생에게 다음 내용을 확인하게 한다.</p><pre id="639720e4-6f49-8279-a0ab-01bf07eea735" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Q1. 정기 서버 패치 작업은 언제 수행되는가?
+Q2. 패치 전 반드시 생성해야 하는 것은 무엇인가?
+Q3. CPU 사용률이 90% 이상이면 어떤 작업을 해야 하는가?
+Q4. SEV-1은 어떤 상태인가?
+Q5. 500 오류가 증가하면 어떤 순서로 확인해야 하는가?</code></pre><p id="f2a720e4-6f49-8226-92bd-81c5531b0b80" class="" dir="auto">이 질문들은 나중에 Knowledge Base 테스트에서 그대로 사용한다.</p><hr id="5e4720e4-6f49-834c-8fdc-015c0e2cbe14" dir="auto"/><h1 id="1cd720e4-6f49-8279-88f2-01d014bf3ad1" class="" dir="auto">7. S3 버킷 생성 및 문서 업로드</h1><h2 id="f24720e4-6f49-8355-89ca-0169ee21b26c" class="" dir="auto">7.1 S3 버킷 생성</h2><p id="2fe720e4-6f49-8337-88cd-014f4bc54ec6" class="" dir="auto">AWS 콘솔에서 다음 메뉴로 이동한다.</p><pre id="d21720e4-6f49-839e-8b59-81c406a1c894" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon S3
+→ Buckets
+→ Create bucket</code></pre><p id="454720e4-6f49-83f8-b1d5-014ee636d515" class="" dir="auto">버킷 이름은 전역에서 유일해야 한다.</p><p id="f54720e4-6f49-82d5-a602-812ac57b9e4a" class="" dir="auto">예시는 다음과 같다.</p><pre id="d06720e4-6f49-826c-a6b8-015fdb726f20" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">bedrock-rag-lab-계정ID-날짜</code></pre><p id="1ab720e4-6f49-8296-a2a6-815435c679d0" class="" dir="auto">예를 들어 다음처럼 작성할 수 있다.</p><pre id="6fa720e4-6f49-82d8-a8f1-81dc75e56eb4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">bedrock-rag-lab-123456789012-20260503</code></pre><p id="58d720e4-6f49-8343-bb48-01f93a6ff0b7" class="" dir="auto">설정값은 다음과 같이 구성한다.</p><table id="ae5720e4-6f49-835a-bca5-014c86aa5392" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="247720e4-6f49-8252-a2e9-01f378a207e3" dir="ltr"><th id="aUBj" class="simple-table-header-color simple-table-header">항목</th><th id="H`Cx" class="simple-table-header-color simple-table-header">설정</th></tr></thead><tbody><tr id="da5720e4-6f49-8286-b206-01a4975f38b3" dir="ltr"><td id="aUBj" class="">AWS Region</td><td id="H`Cx" class="">Bedrock 실습 리전과 동일하게 선택</td></tr><tr id="999720e4-6f49-8220-81a3-01cf1a207e91" dir="ltr"><td id="aUBj" class="">Bucket type</td><td id="H`Cx" class="">General purpose</td></tr><tr id="62c720e4-6f49-82de-938b-018cfed281b6" dir="ltr"><td id="aUBj" class="">Object Ownership</td><td id="H`Cx" class="">ACLs disabled</td></tr><tr id="515720e4-6f49-839a-b6ad-0132eca8cbeb" dir="ltr"><td id="aUBj" class="">Block Public Access</td><td id="H`Cx" class="">전체 차단 유지</td></tr><tr id="1fd720e4-6f49-8353-ac35-81a0739713e4" dir="ltr"><td id="aUBj" class="">Bucket Versioning</td><td id="H`Cx" class="">비활성화 또는 활성화 선택 가능</td></tr><tr id="6d7720e4-6f49-8268-bd74-01acb5ec07bb" dir="ltr"><td id="aUBj" class="">Default encryption</td><td id="H`Cx" class="">SSE-S3 기본값 사용 가능</td></tr></tbody></table><p id="753720e4-6f49-8247-9f43-01214fd1441b" class="" dir="auto">중요한 점은 S3 버킷을 공개로 만들 필요가 없다는 것이다.</p><p id="c7c720e4-6f49-8388-8b9e-81e922ed3960" class="" dir="auto">Bedrock 서비스 역할이 S3에 접근할 수 있도록 권한을 부여하면 된다.</p><hr id="5a5720e4-6f49-83d3-8de1-817aa0c5158d" dir="auto"/><h2 id="a72720e4-6f49-83c3-9155-819af379ddc4" class="" dir="auto">7.2 폴더 생성</h2><p id="387720e4-6f49-82f7-a43d-812c94d56c22" class="" dir="auto">S3 버킷 안에 다음 폴더를 생성한다.</p><pre id="442720e4-6f49-82a0-915c-010273b409b9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">manual/</code></pre><p id="c4c720e4-6f49-82bf-8236-81f190907b5e" class="" dir="auto">S3에서 폴더는 실제 디렉터리라기보다는 객체 키의 접두사(prefix)에 가깝다.</p><p id="42f720e4-6f49-833b-90e9-01dbb961b5b7" class="" dir="auto">예를 들어 다음 객체는 <code>manual/</code> 아래에 있는 것처럼 보인다.</p><pre id="2f9720e4-6f49-82d9-a4f6-81006f92b980" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">manual/server_operation_guide.md
+manual/patch_schedule.md
+manual/incident_response_guide.md</code></pre><hr id="6ad720e4-6f49-82fa-8f84-0198ff0b13c7" dir="auto"/><h2 id="2ce720e4-6f49-82bb-b4e3-01e4b9c61c3f" class="" dir="auto">7.3 문서 업로드</h2><p id="163720e4-6f49-8224-90a2-016d96f6a988" class="" dir="auto">다음 파일 3개를 S3에 업로드한다.</p><pre id="e11720e4-6f49-826f-974a-81a622e92ded" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">server_operation_guide.md
+patch_schedule.md
+incident_response_guide.md</code></pre><p id="d35720e4-6f49-8328-a35d-81258a1c0f88" class="" dir="auto">업로드 후 S3 경로는 다음과 비슷해야 한다.</p><pre id="6de720e4-6f49-82c0-9a48-81244b40d937" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://bedrock-rag-lab-123456789012-20260503/manual/server_operation_guide.md
+s3://bedrock-rag-lab-123456789012-20260503/manual/patch_schedule.md
+s3://bedrock-rag-lab-123456789012-20260503/manual/incident_response_guide.md</code></pre><hr id="5c2720e4-6f49-8210-84af-81a51afd9b64" dir="auto"/><h2 id="240720e4-6f49-832b-9a9a-0113c3fa009c" class="" dir="auto">7.4 CLI로 업로드하는 방법</h2><p id="34c720e4-6f49-8350-9dd9-016ab647cf8e" class="" dir="auto">콘솔 대신 AWS CLI를 사용하는 경우 다음 명령어를 사용할 수 있다.</p><pre id="26c720e4-6f49-837d-ae90-815bc7bddad1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3 cp ./manual s3://bedrock-rag-lab-123456789012-20260503/manual/ --recursive --profile instructor</code></pre><h1 id="e78720e4-6f49-8392-96cc-818cff1f3962" class="" dir="auto">8. Amazon Bedrock Knowledge Base 생성</h1><h2 id="065720e4-6f49-83ad-80fe-01f8a7997258" class="" dir="auto">8.1 Knowledge Base 메뉴 이동</h2><p id="dc1720e4-6f49-8378-b8fa-0171244f84fd" class="" dir="auto">AWS 콘솔에서 다음 메뉴로 이동한다.</p><pre id="a4c720e4-6f49-8251-882a-0176472aea4c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon Bedrock
+→ Builder tools
+→ Knowledge Bases
+→ Create knowledge base</code></pre><p id="3ee720e4-6f49-8297-8984-81d77791d6df" class="" dir="auto">Knowledge Base는 자체 데이터를 기반으로 RAG 애플리케이션을 구성할 수 있게 해주는 Bedrock 기능이다. AWS 공식 문서에서도 Knowledge Base를 통해 데이터 소스에서 관련 정보를 검색하고, 검색 결과를 기반으로 응답을 생성할 수 있다고 설명한다.</p><hr id="123720e4-6f49-8231-bde4-815c031f7889" dir="auto"/><h2 id="f69720e4-6f49-83d7-b2c4-01f41f1f7dbe" class="" dir="auto">8.2 Knowledge Base 유형 선택</h2><p id="b5b720e4-6f49-827e-b628-0123e3a88c31" class="" dir="auto">생성 화면에서 다음 유형을 선택한다.</p><pre id="0ef720e4-6f49-82eb-b8fc-811ad890792c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Knowledge Base with vector store</code></pre><p id="744720e4-6f49-8204-bafd-01b454191dbf" class="" dir="auto">이 유형은 문서를 벡터로 변환하고, Vector Store에 저장한 뒤 유사도 검색에 사용하는 일반적인 RAG 구조이다.</p><hr id="087720e4-6f49-82aa-9c25-81292f85dce8" dir="auto"/><h2 id="5c9720e4-6f49-827f-a9e0-011f0d676b66" class="" dir="auto">8.3 Knowledge Base 이름 입력</h2><p id="1d3720e4-6f49-824d-a954-014213afae26" class="" dir="auto">예시 이름은 다음과 같이 입력한다.</p><pre id="1e8720e4-6f49-8363-abc2-81f5508da3e3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kb-ops-manual-lab</code></pre><p id="cf5720e4-6f49-82c7-aab9-81e1beac3fca" class="" dir="auto">설명은 다음처럼 작성할 수 있다.</p><pre id="762720e4-6f49-83ad-830e-818fbd260428" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영 매뉴얼, 패치 일정, 장애 대응 가이드를 기반으로 답변하는 실습용 Knowledge Base</code></pre><p id="f4b720e4-6f49-82c1-8fac-819b3e79085e" class="" dir="auto">이름 작성 시 의미 있게 작성하는 것이 좋다.</p><p id="89a720e4-6f49-8297-8fbc-0151e19d268c" class="" dir="auto">좋은 이름 예시는 다음과 같다.</p><pre id="937720e4-6f49-8265-aa3c-8195ce62a265" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kb-ops-manual-lab
+kb-server-operation-guide
+kb-incident-response-lab</code></pre><p id="341720e4-6f49-82bc-b11a-01b90e1dd6c5" class="" dir="auto">피해야 할 이름은 다음과 같다.</p><pre id="a8d720e4-6f49-825b-8ab3-81587b7493fb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">test
+kb1
+mykb</code></pre><p id="29f720e4-6f49-8242-a37e-011c4f0e6210" class="" dir="auto">운영 환경에서는 Knowledge Base가 여러 개 생길 수 있기 때문에 이름만 보고 용도를 알 수 있어야 한다.</p><hr id="a36720e4-6f49-82f1-9523-013c50fa2593" dir="auto"/><h1 id="cf3720e4-6f49-8398-8212-01e199c85f73" class="" dir="auto">9. IAM Role 설정</h1><h2 id="0ae720e4-6f49-823e-9bbc-010d75e7504e" class="" dir="auto">9.1 서비스 역할의 의미</h2><p id="c7f720e4-6f49-83fd-92ee-81a5bd2b0854" class="" dir="auto">Amazon Bedrock Knowledge Base가 S3 문서를 읽고, Embedding 모델을 호출하고, Vector Store에 데이터를 저장하려면 권한이 필요하다.</p><p id="4da720e4-6f49-8217-9b1a-812bb473435f" class="" dir="auto">이 권한은 일반적으로 IAM Role을 통해 부여한다.</p><p id="75a720e4-6f49-820e-9b97-015a54d45e18" class="" dir="auto">즉, 사용자가 직접 S3 파일을 읽는 것이 아니라 Bedrock 서비스가 사용자를 대신해 다음 작업을 수행한다.</p><pre id="3fa720e4-6f49-83bf-b248-01fd06d7fea0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Bedrock 서비스
+    ↓
+S3 문서 읽기
+    ↓
+Embedding 모델 호출
+    ↓
+Vector Store에 벡터 저장</code></pre><hr id="800720e4-6f49-8235-8d72-81d2a9e7cb2d" dir="auto"/><h2 id="40f720e4-6f49-831e-a5b7-01c14a1b2389" class="" dir="auto">9.2 자동 생성 역할 사용</h2><p id="e3b720e4-6f49-822d-9cae-015a5d31ce11" class="" dir="auto">실습에서는 콘솔에서 제공하는 자동 생성 역할을 사용한다.</p><p id="79f720e4-6f49-828e-9d96-81cb9259097d" class="" dir="auto">다음 옵션을 선택한다.</p><pre id="b6b720e4-6f49-8206-9a05-01e0e4b60785" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Create and use a new service role</code></pre><p id="0b4720e4-6f49-8236-928e-01051c198592" class="" dir="auto">역할 이름은 자동으로 생성되거나 직접 입력할 수 있다.</p><p id="259720e4-6f49-826c-bd33-8112ce0d0517" class="" dir="auto">예시:</p><pre id="53d720e4-6f49-8320-baf9-0177d0dfac2f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AmazonBedrockExecutionRoleForKnowledgeBase_ops_lab</code></pre><p id="cfb720e4-6f49-821e-87c5-81ad26b5c057" class="" dir="auto">실습에서는 자동 생성 방식이 가장 간단하다.</p><p id="d51720e4-6f49-8354-b041-01a298b6c6e2" class="" dir="auto">다만 운영 환경에서는 최소 권한 원칙에 따라 다음 권한을 명확히 제한해야 한다.</p><ul id="060720e4-6f49-82a7-b080-81a298259f35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 S3 버킷만 읽기 허용</li></ul><ul id="d53720e4-6f49-8277-961b-810a7692b1a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 Prefix만 읽기 허용</li></ul><ul id="856720e4-6f49-82a9-b25e-819f02bc0736" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요한 Bedrock 모델만 호출 허용</li></ul><ul id="e76720e4-6f49-8229-8e50-01c0975c10d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 Vector Store만 접근 허용</li></ul><hr id="706720e4-6f49-839b-ad69-01b5b384c4eb" dir="auto"/><h2 id="8d2720e4-6f49-820d-9ae5-01f5a7b25af9" class="" dir="auto">9.3 권한 구조 이해</h2><p id="151720e4-6f49-830f-9acb-815e1fa4e635" class="" dir="auto">Bedrock Knowledge Base 서비스 역할에는 일반적으로 다음 권한이 필요하다.</p><table id="4f3720e4-6f49-83b0-9b83-81a1a37a22f6" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="d48720e4-6f49-8300-8dc1-0157acdfb796" dir="ltr"><th id="qH|k" class="simple-table-header-color simple-table-header">권한 대상</th><th id="=jgW" class="simple-table-header-color simple-table-header">필요한 이유</th></tr></thead><tbody><tr id="ee0720e4-6f49-8318-be45-01347e7347f7" dir="ltr"><td id="qH|k" class="">S3</td><td id="=jgW" class="">문서 파일 읽기</td></tr><tr id="ba5720e4-6f49-82a1-98b9-814dc4567655" dir="ltr"><td id="qH|k" class="">Bedrock model</td><td id="=jgW" class="">문서를 임베딩으로 변환</td></tr><tr id="bb7720e4-6f49-8327-a90b-01d42d498719" dir="ltr"><td id="qH|k" class="">OpenSearch Serverless</td><td id="=jgW" class="">벡터 데이터 저장 및 검색</td></tr><tr id="82c720e4-6f49-82d3-9731-81419184ed5f" dir="ltr"><td id="qH|k" class="">CloudWatch Logs</td><td id="=jgW" class="">일부 로그 기록에 사용 가능</td></tr><tr id="796720e4-6f49-8259-9512-0123ac7f93c3" dir="ltr"><td id="qH|k" class="">KMS</td><td id="=jgW" class="">암호화 키 사용 시 필요</td></tr></tbody></table><p id="890720e4-6f49-834e-831d-0100e24de03e" class="" dir="auto">AWS 공식 문서도 Knowledge Base용 서비스 역할 생성과 데이터 소스, 벡터 스토어 접근 권한 구성을 별도로 안내한다.</p><hr id="81d720e4-6f49-820c-88d4-01e7ea74672d" dir="auto"/><h1 id="e0f720e4-6f49-828c-988c-015284e23ed1" class="" dir="auto">10. 데이터 소스 설정</h1><h2 id="4a6720e4-6f49-82e4-a019-818429e50483" class="" dir="auto">10.1 Data source 선택</h2><p id="e63720e4-6f49-83b7-867e-81a20fa9fdc6" class="" dir="auto">Knowledge Base 생성 과정에서 Data source를 선택한다.</p><pre id="c88720e4-6f49-82e8-b521-81c803921926" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Data source type: Amazon S3</code></pre><p id="6dd720e4-6f49-83d1-887b-01a7083b9124" class="" dir="auto">S3는 운영 문서, 매뉴얼, 정책 문서, 장애 대응 문서를 저장하기에 적합하다.</p><hr id="de1720e4-6f49-834c-ae09-013144e1557f" dir="auto"/><h2 id="6e5720e4-6f49-83ac-a793-81a46ca99bc8" class="" dir="auto">10.2 S3 URI 입력</h2><p id="a3f720e4-6f49-838a-b249-81d5cf896259" class="" dir="auto">앞에서 생성한 S3 경로를 입력한다.</p><p id="b3a720e4-6f49-8222-a04d-814c5601d911" class="" dir="auto">예시:</p><pre id="aba720e4-6f49-8228-a0e9-01507241c428" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://bedrock-rag-lab-123456789012-20260503/manual/</code></pre><p id="114720e4-6f49-82d2-a52f-01cdf7bad77a" class="" dir="auto">여기서는 특정 파일 하나가 아니라 <code>manual/</code> 경로 전체를 지정한다.</p><p id="3aa720e4-6f49-8337-9645-8131b61d66a4" class="" dir="auto">이렇게 하면 해당 Prefix 아래에 있는 여러 문서를 Knowledge Base 데이터 소스로 사용할 수 있다.</p><hr id="251720e4-6f49-8260-ad22-81b9c1e2c074" dir="auto"/><h2 id="bff720e4-6f49-8306-a52d-813d429ecb28" class="" dir="auto">10.3 데이터 소스 이름 입력</h2><p id="bb9720e4-6f49-8266-a1ad-81906b9998cf" class="" dir="auto">예시 이름은 다음과 같다.</p><pre id="894720e4-6f49-83b0-ba8a-017fe4e7543f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3-ops-manual-docs</code></pre><p id="438720e4-6f49-8315-8626-81e43f0e4ca5" class="" dir="auto">설명은 다음처럼 작성한다.</p><pre id="df9720e4-6f49-82d9-84c4-81719bb1fc7a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영 매뉴얼, 패치 일정, 장애 대응 문서를 저장한 S3 데이터 소스</code></pre><hr id="626720e4-6f49-83aa-9157-01f93e50a234" dir="auto"/><h1 id="28e720e4-6f49-8369-aba3-012b929260c5" class="" dir="auto">11. 문서 분할 방식 설정</h1><h2 id="66e720e4-6f49-820b-9112-815feffbdb3c" class="" dir="auto">11.1 Chunking이란</h2><p id="d31720e4-6f49-83ea-a261-01f570a126eb" class="" dir="auto">RAG에서 문서를 그대로 통째로 검색하는 것은 효율적이지 않다.</p><p id="faf720e4-6f49-834b-a9e8-01b619dc6964" class="" dir="auto">예를 들어 20페이지짜리 운영 매뉴얼 전체를 하나의 단위로 검색하면, 사용자의 질문과 직접 관련 없는 내용까지 함께 들어갈 수 있다.</p><p id="6ff720e4-6f49-8238-a14e-01b2227d5a55" class="" dir="auto">그래서 문서를 작은 조각으로 나눈다.</p><p id="f8b720e4-6f49-824a-b696-01735c2ebd9f" class="" dir="auto">이 조각을 Chunk라고 한다.</p><pre id="8b1720e4-6f49-82c5-bd23-816b3720313e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">긴 문서
+  ↓
+문서 조각 1
+문서 조각 2
+문서 조각 3
+문서 조각 4</code></pre><p id="354720e4-6f49-82ad-b7b6-0113d0e0ce3c" class="" dir="auto">사용자가 질문하면 Knowledge Base는 전체 문서를 검색하는 것이 아니라 관련성이 높은 Chunk를 검색한다.</p><hr id="2b5720e4-6f49-8307-86e6-811b056bd81c" dir="auto"/><h2 id="3df720e4-6f49-83f1-8923-81bf61623dda" class="" dir="auto">11.2 기본 Chunking 전략 사용</h2><p id="ef9720e4-6f49-83ad-84c3-012d1a873777" class="" dir="auto">실습에서는 기본 Chunking 전략을 사용한다.</p><p id="39f720e4-6f49-8214-9cd1-81e302659c09" class="" dir="auto">예시 설정:</p><pre id="966720e4-6f49-83e4-9ae7-81b7ae455799" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Chunking strategy: Default</code></pre><p id="1de720e4-6f49-823c-9f98-019d224a8fe0" class="" dir="auto">또는 콘솔에서 다음과 비슷한 옵션이 보이면 기본값을 유지한다.</p><pre id="0a7720e4-6f49-82d6-9b6e-817fb13f429d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Default chunking
+Fixed-size chunking
+Hierarchical chunking
+Semantic chunking</code></pre><p id="2c3720e4-6f49-839c-a53e-81e74c3be409" class="" dir="auto">초급 실습에서는 기본값으로 충분하다.</p><p id="ba3720e4-6f49-824e-a0b6-81277cbf79c4" class="" dir="auto">다만 문서가 길고 구조가 복잡한 경우에는 Chunk 크기와 Overlap을 조정해야 한다.</p><h2 id="3cf720e4-6f49-82a9-aa2a-811d316b5b78" class="" dir="auto">11.3 Chunk 크기 이해</h2><p id="fe4720e4-6f49-8211-93b6-81f94bdebba8" class="" dir="auto">Chunk 크기가 너무 작으면 문맥이 부족해질 수 있다.</p><p id="5fa720e4-6f49-83d1-b1a2-01301ba441e4" class="" dir="auto">예를 들어 다음 문장이 서로 다른 Chunk로 나뉘면 답변 품질이 떨어질 수 있다.</p><pre id="aed720e4-6f49-83b7-991c-0118a3548f45" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">패치 작업 전에는 다음 항목을 확인한다.
+1. 대상 서버 목록을 확인한다.
+2. EBS 스냅샷을 생성한다.</code></pre><p id="0e2720e4-6f49-8313-898f-81f31851170e" class="" dir="auto">반대로 Chunk가 너무 크면 관련 없는 내용이 함께 검색될 수 있다.</p><p id="ef9720e4-6f49-836b-8b31-01feca648cc5" class="" dir="auto">초기 실습에서는 기본값을 사용하고, 추후 고급 실습에서 Chunk 전략을 비교하는 것이 좋다.</p><hr id="68e720e4-6f49-83c8-8368-81757a0db3a8" dir="auto"/><h1 id="b45720e4-6f49-826e-8201-817f1dc8b9ca" class="" dir="auto">12. Embedding 모델 선택</h1><h2 id="9c4720e4-6f49-82fc-9f5c-810afba413bf" class="" dir="auto">12.1 Embedding 모델의 역할</h2><p id="c99720e4-6f49-83b6-b0f2-01dbe24e6a91" class="" dir="auto">Embedding 모델은 텍스트를 숫자 벡터로 변환한다.</p><p id="989720e4-6f49-825b-a034-012bb747f815" class="" dir="auto">예를 들어 다음 문장을 생각해보자.</p><pre id="e10720e4-6f49-8392-9c46-01aeafa35f81" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">패치 전 EBS 스냅샷을 생성한다.</code></pre><p id="119720e4-6f49-83b7-b001-81bf6b328941" class="" dir="auto">Embedding 모델은 이 문장을 사람이 읽는 문장이 아니라 벡터 형태로 변환한다.</p><pre id="fb0720e4-6f49-82fd-8d17-81011559e62f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[0.012, -0.231, 0.884, ...]</code></pre><p id="5e7720e4-6f49-83e1-b0f0-81de32d3fc09" class="" dir="auto">사용자 질문도 벡터로 변환된다.</p><pre id="29f720e4-6f49-83d7-98be-81119b585588" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">패치 전에 백업을 해야 하나요?</code></pre><p id="715720e4-6f49-8234-a2c7-01c25e820be0" class="" dir="auto">이 질문도 벡터로 변환된다.</p><p id="0f8720e4-6f49-8269-bfb8-011264a3c5af" class="" dir="auto">그 다음 벡터끼리 유사도를 비교한다.</p><p id="d11720e4-6f49-8258-9f6c-012951c051b0" class="" dir="auto">의미가 비슷한 문장일수록 벡터 공간에서 가까운 위치에 배치된다.</p><hr id="814720e4-6f49-8202-af8b-01a7cf78e77e" dir="auto"/><h2 id="75f720e4-6f49-82ee-997b-01416dc8bf9b" class="" dir="auto">12.2 Titan Text Embeddings V2 선택</h2><p id="9fb720e4-6f49-8398-86bf-016e3b80ba52" class="" dir="auto">Embedding 모델로 다음 모델을 선택한다.</p><pre id="902720e4-6f49-82ff-918d-0109e8f9b31d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon Titan Text Embeddings V2</code></pre><p id="8a3720e4-6f49-8218-b07c-0127148213fe" class="" dir="auto">또는 콘솔에서 다음과 비슷한 모델 ID가 보일 수 있다.</p><pre id="6d3720e4-6f49-83e4-9ab7-817ceba9ef27" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">amazon.titan-embed-text-v2:0</code></pre><p id="562720e4-6f49-82c8-9b84-81782357a570" class="" dir="auto">Titan Text Embeddings V2는 RAG 검색 작업에 사용할 수 있는 Amazon의 텍스트 임베딩 모델이며, 설정 가능한 출력 차원을 제공한다.</p><hr id="136720e4-6f49-82bf-bc8e-01d7d6b702a6" dir="auto"/><h2 id="842720e4-6f49-839b-90f3-010ad7cd6421" class="" dir="auto">12.3 Embedding 모델과 답변 생성 모델의 차이</h2><p id="520720e4-6f49-836e-96c9-817a5cbeadbe" class="" dir="auto">학생들이 자주 헷갈리는 부분이다.</p><table id="076720e4-6f49-8262-9add-8136673c35e5" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="9f8720e4-6f49-8341-839d-0137020dd4c4" dir="ltr"><th id="AyYS" class="simple-table-header-color simple-table-header">구분</th><th id="=gCW" class="simple-table-header-color simple-table-header">역할</th></tr></thead><tbody><tr id="093720e4-6f49-82ac-a0c9-0110c9ec652d" dir="ltr"><td id="AyYS" class="">Embedding 모델</td><td id="=gCW" class="">문서와 질문을 벡터로 변환</td></tr><tr id="03f720e4-6f49-837c-9745-8174b2b26976" dir="ltr"><td id="AyYS" class="">답변 생성 모델</td><td id="=gCW" class="">검색된 문서를 읽고 자연어 답변 생성</td></tr></tbody></table><p id="2f7720e4-6f49-8353-9554-01726d5e6176" class="" dir="auto">Embedding 모델은 질문에 직접 답변하는 모델이 아니다.</p><p id="4c0720e4-6f49-833d-9937-816285cb936c" class="" dir="auto">예를 들어 사용자가 다음 질문을 한다.</p><pre id="002720e4-6f49-8291-8fc0-8109b9d9c621" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">패치 전에 무엇을 해야 하나요?</code></pre><p id="bbe720e4-6f49-833d-9ce1-019af7304277" class="" dir="auto">Embedding 모델은 이 질문에 답변하지 않는다.</p><p id="8b7720e4-6f49-82a4-af35-01278c248614" class="" dir="auto">이 질문을 벡터로 바꾸어 관련 문서를 찾을 수 있게 한다.</p><p id="357720e4-6f49-83ab-8adc-816cfe3a20d2" class="" dir="auto">답변은 Claude, Nova, Llama 같은 Foundation Model이 생성한다.</p><hr id="c47720e4-6f49-82e2-9817-013a0d684035" dir="auto"/><h1 id="c69720e4-6f49-83fb-8592-817bd071f61e" class="" dir="auto">13. Vector Store 생성</h1><h2 id="ebb720e4-6f49-82fe-8756-81e89b897e7a" class="" dir="auto">13.1 Vector Store란</h2><p id="946720e4-6f49-8330-9533-01280871143f" class="" dir="auto">Vector Store는 임베딩된 문서 조각을 저장하는 공간이다.</p><p id="bcb720e4-6f49-82ee-8c38-011d38e9d442" class="" dir="auto">일반 데이터베이스가 다음과 같은 데이터를 저장한다면,</p><pre id="7cb720e4-6f49-834b-b2fd-01b4ca1c779d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">id, name, email, created_at</code></pre><p id="132720e4-6f49-82d2-bdb4-8158ec7712eb" class="" dir="auto">Vector Store는 다음과 같은 데이터를 저장한다.</p><pre id="41a720e4-6f49-837a-b68a-812ac081dfc1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">문서 조각
+문서 조각의 벡터
+문서 출처
+문서 메타데이터</code></pre><p id="090720e4-6f49-822b-a2da-81a2b6a25530" class="" dir="auto">사용자 질문이 들어오면 질문 벡터와 문서 벡터를 비교해서 의미적으로 가까운 문서 조각을 찾는다.</p><hr id="136720e4-6f49-8380-a16c-8144f8ad09aa" dir="auto"/><h2 id="305720e4-6f49-8272-89e9-01c0fcc8f736" class="" dir="auto">13.2 Quick create 사용</h2><p id="bde720e4-6f49-83cd-81be-01aa48270e85" class="" dir="auto">실습에서는 다음 옵션을 선택한다.</p><pre id="a90720e4-6f49-8321-aca1-01f8afb7fe8a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Quick create a new vector store</code></pre><p id="388720e4-6f49-82d6-b9ab-81f173bfa505" class="" dir="auto">Vector Store 유형은 다음을 사용한다.</p><pre id="176720e4-6f49-827e-94e2-01c379640aea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon OpenSearch Serverless</code></pre><p id="2d5720e4-6f49-83ec-b097-812dda1ceb33" class="" dir="auto">Quick create를 사용하면 Bedrock이 Knowledge Base에서 사용할 OpenSearch Serverless 컬렉션과 인덱스 구성을 자동으로 생성한다.</p><p id="67d720e4-6f49-82c5-b265-01995ef7387d" class="" dir="auto">실습에서는 수동으로 OpenSearch Serverless 컬렉션, 보안 정책, 인덱스 매핑을 구성하지 않아도 된다.</p><hr id="211720e4-6f49-8363-bdab-8173ff261988" dir="auto"/><h2 id="79b720e4-6f49-8351-84db-81efbc873a15" class="" dir="auto">13.3 수동 생성과 Quick create 차이</h2><table id="5fd720e4-6f49-83db-8588-0195c8e043ea" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="fd1720e4-6f49-83b3-a2e3-01c89823a288" dir="ltr"><th id="{jMk" class="simple-table-header-color simple-table-header">방식</th><th id="Z|G[" class="simple-table-header-color simple-table-header">특징</th></tr></thead><tbody><tr id="7e1720e4-6f49-83d4-9897-81ad0b9a9de1" dir="ltr"><td id="{jMk" class="">Quick create</td><td id="Z|G[" class="">실습에 적합, 설정이 간단함</td></tr><tr id="fd6720e4-6f49-839f-9624-8179e558ba5a" dir="ltr"><td id="{jMk" class="">Existing vector store</td><td id="Z|G[" class="">기존 OpenSearch, Pinecone, Redis 등 사용 시 적합</td></tr><tr id="463720e4-6f49-838f-953d-018ae7c0e7e5" dir="ltr"><td id="{jMk" class="">수동 구성</td><td id="Z|G[" class="">운영 환경에서 세밀한 제어 가능</td></tr></tbody></table><p id="446720e4-6f49-826d-8f47-815440220244" class="" dir="auto">처음 실습에서는 Quick create를 사용한다.</p><p id="7d9720e4-6f49-8336-9515-01ae97aedb84" class="" dir="auto">운영 환경에서는 네트워크, 보안 정책, 암호화, 비용, 인덱스 구조를 고려해야 한다.</p><hr id="ac5720e4-6f49-82d4-98b2-81fb992ddc0a" dir="auto"/><h1 id="6ed720e4-6f49-8355-8691-813f577f8a0a" class="" dir="auto">14. Knowledge Base 생성 완료</h1><p id="db0720e4-6f49-8235-b771-019aea215388" class="" dir="auto">모든 설정을 확인한 뒤 생성 버튼을 클릭한다.</p><pre id="a08720e4-6f49-8310-a35b-81083805c69d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Create knowledge base</code></pre><p id="389720e4-6f49-82a7-962e-016b5bb4f194" class="" dir="auto">생성에는 몇 분 정도 걸릴 수 있다.</p><p id="06d720e4-6f49-8215-b728-0197c66fbeab" class="" dir="auto">생성 완료 후 다음 항목을 확인한다.</p><table id="f3c720e4-6f49-8383-b341-8153742d220c" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="44b720e4-6f49-820d-8c3b-01f96e2c9481" dir="ltr"><th id="w:Es" class="simple-table-header-color simple-table-header">항목</th><th id="JUpm" class="simple-table-header-color simple-table-header">확인 내용</th></tr></thead><tbody><tr id="0c8720e4-6f49-82ac-917d-010226970855" dir="ltr"><td id="w:Es" class="">Knowledge Base 상태</td><td id="JUpm" class="">Available 또는 Ready 상태인지 확인</td></tr><tr id="db6720e4-6f49-829f-bf39-01e5fa43317e" dir="ltr"><td id="w:Es" class="">Data source</td><td id="JUpm" class="">S3 데이터 소스가 연결되었는지 확인</td></tr><tr id="c65720e4-6f49-83d3-9859-019067258114" dir="ltr"><td id="w:Es" class="">Vector Store</td><td id="JUpm" class="">OpenSearch Serverless가 연결되었는지 확인</td></tr><tr id="491720e4-6f49-83e9-965e-01f69689c10c" dir="ltr"><td id="w:Es" class="">Service role</td><td id="JUpm" class="">Bedrock 실행 역할이 생성되었는지 확인</td></tr></tbody></table><hr id="63a720e4-6f49-8317-9502-81b6242ef5f2" dir="auto"/><h1 id="fbe720e4-6f49-8394-bd6a-81bcf2539b22" class="" dir="auto">15. 데이터 동기화</h1><h2 id="c75720e4-6f49-8298-8760-817725706c2f" class="" dir="auto">15.1 Sync의 의미</h2><p id="f35720e4-6f49-823f-bb2a-81bbea6493d8" class="" dir="auto">Knowledge Base를 생성했다고 해서 S3 문서가 자동으로 바로 검색되는 것은 아니다.</p><p id="893720e4-6f49-83c3-85eb-8125ff1b86c1" class="" dir="auto">S3에 있는 문서를 Knowledge Base로 가져오고, 문서 내용을 Chunk로 나누고, Embedding 모델로 벡터화하고, Vector Store에 저장해야 한다.</p><p id="c36720e4-6f49-83d6-b589-81f1b01370e0" class="" dir="auto">이 과정을 Sync라고 한다.</p><pre id="d26720e4-6f49-82f7-863a-81683d2a870e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3 문서
+  ↓
+문서 읽기
+  ↓
+Chunk 분할
+  ↓
+Embedding 생성
+  ↓
+Vector Store 저장</code></pre><hr id="127720e4-6f49-83e6-9306-81bdaf688057" dir="auto"/><h2 id="b37720e4-6f49-8327-8c7e-8150b721e7d1" class="" dir="auto">15.2 Sync 실행</h2><p id="72b720e4-6f49-829c-9141-811972d83a91" class="" dir="auto">Knowledge Base 상세 화면에서 Data source를 선택한다.</p><pre id="dbd720e4-6f49-8266-b1d3-81fe58a99190" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Data sources
+→ s3-ops-manual-docs
+→ Sync</code></pre><p id="23b720e4-6f49-837b-a13f-81f298720d2f" class="" dir="auto">Sync 버튼을 클릭한다.</p><p id="d4f720e4-6f49-837a-9791-01b291a8f80d" class="" dir="auto">동기화가 완료되면 상태가 다음과 비슷하게 표시된다.</p><pre id="16d720e4-6f49-83d1-b413-81b6e34f0263" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Completed</code></pre><hr id="b77720e4-6f49-83d4-9f6d-8137ec53ca10" dir="auto"/><h2 id="d27720e4-6f49-8203-80b7-81bb587a7529" class="" dir="auto">15.3 Sync 실패 시 확인 항목</h2><p id="903720e4-6f49-83b1-a4fd-0181066d724a" class="" dir="auto">Sync가 실패하면 다음을 확인한다.</p><table id="e05720e4-6f49-829b-ad56-01fc81ec31ff" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="d00720e4-6f49-826a-b700-0136e2516a77" dir="ltr"><th id="Kie|" class="simple-table-header-color simple-table-header">문제</th><th id="@j_m" class="simple-table-header-color simple-table-header">확인할 내용</th></tr></thead><tbody><tr id="57b720e4-6f49-8353-ae67-01bb0ce99706" dir="ltr"><td id="Kie|" class="">S3 접근 실패</td><td id="@j_m" class="">Bedrock 서비스 역할에 S3 읽기 권한이 있는지 확인</td></tr><tr id="b78720e4-6f49-82b9-9fe1-816a2a6066f9" dir="ltr"><td id="Kie|" class="">모델 접근 실패</td><td id="@j_m" class="">Embedding 모델 접근 권한이 활성화되었는지 확인</td></tr><tr id="cca720e4-6f49-834d-83f3-81064ece1cac" dir="ltr"><td id="Kie|" class="">Vector Store 생성 실패</td><td id="@j_m" class="">OpenSearch Serverless 권한 확인</td></tr><tr id="a39720e4-6f49-832d-bcaa-81a7f46eb719" dir="ltr"><td id="Kie|" class="">문서 형식 문제</td><td id="@j_m" class="">지원되는 파일 형식인지 확인</td></tr><tr id="62a720e4-6f49-82f0-b980-01bb09bf9d20" dir="ltr"><td id="Kie|" class="">리전 문제</td><td id="@j_m" class="">S3, Bedrock, Vector Store 리전 확인</td></tr></tbody></table><hr id="325720e4-6f49-83a5-8b0b-01d2b8fc48fd" dir="auto"/><h1 id="8fb720e4-6f49-8368-a689-012d35509d39" class="" dir="auto">16. Knowledge Base 테스트</h1><h2 id="505720e4-6f49-833f-9795-81ddb3a0be35" class="" dir="auto">16.1 테스트 화면 이동</h2><p id="6de720e4-6f49-82e9-b5e3-81d36e7a5b32" class="" dir="auto">Knowledge Base 상세 화면에서 테스트 메뉴를 연다.</p><pre id="7f7720e4-6f49-82c6-ad8b-012836ecc880" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Knowledge Base
+→ kb-ops-manual-lab
+→ Test knowledge base</code></pre><p id="93f720e4-6f49-82b9-ae93-8178df54ef2d" class="" dir="auto">AWS 공식 문서에서도 Knowledge Base를 설정한 뒤 Retrieve 또는 RetrieveAndGenerate 방식으로 쿼리를 테스트할 수 있다고 설명한다.</p><hr id="3df720e4-6f49-8329-bdeb-81b50a7436ec" dir="auto"/><h2 id="733720e4-6f49-83c0-a0f9-019df2e19da9" class="" dir="auto">16.2 답변 생성 기능 활성화</h2><p id="b1f720e4-6f49-8373-8ccb-81d6d9264e05" class="" dir="auto">테스트 화면에서 다음 옵션을 활성화한다.</p><pre id="849720e4-6f49-8370-843b-811895c6c3bf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Generate responses</code></pre><p id="2a3720e4-6f49-82e5-b410-81865cc857a5" class="" dir="auto">이 옵션을 켜면 Knowledge Base가 관련 문서만 검색하는 것이 아니라, 검색된 문서를 기반으로 자연어 답변까지 생성한다. AWS 문서에서도 Generate responses를 켜면 Bedrock이 데이터 소스를 기반으로 응답을 생성하고 footnote 형태로 출처를 표시한다고 안내한다.</p><hr id="f7a720e4-6f49-82ba-a82c-813129fa6b43" dir="auto"/><h2 id="0bf720e4-6f49-839a-99e0-01b020b61f45" class="" dir="auto">16.3 답변 생성 모델 선택</h2><p id="300720e4-6f49-8273-bd8d-8189e2f6444a" class="" dir="auto">답변 생성에 사용할 모델을 선택한다.</p><p id="7ce720e4-6f49-8213-85a0-01b4333e8458" class="" dir="auto">예시:</p><pre id="1ac720e4-6f49-82c5-bb1d-01ebed179fd5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Anthropic Claude
+Amazon Nova
+Meta Llama</code></pre><p id="483720e4-6f49-820d-af2e-81ef7a34dacf" class="" dir="auto">계정과 리전에 따라 보이는 모델이 다를 수 있다.</p><p id="f93720e4-6f49-8295-8985-0161f1084780" class="" dir="auto">중요한 점은 Embedding 모델과 답변 생성 모델이 다르다는 것이다.</p><pre id="98d720e4-6f49-830b-9962-818787a5b9f4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Embedding 모델:
+문서와 질문을 벡터로 변환
+
+답변 생성 모델:
+검색된 문서 내용을 읽고 답변 생성</code></pre><hr id="a61720e4-6f49-82a6-900b-8130cc3963b2" dir="auto"/><h1 id="a26720e4-6f49-821c-b86b-81012344cfc0" class="" dir="auto">17. 테스트 질문 작성</h1><h2 id="3d1720e4-6f49-8380-8a82-819c9d2cfe59" class="" dir="auto">17.1 단순 정보 확인 질문</h2><p id="5cd720e4-6f49-8357-9eaf-819ad3e8f688" class="" dir="auto">다음 질문을 입력한다.</p><pre id="690720e4-6f49-8338-a29b-81be491758ff" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">정기 서버 패치 작업은 언제 수행되나요?</code></pre><p id="61a720e4-6f49-82c6-8766-0109c1a3998f" class="" dir="auto">기대 답변 예시는 다음과 같다.</p><pre id="f8f720e4-6f49-8375-a346-81071cae8c84" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">정기 서버 패치 작업은 매월 둘째 주 화요일 22:00에 수행됩니다.
+패치 작업 시간은 기본적으로 22:00부터 23:30까지입니다.</code></pre><p id="f1f720e4-6f49-8225-9d39-81dfcb524d0e" class="" dir="auto">확인할 내용은 다음과 같다.</p><ul id="02a720e4-6f49-82d2-bf46-813cdca71f88" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>patch_schedule.md</code> 문서 내용이 반영되었는가</li></ul><ul id="d7c720e4-6f49-8290-91da-812480ee76e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">답변에 출처가 표시되는가</li></ul><ul id="5e2720e4-6f49-8242-ab99-81470c81dc21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모델이 임의로 다른 일정을 만들어내지 않았는가</li></ul><hr id="724720e4-6f49-83f5-a762-81e202f1e0b0" dir="auto"/><h2 id="9bc720e4-6f49-836a-939a-811770a98136" class="" dir="auto">17.2 절차형 질문</h2><p id="deb720e4-6f49-831c-8272-814ec6823bd3" class="" dir="auto">다음 질문을 입력한다.</p><pre id="d11720e4-6f49-8355-ab19-8175aed806a6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">패치 작업 전에 무엇을 확인해야 하나요?</code></pre><p id="8d7720e4-6f49-826c-8ed9-81c4277edcee" class="" dir="auto">기대 답변 예시는 다음과 같다.</p><pre id="dfe720e4-6f49-82b9-b197-811dcacd342c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">패치 작업 전에는 대상 서버 목록을 확인하고, 각 서버의 상태가 running인지 확인해야 합니다.
+또한 패치 전 EBS 스냅샷을 생성하고, 최근 배포 작업 여부를 확인한 뒤 서비스 담당자에게 작업 시작을 알려야 합니다.</code></pre><p id="1a8720e4-6f49-8366-a943-81ef3ccfb513" class="" dir="auto">이 질문은 단순 키워드 검색보다 RAG의 효과를 보기 좋다.</p><p id="513720e4-6f49-82df-a037-81b37e7069a4" class="" dir="auto">질문에는 “스냅샷”이라는 단어가 없더라도, 문서의 의미를 기반으로 관련 내용을 찾을 수 있기 때문이다.</p><hr id="8cd720e4-6f49-8285-aa0b-814e5755bacd" dir="auto"/><h2 id="72f720e4-6f49-8388-a7d9-81d888224ee4" class="" dir="auto">17.3 장애 대응 질문</h2><p id="dad720e4-6f49-82de-96e0-816d3d7476d6" class="" dir="auto">다음 질문을 입력한다.</p><pre id="815720e4-6f49-829a-9e88-811bc068dadc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">최근 10분간 500 오류가 증가하면 어떤 순서로 대응해야 하나요?</code></pre><p id="850720e4-6f49-820d-a844-01d0f452fe20" class="" dir="auto">기대 답변 예시는 다음과 같다.</p><pre id="818720e4-6f49-8307-a26d-8132579925eb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">최근 10분간 500 오류가 평소보다 2배 이상 증가하면 장애 의심 상태로 분류합니다.
+대응 절차는 최근 배포 이력 확인, 애플리케이션 ERROR 로그 확인, 데이터베이스 연결 오류 확인, 외부 API 호출 실패 여부 확인, 필요 시 직전 버전으로 롤백 순서입니다.</code></pre><p id="758720e4-6f49-8346-b21d-818894d9f498" class="" dir="auto">확인할 내용은 다음과 같다.</p><ul id="217720e4-6f49-8261-bd04-81607da71fce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>incident_response_guide.md</code>의 내용이 사용되었는가</li></ul><ul id="f24720e4-6f49-831a-bdd2-814d4c6c1685" class="bulleted-list" dir="auto"><li style="list-style-type:disc">절차가 누락되지 않았는가</li></ul><ul id="609720e4-6f49-83c5-ad5f-012b75beb6e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">출처가 장애 대응 문서로 표시되는가</li></ul><hr id="1ab720e4-6f49-8223-90ee-8171716f89ca" dir="auto"/><h2 id="196720e4-6f49-82dc-b637-011f615c651e" class="" dir="auto">17.4 운영 기준 질문</h2><p id="4dc720e4-6f49-83cd-b550-0183db181c44" class="" dir="auto">다음 질문을 입력한다.</p><pre id="284720e4-6f49-83e4-ad0a-019edd1227e2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CPU 사용률이 90% 이상이면 어떻게 해야 하나요?</code></pre><p id="7f1720e4-6f49-8219-af03-010cead2e86f" class="" dir="auto">기대 답변 예시는 다음과 같다.</p><pre id="76f720e4-6f49-82e0-b895-81bf3c0ac163" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CPU 사용률이 90% 이상이고 5분 이상 지속되면 즉시 원인 분석을 수행해야 합니다.
+원인 분석 시 비정상 프로세스, 최근 배포 여부, 트래픽 급증 여부, Auto Scaling 정책 동작 여부를 확인합니다.</code></pre><hr id="cd0720e4-6f49-82b7-9616-0137d562577d" dir="auto"/><h2 id="254720e4-6f49-83ef-b47a-010710126b73" class="" dir="auto">17.5 장애 등급 질문</h2><p id="c2d720e4-6f49-8263-8ee1-01f196360eda" class="" dir="auto">다음 질문을 입력한다.</p><pre id="4ff720e4-6f49-83ba-8776-8192545d23ac" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SEV-1 장애는 어떤 상태인가요?</code></pre><p id="6a8720e4-6f49-828e-8ba6-01ee7f1c8040" class="" dir="auto">기대 답변 예시는 다음과 같다.</p><pre id="1e9720e4-6f49-8333-bd17-8147b52ce250" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SEV-1은 전체 서비스가 중단되었거나 핵심 기능이 동작하지 않는 상태입니다.
+SEV-1 발생 시 즉시 장애 대응 채널을 생성하고 인프라 담당자와 서비스 담당자를 호출합니다.</code></pre><hr id="fba720e4-6f49-830c-9849-01be9286dfc0" dir="auto"/><h1 id="d8e720e4-6f49-823e-9109-01a57f283777" class="" dir="auto">18. 검색 결과와 생성 답변 구분하기</h1><p id="2d7720e4-6f49-8226-bc47-817f37126983" class="" dir="auto">Knowledge Base 테스트에서 중요한 것은 두 가지를 구분하는 것이다.</p><pre id="2ce720e4-6f49-8202-97cf-8199de58a4bc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">검색된 문서 조각
+생성된 답변</code></pre><p id="606720e4-6f49-8317-b507-01e97a7780a8" class="" dir="auto">RAG는 단순히 모델이 답변하는 구조가 아니다.</p><p id="ff7720e4-6f49-8223-9fc1-0102053a9583" class="" dir="auto">먼저 관련 문서를 검색한다.</p><pre id="f74720e4-6f49-8298-b4c8-8185885c6fa9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Retrieve</code></pre><p id="bf8720e4-6f49-83ed-a28f-81a9339a1352" class="" dir="auto">그 다음 검색된 문서를 기반으로 답변을 생성한다.</p><pre id="f11720e4-6f49-8289-a14c-81f1dab6c722" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">RetrieveAndGenerate</code></pre><p id="36a720e4-6f49-8216-8aa1-01f06443ab6a" class="" dir="auto">AWS 공식 API 문서에서도 <code>RetrieveAndGenerate</code>는 Knowledge Base를 질의하고, 검색된 결과를 기반으로 Foundation Model 또는 inference profile을 사용해 응답을 생성한다고 설명한다.</p><hr id="bad720e4-6f49-8310-b9c3-013138fbcc1e" dir="auto"/><h1 id="69a720e4-6f49-825e-9383-012efd3504d0" class="" dir="auto">19. 출처 확인 실습</h1><h2 id="8b8720e4-6f49-820f-834f-01cb05b4b59a" class="" dir="auto">19.1 출처가 중요한 이유</h2><p id="f3c720e4-6f49-8341-8030-019fb1cc649e" class="" dir="auto">RAG 기반 지식 서비스에서는 답변이 맞는지만 보는 것이 아니라, 어떤 문서를 근거로 답변했는지도 확인해야 한다.</p><p id="af0720e4-6f49-82e4-90b6-81620d4b8b18" class="" dir="auto">운영 문서 기반 챗봇에서 출처가 중요한 이유는 다음과 같다.</p><ul id="8bc720e4-6f49-823d-89a7-012aa11bb466" class="bulleted-list" dir="auto"><li style="list-style-type:disc">답변의 신뢰성을 확인할 수 있다.</li></ul><ul id="66c720e4-6f49-828f-8ab0-019f079d4e11" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 문서가 검색되었는지 확인할 수 있다.</li></ul><ul id="2e1720e4-6f49-8263-ba8b-817463457fb9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문서 내용이 오래되었는지 확인할 수 있다.</li></ul><ul id="7e6720e4-6f49-8333-882e-01d084d3f8b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">답변 근거를 운영자가 직접 검증할 수 있다.</li></ul><hr id="c71720e4-6f49-8264-b632-815fe8dfb834" dir="auto"/><h2 id="0bf720e4-6f49-831a-8a2c-8168f89ec5bc" class="" dir="auto">19.2 출처 확인 방법</h2><p id="97e720e4-6f49-8289-b251-015d0acbd253" class="" dir="auto">테스트 답변 아래에 표시되는 Citation 또는 Source 정보를 확인한다.</p><p id="f3b720e4-6f49-830d-a5dd-01d1f2e97672" class="" dir="auto">예상 출처는 다음과 같다.</p><table id="b7b720e4-6f49-8396-aca6-811f558a5a01" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="b1d720e4-6f49-8397-9348-019a1e75c0db" dir="ltr"><th id="jy=R" class="simple-table-header-color simple-table-header">질문</th><th id="dGXA" class="simple-table-header-color simple-table-header">예상 출처</th></tr></thead><tbody><tr id="11d720e4-6f49-8310-9a45-81b187975ab5" dir="ltr"><td id="jy=R" class="">정기 패치 일정</td><td id="dGXA" class=""><code>patch_schedule.md</code></td></tr><tr id="b90720e4-6f49-825c-bd3a-8135ef90468e" dir="ltr"><td id="jy=R" class="">패치 전 준비 사항</td><td id="dGXA" class=""><code>patch_schedule.md</code></td></tr><tr id="e3e720e4-6f49-8267-83d5-01d8342c9827" dir="ltr"><td id="jy=R" class="">CPU 사용률 대응</td><td id="dGXA" class=""><code>server_operation_guide.md</code></td></tr><tr id="6e1720e4-6f49-83cb-9d8a-819fab60ee33" dir="ltr"><td id="jy=R" class="">SEV-1 정의</td><td id="dGXA" class=""><code>incident_response_guide.md</code></td></tr><tr id="cc9720e4-6f49-822a-a42a-81043e51496e" dir="ltr"><td id="jy=R" class="">500 오류 대응</td><td id="dGXA" class=""><code>incident_response_guide.md</code></td></tr></tbody></table><hr id="1fb720e4-6f49-8232-b41f-81307e1a675a" dir="auto"/><h1 id="d0b720e4-6f49-82cb-919e-819d8592fa8e" class="" dir="auto">20. 실습 검증표</h1><p id="b91720e4-6f49-822d-bdb2-810f62aa31fc" class="" dir="auto">학생들은 실습 완료 후 다음 표를 작성한다.</p><table id="df5720e4-6f49-837e-bca7-81aedcc02310" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="565720e4-6f49-82ff-99d4-01d2ee64a7a9" dir="ltr"><th id="Ypag" class="simple-table-header-color simple-table-header">검증 항목</th><th id="UD{:" class="simple-table-header-color simple-table-header">결과</th></tr></thead><tbody><tr id="d87720e4-6f49-82dc-a6d2-011f5053f8dc" dir="ltr"><td id="Ypag" class="">S3 버킷을 생성했는가</td><td id="UD{:" class="">예 / 아니오</td></tr><tr id="b95720e4-6f49-82e0-ae07-019d296832b1" dir="ltr"><td id="Ypag" class="">운영 문서 3개를 업로드했는가</td><td id="UD{:" class="">예 / 아니오</td></tr><tr id="90b720e4-6f49-83b3-bed4-01b0e2798af9" dir="ltr"><td id="Ypag" class="">Knowledge Base를 생성했는가</td><td id="UD{:" class="">예 / 아니오</td></tr><tr id="fda720e4-6f49-82fc-8d00-813f334d407e" dir="ltr"><td id="Ypag" class="">S3 데이터 소스를 연결했는가</td><td id="UD{:" class="">예 / 아니오</td></tr><tr id="7e9720e4-6f49-8238-86a3-01d893420397" dir="ltr"><td id="Ypag" class="">Embedding 모델을 선택했는가</td><td id="UD{:" class="">예 / 아니오</td></tr><tr id="4f6720e4-6f49-8345-afb1-81a18a37da48" dir="ltr"><td id="Ypag" class="">Vector Store를 생성했는가</td><td id="UD{:" class="">예 / 아니오</td></tr><tr id="0f5720e4-6f49-826b-924d-017c3b9654bd" dir="ltr"><td id="Ypag" class="">Sync가 성공했는가</td><td id="UD{:" class="">예 / 아니오</td></tr><tr id="006720e4-6f49-82fd-bb83-81e60485ab3e" dir="ltr"><td id="Ypag" class="">테스트 질문에 답변이 생성되었는가</td><td id="UD{:" class="">예 / 아니오</td></tr><tr id="f42720e4-6f49-838d-a94d-8185516593cb" dir="ltr"><td id="Ypag" class="">답변에 출처가 표시되었는가</td><td id="UD{:" class="">예 / 아니오</td></tr><tr id="cb4720e4-6f49-8368-9446-81295013f5a5" dir="ltr"><td id="Ypag" class="">문서에 없는 질문에 대해 부정확하게 답하지 않는가</td><td id="UD{:" class="">예 / 아니오</td></tr></tbody></table><hr id="92c720e4-6f49-8207-acb0-8182ca7bc157" dir="auto"/><h1 id="55c720e4-6f49-835e-83a9-015bf0c86a7c" class="" dir="auto">21. 문서에 없는 질문 테스트</h1><p id="c4b720e4-6f49-8302-baaa-811d3829855a" class="" dir="auto">RAG 챗봇에서는 문서에 없는 질문을 했을 때 어떻게 답하는지도 확인해야 한다.</p><p id="0a3720e4-6f49-83d6-a20d-814efca5c9a8" class="" dir="auto">다음 질문을 입력한다.</p><pre id="4bd720e4-6f49-8210-98c3-81f0f8862e86" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">데이터베이스 백업은 매일 몇 시에 수행되나요?</code></pre><p id="937720e4-6f49-823c-85a8-0178b344a589" class="" dir="auto">이번 실습 문서에는 데이터베이스 백업 시간이 없다.</p><p id="376720e4-6f49-839a-a2af-01cb8e4321f7" class="" dir="auto">좋은 답변은 다음과 비슷해야 한다.</p><pre id="d4d720e4-6f49-828d-a1eb-01b21546f3bf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">제공된 문서에서는 데이터베이스 백업 시간이 명시되어 있지 않습니다.</code></pre><p id="644720e4-6f49-8206-af3c-8174dd8d23db" class="" dir="auto">좋지 않은 답변은 다음과 같다.</p><pre id="993720e4-6f49-82a8-8393-01713a9dfeb2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">데이터베이스 백업은 매일 새벽 2시에 수행됩니다.</code></pre><p id="b19720e4-6f49-824b-ae13-014564688542" class="" dir="auto">이런 답변은 문서에 없는 내용을 모델이 생성한 것이다.</p><p id="27f720e4-6f49-8331-8047-81fb76557de7" class="" dir="auto">RAG 시스템에서는 이런 현상을 줄이기 위해 프롬프트, 검색 설정, 답변 생성 설정을 조정해야 한다.</p><hr id="cae720e4-6f49-83b5-8e68-015b313c2095" dir="auto"/><h1 id="3bc720e4-6f49-825b-a156-01a6c6429e83" class="" dir="auto">22. 실습 확장: 문서 추가 후 재동기화</h1><h2 id="53f720e4-6f49-83db-b213-81194b0109d7" class="" dir="auto">22.1 새 문서 추가</h2><p id="ff0720e4-6f49-8303-9010-0162322b840b" class="" dir="auto">새 문서를 추가한다.</p><p id="aad720e4-6f49-8319-9e92-01db3aa1373a" class="" dir="auto">파일명: <code>backup_policy.md</code></p><pre id="ae2720e4-6f49-82cf-ad87-81088b48ce2b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all"># 백업 정책
+
+## 데이터베이스 백업
+
+운영 데이터베이스 백업은 매일 새벽 2시에 수행한다.
+
+백업 파일은 14일간 보관한다.
+
+백업 실패 시 인프라 담당자에게 즉시 알림을 전송한다.
+
+## 백업 검증
+
+백업 파일은 매주 월요일 오전 10시에 복구 테스트를 수행한다.
+
+복구 테스트 결과는 운영 기록에 남긴다.</code></pre><p id="5fc720e4-6f49-83c8-bf3b-81b997e6c8e8" class="" dir="auto">S3에 업로드한다.</p><pre id="d8b720e4-6f49-8308-8ff5-019e8880a93f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3cp backup_policy.md s3://bedrock-rag-lab-123456789012-20260503/manual/--profile instructor</code></pre><hr id="2bc720e4-6f49-82e8-98bc-81df31429fa2" dir="auto"/><h2 id="1f1720e4-6f49-8238-8a05-0177d5b67dea" class="" dir="auto">22.2 재동기화 실행</h2><p id="68a720e4-6f49-8256-bee0-8160844dc5da" class="" dir="auto">Knowledge Base 화면으로 돌아간다.</p><pre id="970720e4-6f49-8231-952f-01bbde72c7f9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Data sources
+→ s3-ops-manual-docs
+→ Sync</code></pre><p id="a8f720e4-6f49-82e9-ba3a-8157dbeb70cb" class="" dir="auto">새 문서를 추가했기 때문에 다시 Sync를 실행해야 한다.</p><hr id="97f720e4-6f49-835d-825d-81b7fddb9d18" dir="auto"/><h2 id="3f2720e4-6f49-82fb-a1ab-01df8555c4c6" class="" dir="auto">22.3 다시 질문하기</h2><p id="3a1720e4-6f49-83c9-9050-01283d941958" class="" dir="auto">다음 질문을 다시 입력한다.</p><pre id="2c9720e4-6f49-82f2-a344-01ec065c1e6a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">데이터베이스 백업은 매일 몇 시에 수행되나요?</code></pre><p id="53f720e4-6f49-83de-bbd8-81f470a2d6b4" class="" dir="auto">기대 답변은 다음과 같다.</p><pre id="527720e4-6f49-82de-bcac-01381152691e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영 데이터베이스 백업은 매일 새벽 2시에 수행됩니다.</code></pre><p id="baf720e4-6f49-82ae-8fd2-0115fa9956fd" class="" dir="auto">이 실습을 통해 학생들은 다음 사실을 이해할 수 있다.</p><pre id="0b5720e4-6f49-82b7-a9e8-81800223dc34" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3에 문서를 추가했다고 바로 답변에 반영되는 것은 아니다.
+Knowledge Base 데이터 소스를 다시 Sync해야 검색 대상에 포함된다.</code></pre><hr id="75e720e4-6f49-8277-be64-014b436e587b" dir="auto"/><h1 id="bdb720e4-6f49-83dd-b721-81418cf9b0c4" class="" dir="auto">23. 실습 확장: 잘못된 답변 줄이기</h1><h2 id="f11720e4-6f49-8228-bf43-81e378914da8" class="" dir="auto">23.1 테스트용 질문</h2><p id="f08720e4-6f49-8287-adb4-0179c76e280c" class="" dir="auto">다음처럼 문서에 없는 질문을 입력한다.</p><pre id="982720e4-6f49-8218-a7c1-819dac0c3751" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영팀 야간 당직자는 누구인가요?</code></pre><p id="42a720e4-6f49-82e3-b269-81a12578647c" class="" dir="auto">문서에는 야간 당직자 정보가 없다.</p><p id="2d1720e4-6f49-82a1-9c50-811af2fb4491" class="" dir="auto">좋은 답변은 다음과 같다.</p><pre id="25d720e4-6f49-83fa-87bd-01b16b81aad0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">제공된 문서에서는 운영팀 야간 당직자 정보가 확인되지 않습니다.</code></pre><hr id="d8e720e4-6f49-82b7-99ec-818a66d0fecd" dir="auto"/><h2 id="92d720e4-6f49-83aa-ab01-0181e849faf9" class="" dir="auto">23.2 답변 생성 지침 예시</h2><p id="424720e4-6f49-82f6-879e-01b5c6debd9c" class="" dir="auto">Knowledge Base 테스트 화면에서 프롬프트 또는 응답 생성 지침을 설정할 수 있는 경우 다음 내용을 사용한다.</p><pre id="31e720e4-6f49-83f7-94a1-813d7afcc95a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">제공된 검색 결과에 근거해서만 답변한다.
+검색 결과에 없는 내용은 추측하지 않는다.
+문서에서 확인할 수 없는 경우 &quot;제공된 문서에서는 확인할 수 없습니다.&quot;라고 답변한다.
+운영 절차를 답변할 때는 가능한 한 단계별로 정리한다.</code></pre><p id="4e1720e4-6f49-8351-a72b-0102b5934572" class="" dir="auto">이 지침은 운영 챗봇에서 매우 중요하다.</p><p id="208720e4-6f49-8247-aad2-013214e5f175" class="" dir="auto">운영자가 질문했을 때 챗봇이 추측으로 작업 절차를 안내하면 장애로 이어질 수 있기 때문이다.</p><hr id="159720e4-6f49-833e-b99b-01c632f93dbe" dir="auto"/><h1 id="27e720e4-6f49-82bb-8b51-81e0d1d2e774" class="" dir="auto">24. 실습 과제</h1><h2 id="b64720e4-6f49-83fd-bf27-81f3269d03c9" class="" dir="auto">과제 1. 운영 문서 기반 질문 검증</h2><p id="650720e4-6f49-8344-93ed-81a91c1010b6" class="" dir="auto">다음 질문 5개를 Knowledge Base에 입력하고 답변과 출처를 기록한다.</p><pre id="cf9720e4-6f49-826f-a94c-01056c876c4a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 정기 서버 패치 작업은 언제 수행되나요?
+2. 패치 전 준비 사항은 무엇인가요?
+3. CPU 사용률이 90% 이상이면 어떤 항목을 확인해야 하나요?
+4. SEV-1 장애 발생 시 어떤 조치를 해야 하나요?
+5. 데이터베이스 연결 장애가 반복되면 무엇을 확인해야 하나요?</code></pre><p id="430720e4-6f49-8365-bc6b-8177a2f9f133" class="" dir="auto">제출 형식은 다음과 같다.</p><table id="ea0720e4-6f49-828d-92a2-011498e04966" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="5dd720e4-6f49-8279-8c2a-0103fabc3c72" dir="ltr"><th id="JdVc" class="simple-table-header-color simple-table-header">질문</th><th id="FRDR" class="simple-table-header-color simple-table-header">답변 요약</th><th id="Tek_" class="simple-table-header-color simple-table-header">출처 문서</th><th id="[GxO" class="simple-table-header-color simple-table-header">정확 여부</th></tr></thead><tbody><tr id="5c7720e4-6f49-822a-ae47-81f67a32acb5" dir="ltr"><td id="JdVc" class="">정기 서버 패치 작업은 언제 수행되나요?</td><td id="FRDR" class="">매월 둘째 주 화요일 22:00</td><td id="Tek_" class="">patch_schedule.md</td><td id="[GxO" class="">정확</td></tr><tr id="cb2720e4-6f49-835f-9183-814862170892" dir="ltr"><td id="JdVc" class="">패치 전 준비 사항은 무엇인가요?</td><td id="FRDR" class="">서버 목록 확인, 스냅샷 생성 등</td><td id="Tek_" class="">patch_schedule.md</td><td id="[GxO" class="">정확</td></tr></tbody></table><hr id="7af720e4-6f49-834a-914e-81ff00cf2d14" dir="auto"/><h2 id="ece720e4-6f49-83cb-8903-0177709948ca" class="" dir="auto">과제 2. 새 문서 추가 후 답변 변화 확인</h2><p id="13c720e4-6f49-835a-8a60-81c2738b9123" class="" dir="auto">다음 조건을 만족하는 문서를 새로 작성한다.</p><p id="75b720e4-6f49-8320-a205-817b60586d6f" class="" dir="auto">파일명:</p><pre id="697720e4-6f49-838c-bb89-01d36de59e4f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">network_policy.md</code></pre><p id="134720e4-6f49-83ed-af2c-01674ae80921" class="" dir="auto">내용 조건:</p><pre id="fd7720e4-6f49-839e-8328-0178f64f15c3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 보안 그룹 변경 절차 포함
+2. 인바운드 포트 오픈 승인 기준 포함
+3. SSH 포트 접근 제한 정책 포함
+4. 변경 후 확인 절차 포함</code></pre><p id="571720e4-6f49-829a-b074-0113d82512e5" class="" dir="auto">작성 예시는 다음과 같다.</p><pre id="1de720e4-6f49-830f-9f8f-814d665f5e87" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all"># 네트워크 보안 정책
+
+## 보안 그룹 변경 절차
+
+보안 그룹 인바운드 규칙을 변경하려면 변경 요청 티켓을 생성해야 한다.
+
+운영 서버의 인바운드 포트는 서비스 담당자와 보안 담당자의 승인을 받은 경우에만 오픈할 수 있다.
+
+## SSH 접근 정책
+
+운영 서버의 SSH 포트는 전체 공개를 허용하지 않는다.
+
+SSH 접근은 지정된 관리용 IP 대역에서만 허용한다.
+
+## 변경 후 확인 절차
+
+보안 그룹 변경 후에는 다음 항목을 확인한다.
+
+1. 허용된 IP에서 접속 가능한지 확인한다.
+2. 허용되지 않은 IP에서 접속이 차단되는지 확인한다.
+3. 변경 내용을 운영 기록에 남긴다.</code></pre><p id="70b720e4-6f49-834d-b04b-819397eb34aa" class="" dir="auto">업로드 후 Sync를 다시 실행한다.</p><p id="657720e4-6f49-838c-8d73-817823f04c60" class="" dir="auto">그 다음 다음 질문을 테스트한다.</p><pre id="587720e4-6f49-83a4-8986-81ff16da4efc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영 서버의 SSH 접근은 어떻게 제한해야 하나요?</code></pre><p id="e02720e4-6f49-8340-bbc7-812d7e328eb5" class="" dir="auto">기대 답변은 다음과 같다.</p><pre id="09e720e4-6f49-834f-8a3a-0153fb57a11a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영 서버의 SSH 포트는 전체 공개를 허용하지 않으며, 지정된 관리용 IP 대역에서만 접근을 허용해야 합니다.</code></pre><hr id="f6e720e4-6f49-837c-b3f7-01de17e97ca8" dir="auto"/><h2 id="430720e4-6f49-8376-8be7-81301eb893e4" class="" dir="auto">과제 3. 문서에 없는 질문 검증</h2><p id="f4b720e4-6f49-82b0-9457-014690a29e4b" class="" dir="auto">다음 질문을 입력한다.</p><pre id="4b7720e4-6f49-8251-aab6-017fdd6a0806" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영 서버의 관리자 비밀번호는 무엇인가요?</code></pre><p id="ce7720e4-6f49-82be-a6f0-814a794b170b" class="" dir="auto">좋은 결과는 다음과 같다.</p><pre id="1cc720e4-6f49-82fe-b2ec-015160618a7b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">제공된 문서에서는 운영 서버의 관리자 비밀번호를 확인할 수 없습니다.</code></pre><p id="0b0720e4-6f49-82e4-9f74-01529aacf679" class="" dir="auto">학생은 다음을 기록한다.</p><table id="dbb720e4-6f49-8399-a530-015cf0b08e4a" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="2ad720e4-6f49-83ad-a3f5-010e390648fb" dir="ltr"><th id="o`Y|" class="simple-table-header-color simple-table-header">항목</th><th id="vJ^M" class="simple-table-header-color simple-table-header">기록</th></tr></thead><tbody><tr id="3f1720e4-6f49-838b-98a8-81d77ccf76de" dir="ltr"><td id="o`Y|" class="">질문</td><td id="vJ^M" class="">운영 서버의 관리자 비밀번호는 무엇인가요?</td></tr><tr id="05e720e4-6f49-83d4-9a05-010c33683c11" dir="ltr"><td id="o`Y|" class="">답변이 추측했는가</td><td id="vJ^M" class="">예 / 아니오</td></tr><tr id="ec6720e4-6f49-8373-b1a0-8116e8eddcf2" dir="ltr"><td id="o`Y|" class="">문서에 없는 내용이라고 답했는가</td><td id="vJ^M" class="">예 / 아니오</td></tr><tr id="a64720e4-6f49-83eb-9743-0124adb8f82c" dir="ltr"><td id="o`Y|" class="">개선이 필요한가</td><td id="vJ^M" class="">예 / 아니오</td></tr></tbody></table><hr id="0bd720e4-6f49-8339-9082-01279513fd0a" dir="auto"/><h1 id="936720e4-6f49-82f5-be0e-018b5fbbb6da" class="" dir="auto">25. 자주 발생하는 오류와 해결 방법</h1><h2 id="163720e4-6f49-83e8-b8aa-8158a6304d00" class="" dir="auto">25.1 Knowledge Base 생성 시 모델이 보이지 않는 경우</h2><p id="25a720e4-6f49-8364-914e-816a60f4c692" class="" dir="auto">원인은 다음 중 하나일 수 있다.</p><ul id="079720e4-6f49-8339-9e1d-81af6453d65c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 리전에서 모델을 지원하지 않음</li></ul><ul id="704720e4-6f49-82fe-bd1c-81b9a1b14397" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Model access가 활성화되지 않음</li></ul><ul id="811720e4-6f49-8324-810d-81e7e37fc58b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정 권한이 부족함</li></ul><p id="ae3720e4-6f49-8385-a426-81d139cb7d16" class="" dir="auto">해결 방법은 다음과 같다.</p><pre id="857720e4-6f49-83be-8e8b-018d0b458ca8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. Amazon Bedrock → Model access 메뉴로 이동한다.
+2. 사용할 모델 접근 권한을 활성화한다.
+3. 다른 리전에서 동일한 실습을 시도한다.
+4. IAM 권한을 확인한다.</code></pre><hr id="326720e4-6f49-824a-9e60-8167db29225c" dir="auto"/><h2 id="84b720e4-6f49-8389-90cb-815a1d1c4971" class="" dir="auto">25.2 Sync 실패</h2><p id="a92720e4-6f49-8244-b6c9-81ff3c94daba" class="" dir="auto">원인은 다음 중 하나일 수 있다.</p><ul id="922720e4-6f49-82c7-abb6-814b97356fa6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 경로가 잘못됨</li></ul><ul id="5a4720e4-6f49-8354-b562-0198da8690e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bedrock 서비스 역할에 S3 읽기 권한이 없음</li></ul><ul id="443720e4-6f49-8362-8a37-019e96d23403" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문서 파일 형식이 지원되지 않음</li></ul><ul id="c60720e4-6f49-8384-ae83-01c29c0bd3a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OpenSearch Serverless 생성 또는 접근 권한 문제</li></ul><p id="12a720e4-6f49-82f4-b417-817e6c922a22" class="" dir="auto">확인 순서는 다음과 같다.</p><pre id="05c720e4-6f49-8270-91ae-8132eb7998a3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. S3 URI가 정확한지 확인한다.
+2. S3 버킷과 Bedrock 리전이 실습 의도와 맞는지 확인한다.
+3. IAM Role에 S3 읽기 권한이 있는지 확인한다.
+4. Model access가 활성화되어 있는지 확인한다.
+5. OpenSearch Serverless 리소스가 생성되었는지 확인한다.</code></pre><hr id="700720e4-6f49-839b-82a6-81e9f51c6d4f" dir="auto"/><h2 id="081720e4-6f49-821f-af97-8180d285dacb" class="" dir="auto">25.3 답변이 문서와 다르게 나오는 경우</h2><p id="f01720e4-6f49-82ac-8313-014452559f58" class="" dir="auto">가능한 원인은 다음과 같다.</p><ul id="272720e4-6f49-8227-b9d9-01ff894629e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문서가 Sync되지 않았음</li></ul><ul id="a30720e4-6f49-82d1-b135-8164b573bcb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">질문과 관련된 Chunk가 제대로 검색되지 않았음</li></ul><ul id="e34720e4-6f49-82aa-94f8-0103422371e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문서 내용이 모호함</li></ul><ul id="b4d720e4-6f49-82ca-83c8-8148b525df45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">답변 생성 모델이 추측함</li></ul><ul id="9c9720e4-6f49-837b-987d-01ab8d421665" class="bulleted-list" dir="auto"><li style="list-style-type:disc">출처 문서가 잘못 검색됨</li></ul><p id="5d7720e4-6f49-82ab-a4bb-8194b2601230" class="" dir="auto">해결 방법은 다음과 같다.</p><pre id="4fe720e4-6f49-8320-9cda-8150fdc4c803" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. Data source Sync를 다시 실행한다.
+2. 질문을 문서에 있는 표현과 비슷하게 바꿔본다.
+3. 문서 제목과 소제목을 명확하게 작성한다.
+4. 한 문서에 너무 많은 주제를 섞지 않는다.
+5. &quot;문서에 없는 내용은 답하지 말라&quot;는 지침을 추가한다.</code></pre><hr id="b29720e4-6f49-82bf-aa2a-01edbb80c024" dir="auto"/><h2 id="600720e4-6f49-83b2-8b9b-816e52908d06" class="" dir="auto">25.4 출처가 표시되지 않는 경우</h2><p id="1df720e4-6f49-8350-b769-018d22610d1a" class="" dir="auto">확인할 내용은 다음과 같다.</p><pre id="55f720e4-6f49-820e-8fb9-01158056659f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. Knowledge Base 테스트에서 Generate responses가 활성화되었는지 확인한다.
+2. 질문과 관련된 문서가 실제로 검색되었는지 확인한다.
+3. Sync가 완료되었는지 확인한다.
+4. 문서 내용이 너무 짧거나 질문과 관련성이 낮지 않은지 확인한다.</code></pre><hr id="edd720e4-6f49-82c7-a8d6-01d7df461337" dir="auto"/><h1 id="8d5720e4-6f49-8336-8cac-811766132b7e" class="" dir="auto">26. 정리</h1><p id="8f8720e4-6f49-8200-a053-016a035d9b15" class="" dir="auto">이번 실습에서는 Amazon Bedrock Knowledge Base를 사용해 RAG 기반 지식 서비스를 구성했다.</p><p id="526720e4-6f49-834c-9fb2-01501f2690ea" class="" dir="auto">핵심 흐름은 다음과 같다.</p><pre id="33b720e4-6f49-821b-a585-81cec989949a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">문서 작성
+→ S3 업로드
+→ Knowledge Base 생성
+→ Embedding 모델 선택
+→ Vector Store 생성
+→ 데이터 동기화
+→ 질문 테스트
+→ 출처 확인</code></pre><p id="8aa720e4-6f49-837e-bbed-016ba355a722" class="" dir="auto">중요한 개념은 다음과 같다.</p><ul id="fea720e4-6f49-829e-baef-01a5be9726e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RAG는 모델이 모르는 내부 문서를 검색해서 답변에 활용하는 구조이다.</li></ul><ul id="df1720e4-6f49-8307-ab6b-01db06e0cb35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3는 원본 문서 저장소 역할을 한다.</li></ul><ul id="287720e4-6f49-83b8-b884-8170b5cfd4c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Embedding 모델은 문서와 질문을 벡터로 변환한다.</li></ul><ul id="e1c720e4-6f49-832a-93a9-8141229efcad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Vector Store는 벡터화된 문서 조각을 저장한다.</li></ul><ul id="c40720e4-6f49-831a-a585-015324bd20ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Knowledge Base는 검색과 답변 생성을 연결한다.</li></ul><ul id="59e720e4-6f49-828b-a3d5-813199cfdcc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Sync를 실행해야 S3 문서가 검색 대상에 반영된다.</li></ul><ul id="144720e4-6f49-82c6-bf7f-01eeb1361ba1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">답변의 정확성은 반드시 출처 문서와 함께 검증해야 한다.</li></ul><ul id="122720e4-6f49-825d-8c54-01de7310ba40" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문서에 없는 내용은 답하지 않도록 테스트해야 한다.</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

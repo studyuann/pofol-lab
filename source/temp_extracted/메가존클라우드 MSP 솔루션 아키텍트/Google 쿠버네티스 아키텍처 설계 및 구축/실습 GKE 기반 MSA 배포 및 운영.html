@@ -1,0 +1,787 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. GKE 기반 MSA 배포 및 운영</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="92c720e4-6f49-8374-993c-814c37147f42" class="page sans"><header><h1 class="page-title" dir="auto">실습. GKE 기반 MSA 배포 및 운영</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="906720e4-6f49-82e5-ac6e-0127a9fc73a4" dir="auto"/><h2 id="d08720e4-6f49-8376-a61d-01ea678a8154" class="" dir="auto">0. 실습 목표</h2><ul id="09f720e4-6f49-83f0-894b-81fad4861150" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE 클러스터에 마이크로서비스 애플리케이션을 배포함</li></ul><ul id="77f720e4-6f49-82d2-9a8a-812c9f190f0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스별 Pod, Service, Deployment 상태를 확인함</li></ul><ul id="1f4720e4-6f49-8240-902a-8112084f1670" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 서비스만 중단했을 때 영향 범위를 확인함</li></ul><ul id="b85720e4-6f49-8312-b18b-013406f29ac0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 서비스만 확장하여 독립 확장을 확인함</li></ul><ul id="514720e4-6f49-83e8-be2e-817758e660b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 서비스만 롤링 재시작하고 롤백 흐름을 확인함</li></ul><ul id="ec2720e4-6f49-8240-9e81-813c39e237ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 이름 기반 내부 통신 구조를 확인함</li></ul><hr id="122720e4-6f49-8363-8a21-0167657dc279" dir="auto"/><h1 id="85a720e4-6f49-83fc-992e-8131c627640b" class="" dir="auto">1. 실습 개요</h1><p id="e3f720e4-6f49-835a-8983-01085173516c" class="" dir="auto"><strong>Online Boutique</strong> 애플리케이션을 GKE에 배포하고, 배포 이후 다음 4가지를 직접 확인한다.</p><ul id="14c720e4-6f49-8249-b6bc-018384de6592" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스가 여러 개로 분리되어 배포되는 구조</li></ul><ul id="1c0720e4-6f49-83d2-b2e2-81b1eb1637bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일부 서비스만 장애를 내도 전체가 완전히 중단되지 않는 구조</li></ul><ul id="430720e4-6f49-8260-9b98-81236ce5330d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요한 서비스만 따로 확장 가능한 구조</li></ul><ul id="25e720e4-6f49-83f7-89d1-01938222c976" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 서비스만 업데이트·복구 가능한 구조</li></ul><p id="8b2720e4-6f49-8282-80b0-0174ee0352d0" class="" dir="auto">즉, 이번 실습의 핵심은 <strong>MSA 운영 특성을 Kubernetes 위에서 관찰하는 것</strong>이다.</p><hr id="a42720e4-6f49-8282-a8a3-01e851d86e1b" dir="auto"/><h1 id="dd7720e4-6f49-831c-b8a2-81cf3bd3822d" class="" dir="auto">2. 클러스터 연결 확인</h1><p id="e2a720e4-6f49-83da-9dce-013c9fedef4c" class="" dir="auto">실습 대상 클러스터에 현재 <code>kubectl</code>이 연결되어 있는지 확인한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="69c720e4-6f49-83f8-a21e-010250d811fc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export REGION=asia-northeast3
+export CLUSTER_NAME=이니셜-std-cluster-1
+
+gcloud container clusters get-credentials $CLUSTER_NAME \
+  --region $REGION</code></pre><h2 id="ce5720e4-6f49-838e-b1e2-818c7aebbdd5" class="" dir="auto">확인</h2><pre id="db6720e4-6f49-8234-915c-81c53d77a67b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl config current-context
+kubectl get nodes</code></pre><h2 id="518720e4-6f49-826f-ac56-81f2f95d507a" class="" dir="auto">확인 포인트</h2><ul id="f75720e4-6f49-826d-a45d-0167600a0683" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 컨텍스트가 실습 대상 클러스터인지 확인함</li></ul><ul id="554720e4-6f49-8362-9eef-81dfa5befa16" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드가 <code>Ready</code> 상태인지 확인함</li></ul><hr id="a5c720e4-6f49-82fa-af85-019f0e795ac7" dir="auto"/><h1 id="751720e4-6f49-828a-a3b5-018b6fa67b92" class="" dir="auto">3. 샘플 애플리케이션 받기</h1><pre id="20e720e4-6f49-82ac-bbc7-013bf9ad2a65" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">git clone --depth 1 https://github.com/GoogleCloudPlatform/microservices-demo.git
+cd microservices-demo</code></pre><h2 id="590720e4-6f49-8230-aa8c-814c6e7e38e1" class="" dir="auto">확인</h2><pre id="ecb720e4-6f49-8208-9247-810366493440" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ls</code></pre><p id="03d720e4-6f49-826d-a9d7-01661889f69b" class="" dir="auto">다음 디렉터리나 파일이 보이면 정상이다.</p><p id="499720e4-6f49-83ad-9e10-816bc1b065af" class="" dir="auto">
+</p><ul id="eff720e4-6f49-8384-9b62-814c1fe814ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>release</code></li></ul><ul id="5c7720e4-6f49-8279-b06c-0109b8bf6178" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>src</code></li></ul><ul id="782720e4-6f49-8294-a15b-01d33a3a6998" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>README.md</code></li></ul><hr id="d6a720e4-6f49-82fa-a1dc-81927a1bd28b" dir="auto"/><h1 id="d8d720e4-6f49-83af-8b7b-019de4a207ee" class="" dir="auto">4. 애플리케이션 배포</h1><h2 id="217720e4-6f49-82b6-8bbe-81c0be515c82" class="" dir="auto">4-1. 전체 매니페스트 적용</h2><pre id="f3a720e4-6f49-82b5-8d99-81de77bec56a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f ./release/kubernetes-manifests.yaml</code></pre><h2 id="8a6720e4-6f49-836f-ab06-8176e63b2ffa" class="" dir="auto">확인</h2><pre id="474720e4-6f49-836e-89e7-01c36755ea14" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods</code></pre><p id="516720e4-6f49-8345-a5e3-01611106edc4" class="" dir="auto">처음에는 일부 Pod가 <code>Pending</code>, <code>ContainerCreating</code> 상태일 수 있다.</p><p id="53b720e4-6f49-83a8-b948-81fee0f6b852" class="" dir="auto">조금 지나 대부분 <code>Running</code>으로 바뀌면 정상이다.</p><p id="064720e4-6f49-83be-ab02-81338a024d48" class="" dir="auto">실시간으로 보려면 다음 명령을 사용한다.</p><pre id="ba4720e4-6f49-8377-b6fa-01fc20ae81f5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -w</code></pre><h2 id="f88720e4-6f49-82b9-b8fa-01dd144c7478" class="" dir="auto">관찰 포인트</h2><p id="d49720e4-6f49-827e-b655-813af4ed80d3" class="" dir="auto">다음과 같은 서비스 Pod가 생성되는지 확인한다.</p><ul id="f95720e4-6f49-830e-8511-8114ebb7897e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>frontend</code></li></ul><ul id="e1d720e4-6f49-8362-a37a-015da4b35034" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>cartservice</code></li></ul><ul id="beb720e4-6f49-83df-a345-8183ccc61d5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>checkoutservice</code></li></ul><ul id="112720e4-6f49-82e9-ba96-015a909f57c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>currencyservice</code></li></ul><ul id="57a720e4-6f49-8291-b736-81f152f67136" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>productcatalogservice</code></li></ul><ul id="a3c720e4-6f49-83d5-8f61-0122d3e671f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>recommendationservice</code></li></ul><ul id="d32720e4-6f49-8259-8a12-81184e259ab7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>paymentservice</code></li></ul><ul id="1df720e4-6f49-83de-9190-8122b201d97b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>shippingservice</code></li></ul><ul id="b0c720e4-6f49-83c4-948e-81c568e1a72a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>emailservice</code></li></ul><ul id="511720e4-6f49-8373-a632-812efda176df" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>adservice</code></li></ul><ul id="2ce720e4-6f49-8346-b0b3-81c108583177" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>redis-cart</code></li></ul><hr id="e35720e4-6f49-825b-89df-810a7a5c794d" dir="auto"/><h1 id="0b8720e4-6f49-828b-8184-8123a401a396" class="" dir="auto">5. 배포된 구성 확인</h1><h2 id="27c720e4-6f49-828f-809e-0161269cc9ee" class="" dir="auto">5-1. Deployment 확인</h2><pre id="383720e4-6f49-8283-ae79-81ee4771b63d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get deployments</code></pre><h2 id="e14720e4-6f49-82ca-9318-81975c544dd7" class="" dir="auto">확인 포인트</h2><ul id="b1d720e4-6f49-83f5-a377-81abd62b854b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 서비스가 개별 Deployment로 배포되었는지 확인함</li></ul><ul id="da6720e4-6f49-82db-9b2a-81605e887b0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>READY</code>, <code>UP-TO-DATE</code>, <code>AVAILABLE</code> 값이 정상인지 확인함</li></ul><p id="f43720e4-6f49-83e1-812a-01caf90d97ae" class="" dir="auto">예를 들어 대부분 <code>1/1</code>이면 정상이다.</p><hr id="9f3720e4-6f49-8393-b8aa-013155a5045c" dir="auto"/><h2 id="ab7720e4-6f49-8395-8aff-81d94a80e074" class="" dir="auto">5-2. Service 확인</h2><pre id="4b4720e4-6f49-8223-b0ad-018e1bc4857a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc</code></pre><h2 id="429720e4-6f49-838c-966d-0157b42357b2" class="" dir="auto">확인 포인트</h2><ul id="320720e4-6f49-8369-bf28-8103248a00cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 마이크로서비스 앞단에 Service가 존재하는지 확인함</li></ul><ul id="249720e4-6f49-82cf-a700-81a2d25c6abc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 노출용 서비스와 내부 통신용 서비스를 구분해서 봄</li></ul><ul id="f17720e4-6f49-837a-82cb-815a27f03145" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>frontend-external</code> 서비스가 외부 노출용인지 확인함</li></ul><hr id="696720e4-6f49-830c-b246-01f059674b61" dir="auto"/><h2 id="964720e4-6f49-83dc-aa3f-81c8c71c06f8" class="" dir="auto">5-3. Pod 라벨 기준 조회</h2><pre id="4e0720e4-6f49-82bb-a623-817b39a3b2d2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods --show-labels</code></pre><h2 id="0c6720e4-6f49-8372-b291-8151801ef556" class="" dir="auto">관찰 포인트</h2><ul id="059720e4-6f49-820d-9e4e-0132e25a1908" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스별 Pod에 어떤 라벨이 붙어 있는지 확인함</li></ul><ul id="4f9720e4-6f49-82df-bd0d-017687022281" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 특정 서비스만 조회할 때 라벨 셀렉터를 사용함</li></ul><p id="e60720e4-6f49-82e0-81ee-01f784763b69" class="" dir="auto">예:</p><pre id="492720e4-6f49-83fa-afd3-81bcea315251" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -l app=frontend
+kubectl get pods -l app=recommendationservice</code></pre><p id="ff7720e4-6f49-83dd-b6f2-0116a0056337" class="" dir="auto"><strong>서비스 단위로 운영 대상을 좁혀서 보려면 라벨 기반 조회가 중요</strong>하다.</p><hr id="9d0720e4-6f49-83d7-bad3-8117b826a4dc" dir="auto"/><h1 id="121720e4-6f49-836f-8e2a-818481ec4746" class="" dir="auto">6. 외부 접속 확인</h1><h2 id="4fd720e4-6f49-8331-96cb-010978b191f1" class="" dir="auto">6-1. 외부 서비스 확인</h2><pre id="723720e4-6f49-82ed-84b1-015d8e2ba2da" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get service frontend-external</code></pre><h2 id="4a1720e4-6f49-838d-a68d-81f63291ab7e" class="" dir="auto">확인 포인트</h2><ul id="305720e4-6f49-8331-9dea-81dadfbe74fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>TYPE</code>이 <code>LoadBalancer</code>인지 확인함</li></ul><ul id="e35720e4-6f49-82d3-b5fa-814753cc7f51" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>EXTERNAL-IP</code>가 할당되었는지 확인함</li></ul><p id="b1f720e4-6f49-82f5-9ef7-011ccbd7c3dd" class="" dir="auto">예시:</p><pre id="b31720e4-6f49-8215-95f8-81dededb9d55" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME                TYPE           CLUSTER-IP      EXTERNAL-IP     PORT(S)        AGE
+frontend-external   LoadBalancer   34.x.x.x        35.x.x.x        80:xxxxx/TCP   2m</code></pre><p id="567720e4-6f49-832e-b023-81d165487f17" class="" dir="auto"><code>EXTERNAL-IP</code>가 <code>pending</code>이면 조금 더 기다린다.</p><hr id="9d2720e4-6f49-8279-a81c-01135e6aedcf" dir="auto"/><h2 id="c05720e4-6f49-837d-882d-817639debd8e" class="" dir="auto">6-2. 외부 IP 추출</h2><pre id="005720e4-6f49-8374-bbc2-815d2a862ade" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get service frontend-external -o jsonpath=&#x27;{.status.loadBalancer.ingress[0].ip}&#x27;</code></pre><p id="995720e4-6f49-822d-aec0-01b71cb9df62" class="" dir="auto">출력된 IP로 브라우저 접속한다.</p><pre id="be0720e4-6f49-82bf-aca4-8126a4e824d5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">http://외부IP</code></pre><hr id="c39720e4-6f49-82da-9cb1-01246e95e4bb" dir="auto"/><h1 id="531720e4-6f49-833b-ba9c-81bf22c164d7" class="" dir="auto">7. 애플리케이션 동작 확인</h1><p id="ac5720e4-6f49-828d-b3b9-8148ee079613" class="" dir="auto">브라우저에서 다음 동작을 수행한다.</p><ol type="1" id="330720e4-6f49-83cf-9dfb-8178ac92a6fc" class="numbered-list" start="1" dir="auto"><li>메인 페이지 접속</li></ol><ol type="1" id="917720e4-6f49-83f1-822a-8158443a871a" class="numbered-list" start="2" dir="auto"><li>상품 목록 확인</li></ol><ol type="1" id="de0720e4-6f49-8287-93ab-811f76ccb83b" class="numbered-list" start="3" dir="auto"><li>상품 상세 페이지 이동</li></ol><ol type="1" id="a8b720e4-6f49-82f1-99b9-0199354fb2b0" class="numbered-list" start="4" dir="auto"><li>장바구니 추가</li></ol><ol type="1" id="1ca720e4-6f49-8214-8f5b-01eb1c572411" class="numbered-list" start="5" dir="auto"><li>장바구니 화면 확인</li></ol><ol type="1" id="ea2720e4-6f49-8209-ab60-810107e73517" class="numbered-list" start="6" dir="auto"><li>체크아웃 화면 진입</li></ol><h2 id="16b720e4-6f49-82aa-8adb-0113f5e462a6" class="" dir="auto">관찰 포인트</h2><ul id="25a720e4-6f49-8268-ae40-8157da258d6b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 기능이 하나의 애플리케이션처럼 보이지만 실제로는 여러 서비스 호출 결과가 합쳐진 화면이라는 점을 인식함</li></ul><ul id="830720e4-6f49-82c7-9d98-01b767ef835c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 특정 서비스만 중단하면 어떤 기능이 영향을 받는지 비교할 준비를 함</li></ul><hr id="535720e4-6f49-82d4-878e-01bd6324b4c0" dir="auto"/><h1 id="c29720e4-6f49-8390-b0e3-81329072650c" class="" dir="auto">8. 서비스 상세 확인</h1><h2 id="1e3720e4-6f49-830b-b3fd-011441c4188b" class="" dir="auto">8-1. frontend Service 상세</h2><pre id="25a720e4-6f49-8235-a356-819fb57ecdf9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe svc frontend</code></pre><h2 id="b1b720e4-6f49-829d-9fbf-0126c2b73f1a" class="" dir="auto">확인 포인트</h2><p id="1be720e4-6f49-830e-8e31-016f1588fa23" class="" dir="auto">다음 항목만 집중해서 본다.</p><ul id="e37720e4-6f49-83e2-9ed3-010db9c51425" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Selector</code></li></ul><ul id="c59720e4-6f49-8296-99de-0157daae9e1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Endpoints</code></li></ul><ul id="325720e4-6f49-83a0-bdfc-81a0b5535e64" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Port</code></li></ul><h3 id="16b720e4-6f49-83dc-a94b-81bdd92ac8c5" class="" dir="auto">해석</h3><ul id="8a7720e4-6f49-820a-91ab-81e84015bcb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Selector</code> : 어떤 Pod들을 대상으로 삼는지</li></ul><ul id="7ce720e4-6f49-83d5-90f4-0191d9305652" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Endpoints</code> : 현재 실제 연결 중인 Pod IP와 포트가 무엇인지</li></ul><ul id="4d6720e4-6f49-83dd-a0e5-012c7428a776" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Port</code> : 이 Service가 내부적으로 제공하는 포트가 무엇인지</li></ul><p id="057720e4-6f49-821c-97ef-81f20fceaf91" class="" dir="auto">즉, <strong>frontend 서비스가 실제 어느 Pod로 연결되는지 확인</strong>할 수 있다.</p><hr id="628720e4-6f49-83b9-b8df-01a437e0ebd7" dir="auto"/><h2 id="c69720e4-6f49-823f-a569-818ab0fdd645" class="" dir="auto">8-2. frontend Deployment 상세</h2><pre id="108720e4-6f49-82e0-ab4b-012587e33bfe" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe deployment frontend</code></pre><h2 id="e49720e4-6f49-8241-997e-812b0f8b1bc0" class="" dir="auto">확인 포인트</h2><ul id="cd2720e4-6f49-836b-9237-011f49fdddf0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 이미지</li></ul><ul id="9fc720e4-6f49-8253-8aac-81e2f7274f70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">replica 수</li></ul><ul id="e07720e4-6f49-83d3-a39c-818f5cae865e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 내역</li></ul><p id="793720e4-6f49-835c-ba56-016c285b16f3" class="" dir="auto"><strong>현재 frontend가 어떤 상태로 실행 중인지 확인하는 운영 점검</strong>할 수 있다.</p><hr id="b2e720e4-6f49-82b6-b819-011c70b676c5" dir="auto"/><h1 id="44d720e4-6f49-82da-9184-01a5bd75b7e4" class="" dir="auto">9. 로그 확인</h1><h2 id="4cc720e4-6f49-82e8-87ad-0169428ba412" class="" dir="auto">9-1. frontend 로그 확인</h2><pre id="c4e720e4-6f49-83cf-84d3-813d5b741f2f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl logs deployment/frontend</code></pre><h2 id="f50720e4-6f49-8346-89ee-819eb0efd98c" class="" dir="auto">9-2. checkoutservice 로그 확인</h2><pre id="c49720e4-6f49-830b-81e6-81e0d12cccb7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl logs deployment/checkoutservice</code></pre><h2 id="56d720e4-6f49-83ca-9359-013b8410aa1b" class="" dir="auto">9-3. recommendationservice 로그 확인</h2><pre id="bed720e4-6f49-8285-a558-81ede6d27337" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl logs deployment/recommendationservice</code></pre><h2 id="5c7720e4-6f49-834d-8ae8-014fe0255cfb" class="" dir="auto">실습 방법</h2><p id="c3d720e4-6f49-82f8-8264-8108ee18542d" class="" dir="auto">한쪽 터미널에서 로그를 보고, 브라우저에서 상품 조회나 장바구니 추가를 반복한다.</p><h2 id="28a720e4-6f49-8268-8905-01dd1d6c47d1" class="" dir="auto">관찰 포인트</h2><ul id="a25720e4-6f49-82ac-99c3-8171103d8a83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 동작에 따라 어떤 서비스 로그가 반응하는지 확인함</li></ul><ul id="4a0720e4-6f49-8374-b295-8162b03d2b6f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전체 앱이 아니라 서비스 단위로 관찰해야 한다는 점을 확인함</li></ul><p id="921720e4-6f49-82a8-b836-01f36813e025" class="" dir="auto">필요하면 다음처럼 실시간 추적도 가능하다.</p><pre id="06f720e4-6f49-8305-904a-81d76dc286da" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl logs -f deployment/frontend
+kubectl logs -f deployment/checkoutservice</code></pre><hr id="a78720e4-6f49-83f9-96b1-8154302c8de1" dir="auto"/><h1 id="878720e4-6f49-82cb-9743-01f883b1770d" class="" dir="auto">10. 장애 주입 실습</h1><p id="ccc720e4-6f49-825a-835a-812a03fd020a" class="" dir="auto">이번 단계의 핵심은</p><p id="ff6720e4-6f49-8390-bf8e-81286a818b37" class="" dir="auto"><strong>특정 기능 서비스만 중단했을 때 전체가 어떻게 반응하는지 확인하는 것</strong>이다.</p><hr id="261720e4-6f49-83d7-9f98-010bd50c66f8" dir="auto"/><h2 id="501720e4-6f49-82d2-b7bb-01c14234bc93" class="" dir="auto">10-1. recommendationservice 중단</h2><pre id="9e2720e4-6f49-83e8-b592-8191bc543200" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl scale deployment recommendationservice --replicas=0</code></pre><h2 id="a2a720e4-6f49-83ba-8749-012fbe5e4d74" class="" dir="auto">확인</h2><pre id="d98720e4-6f49-83da-be52-81b25d254d6e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods
+kubectl get deployment recommendationservice</code></pre><p id="c0c720e4-6f49-83d1-95c6-8104ae9ab646" class="" dir="auto">또는 서비스만 좁혀서 본다.</p><pre id="505720e4-6f49-8326-b5ed-81d73131fd88" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -l app=recommendationservice</code></pre><h2 id="db9720e4-6f49-827e-a853-01827fdfc316" class="" dir="auto">브라우저 확인</h2><p id="912720e4-6f49-837d-b509-01862d461e41" class="" dir="auto">상품 상세 페이지나 메인 화면을 다시 확인한다.</p><h2 id="144720e4-6f49-83f7-beda-81c4449c527c" class="" dir="auto">관찰 포인트</h2><ul id="6f4720e4-6f49-830a-9fd9-0163afb7e26a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">추천 상품 영역이 비정상 동작하거나 비어 있을 수 있음</li></ul><ul id="e16720e4-6f49-8357-9bd1-01919ed2f705" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하지만 전체 쇼핑몰이 완전히 죽지 않을 수 있음</li></ul><ul id="6a5720e4-6f49-829b-b9b3-8180bcb29a9b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">즉, 일부 서비스 장애가 전체 장애로 바로 이어지지 않음을 확인함</li></ul><p id="137720e4-6f49-826c-8bc3-813d3232942e" class="" dir="auto"> <strong>장애 격리</strong>, <strong>부분 실패 허용</strong>, <strong>서비스 분리 운영</strong>이MSA로 구현하는 이유이다.</p><hr id="81a720e4-6f49-8346-8214-0122dfa5fbb8" dir="auto"/><h2 id="9cb720e4-6f49-8370-8c89-8176e2c00173" class="" dir="auto">10-2. recommendationservice 복구</h2><pre id="fc7720e4-6f49-82d7-b267-816942ef9adc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl scale deployment recommendationservice --replicas=1</code></pre><h2 id="fde720e4-6f49-839e-ba8e-81b3e4554b7c" class="" dir="auto">확인</h2><pre id="ff0720e4-6f49-8290-a0a8-8199853e35c9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -l app=recommendationservice</code></pre><p id="194720e4-6f49-839e-b74b-8162d8c3ff1a" class="" dir="auto">새 Pod가 <code>Running</code>이 되면 브라우저를 새로고침해서 추천 기능이 회복되는지 확인한다.</p><hr id="0a1720e4-6f49-8310-b5cd-81d6443e79de" dir="auto"/><h1 id="490720e4-6f49-824c-b766-8167f6952055" class="" dir="auto">11. 독립 확장 실습</h1><p id="74d720e4-6f49-82a0-b7d6-8174f42b0401" class="" dir="auto">이번에는 전체가 아니라 특정 서비스만 확장한다.</p><h2 id="216720e4-6f49-821e-81cd-81c9448ae673" class="" dir="auto">11-1. frontend 확장</h2><pre id="12a720e4-6f49-83e7-b48b-01f652409bd9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl scale deployment frontend --replicas=3</code></pre><h2 id="de8720e4-6f49-8321-9c9d-0156767626cc" class="" dir="auto">확인</h2><pre id="2ec720e4-6f49-8271-a087-81e170537169" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -l app=frontend
+kubectl get deployment frontend</code></pre><h2 id="0e2720e4-6f49-824e-af34-0173af6a3b99" class="" dir="auto">관찰 포인트</h2><ul id="18b720e4-6f49-82b3-b76e-0138097852e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">frontend Pod가 여러 개로 증가함</li></ul><ul id="73f720e4-6f49-82df-8157-01b016766dc5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 여전히 동일한 <code>frontend-external</code> 주소로 접속함</li></ul><ul id="0f2720e4-6f49-82f2-9f2a-016a274aaf65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 진입점은 같지만 내부 실행 인스턴스 수만 늘어남</li></ul><p id="752720e4-6f49-8353-87bf-019c536495c3" class="" dir="auto">즉, 트래픽 증가가 있다고 해서 전체 서비스를 모두 늘리는 것이 아니라</p><p id="cb3720e4-6f49-82d8-a815-017dfdbf904b" class="" dir="auto"><strong>필요한 서비스만 선택적으로 확장</strong>할 수 있다.</p><hr id="4aa720e4-6f49-832e-aefe-817bafc96939" dir="auto"/><h2 id="19c720e4-6f49-835f-9c99-010d6b229ee3" class="" dir="auto">11-2. 다시 원래 상태로 축소</h2><pre id="b38720e4-6f49-823b-99e9-81f3fd464442" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl scale deployment frontend --replicas=1</code></pre><h2 id="ca4720e4-6f49-825b-adc6-810b556e63ef" class="" dir="auto">확인</h2><pre id="f62720e4-6f49-837a-8c5e-815dfeb5aacb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -l app=frontend</code></pre><hr id="e5b720e4-6f49-839f-85c6-014a2d09930d" dir="auto"/><h1 id="15f720e4-6f49-83eb-9db2-81e5c1d33622" class="" dir="auto">12. 롤링 재시작 및 배포 상태 확인</h1><p id="289720e4-6f49-8254-a3ab-01c6cfeda4d2" class="" dir="auto">이번 단계에서는 특정 서비스만 재배포 흐름으로 다뤄본다.</p><h2 id="d3b720e4-6f49-8203-8501-0108f1bab551" class="" dir="auto">12-1. 배포 이력 확인</h2><pre id="a6a720e4-6f49-83d9-ae38-01c3c9c3afb0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl rollout history deployment/frontend</code></pre><h2 id="e39720e4-6f49-83c3-a8b7-817baba08925" class="" dir="auto">12-2. 현재 배포 상태 확인</h2><pre id="559720e4-6f49-8396-a822-01ead6e9b53d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl rollout status deployment/frontend</code></pre><h2 id="f6b720e4-6f49-83a1-803a-01ac7e284f3b" class="" dir="auto">12-3. 롤링 재시작</h2><pre id="e46720e4-6f49-83d5-a00b-01c324e801a8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl rollout restart deployment/frontend</code></pre><h2 id="415720e4-6f49-82ef-87a0-018a933835ae" class="" dir="auto">확인</h2><pre id="ea1720e4-6f49-824a-87d2-01dbe590c9be" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl rollout status deployment/frontend
+kubectl get pods -l app=frontend -w</code></pre><h2 id="dcb720e4-6f49-82d8-a327-01708c50347d" class="" dir="auto">관찰 포인트</h2><ul id="1b3720e4-6f49-82e3-bbaa-812cb7cbaf19" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 Pod가 한 번에 모두 종료되지 않음</li></ul><ul id="b4a720e4-6f49-8214-a64f-0108f537354c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새 Pod가 순차적으로 준비되면서 교체됨</li></ul><ul id="31a720e4-6f49-8301-87d3-818d7fafecd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">frontend만 재시작되며 다른 서비스에는 직접 영향이 없음</li></ul><p id="d62720e4-6f49-83c3-b852-8169804b8d05" class="" dir="auto">이 단계에서는 “서비스 전체 재배포”가 아니라</p><p id="cbb720e4-6f49-8267-86c1-81d56833fb11" class="" dir="auto"><strong>특정 서비스 단위 운영</strong>이 가능하다는 점을 강조하면 좋다.</p><hr id="f5f720e4-6f49-8278-bb47-8154b8e847b0" dir="auto"/><h1 id="462720e4-6f49-820b-abb4-01cd58752235" class="" dir="auto">13. 롤백 흐름 확인</h1><pre id="ebd720e4-6f49-8325-9e75-0107389b5943" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl rollout undo deployment/frontend
+kubectl rollout undo deployment/frontend --to-revision=2 // 특정 revision으로 롤백</code></pre><h2 id="6f8720e4-6f49-83a3-98d8-81a591ce02c0" class="" dir="auto">확인</h2><pre id="b0f720e4-6f49-8263-8531-0198be8f2760" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl rollout history deployment/frontend
+kubectl rollout status deployment/frontend</code></pre><h2 id="5d6720e4-6f49-8206-98f0-819f594e2414" class="" dir="auto">관찰 포인트</h2><ul id="158720e4-6f49-8202-a14c-011cf225cfa2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문제가 생긴 서비스만 되돌릴 수 있음</li></ul><ul id="af7720e4-6f49-8211-a58e-818a838b86a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전체 애플리케이션을 한꺼번에 롤백하는 구조가 아님</li></ul><ul id="e6a720e4-6f49-82b8-b632-01ce599b8cf1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MSA 운영에서는 부분 롤백이 가능하다는 점이 중요함</li></ul><hr id="e87720e4-6f49-829b-9d5e-810fcb44d944" dir="auto"/><h1 id="86a720e4-6f49-82c5-80ea-01d826ab3187" class="" dir="auto">14. 내부 DNS 기반 서비스 통신 확인</h1><p id="7a0720e4-6f49-83bf-9754-010c9f687be6" class="" dir="auto">서비스 이름으로 통신하는 구조를 직접 확인한다.</p><h2 id="c43720e4-6f49-8289-be11-81c90d09e18d" class="" dir="auto">14-1. 임시 디버그 Pod 실행</h2><pre id="691720e4-6f49-822d-9d1d-812bd9713764" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl run debug-shell --rm -it --image=busybox -- sh</code></pre><h2 id="111720e4-6f49-8249-b49b-818601b64e9a" class="" dir="auto">14-2. 서비스 이름 조회</h2><p id="41d720e4-6f49-83e5-8f0e-019b6a5186c6" class="" dir="auto">Pod 내부 셸에서 다음 명령을 실행한다.</p><pre id="0ff720e4-6f49-8320-9e99-0150c2e6051e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">nslookup frontend
+nslookup cartservice
+nslookup productcatalogservice
+nslookup recommendationservice</code></pre><h2 id="abe720e4-6f49-8344-a130-811e5f405a1a" class="" dir="auto">관찰 포인트</h2><ul id="25b720e4-6f49-83f5-a805-01469d427b82" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 이름이 내부 클러스터 DNS로 해석되는지 확인함</li></ul><ul id="0b3720e4-6f49-8372-9ac4-01f3c71ae2e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션이 Pod IP를 직접 바라보지 않아도 된다는 점을 확인함</li></ul><p id="dcd720e4-6f49-832f-bfbb-8159f793d0ea" class="" dir="auto">필요하면 다음도 시도할 수 있다.</p><pre id="e7f720e4-6f49-831c-a4ac-810d367e6ad5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">wget -qO- http://frontend</code></pre><p id="7ba720e4-6f49-8288-b5a3-8168a521f6ba" class="" dir="auto">셸 종료:</p><pre id="cd5720e4-6f49-82d7-9a2e-0129c2751c3f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">exit</code></pre><hr id="f2f720e4-6f49-824f-84c2-01f38e548245" dir="auto"/><h1 id="258720e4-6f49-8390-9f03-01f9783b9c2d" class="" dir="auto">15. 추가 명령</h1><h2 id="b3f720e4-6f49-83c1-bfa1-01be1537b9b0" class="" dir="auto">전체 리소스 한 번에 보기</h2><pre id="143720e4-6f49-83b2-9ae2-01a7b11acfe6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get all</code></pre><h2 id="690720e4-6f49-83c1-a186-015a54f5a80e" class="" dir="auto">특정 서비스 Pod만 보기</h2><pre id="c47720e4-6f49-834f-bbae-81eda5550861" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -l app=checkoutservice
+kubectl get pods -l app=cartservice</code></pre><h2 id="3cc720e4-6f49-8324-92ec-01ac2445f579" class="" dir="auto">이벤트 확인</h2><pre id="4a3720e4-6f49-8270-bd06-81173bfab7d7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get events --sort-by=.metadata.creationTimestamp</code></pre><h2 id="17c720e4-6f49-8264-8d6f-0154608c9714" class="" dir="auto">특정 Pod 상세 보기</h2><pre id="fee720e4-6f49-829c-bd14-0110dcccb7c4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe pod &lt;POD_NAME&gt;</code></pre><hr id="f7f720e4-6f49-82b1-804c-01d0f10dc2ec" dir="auto"/><h1 id="ba8720e4-6f49-828e-a04a-81bc48c07d6e" class="" dir="auto">16. 실습 정리</h1><p id="e93720e4-6f49-8237-9739-8127466a2666" class="" dir="auto">이번 실습에서 확인한 핵심은 다음과 같다.</p><ul id="a5a720e4-6f49-83e2-b51d-019353ab9fff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션이 여러 서비스로 나뉘어 독립 배포됨</li></ul><ul id="48d720e4-6f49-820e-9312-81412ea83f17" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 서비스만 장애를 내도 전체가 항상 같이 죽지는 않음</li></ul><ul id="169720e4-6f49-838e-b213-015be18a00de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요한 서비스만 따로 확장할 수 있음</li></ul><ul id="8e3720e4-6f49-83a7-ace2-81cb428568e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요한 서비스만 따로 재시작·롤백할 수 있음</li></ul><ul id="b04720e4-6f49-82a5-82eb-813a547a8e21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 이름 기반 내부 통신이 가능함</li></ul><p id="1f5720e4-6f49-83c3-828e-014f38299d6e" class="" dir="auto">즉, Kubernetes는 단순 컨테이너 실행 도구가 아니라 <strong>마이크로서비스 운영을 위한 실행 플랫폼</strong> 역할을 한다고 볼 수 있다.</p><hr id="75d720e4-6f49-82fb-835b-01458a513a82" dir="auto"/><h1 id="052720e4-6f49-8351-83e6-01934060e5b8" class="" dir="auto">17. 실습 종료</h1><p id="eb7720e4-6f49-826e-85f5-014543988285" class="" dir="auto">실습이 끝나면 사용한 애플리케이션 리소스를 정리한다.</p><h2 id="f68720e4-6f49-829a-a0d8-01a6db988eed" class="" dir="auto">애플리케이션만 삭제</h2><pre id="eb0720e4-6f49-8257-9ddd-810b5a2b0600" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete -f ./release/kubernetes-manifests.yaml</code></pre><h2 id="a6a720e4-6f49-8291-9d4d-8169f2ff9ed2" class="" dir="auto">확인</h2><pre id="65a720e4-6f49-8362-8fc6-0160f925a39a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods
+kubectl get svc</code></pre><hr id="440720e4-6f49-83f2-8ff4-81b175a9accc" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

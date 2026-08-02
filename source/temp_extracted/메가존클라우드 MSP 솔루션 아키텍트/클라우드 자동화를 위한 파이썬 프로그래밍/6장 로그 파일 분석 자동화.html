@@ -1,0 +1,1277 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>6장. 로그 파일 분석 자동화</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="c09720e4-6f49-824d-95b5-017ad38dce45" class="page sans"><header><h1 class="page-title" dir="auto">6장. 로그 파일 분석 자동화</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="3dc720e4-6f49-821b-9876-011eeb8e0aa7" dir="auto"/><h2 id="1a8720e4-6f49-8307-8efa-8194a9bef6f7" class="" dir="auto">장 개요</h2><p id="c6b720e4-6f49-8295-8e1e-816a7cf9529f" class="" dir="auto">이 장에서는 시스템과 애플리케이션에서 생성되는 로그 파일을 Python으로 읽고 분석하는 방법을 학습한다.</p><p id="087720e4-6f49-836a-9f05-81e2775ea3c2" class="" dir="auto">로그는 운영 환경에서 문제 원인을 찾거나, 서비스 상태를 확인하거나, 반복적으로 발생하는 오류를 추적할 때 매우 중요한 자료이다. 하지만 로그 파일은 시간이 지날수록 매우 커지고, 사람이 직접 눈으로 확인하기에는 한계가 있다.</p><p id="ae1720e4-6f49-83d1-83ae-813e21b06b9c" class="" dir="auto">이 장에서는 텍스트 로그와 JSON 로그의 기본 구조를 이해하고, Python을 이용해 로그 파일을 줄 단위로 읽는 방법을 학습한다. 이후 특정 문자열 검색, 조건 필터링, 정규표현식을 이용한 값 추출, 상태코드 집계, IP별 요청 수 집계, URL별 요청 수 집계, 시간대별 집계까지 단계적으로 실습한다.</p><p id="cfd720e4-6f49-83f2-b354-81fd2a4d5823" class="" dir="auto">마지막에는 <code>argparse</code>, 함수 분리, 예외 처리를 포함한 자동화 스타일의 로그 분석 스크립트를 작성한다.</p><p id="675720e4-6f49-8372-9e92-019a97bea24d" class="" dir="auto">이 장의 목표는 단순히 로그 파일을 읽는 것이 아니라, <strong>운영자가 반복적으로 수행하는 로그 확인 작업을 Python 코드로 자동화하는 기본 흐름을 익히는 것</strong>이다.</p><hr id="89f720e4-6f49-83ec-9169-818057d9c575" dir="auto"/><h2 id="673720e4-6f49-83d7-96b8-8111e605cd44" class="" dir="auto">학습 목표</h2><p id="8c9720e4-6f49-83f7-9c4b-01e13ccaa3ba" class="" dir="auto">이 장을 학습하면 다음을 수행할 수 있다.</p><ul id="a05720e4-6f49-82e9-95d9-81f392e1ad3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 자동화가 필요한 이유를 설명할 수 있다.</li></ul><ul id="cb6720e4-6f49-8294-a5ca-81e66b9021ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">텍스트 로그와 JSON 로그의 차이를 설명할 수 있다.</li></ul><ul id="4ac720e4-6f49-836b-b3d3-016de968e55c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python으로 로그 파일을 줄 단위로 읽을 수 있다.</li></ul><ul id="a62720e4-6f49-823c-8bfd-81beb8780fb1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 키워드가 포함된 로그만 필터링할 수 있다.</li></ul><ul id="dda720e4-6f49-8370-b74a-81d034bb16ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조건문과 반복문을 이용해 로그 레벨별로 분기할 수 있다.</li></ul><ul id="ad6720e4-6f49-8204-b491-01f5903e477b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정규표현식을 사용해 상태코드, IP, 요청 경로 같은 값을 추출할 수 있다.</li></ul><ul id="b4d720e4-6f49-8372-9c6e-01941632efa2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">딕셔너리와 <code>Counter</code>를 사용해 로그 데이터를 집계할 수 있다.</li></ul><ul id="715720e4-6f49-83e8-8a8e-01457cb7af91" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON 로그를 <code>json.loads()</code>로 파싱할 수 있다.</li></ul><ul id="efa720e4-6f49-8373-ba18-81876ff87fd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 로그 줄이나 파일 오류를 예외 처리할 수 있다.</li></ul><ul id="db5720e4-6f49-8301-861f-016641a0fd07" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 인자를 받아 동작하는 로그 분석 자동화 스크립트를 작성할 수 있다.</li></ul><hr id="864720e4-6f49-828e-be52-0110c311f0e8" dir="auto"/><h2 id="4d6720e4-6f49-8338-b8f7-0117a45abb7e" class="" dir="auto">주요 키워드</h2><ul id="1a8720e4-6f49-8280-9c3a-811cca1d626f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그</li></ul><ul id="7b7720e4-6f49-8271-a85a-81fbff2332b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 분석</li></ul><ul id="c24720e4-6f49-8397-930d-0164d76220ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">텍스트 로그</li></ul><ul id="581720e4-6f49-837c-b01a-8194e706cbda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON 로그</li></ul><ul id="32e720e4-6f49-83bc-945b-817d943de874" class="bulleted-list" dir="auto"><li style="list-style-type:disc">액세스 로그</li></ul><ul id="3fc720e4-6f49-82ef-8498-8195545373ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">에러 로그</li></ul><ul id="7ae720e4-6f49-83ae-bc12-01ed5dd6a2b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정규표현식</li></ul><ul id="38b720e4-6f49-83c1-b3c1-015fc2d9bf88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태코드</li></ul><ul id="978720e4-6f49-8344-8778-017ddcda17d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필터링</li></ul><ul id="131720e4-6f49-8293-8ecd-012a3737c89e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">집계</li></ul><ul id="ed3720e4-6f49-8268-848a-015537c1db55" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Counter</li></ul><ul id="0d6720e4-6f49-83d3-88a5-8116af71edda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">argparse</li></ul><ul id="e46720e4-6f49-83d8-8d08-8127f6ad5485" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예외 처리</li></ul><ul id="aac720e4-6f49-837a-b2ea-816d6c6ed9f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 자동화</li></ul><hr id="595720e4-6f49-8212-b338-8178ac7cc404" dir="auto"/><h1 id="abd720e4-6f49-8251-86f5-81273cf83d01" class="" dir="auto">6.1 로그 자동화가 필요한 이유</h1><h2 id="0bb720e4-6f49-8251-9a75-013df0e131ab" class="" dir="auto">1. 로그란 무엇인가</h2><p id="b45720e4-6f49-8271-991f-810f33036f92" class="" dir="auto">로그는 시스템, 서버, 애플리케이션, 네트워크 장비 등이 동작하면서 남기는 기록이다.</p><p id="ced720e4-6f49-827e-a370-81207495a6fb" class="" dir="auto">예를 들어 웹 서버는 사용자가 어떤 URL에 접속했는지, 응답 상태코드는 무엇이었는지, 요청 시간이 언제였는지 등을 로그로 남긴다.</p><p id="6be720e4-6f49-836f-83a3-019395062421" class="" dir="auto">애플리케이션은 서비스 시작, 오류 발생, 데이터베이스 연결 실패, 외부 API 호출 실패 같은 정보를 로그로 남길 수 있다.</p><p id="424720e4-6f49-83d2-b0c4-8118f5ea537c" class="" dir="auto">대표적으로 로그에는 다음과 같은 정보가 포함된다.</p><ul id="170720e4-6f49-83da-a3a4-81ce8eee1eae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 시간</li></ul><ul id="cfe720e4-6f49-8234-b760-01d881c5f444" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청한 클라이언트 IP</li></ul><ul id="78f720e4-6f49-83e9-8e0c-8134e65234fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 URL</li></ul><ul id="600720e4-6f49-83eb-a204-819a4e831aa6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP 메서드</li></ul><ul id="e94720e4-6f49-836b-b9a9-01aec9dc06d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">응답 상태코드</li></ul><ul id="6eb720e4-6f49-83bc-a79f-01162e235382" class="bulleted-list" dir="auto"><li style="list-style-type:disc">에러 메시지</li></ul><ul id="775720e4-6f49-8319-81a5-81c181b168cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 ID</li></ul><ul id="9cb720e4-6f49-83e8-88c1-01a05c98b29b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">처리 시간</li></ul><ul id="4f2720e4-6f49-8307-abfc-01538a105f54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 이름</li></ul><ul id="7a8720e4-6f49-82ff-b53b-817b5cfb0179" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로세스 정보</li></ul><p id="8d8720e4-6f49-82f0-a55a-015733cad412" class="" dir="auto">운영 환경에서는 장애가 발생했을 때 가장 먼저 로그를 확인하는 경우가 많다.</p><p id="e38720e4-6f49-8214-8e6c-8150f60df3ad" class="" dir="auto">예를 들어 웹 서비스에서 사용자가 “페이지가 열리지 않는다”고 신고하면 운영자는 다음과 같은 항목을 확인한다.</p><ul id="fe4720e4-6f49-82b5-b93a-8140daccc03c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 시간대에 500 오류가 발생했는가</li></ul><ul id="761720e4-6f49-8391-8654-81127b4f102f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 API에서 오류가 반복되는가</li></ul><ul id="5f9720e4-6f49-83c8-b01c-8113c5718f95" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 IP에서 비정상적으로 많은 요청이 들어왔는가</li></ul><ul id="336720e4-6f49-83b1-b4c7-81a8f02aeb6f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터베이스 연결 실패 로그가 있었는가</li></ul><ul id="5e8720e4-6f49-83d5-9996-81e44e4f08a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증 실패나 권한 오류가 증가했는가</li></ul><p id="cac720e4-6f49-832a-82b2-01790ca6e236" class="" dir="auto">즉, 로그는 운영 상태를 확인하기 위한 가장 기본적인 데이터이다.</p><hr id="623720e4-6f49-83bf-bd90-01e821f5513d" dir="auto"/><h2 id="9f8720e4-6f49-8208-8022-816bb6e3f8f8" class="" dir="auto">2. 수동 로그 확인의 한계</h2><p id="223720e4-6f49-827b-aa8c-0199f3874fbd" class="" dir="auto">로그 파일이 작을 때는 사람이 직접 열어서 확인할 수 있다.</p><p id="ace720e4-6f49-82ea-8574-81deb6fab1c3" class="" dir="auto">예를 들어 로그가 10줄, 20줄 정도라면 눈으로 <code>ERROR</code> 문구를 찾는 것이 어렵지 않다.</p><p id="b95720e4-6f49-8311-b906-01dd8dab7d29" class="" dir="auto">하지만 실제 운영 환경에서는 로그가 매우 많다.</p><p id="f67720e4-6f49-8240-8ddd-81cfab2805fb" class="" dir="auto">웹 서버의 경우 하루에도 수천 줄, 수만 줄, 수백만 줄의 로그가 쌓일 수 있다. 이런 로그를 사람이 직접 확인하는 것은 비효율적이고 실수도 많이 발생한다.</p><p id="170720e4-6f49-82c3-9cf5-012d3e217334" class="" dir="auto">운영자가 자주 수행하는 작업은 다음과 같다.</p><ul id="4be720e4-6f49-835a-b740-812ca4b4a628" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ERROR</code>가 포함된 줄만 찾기</li></ul><ul id="df4720e4-6f49-8288-8046-0154fa1451b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>WARN</code> 로그만 찾기</li></ul><ul id="7f7720e4-6f49-829f-82ea-8171ef4ce4bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP 상태코드가 <code>500</code>인 요청만 찾기</li></ul><ul id="2fa720e4-6f49-82bd-9d10-81b5fe8090e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>4xx</code>, <code>5xx</code> 상태코드 개수 세기</li></ul><ul id="58c720e4-6f49-82d7-a96b-81bdd1fad8b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 IP가 몇 번 요청했는지 확인하기</li></ul><ul id="e2f720e4-6f49-83bc-bcd1-8146ef25aa02" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 URL이 얼마나 호출되었는지 확인하기</li></ul><ul id="938720e4-6f49-8232-90fb-81529404c3fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 시간대에 요청이 몰렸는지 확인하기</li></ul><ul id="8bf720e4-6f49-83bf-8f11-01fb99966f06" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 JSON 로그 줄 찾기</li></ul><ul id="412720e4-6f49-827a-843d-016ee71d90af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오류 로그만 별도 파일로 저장하기</li></ul><p id="2e0720e4-6f49-8387-af8e-01fd560b3570" class="" dir="auto">이런 작업은 반복적이고 규칙적이다.</p><p id="f3b720e4-6f49-826e-9e0c-01473ef692be" class="" dir="auto">반복적이고 규칙적인 작업은 Python 자동화에 적합하다.</p><hr id="fcc720e4-6f49-83ab-a5f5-01efc44edbd9" dir="auto"/><h2 id="338720e4-6f49-8254-9250-811663a9a7c7" class="" dir="auto">3. 로그 분석 자동화의 실무 흐름</h2><p id="c60720e4-6f49-8377-8071-01f9c8a571de" class="" dir="auto">운영자가 로그를 분석할 때는 보통 다음 순서로 접근한다.</p><ol type="1" id="e37720e4-6f49-823a-922d-81a297aeb5f2" class="numbered-list" start="1" dir="auto"><li>문제가 발생한 시간대를 확인한다.</li></ol><ol type="1" id="9d1720e4-6f49-837d-8a78-01439f67cb80" class="numbered-list" start="2" dir="auto"><li>해당 시간대의 로그 파일을 찾는다.</li></ol><ol type="1" id="5d3720e4-6f49-828e-ab46-81c18edaf778" class="numbered-list" start="3" dir="auto"><li><code>ERROR</code>, <code>WARN</code>, <code>Exception</code>, <code>timeout</code> 같은 키워드를 검색한다.</li></ol><ol type="1" id="8c1720e4-6f49-8365-94cf-811aa0ca6042" class="numbered-list" start="4" dir="auto"><li>웹 서버 로그라면 <code>4xx</code>, <code>5xx</code> 상태코드를 확인한다.</li></ol><ol type="1" id="5fb720e4-6f49-83c7-80a6-01a9f696adaf" class="numbered-list" start="5" dir="auto"><li>같은 에러 메시지가 반복되는지 확인한다.</li></ol><ol type="1" id="b8a720e4-6f49-8326-87b2-812afabd5c5c" class="numbered-list" start="6" dir="auto"><li>특정 IP, URL, 사용자, 상태코드에 요청이 집중되는지 확인한다.</li></ol><ol type="1" id="15c720e4-6f49-830b-be6e-01cadaa13f7a" class="numbered-list" start="7" dir="auto"><li>분석 결과를 정리해 장애 원인 분석이나 보고에 활용한다.</li></ol><p id="00e720e4-6f49-83e2-b3a6-01693c023387" class="" dir="auto">Python 로그 자동화는 이 과정에서 반복되는 검색, 필터링, 집계 작업을 코드로 대신 수행하는 것이다.</p><hr id="1e9720e4-6f49-83dd-87f1-812cd3b60dbc" dir="auto"/><h2 id="fb2720e4-6f49-8328-a9d8-01cec9fb147a" class="" dir="auto">4. 로그 자동화의 기본 흐름</h2><p id="7ef720e4-6f49-83cb-b1f0-01141a9bf2dc" class="" dir="auto">Python을 이용한 로그 자동화는 보통 다음 흐름으로 작성한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="db9720e4-6f49-83f4-8414-81bc3ad65028" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">로그 파일 열기
+↓
+한 줄씩 읽기
+↓
+필요한 문자열 또는 패턴 찾기
+↓
+조건에 맞는 로그만 필터링
+↓
+필요한 값 추출
+↓
+개수 집계
+↓
+결과 출력 또는 파일 저장</code></pre><p id="d6a720e4-6f49-8391-904f-81b6c5add81b" class="" dir="auto">코드 흐름으로 보면 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="fc5720e4-6f49-8315-9ab9-014d8a8f017b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;app.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file:
+	for line in file:
+		if &quot;ERROR&quot; in line:
+	  print(line.strip())</code></pre><p id="71c720e4-6f49-83f1-b9ef-0132e4602323" class="" dir="auto">이 코드는 가장 기본적인 로그 자동화 구조이다.</p><ul id="dec720e4-6f49-83ea-b1e6-81f8b1b48d9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>open()</code>으로 로그 파일을 연다.</li></ul><ul id="712720e4-6f49-8228-b623-817731da7f14" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>for line in file:</code>로 한 줄씩 읽는다.</li></ul><ul id="876720e4-6f49-83d5-be20-8132beba7b87" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>if &quot;ERROR&quot; in line:</code>로 조건을 검사한다.</li></ul><ul id="0fb720e4-6f49-83d2-b159-816636ae9594" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>print()</code>로 조건에 맞는 로그만 출력한다.</li></ul><p id="626720e4-6f49-8335-a5fa-018eafe1f047" class="" dir="auto">이 장에서는 이 기본 구조를 점진적으로 확장한다.</p><hr id="c50720e4-6f49-82f6-a098-81c67fc3f3f9" dir="auto"/><h1 id="2ed720e4-6f49-8243-b750-81c87a061e62" class="" dir="auto">6.2 로그 형식 이해</h1><h2 id="da5720e4-6f49-8352-aeaf-01daf2b4b610" class="" dir="auto">1. 텍스트 로그</h2><p id="6ac720e4-6f49-8311-a96a-0189b6000411" class="" dir="auto">텍스트 로그는 사람이 읽기 쉬운 문자열 형태의 로그이다.</p><p id="e93720e4-6f49-8338-8593-01c49ade240d" class="" dir="auto">예를 들면 다음과 같다.</p><pre id="890720e4-6f49-8331-912f-81aa16ecff79" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:11 INFO service started
+2026-04-20 10:01:15 ERROR database connection failed
+2026-04-20 10:01:20 INFO retry started
+2026-04-20 10:01:25 ERROR timeout occurred</code></pre><p id="693720e4-6f49-833d-af7f-015c6a503458" class="" dir="auto">이 로그는 다음 요소로 구성되어 있다.</p><pre id="fe5720e4-6f49-829f-82a0-815a54828862" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">날짜 시간 로그레벨 메시지</code></pre><p id="bf3720e4-6f49-82dd-aea1-01c41ee1e571" class="" dir="auto">예를 들어 아래 한 줄을 보자.</p><pre id="9e2720e4-6f49-8231-890e-81bc064f643a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:15 ERROR database connection failed</code></pre><p id="3c8720e4-6f49-8327-884e-8132e7e6cbac" class="" dir="auto">각 항목은 다음 의미를 가진다.</p><table id="612720e4-6f49-82d3-972c-0131c48a36bf" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="167720e4-6f49-839e-a8d2-81c22659288b" dir="ltr"><th id="xwf{" class="simple-table-header-color simple-table-header">항목</th><th id="{jrj" class="simple-table-header-color simple-table-header">값</th><th id="F&lt;Cn" class="simple-table-header-color simple-table-header">의미</th></tr></thead><tbody><tr id="d3c720e4-6f49-8274-9244-017eb3168b2c" dir="ltr"><td id="xwf{" class="">날짜</td><td id="{jrj" class=""><code>2026-04-20</code></td><td id="F&lt;Cn" class="">로그가 발생한 날짜</td></tr><tr id="f2f720e4-6f49-82bf-aefc-81e7828f0e5a" dir="ltr"><td id="xwf{" class="">시간</td><td id="{jrj" class=""><code>10:01:15</code></td><td id="F&lt;Cn" class="">로그가 발생한 시각</td></tr><tr id="2b4720e4-6f49-8259-8ccf-0167b74ce61b" dir="ltr"><td id="xwf{" class="">로그 레벨</td><td id="{jrj" class=""><code>ERROR</code></td><td id="F&lt;Cn" class="">오류 로그</td></tr><tr id="f1e720e4-6f49-833f-9bde-81caf1c1aa3a" dir="ltr"><td id="xwf{" class="">메시지</td><td id="{jrj" class=""><code>database connection failed</code></td><td id="F&lt;Cn" class="">데이터베이스 연결 실패</td></tr></tbody></table><p id="724720e4-6f49-838b-8501-01a31618181d" class="" dir="auto">텍스트 로그는 사람이 읽기 쉽지만, 프로그램이 구조적으로 처리하려면 문자열 자르기, 정규표현식, 조건문 등이 필요하다.</p><hr id="2c3720e4-6f49-8379-b589-019d4d7d80d8" dir="auto"/><h2 id="9d4720e4-6f49-82df-bbf6-817183c501d1" class="" dir="auto">2. JSON 로그</h2><p id="5c7720e4-6f49-83de-b282-816a1c99d735" class="" dir="auto">JSON 로그는 한 줄이 JSON 형식으로 저장된 로그이다.</p><p id="a60720e4-6f49-82e9-bbc1-81e27c3fd576" class="" dir="auto">예를 들면 다음과 같다.</p><pre id="515720e4-6f49-83ac-ae62-81070b72c495" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{&quot;time&quot;:&quot;2026-04-20T10:01:11&quot;,&quot;level&quot;:&quot;INFO&quot;,&quot;message&quot;:&quot;service started&quot;}
+{&quot;time&quot;:&quot;2026-04-20T10:01:15&quot;,&quot;level&quot;:&quot;ERROR&quot;,&quot;message&quot;:&quot;database connection failed&quot;}
+{&quot;time&quot;:&quot;2026-04-20T10:01:20&quot;,&quot;level&quot;:&quot;INFO&quot;,&quot;message&quot;:&quot;retry started&quot;}</code></pre><p id="a2a720e4-6f49-83cd-975b-01fc38396c9c" class="" dir="auto">JSON 로그는 다음처럼 키와 값으로 구성된다.</p><pre id="129720e4-6f49-8315-8bc3-81d3a56feb87" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;time&quot;:&quot;2026-04-20T10:01:15&quot;,
+  &quot;level&quot;:&quot;ERROR&quot;,
+  &quot;message&quot;:&quot;database connection failed&quot;
+}</code></pre><p id="ffd720e4-6f49-8234-9762-81dba305464a" class="" dir="auto">JSON 로그의 장점은 프로그램이 구조적으로 다루기 쉽다는 점이다.</p><p id="117720e4-6f49-83a5-a0e0-01daf51f4e0c" class="" dir="auto">예를 들어 <code>level</code> 값을 확인하고 싶으면 문자열에서 직접 찾지 않고 다음처럼 접근할 수 있다.</p><pre id="992720e4-6f49-82c9-b2c6-019dd6130c68" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">log[&quot;level&quot;]</code></pre><p id="5c7720e4-6f49-82de-919a-01e116c7ec7e" class="" dir="auto">또는 더 안전하게 다음처럼 접근할 수도 있다.</p><pre id="4c3720e4-6f49-8245-ab35-019b33b40792" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">log.get(&quot;level&quot;)</code></pre><p id="25b720e4-6f49-839b-851e-01763ca41cad" class="" dir="auto">텍스트 로그는 사람이 보기 쉽고, JSON 로그는 프로그램이 분석하기 좋다.</p><hr id="78e720e4-6f49-832a-b87f-81ad35239eb7" dir="auto"/><h2 id="700720e4-6f49-82ba-8a9a-812da3a06847" class="" dir="auto">3. 액세스 로그와 에러 로그</h2><p id="a16720e4-6f49-8281-a70c-81b33ef9c8f1" class="" dir="auto">운영 환경에서 자주 보는 로그는 크게 액세스 로그와 에러 로그로 나눌 수 있다.</p><h3 id="afc720e4-6f49-82c5-870a-0104fd05c53d" class="" dir="auto">액세스 로그</h3><p id="666720e4-6f49-823b-83be-016762839f2e" class="" dir="auto">액세스 로그는 사용자의 요청과 서버의 응답 정보를 기록한다.</p><p id="a3e720e4-6f49-82bc-bf8c-81168864b4dc" class="" dir="auto">예를 들면 다음과 같다.</p><pre id="8e3720e4-6f49-83f3-b44a-81036d25c1dd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">127.0.0.1 - - [20/Apr/2026:10:01:15 +0900] &quot;GET /api/items HTTP/1.1&quot; 200 1234</code></pre><p id="b86720e4-6f49-8263-897a-815e0aab2b1d" class="" dir="auto">이 로그에는 다음 정보가 들어 있다.</p><table id="6fa720e4-6f49-82c3-be4a-81c90435ec9b" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="5b9720e4-6f49-8376-ad64-81ac1bba3af9" dir="ltr"><th id="Nrrn" class="simple-table-header-color simple-table-header">항목</th><th id="_D]y" class="simple-table-header-color simple-table-header">예시</th><th id="u`Yd" class="simple-table-header-color simple-table-header">의미</th></tr></thead><tbody><tr id="a39720e4-6f49-8236-a1d2-811d5133b707" dir="ltr"><td id="Nrrn" class="">IP 주소</td><td id="_D]y" class=""><code>127.0.0.1</code></td><td id="u`Yd" class="">요청한 클라이언트 IP</td></tr><tr id="2df720e4-6f49-83d8-932e-81baad6a9bef" dir="ltr"><td id="Nrrn" class="">시간</td><td id="_D]y" class=""><code>[20/Apr/2026:10:01:15 +0900]</code></td><td id="u`Yd" class="">요청 발생 시간</td></tr><tr id="d49720e4-6f49-8346-8009-81f23b94377f" dir="ltr"><td id="Nrrn" class="">메서드</td><td id="_D]y" class=""><code>GET</code></td><td id="u`Yd" class="">HTTP 요청 메서드</td></tr><tr id="a35720e4-6f49-82fe-888d-01ae75b5df92" dir="ltr"><td id="Nrrn" class="">경로</td><td id="_D]y" class=""><code>/api/items</code></td><td id="u`Yd" class="">요청 URL 경로</td></tr><tr id="77c720e4-6f49-8355-a3d1-81b3b788a582" dir="ltr"><td id="Nrrn" class="">프로토콜</td><td id="_D]y" class=""><code>HTTP/1.1</code></td><td id="u`Yd" class="">HTTP 버전</td></tr><tr id="7b7720e4-6f49-8295-8a48-01d239a0d866" dir="ltr"><td id="Nrrn" class="">상태코드</td><td id="_D]y" class=""><code>200</code></td><td id="u`Yd" class="">응답 상태코드</td></tr><tr id="ad5720e4-6f49-828d-a67e-018db64c2dc3" dir="ltr"><td id="Nrrn" class="">응답 크기</td><td id="_D]y" class=""><code>1234</code></td><td id="u`Yd" class="">응답 바이트 크기</td></tr></tbody></table><p id="2eb720e4-6f49-839c-8b38-017c1a4018b7" class="" dir="auto">액세스 로그는 다음을 분석할 때 유용하다.</p><ul id="74f720e4-6f49-83be-a917-01a03d1d5a0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 URL 호출 횟수</li></ul><ul id="224720e4-6f49-83df-ab55-8183822a2e82" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 IP 요청 횟수</li></ul><ul id="4c6720e4-6f49-824e-b3eb-0198d50a13dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">404 오류 발생 횟수</li></ul><ul id="054720e4-6f49-8285-baf1-01ea643c014a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">500 오류 발생 횟수</li></ul><ul id="630720e4-6f49-82c3-af89-8133022a4c48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그인 실패 요청</li></ul><ul id="92b720e4-6f49-82a1-b8ff-01b3e1e1450c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리자 페이지 접근 시도</li></ul><h3 id="a54720e4-6f49-836b-bc9f-815b426a2640" class="" dir="auto">에러 로그</h3><p id="f8f720e4-6f49-8349-a99f-013a8a98799d" class="" dir="auto">에러 로그는 오류, 경고, 예외 상황을 기록한다.</p><p id="915720e4-6f49-83ab-bf08-8104b8812ac2" class="" dir="auto">예를 들면 다음과 같다.</p><pre id="492720e4-6f49-8311-a9c9-815452f44394" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:15 ERROR database connection failed
+2026-04-20 10:01:25 ERROR timeout occurred
+2026-04-20 10:01:40 WARN retry count exceeded</code></pre><p id="5f0720e4-6f49-8288-bec6-01bdf0db31d8" class="" dir="auto">에러 로그는 다음을 분석할 때 유용하다.</p><ul id="639720e4-6f49-82b4-bb80-01b0f38dece4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 장애 원인</li></ul><ul id="435720e4-6f49-832b-a7b4-8155e71df022" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터베이스 연결 실패</li></ul><ul id="dd8720e4-6f49-83c2-9c42-81596f06660a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 API 호출 실패</li></ul><ul id="4e5720e4-6f49-8315-ae5b-8188567ade9f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증 오류</li></ul><ul id="029720e4-6f49-82e5-b70a-81b459da803f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">권한 오류</li></ul><ul id="e97720e4-6f49-83b5-8fe7-813b9d8413a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예외 발생 위치</li></ul><p id="0f4720e4-6f49-8344-902e-81c5fc3b5c01" class="" dir="auto">이번 장에서는 텍스트 로그, 액세스 로그, JSON 로그를 모두 다룬다.</p><hr id="d19720e4-6f49-8283-8110-812afe7aa4fc" dir="auto"/><h1 id="11f720e4-6f49-8336-b92a-01c26631fb99" class="" dir="auto">6.3 Python으로 로그 파일 읽기</h1><h2 id="330720e4-6f49-8229-826f-81426c189bc9" class="" dir="auto">1. 실습 파일 준비</h2><p id="136720e4-6f49-83a1-b296-0120067e92cb" class="" dir="auto">먼저 <code>app.log</code> 파일을 만든다.</p><p id="cd7720e4-6f49-83fb-bba2-810b46bcee90" class="" dir="auto">파일명: <code>app.log</code></p><pre id="196720e4-6f49-8243-b759-81372103db2f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:11 INFO service started
+2026-04-20 10:01:15 ERROR database connection failed
+2026-04-20 10:01:20 INFO retry started
+2026-04-20 10:01:25 ERROR timeout occurred
+2026-04-20 10:01:30 INFO service stopped</code></pre><p id="2b5720e4-6f49-8267-8cf9-81c5506ce0a7" class="" dir="auto">이 파일은 간단한 애플리케이션 로그를 가정한 것이다.</p><hr id="c37720e4-6f49-8225-a8d4-015975b8bbd5" dir="auto"/><h2 id="07e720e4-6f49-82cf-adeb-817f889099b3" class="" dir="auto">2. 로그 파일 전체 읽기</h2><p id="f30720e4-6f49-8265-abc7-815d3f6435fa" class="" dir="auto">파일명: <code>read_log_all.py</code></p><pre id="69d720e4-6f49-82c2-b65a-019354fb1bc2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">with open(&quot;app.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file:
+	for line in file:
+		print(line.strip())</code></pre><p id="478720e4-6f49-821f-917e-81a52d5f988a" class="" dir="auto">실행한다.</p><pre id="c61720e4-6f49-8299-a272-81c547f731f7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python read_log_all.py</code></pre><p id="2d1720e4-6f49-8283-a6af-01039214caa9" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="399720e4-6f49-8244-a4bb-814991738c7b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:11 INFO service started
+2026-04-20 10:01:15 ERROR database connection failed
+2026-04-20 10:01:20 INFO retry started
+2026-04-20 10:01:25 ERROR timeout occurred
+2026-04-20 10:01:30 INFO service stopped</code></pre><hr id="2d2720e4-6f49-831e-ae13-018c8b9bca33" dir="auto"/><h2 id="22f720e4-6f49-820d-8a2f-018c4e3b7eeb" class="" dir="auto">3. 코드 설명</h2><pre id="eab720e4-6f49-8282-b1f0-81f73f43de6d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">with open(&quot;app.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file:</code></pre><p id="0f5720e4-6f49-824d-a21c-010499708f92" class="" dir="auto"><code>open()</code>은 파일을 여는 함수이다.</p><p id="3e0720e4-6f49-820f-986e-0125482284ad" class="" dir="auto">첫 번째 인자인 <code>&quot;app.log&quot;</code>는 열 파일 이름이다.</p><p id="83d720e4-6f49-837a-bad6-81feff09b97c" class="" dir="auto">두 번째 인자인 <code>&quot;r&quot;</code>은 읽기 모드이다. <code>r</code>은 read를 의미한다.</p><p id="1db720e4-6f49-832c-b138-018c8740ab04" class="" dir="auto">세 번째 인자인 <code>encoding=&quot;utf-8&quot;</code>은 파일을 UTF-8 문자 인코딩으로 읽겠다는 의미이다. 한글 로그가 포함될 수 있으므로 UTF-8을 명시하는 것이 좋다.</p><pre id="58d720e4-6f49-83e0-9e25-01719e91a7f2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">for line in file:</code></pre><p id="243720e4-6f49-82ab-8a0a-0120faa8a21b" class="" dir="auto">파일 객체를 반복문에 넣으면 파일을 한 줄씩 읽는다.</p><p id="a80720e4-6f49-82c9-819a-819eb505a0fa" class="" dir="auto">로그 파일은 보통 줄 단위로 기록되기 때문에 <code>for line in file:</code> 구조가 로그 분석에 매우 자주 사용된다.</p><pre id="7db720e4-6f49-8339-995f-019140ecdf59" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">print(line.strip())</code></pre><p id="147720e4-6f49-826d-9381-81ff6d7ab839" class="" dir="auto"><code>strip()</code>은 문자열 앞뒤의 공백, 탭, 줄바꿈 문자를 제거한다.</p><p id="37a720e4-6f49-83f0-abbf-812dd6a616ef" class="" dir="auto">파일을 한 줄씩 읽으면 각 줄 끝에는 줄바꿈 문자 <code>\n</code>이 포함된다.</p><p id="e21720e4-6f49-8234-8fb0-81b836d076ca" class="" dir="auto">예를 들어 다음 로그 한 줄이 있다고 하자.</p><pre id="401720e4-6f49-8275-8181-0110cf042b36" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:11 INFO service started</code></pre><p id="bb1720e4-6f49-8381-b23e-81990ea0a1df" class="" dir="auto">Python이 파일에서 이 줄을 읽으면 내부적으로는 다음과 비슷한 문자열이 된다.</p><pre id="8ef720e4-6f49-82c9-8a18-81b71bb5f353" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&quot;2026-04-20 10:01:11 INFO service started\n&quot;</code></pre><p id="754720e4-6f49-820f-8cd7-814cc7b18ab3" class="" dir="auto">여기서 <code>\n</code>은 줄바꿈 문자이다.</p><p id="84e720e4-6f49-83ff-b326-01309d538f6c" class="" dir="auto">따라서 출력할 때 깔끔하게 보이도록 <code>strip()</code>을 사용한다.</p><hr id="6f2720e4-6f49-83e6-bc3c-81993b4f0cbb" dir="auto"/><h1 id="0bf720e4-6f49-83f0-8540-8139ec4ca3d4" class="" dir="auto">6.4 특정 키워드가 포함된 로그 찾기</h1><h2 id="3b3720e4-6f49-82a7-84e0-814fcc824805" class="" dir="auto">1. 문자열 포함 여부 확인</h2><p id="102720e4-6f49-82f1-8094-010d4727ccf8" class="" dir="auto">Python에서는 문자열 안에 특정 문자열이 포함되어 있는지 <code>in</code>으로 확인할 수 있다.</p><p id="222720e4-6f49-8312-82c4-81ea4e51e23a" class="" dir="auto">예를 들면 다음과 같다.</p><pre id="255720e4-6f49-8358-9a3c-0132d2995bda" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">line=&quot;2026-04-20 10:01:15 ERROR database connection failed&quot;
+
+if &quot;ERROR&quot; in line:
+	print(&quot;ERROR 로그입니다.&quot;)</code></pre><p id="215720e4-6f49-8213-83e8-81c0970c85c7" class="" dir="auto"><code>&quot;ERROR&quot; in line</code>은 <code>line</code> 문자열 안에 <code>&quot;ERROR&quot;</code>라는 문자열이 포함되어 있으면 <code>True</code>가 된다.</p><hr id="2f0720e4-6f49-8343-954d-0116a0606bf8" dir="auto"/><h2 id="01b720e4-6f49-82a8-b44b-019f08a081d6" class="" dir="auto">2. ERROR 로그만 출력하기</h2><p id="3b6720e4-6f49-83f6-81da-018d6935281a" class="" dir="auto">파일명: <code>read_error_only.py</code></p><pre id="0a3720e4-6f49-821e-8a39-0139df6ce548" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;app.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file:
+	for line in file:
+		if &quot;ERROR&quot; in line:
+			print(f&quot;error line:{line.strip()}&quot;)</code></pre><p id="b29720e4-6f49-82a4-acce-016dd5dab55c" class="" dir="auto">실행한다.</p><pre id="52d720e4-6f49-8279-9dda-815f590ddbc2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python read_error_only.py</code></pre><p id="a67720e4-6f49-8265-9261-815ea8cebeda" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="070720e4-6f49-8378-9760-01c662aa0e61" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">error line: 2026-04-20 10:01:15 ERROR database connection failed
+error line: 2026-04-20 10:01:25 ERROR timeout occurred</code></pre><hr id="7ea720e4-6f49-82a3-93dd-01f448378b92" dir="auto"/><h2 id="e05720e4-6f49-827e-a710-81b5a7570a06" class="" dir="auto">3. 코드 설명</h2><pre id="406720e4-6f49-821a-bdc3-81c43d99071f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">if &quot;ERROR&quot; in line:</code></pre><p id="317720e4-6f49-8255-bd0b-81aa2c908d8c" class="" dir="auto">이 조건은 현재 읽은 줄에 <code>ERROR</code>라는 문자열이 포함되어 있는지 검사한다.</p><p id="42e720e4-6f49-8374-a8eb-01b31c079b36" class="" dir="auto">포함되어 있으면 아래 코드가 실행된다.</p><pre id="3d6720e4-6f49-8260-969c-01668db92520" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">print(f&quot;error line:{line.strip()}&quot;)</code></pre><p id="d9f720e4-6f49-826c-8a14-81b921dd9b13" class="" dir="auto"><code>f-string</code>을 사용해 출력 문자열 안에 로그 내용을 넣는다.</p><hr id="b8c720e4-6f49-8251-9ee5-816e70031362" dir="auto"/><h2 id="bcc720e4-6f49-8229-a658-81bc4c441a63" class="" dir="auto">4. 단순 문자열 검색의 한계</h2><p id="987720e4-6f49-8204-a596-81516ab1138d" class="" dir="auto"><code>if &quot;ERROR&quot; in line:</code> 방식은 쉽고 빠르다.</p><p id="fe9720e4-6f49-8302-aeed-0143738c605b" class="" dir="auto">하지만 모든 상황에서 정확하지는 않다.</p><p id="e01720e4-6f49-820a-bcd8-81d76ee552fb" class="" dir="auto">예를 들어 다음 로그를 보자.</p><pre id="266720e4-6f49-8290-8a75-816ac5bcc609" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:02:00 INFO previous_error_count=0
+2026-04-20 10:02:10 INFO message=NOERROR</code></pre><p id="59f720e4-6f49-8396-ac0b-01e405aef5d5" class="" dir="auto">이 로그는 실제 오류 로그가 아니지만 <code>ERROR</code>라는 문자열이 포함되어 있을 수 있다.</p><p id="980720e4-6f49-82d3-a7e8-81bee2802981" class="" dir="auto">따라서 단순 문자열 검색은 빠르게 확인할 때는 좋지만, 정확한 분석이 필요할 때는 로그 형식에 맞게 처리하는 것이 좋다.</p><p id="514720e4-6f49-829d-8754-8137a4ef89e2" class="" dir="auto">예를 들어 로그 레벨 위치가 일정하다면 다음처럼 분리해서 검사할 수 있다.</p><pre id="c44720e4-6f49-8347-a932-01905b7f529e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">line=&quot;2026-04-20 10:01:15 ERROR database connection failed&quot;
+parts=line.split()
+
+level=parts[2]
+
+if level==&quot;ERROR&quot;:
+	print(&quot;정확한 ERROR 로그&quot;)</code></pre><p id="d08720e4-6f49-8220-8197-013505c07c66" class="" dir="auto"><code>split()</code>은 문자열을 공백 기준으로 나누어 리스트로 만든다.</p><p id="fa1720e4-6f49-83c3-b699-8192b5f47040" class="" dir="auto">위 로그를 <code>split()</code>하면 다음과 비슷한 결과가 된다.</p><pre id="e70720e4-6f49-830b-b828-8175ab7c1729" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[
+&quot;2026-04-20&quot;,
+&quot;10:01:15&quot;,
+&quot;ERROR&quot;,
+&quot;database&quot;,
+&quot;connection&quot;,
+&quot;failed&quot;
+]</code></pre><p id="dec720e4-6f49-83da-90ec-011b429de760" class="" dir="auto">여기서 인덱스 <code>2</code>에 해당하는 값이 로그 레벨이다.</p><hr id="c14720e4-6f49-822b-a050-0155f931f785" dir="auto"/><h1 id="897720e4-6f49-83dc-be2f-01808ce5b027" class="" dir="auto">6.5 조건문과 반복문을 이용한 로그 분기</h1><h2 id="8f9720e4-6f49-83ee-b460-01913f489e25" class="" dir="auto">1. 로그 레벨별로 다르게 출력하기</h2><p id="1a2720e4-6f49-82d0-8555-81b7551edceb" class="" dir="auto">로그에는 <code>INFO</code>, <code>WARN</code>, <code>ERROR</code> 같은 레벨이 있다.</p><p id="f01720e4-6f49-8287-a40c-8139f9228062" class="" dir="auto">각 레벨에 따라 다른 형식으로 출력해보자.</p><p id="b98720e4-6f49-8276-8678-810477ae7fc3" class="" dir="auto">파일명: <code>log_level_branch.py</code></p><pre id="c8a720e4-6f49-8213-ac66-810271889160" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;app.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        line = line.strip()
+        
+        # 빈 줄은 처리하지 않고 건너뛴다.
+        if not line:
+            continue
+
+        if &quot;ERROR&quot; in line:
+            print(f&quot;[ERROR] {line}&quot;)
+        elif &quot;WARN&quot; in line:
+            print(f&quot;[WARN] {line}&quot;)
+        elif &quot;INFO&quot; in line:
+            print(f&quot;[INFO] {line}&quot;)
+        else:
+            print(f&quot;[OTHER] {line}&quot;)</code></pre><p id="531720e4-6f49-8362-92b0-81a0f22ae9bb" class="" dir="auto">실행한다.</p><pre id="959720e4-6f49-824a-91f5-017e927526c8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python log_level_branch.py</code></pre><p id="8ae720e4-6f49-8212-bf07-81d5b96faa4b" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="046720e4-6f49-830b-ad09-81740d886149" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[INFO] 2026-04-20 10:01:11 INFO service started
+[ERROR] 2026-04-20 10:01:15 ERROR database connection failed
+[INFO] 2026-04-20 10:01:20 INFO retry started
+[ERROR] 2026-04-20 10:01:25 ERROR timeout occurred
+[INFO] 2026-04-20 10:01:30 INFO service stopped</code></pre><hr id="5a3720e4-6f49-8329-a928-813f519bacfe" dir="auto"/><h2 id="6e2720e4-6f49-82ba-86f6-8194bbf3fe3b" class="" dir="auto">2. 코드 설명</h2><pre id="67d720e4-6f49-8356-ac8c-81733a041485" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">if&quot;ERROR&quot;inline:</code></pre><p id="2fe720e4-6f49-82ce-900b-81b37a5adc0c" class="" dir="auto">먼저 <code>ERROR</code>가 포함되어 있는지 확인한다.</p><pre id="bd2720e4-6f49-8341-8371-81414d86ff7d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">elif&quot;WARN&quot;inline:</code></pre><p id="7a2720e4-6f49-82a7-b5f8-0134751db9a9" class="" dir="auto">앞의 조건이 아니면 <code>WARN</code>이 포함되어 있는지 확인한다.</p><pre id="366720e4-6f49-8356-a331-8161d930e625" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">elif&quot;INFO&quot;inline:</code></pre><p id="9b8720e4-6f49-82ba-9e3c-017bc3a22f1e" class="" dir="auto">앞의 조건들이 모두 아니면 <code>INFO</code>가 포함되어 있는지 확인한다.</p><pre id="377720e4-6f49-83d7-bbd5-0178bddb4c26" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">else:</code></pre><p id="f71720e4-6f49-8246-8c75-814d4a40a5ae" class="" dir="auto">위 조건에 모두 해당하지 않는 로그는 <code>OTHER</code>로 처리한다.</p><p id="68c720e4-6f49-8208-b663-81c7ad213995" class="" dir="auto">이 구조는 로그를 레벨별로 분리하거나, 상태별로 다른 처리를 할 때 기본적으로 사용된다.</p><hr id="6c2720e4-6f49-831e-af77-81904f21c3da" dir="auto"/><h1 id="f3a720e4-6f49-8397-ab6b-01e670216484" class="" dir="auto">6.6 정규표현식 기초</h1><h2 id="f4d720e4-6f49-8220-bd28-018f5f1fa324" class="" dir="auto">1. 정규표현식이 필요한 이유</h2><p id="d5d720e4-6f49-824d-9f75-01b55ff9ff8a" class="" dir="auto">단순 문자열 검색만으로는 부족한 경우가 많다.</p><p id="9c0720e4-6f49-8388-a4a2-816b3a5ecd5b" class="" dir="auto">예를 들어 다음 값들을 정확히 추출하고 싶을 수 있다.</p><ul id="faa720e4-6f49-83b4-bce0-81edecf1a40f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태코드</li></ul><ul id="d0a720e4-6f49-83a0-a3c0-816b0f7d6860" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 주소</li></ul><ul id="57a720e4-6f49-8347-a708-81604d306478" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 경로</li></ul><ul id="482720e4-6f49-8318-9800-01131cd7b4d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">날짜</li></ul><ul id="219720e4-6f49-8281-8cd1-819a8e621954" class="bulleted-list" dir="auto"><li style="list-style-type:disc">시간</li></ul><ul id="313720e4-6f49-82de-b36c-81fa2ddf76c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">숫자 값</li></ul><ul id="17c720e4-6f49-83d7-b237-0140b45a5c09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 패턴의 메시지</li></ul><p id="1e4720e4-6f49-8285-98e4-01ec9e2ca78d" class="" dir="auto">이런 경우 정규표현식을 사용한다.</p><p id="3ca720e4-6f49-820d-93e7-812c5e25d919" class="" dir="auto">정규표현식은 문자열에서 특정 규칙을 가진 부분을 찾기 위한 표현식이다.</p><p id="7d6720e4-6f49-825f-bb3c-8172a6b31802" class="" dir="auto">Python에서는 <code>re</code> 모듈을 사용한다.</p><pre id="9ee720e4-6f49-8377-a1ae-81babef512bf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">importre</code></pre><hr id="ece720e4-6f49-8285-9285-01ac6a3a3254" dir="auto"/><h2 id="aed720e4-6f49-82cc-a6d5-81ea9bbc2664" class="" dir="auto">2. 자주 사용하는 정규표현식 패턴</h2><table id="09e720e4-6f49-8375-9899-81a0b7e63626" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="37b720e4-6f49-8372-9e6d-014644c20b00" dir="ltr"><th id="erjY" class="simple-table-header-color simple-table-header">패턴</th><th id="T]YS" class="simple-table-header-color simple-table-header">의미</th><th id="@z@C" class="simple-table-header-color simple-table-header">예시</th></tr></thead><tbody><tr id="f68720e4-6f49-82a4-a67b-811ea98a06d9" dir="ltr"><td id="erjY" class=""><code>\d</code></td><td id="T]YS" class="">숫자 한 글자</td><td id="@z@C" class=""><code>1</code>, <code>5</code>, <code>9</code></td></tr><tr id="802720e4-6f49-832f-bb18-01a098b9cac0" dir="ltr"><td id="erjY" class=""><code>\d+</code></td><td id="T]YS" class="">숫자가 1개 이상 반복</td><td id="@z@C" class=""><code>500</code>, <code>1234</code></td></tr><tr id="a0e720e4-6f49-82c7-80f8-8180d0013479" dir="ltr"><td id="erjY" class=""><code>\d{3}</code></td><td id="T]YS" class="">숫자가 정확히 3개</td><td id="@z@C" class=""><code>200</code>, <code>404</code>, <code>500</code></td></tr><tr id="936720e4-6f49-8260-948a-014e766da2e3" dir="ltr"><td id="erjY" class=""><code>.</code></td><td id="T]YS" class="">임의의 문자 한 글자</td><td id="@z@C" class=""><code>a</code>, <code>1</code>, <code>?</code></td></tr><tr id="07c720e4-6f49-835b-8b08-818f4748cd65" dir="ltr"><td id="erjY" class=""><code>.*</code></td><td id="T]YS" class="">임의의 문자가 0개 이상 반복</td><td id="@z@C" class="">여러 문자</td></tr><tr id="148720e4-6f49-83f1-8736-01685b053a31" dir="ltr"><td id="erjY" class=""><code>()</code></td><td id="T]YS" class="">추출할 부분을 그룹으로 지정</td><td id="@z@C" class="">상태코드만 추출</td></tr><tr id="ead720e4-6f49-8363-beb2-0119355daa07" dir="ltr"><td id="erjY" class=""><code>^</code></td><td id="T]YS" class="">문자열 시작</td><td id="@z@C" class="">로그 시작 부분</td></tr><tr id="be5720e4-6f49-83fe-a370-0194168dfdbc" dir="ltr"><td id="erjY" class=""><code>$</code></td><td id="T]YS" class="">문자열 끝</td><td id="@z@C" class="">로그 끝 부분</td></tr><tr id="784720e4-6f49-82d2-ac68-8163d6a9382d" dir="ltr"><td id="erjY" class=""><code>[^ ]+</code></td><td id="T]YS" class="">공백이 아닌 문자가 1개 이상 반복</td><td id="@z@C" class=""><code>/api/items</code></td></tr></tbody></table><hr id="6da720e4-6f49-82a9-9f29-013d282c35a4" dir="auto"/><h2 id="886720e4-6f49-837a-8f2a-018136b42d03" class="" dir="auto">3. 숫자 찾기 예제</h2><p id="64e720e4-6f49-83fb-8195-014208ff5b1c" class="" dir="auto">파일명: <code>regex_number.py</code></p><pre id="814720e4-6f49-8221-8924-815ad0c0283d" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import re
+
+line=&quot;status=500&quot;
+
+match=re.search(r&quot;\d+&quot;,line)
+
+if match:
+	print(match.group())</code></pre><p id="18a720e4-6f49-8329-9d66-01bb5d07eed8" class="" dir="auto">실행한다.</p><pre id="d3b720e4-6f49-8279-b70a-8130bed0c26b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python regex_number.py</code></pre><p id="ccb720e4-6f49-8357-8382-8176a0dbdb37" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="74a720e4-6f49-8362-a9be-81aec6075fcb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">500</code></pre><hr id="086720e4-6f49-822e-8c59-012c048ec57b" dir="auto"/><h2 id="777720e4-6f49-82f3-a6a8-814d9c724c2f" class="" dir="auto">4. 코드 설명</h2><pre id="f50720e4-6f49-8371-b11e-01c46ff606ab" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">match=re.search(r&quot;\d+&quot;,line)</code></pre><p id="13f720e4-6f49-83a5-8e01-01adc3622635" class="" dir="auto"><code>re.search()</code>는 문자열 안에서 정규표현식 패턴과 일치하는 부분을 찾는다.</p><p id="451720e4-6f49-832c-8291-8129d4721162" class="" dir="auto"><code>r&quot;\d+&quot;</code>는 숫자가 하나 이상 이어진 부분을 찾는 패턴이다.</p><p id="9bc720e4-6f49-82a2-81f3-81aca7d9a6ee" class="" dir="auto">여기서 앞에 붙은 <code>r</code>은 raw string을 의미한다.</p><p id="903720e4-6f49-82c5-b291-01d82e14a2f0" class="" dir="auto">정규표현식에서는 <code>\d</code>처럼 역슬래시를 많이 사용한다. 그래서 Python 문자열에서 역슬래시를 그대로 사용하기 위해 <code>r&quot;...&quot;</code> 형태를 자주 사용한다.</p><pre id="941720e4-6f49-8398-b83d-019b7ef2d914" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if match:</code></pre><p id="622720e4-6f49-835d-95c3-81860317fd47" class="" dir="auto">패턴을 찾으면 <code>match</code> 객체가 만들어진다.</p><p id="ce0720e4-6f49-8310-9711-011d806c9eba" class="" dir="auto">찾지 못하면 <code>None</code>이 된다.</p><p id="f41720e4-6f49-83b7-8391-01e436e70509" class="" dir="auto">따라서 <code>match.group()</code>을 사용하기 전에 반드시 <code>if match:</code>로 확인하는 것이 안전하다.</p><pre id="a6b720e4-6f49-8271-8733-8111a323cd51" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">print(match.group())</code></pre><p id="2cf720e4-6f49-827a-a311-01e3a60612b0" class="" dir="auto"><code>group()</code>은 실제로 찾은 문자열을 반환한다.</p><hr id="df8720e4-6f49-8317-9d30-812d6e927d74" dir="auto"/><h2 id="bc2720e4-6f49-83b0-9b15-01fe0c410565" class="" dir="auto">5. 상태코드 추출 예제</h2><p id="4e5720e4-6f49-82d7-bf5e-81cfe041a36e" class="" dir="auto">웹 액세스 로그에서 상태코드를 추출해보자.</p><pre id="e48720e4-6f49-8382-b8da-810e08640a95" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">127.0.0.1 - - [20/Apr/2026:10:01:15 +0900] &quot;GET /api/items HTTP/1.1&quot; 500 1234</code></pre><p id="f75720e4-6f49-8338-a0b1-815efb11ea34" class="" dir="auto">이 로그에서 상태코드는 <code>500</code>이다.</p><p id="d9b720e4-6f49-824c-b830-81afd7850d84" class="" dir="auto">파일명: <code>regex_status_code.py</code></p><pre id="4d3720e4-6f49-834a-83da-818223845c6b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import re
+
+line=&#x27;127.0.0.1 - - [20/Apr/2026:10:01:15 +0900] &quot;GET /api/items HTTP/1.1&quot; 500 1234&#x27;
+
+match=re.search(r&#x27;&quot; (\d{3}) &#x27;,line)
+
+if match:
+	print(match.group(1))</code></pre><p id="67f720e4-6f49-82b1-a0ab-01c34e691647" class="" dir="auto">실행한다.</p><pre id="e58720e4-6f49-8243-904c-81290457c6a6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python regex_status_code.py</code></pre><p id="10c720e4-6f49-824c-96bd-814d94bdb454" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="682720e4-6f49-8220-882d-81d05913b324" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">500</code></pre><hr id="759720e4-6f49-834f-b376-814a97cffbaf" dir="auto"/><h2 id="ee4720e4-6f49-8330-91b8-81f9aac11171" class="" dir="auto">6. <code>group()</code>과 <code>group(1)</code>의 차이</h2><p id="9a9720e4-6f49-822b-ac10-811ac303eb4b" class="" dir="auto">다음 패턴을 보자.</p><pre id="0e7720e4-6f49-83da-b127-81530b3efcda" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">r&#x27;&quot; (\d{3}) &#x27;</code></pre><p id="643720e4-6f49-8396-a5b3-017e0cb0d719" class="" dir="auto">이 패턴의 의미는 다음과 같다.</p><table id="4a0720e4-6f49-83dd-9151-819a12084095" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="8dc720e4-6f49-83f9-b9c9-815e86f68213" dir="ltr"><th id="JVv&lt;" class="simple-table-header-color simple-table-header">부분</th><th id="uQ{i" class="simple-table-header-color simple-table-header">의미</th></tr></thead><tbody><tr id="213720e4-6f49-830e-9bae-817e6e3b38de" dir="ltr"><td id="JVv&lt;" class=""><code>&quot;</code></td><td id="uQ{i" class="">큰따옴표 문자를 찾음</td></tr><tr id="430720e4-6f49-82c7-b52d-81ba0dc4bda1" dir="ltr"><td id="JVv&lt;" class="">공백</td><td id="uQ{i" class="">큰따옴표 뒤의 공백</td></tr><tr id="214720e4-6f49-835e-b674-013272a67ad6" dir="ltr"><td id="JVv&lt;" class=""><code>(\d{3})</code></td><td id="uQ{i" class="">숫자 3개를 찾아 그룹으로 묶음</td></tr><tr id="042720e4-6f49-8243-b6f6-01ff616bd5e3" dir="ltr"><td id="JVv&lt;" class="">공백</td><td id="uQ{i" class="">상태코드 뒤의 공백</td></tr></tbody></table><p id="9b1720e4-6f49-828a-b781-0117e8489742" class="" dir="auto"><code>group()</code>은 패턴 전체와 일치한 문자열을 반환한다.</p><p id="073720e4-6f49-8222-bd19-01598fc6d654" class="" dir="auto"><code>group(1)</code>은 괄호 <code>()</code>로 묶은 첫 번째 그룹만 반환한다.</p><p id="ef0720e4-6f49-82f3-8120-01def48e2a3e" class="" dir="auto">예를 들어 다음 코드를 보자.</p><pre id="24c720e4-6f49-835f-88ce-01af4e2b08a5" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import re
+
+line=&#x27;127.0.0.1 - - [20/Apr/2026:10:01:15 +0900] &quot;GET /api/items HTTP/1.1&quot; 500 1234&#x27;
+
+match=re.search(r&#x27;&quot; (\d{3}) &#x27;,line)
+
+if match:
+	print(match.group())
+	print(match.group(1))</code></pre><p id="dc9720e4-6f49-8238-a848-01e1efd8cf86" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="f53720e4-6f49-832c-a7c7-016943ddbed4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&quot; 500
+500</code></pre><p id="874720e4-6f49-8269-959a-01533a5071c9" class="" dir="auto">첫 번째 출력은 패턴 전체이고, 두 번째 출력은 괄호로 묶은 상태코드만 출력한 것이다.</p><hr id="1de720e4-6f49-8352-b908-01b90dde6f96" dir="auto"/><h1 id="4e1720e4-6f49-837f-bc3c-0149775ba068" class="" dir="auto">6.7 액세스 로그 기초 분석</h1><h2 id="e5e720e4-6f49-820b-b184-01f296ffbbef" class="" dir="auto">1. 실습 파일 준비</h2><p id="197720e4-6f49-831c-a688-81fee07f56b7" class="" dir="auto">파일명: <code>access.log</code></p><pre id="056720e4-6f49-8336-ab9b-015842d108d5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">127.0.0.1 - - [20/Apr/2026:10:01:15 +0900] &quot;GET /api/items HTTP/1.1&quot; 200 1234
+10.0.1.15 - - [20/Apr/2026:10:01:20 +0900] &quot;POST /login HTTP/1.1&quot; 401 532
+10.0.1.16 - - [20/Apr/2026:10:01:25 +0900] &quot;GET /admin HTTP/1.1&quot; 403 222
+10.0.1.17 - - [20/Apr/2026:10:01:30 +0900] &quot;GET /api/items HTTP/1.1&quot; 500 110
+127.0.0.1 - - [20/Apr/2026:10:01:35 +0900] &quot;GET /health HTTP/1.1&quot; 200 15</code></pre><p id="e4e720e4-6f49-82be-a9ae-012a364899d1" class="" dir="auto">이 파일은 웹 서버의 액세스 로그를 단순화한 예제이다.</p><p id="15e720e4-6f49-8312-b4b7-01a215f5d4d2" class="" dir="auto">각 줄에는 IP, 시간, 요청 메서드, 요청 경로, 상태코드, 응답 크기가 포함되어 있다.</p><hr id="40f720e4-6f49-82e6-90b1-8141c1cced4c" dir="auto"/><h2 id="18a720e4-6f49-837c-8f13-013314051c0e" class="" dir="auto">2. 4xx, 5xx 로그만 출력하기</h2><p id="3fb720e4-6f49-83d9-84de-01bcb696c58d" class="" dir="auto">HTTP 상태코드는 응답 결과를 나타낸다.</p><p id="913720e4-6f49-8341-a6fe-8126ad1a439f" class="" dir="auto">대표적으로 다음과 같다.</p><table id="ffe720e4-6f49-836e-bec5-8178ca08f573" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="60b720e4-6f49-82f7-bad2-01b79d09d2b0" dir="ltr"><th id="{@wu" class="simple-table-header-color simple-table-header">상태코드 범위</th><th id="^^=e" class="simple-table-header-color simple-table-header">의미</th></tr></thead><tbody><tr id="ac1720e4-6f49-8219-abb3-8114956e5050" dir="ltr"><td id="{@wu" class=""><code>2xx</code></td><td id="^^=e" class="">성공</td></tr><tr id="2e7720e4-6f49-82d1-99f3-81e43608071e" dir="ltr"><td id="{@wu" class=""><code>3xx</code></td><td id="^^=e" class="">리다이렉션</td></tr><tr id="39b720e4-6f49-824e-9fa9-8114d072a406" dir="ltr"><td id="{@wu" class=""><code>4xx</code></td><td id="^^=e" class="">클라이언트 오류</td></tr><tr id="f01720e4-6f49-8282-813f-8151b1afc6f4" dir="ltr"><td id="{@wu" class=""><code>5xx</code></td><td id="^^=e" class="">서버 오류</td></tr></tbody></table><p id="b5e720e4-6f49-83a2-b355-814aaad09a77" class="" dir="auto">운영에서는 특히 <code>4xx</code>, <code>5xx</code>를 자주 확인한다.</p><p id="8fb720e4-6f49-832f-bab0-81fa5804f49a" class="" dir="auto">파일명: <code>access_error_filter.py</code></p><pre id="dc7720e4-6f49-832d-a1b1-01bf3846ee76" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import re
+
+with open(&quot;access.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file:
+	for line in file:
+		match=re.search(r&#x27;&quot; (\d{3}) &#x27;,line)
+
+		if match:
+			status_code=match.group(1)
+
+		if status_code.startswith(&quot;4&quot;) or status_code.startswith(&quot;5&quot;):
+			print(line.strip())</code></pre><p id="b5f720e4-6f49-839b-8f26-81014c4d72da" class="" dir="auto">실행한다.</p><pre id="b41720e4-6f49-838a-8340-0104bccd9184" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python access_error_filter.py</code></pre><p id="4bf720e4-6f49-8208-b197-0159d4123856" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="89c720e4-6f49-8320-8bd6-012664181f4b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.0.1.15 - - [20/Apr/2026:10:01:20 +0900] &quot;POST /login HTTP/1.1&quot; 401 532
+10.0.1.16 - - [20/Apr/2026:10:01:25 +0900] &quot;GET /admin HTTP/1.1&quot; 403 222
+10.0.1.17 - - [20/Apr/2026:10:01:30 +0900] &quot;GET /api/items HTTP/1.1&quot; 500 110</code></pre><hr id="24a720e4-6f49-8352-b002-014bc082403b" dir="auto"/><h2 id="6e1720e4-6f49-8233-bf6c-01cd415ecde8" class="" dir="auto">3. 코드 설명</h2><pre id="da7720e4-6f49-8398-bcb1-81945badccd4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">match=re.search(r&#x27;&quot; (\d{3}) &#x27;,line)</code></pre><p id="c46720e4-6f49-839e-bb7e-0178370f08ad" class="" dir="auto">액세스 로그에서 상태코드 부분을 찾는다.</p><pre id="9e3720e4-6f49-8205-81ec-8183483a2163" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">status_code=match.group(1)</code></pre><p id="a4d720e4-6f49-82de-ac7f-81fced4c112c" class="" dir="auto">괄호로 묶은 상태코드만 추출한다.</p><pre id="374720e4-6f49-832d-b03d-01d6b3c464de" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if status_code.startswith(&quot;4&quot;) or status_code.startswith(&quot;5&quot;):</code></pre><p id="ac0720e4-6f49-838f-99f0-81fc371b81c8" class="" dir="auto"><code>startswith()</code>는 문자열이 특정 문자로 시작하는지 확인한다.</p><p id="879720e4-6f49-8291-95c8-019dfe1c82f9" class="" dir="auto"><code>&quot;401&quot;.startswith(&quot;4&quot;)</code>는 <code>True</code>이다.</p><p id="041720e4-6f49-82a2-81d5-01a4bc94728b" class="" dir="auto"><code>&quot;500&quot;.startswith(&quot;5&quot;)</code>도 <code>True</code>이다.</p><p id="403720e4-6f49-8361-81b1-017f8cb275f8" class="" dir="auto">따라서 이 조건은 4xx 또는 5xx 상태코드만 찾는다.</p><h1 id="e93720e4-6f49-83a6-8417-01dec83f5e92" class="" dir="auto">6.8 기본 집계</h1><h2 id="b80720e4-6f49-839f-b22a-0161dd168237" class="" dir="auto">1. ERROR 로그 개수 세기</h2><p id="80f720e4-6f49-824c-b19c-01d16f68af39" class="" dir="auto">로그 분석의 기본은 개수를 세는 것이다.</p><p id="c30720e4-6f49-83b9-9d7b-01047971b321" class="" dir="auto">파일명: <code>error_count.py</code></p><pre id="70d720e4-6f49-8389-a5e2-01df11f32a07" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">error_count=0
+
+with open(&quot;app.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file:
+	for line in file:
+		if &quot;ERROR&quot; in line:
+			error_count += 1
+
+	print(f&quot;error count:{error_count}&quot;)</code></pre><p id="ca0720e4-6f49-83fb-9279-819daa26fad2" class="" dir="auto">실행한다.</p><pre id="00a720e4-6f49-8235-8b02-813ea99d2ecb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python error_count.py</code></pre><p id="339720e4-6f49-8372-a881-81216a466d49" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="305720e4-6f49-83f8-9580-01cf2f9bfdc6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">error count: 2</code></pre><hr id="116720e4-6f49-8362-8de8-81acde6697d1" dir="auto"/><h2 id="386720e4-6f49-8277-baa0-81446f2cbae8" class="" dir="auto">2. 코드 설명</h2><pre id="d56720e4-6f49-822e-99a1-81fc6ef3f586" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">error_count=0</code></pre><p id="962720e4-6f49-833c-8fb7-0125215af27b" class="" dir="auto">오류 로그 개수를 저장할 변수를 만든다.</p><p id="17e720e4-6f49-829b-9666-81331a59d074" class="" dir="auto">처음에는 아직 찾은 오류가 없으므로 <code>0</code>으로 시작한다.</p><pre id="423720e4-6f49-822f-a618-813a62a1fe8f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if &quot;ERROR&quot; in line:
+	error_count += 1</code></pre><p id="d15720e4-6f49-826c-bc00-8155ab35835f" class="" dir="auto">현재 줄에 <code>ERROR</code>가 포함되어 있으면 <code>error_count</code> 값을 1 증가시킨다.</p><pre id="2a3720e4-6f49-8370-ac47-01aee4b12221" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">error_count += 1</code></pre><p id="3b3720e4-6f49-82fe-b40e-01a1c19118ec" class="" dir="auto">이 코드는 다음 코드와 같은 의미이다.</p><pre id="cdb720e4-6f49-827b-b659-01bf5602bdde" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">error_count = error_count + 1</code></pre><hr id="10b720e4-6f49-825d-be3f-01859f4f0283" dir="auto"/><h2 id="ebf720e4-6f49-8396-9fc4-8119ffc3515b" class="" dir="auto">3. 상태코드별 개수 세기</h2><p id="664720e4-6f49-83a5-b224-81a25d7fd40f" class="" dir="auto">이번에는 액세스 로그에서 상태코드별 개수를 세어보자.</p><p id="1d1720e4-6f49-82a1-83a1-018797f5b21b" class="" dir="auto">파일명: <code>status_count.py</code></p><pre id="34e720e4-6f49-8366-abc9-81c9f8b5b3d9" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import re
+
+status_count= {}
+
+with open(&quot;access.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file:
+	for line in file:
+		match=re.search(r&#x27;&quot; (\d{3}) &#x27;,line)
+
+		if match:
+			status_code=match.group(1)
+
+			if status_code not in status_count:
+				status_count[status_code]=0
+
+			status_count[status_code] += 1
+
+	print(status_count)</code></pre><p id="def720e4-6f49-82fb-a951-8138a7fa0283" class="" dir="auto">실행한다.</p><pre id="d8b720e4-6f49-8276-addb-8121adabe12b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python status_count.py</code></pre><p id="7d6720e4-6f49-829e-86b6-0184c10c698b" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="859720e4-6f49-82d1-a2da-0184875ed57f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{&#x27;200&#x27;: 2, &#x27;401&#x27;: 1, &#x27;403&#x27;: 1, &#x27;500&#x27;: 1}</code></pre><hr id="12e720e4-6f49-839c-99b5-01603e0562d9" dir="auto"/><h2 id="382720e4-6f49-82f8-bbfc-018d0b36f638" class="" dir="auto">4. 딕셔너리를 집계에 사용하는 방식</h2><p id="532720e4-6f49-8340-84df-818374dd1374" class="" dir="auto"><code>status_count</code> 딕셔너리는 상태코드를 키로, 개수를 값으로 저장한다.</p><pre id="b17720e4-6f49-82d1-9585-0157cb1f2cfa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+&quot;200&quot;:2,
+&quot;401&quot;:1,
+&quot;403&quot;:1,
+&quot;500&quot;:1
+}</code></pre><p id="942720e4-6f49-827e-ba6a-018d12d50263" class="" dir="auto">예를 들어 상태코드 <code>200</code>이 나오면 다음처럼 저장된다.</p><pre id="509720e4-6f49-8379-a438-0109f8dce5b9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">status_count[&quot;200&quot;]=1</code></pre><p id="153720e4-6f49-83db-b9fe-01135e471478" class="" dir="auto">다시 <code>200</code>이 나오면 값이 증가한다.</p><pre id="0ce720e4-6f49-83f9-8eeb-0102d10075e9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">status_count[&quot;200&quot;]+=1</code></pre><p id="fc1720e4-6f49-8354-84f5-81971bf7a121" class="" dir="auto">다만 처음 등장한 상태코드는 아직 딕셔너리에 없으므로 먼저 초기화해야 한다.</p><pre id="15b720e4-6f49-836e-844d-0188ecaaf6a1" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if status_code not in status_count:
+	status_count[status_code] = 0</code></pre><p id="307720e4-6f49-8271-ae82-8155cfd89f9f" class="" dir="auto">이 코드는 상태코드가 처음 등장했을 때 개수를 0으로 준비하는 역할을 한다.</p><hr id="da9720e4-6f49-8214-b7bb-8194663711a5" dir="auto"/><h2 id="a55720e4-6f49-8331-9227-0107aea8158a" class="" dir="auto">5. Counter를 이용한 상태코드 집계</h2><p id="74e720e4-6f49-826e-a523-81f65db8133e" class="" dir="auto">Python의 <code>collections</code> 모듈에는 개수를 세기 좋은 <code>Counter</code>가 있다.</p><p id="4c6720e4-6f49-8336-bb26-01e963550226" class="" dir="auto">직접 딕셔너리를 만들고 초기화하지 않아도 된다.</p><p id="4dd720e4-6f49-828e-b2a1-01c15a2b2bb5" class="" dir="auto">파일명: <code>status_count_counter.py</code></p><pre id="4b9720e4-6f49-82e3-9d55-81acdc5f4f5a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import re
+from collections import Counter
+
+status_counter = Counter()
+
+with open(&quot;access.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        match = re.search(r&#x27;&quot; (\d{3}) &#x27;, line)
+        if match:
+            status_code = match.group(1)
+            # Counter는 키가 없어도 자동으로 0으로 처리하므로 바로 더하면 됩니다.
+            status_counter[status_code] += 1
+
+print(&quot;상태코드별 개수&quot;)
+
+for status_code, count in sorted(status_counter.items()):
+    print(f&quot;{status_code}: {count}&quot;)</code></pre><p id="c20720e4-6f49-8339-84d1-8115820ca68e" class="" dir="auto">실행한다.</p><pre id="b19720e4-6f49-8229-ab9f-81a452ed1400" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python status_count_counter.py</code></pre><p id="b0c720e4-6f49-825a-973d-81cf97d4d751" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="f28720e4-6f49-8386-8fda-81254d19ac83" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">상태코드별 개수
+200: 2
+401: 1
+403: 1
+500: 1</code></pre><p id="086720e4-6f49-83db-9411-01950751e6c3" class="" dir="auto"><code>Counter</code>는 로그 분석처럼 특정 값이 몇 번 나왔는지 세는 작업에 적합하다.</p><hr id="ab1720e4-6f49-83fd-bdb3-01a98b076cc1" dir="auto"/><h1 id="7ba720e4-6f49-8215-baa4-81a0e6377e24" class="" dir="auto">6.9 IP별 요청 수 집계</h1><h2 id="cd8720e4-6f49-83a9-862d-81a90f835a94" class="" dir="auto">1. IP별 요청 수가 필요한 이유</h2><p id="969720e4-6f49-836a-bcb3-01b799911fc7" class="" dir="auto">액세스 로그에서는 어떤 IP가 많이 요청했는지도 중요하다.</p><p id="922720e4-6f49-8384-9c5f-816c5cab1d39" class="" dir="auto">특정 IP가 비정상적으로 많은 요청을 보내면 다음과 같은 상황일 수 있다.</p><ul id="7b6720e4-6f49-83f6-878d-81a868d5deac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">크롤러 접근</li></ul><ul id="ea0720e4-6f49-831f-b513-818effecd4ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스캐닝 시도</li></ul><ul id="02a720e4-6f49-83dd-ba0f-0168a6117935" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그인 공격</li></ul><ul id="307720e4-6f49-8332-9ccb-01ed2801d0ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비정상 API 반복 호출</li></ul><ul id="5a1720e4-6f49-825b-8f46-81df3d949cf6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 사용자 트래픽 집중</li></ul><p id="a5e720e4-6f49-8374-a7ca-81b27cdcfe6d" class="" dir="auto">따라서 IP별 요청 수 집계는 운영 분석에서 자주 사용된다.</p><hr id="5d4720e4-6f49-82b4-94eb-81b835540c57" dir="auto"/><h2 id="95e720e4-6f49-83a5-bd16-01bad2350eaa" class="" dir="auto">2. IP 주소 추출 방식</h2><p id="f09720e4-6f49-82e5-996c-01f393bfc8bf" class="" dir="auto">액세스 로그는 보통 IP 주소가 맨 앞에 나온다.</p><p id="434720e4-6f49-827c-85e3-01807777df84" class="" dir="auto">예를 들어 다음 로그를 보자.</p><pre id="6f9720e4-6f49-83bd-8dfc-01474a565db4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.0.1.15 - - [20/Apr/2026:10:01:20 +0900] &quot;POST /login HTTP/1.1&quot; 401 532</code></pre><p id="80d720e4-6f49-8201-b8c5-013095dac1d3" class="" dir="auto">이 로그를 공백 기준으로 나누면 첫 번째 값이 IP 주소이다.</p><pre id="faa720e4-6f49-8365-b423-016f2a65116e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">line=&#x27;10.0.1.15 - - [20/Apr/2026:10:01:20 +0900] &quot;POST /login HTTP/1.1&quot; 401 532&#x27;
+
+parts=line.split()
+print(parts[0])</code></pre><p id="a92720e4-6f49-8200-b1b6-014ac3de1a74" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="f81720e4-6f49-8203-8ae7-8153cb1b5c6a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.0.1.15</code></pre><hr id="324720e4-6f49-83ab-95cf-01bc327525a7" dir="auto"/><h2 id="0b7720e4-6f49-8204-947f-811de0e82a36" class="" dir="auto">3. IP별 요청 수 집계 코드</h2><p id="c8e720e4-6f49-8336-90d6-01970d38b15c" class="" dir="auto">파일명: <code>ip_count.py</code></p><pre id="84c720e4-6f49-821e-8060-81bf743f300f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from collections import Counter
+
+ip_counter = Counter()
+
+with open(&quot;access.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        parts = line.split()
+        
+        if parts:
+            ip = parts[0]
+            ip_counter[ip] += 1
+
+print(&quot;IP별 요청 수&quot;)
+
+for ip, count in ip_counter.items():
+    print(f&quot;{ip}: {count}&quot;)</code></pre><p id="38a720e4-6f49-8265-8ffb-01a44c85627f" class="" dir="auto">실행한다.</p><pre id="400720e4-6f49-836c-990e-8162f4743035" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ip_count.py</code></pre><p id="c69720e4-6f49-82d2-88ef-011653c51e9a" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="c3b720e4-6f49-83a0-8e76-011bd7f1fb7a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IP별 요청 수
+127.0.0.1: 2
+10.0.1.15: 1
+10.0.1.16: 1
+10.0.1.17: 1</code></pre><hr id="4fc720e4-6f49-82fd-ac2a-81b21a04134c" dir="auto"/><h2 id="2e2720e4-6f49-83d1-a59d-8127598f2fea" class="" dir="auto">4. 코드 설명</h2><pre id="aab720e4-6f49-839f-8607-81002fafe6c5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">parts=line.split()</code></pre><p id="15c720e4-6f49-8387-9ddb-81d1b95f889b" class="" dir="auto">로그 한 줄을 공백 기준으로 나눈다.</p><pre id="4b4720e4-6f49-835b-beeb-01f8c528e802" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if parts:</code></pre><p id="07b720e4-6f49-8291-9037-815beeaeedea" class="" dir="auto">빈 줄이면 <code>parts</code>가 빈 리스트가 될 수 있다.</p><p id="2c6720e4-6f49-8234-8536-01d148293fea" class="" dir="auto">빈 리스트에서 <code>parts[0]</code>을 실행하면 오류가 발생한다.</p><p id="cc0720e4-6f49-820c-90fd-014b14dd04be" class="" dir="auto">따라서 값이 있는지 먼저 확인한다.</p><pre id="ce1720e4-6f49-8325-b091-01f06d8da057" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ip=parts[0]</code></pre><p id="e67720e4-6f49-83e5-9389-01ed14e370a8" class="" dir="auto">첫 번째 값을 IP 주소로 사용한다.</p><pre id="943720e4-6f49-829a-b9a6-01586aa3f17b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ip_counter[ip]+=1</code></pre><p id="c42720e4-6f49-8307-9e13-8125612889ba" class="" dir="auto">IP 주소별 요청 수를 증가시킨다.</p><hr id="4bf720e4-6f49-83b2-8afa-819591826120" dir="auto"/><h1 id="764720e4-6f49-8240-a2a7-81c5256d7c6c" class="" dir="auto">6.10 요청 경로별 집계</h1><h2 id="30d720e4-6f49-83a9-aefe-013f038e1733" class="" dir="auto">1. 요청 경로별 집계가 필요한 이유</h2><p id="fd6720e4-6f49-83bb-b00a-818d3d40228f" class="" dir="auto">액세스 로그에서는 어떤 URL 또는 API가 많이 호출되었는지도 중요하다.</p><p id="e9b720e4-6f49-83a8-a5c3-81ba8bc7d4a5" class="" dir="auto">예를 들어 다음을 확인할 수 있다.</p><ul id="497720e4-6f49-834c-b34c-01f52e3b659b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/api/items</code> 요청이 많은가</li></ul><ul id="31e720e4-6f49-83f8-a568-010864e8da96" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/login</code> 요청이 반복적으로 실패하는가</li></ul><ul id="092720e4-6f49-8299-83fd-8120e1314143" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/admin</code> 접근 시도가 있는가</li></ul><ul id="144720e4-6f49-83f9-8733-01d36904ffff" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/health</code> 체크 요청이 정상적으로 들어오는가</li></ul><ul id="a22720e4-6f49-839e-bc8e-8178bd6745a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 API에서 500 오류가 집중되는가</li></ul><p id="981720e4-6f49-828a-b8b4-01233534ac57" class="" dir="auto">요청 경로별 집계는 서비스 사용 패턴 분석과 장애 분석에 모두 유용하다.</p><hr id="124720e4-6f49-83c3-b011-01544dd6c089" dir="auto"/><h2 id="b28720e4-6f49-830a-8a18-014101f39b32" class="" dir="auto">2. 요청 경로 추출하기</h2><p id="f57720e4-6f49-828e-b5d9-812189160fe4" class="" dir="auto">다음 로그를 보자.</p><pre id="4ca720e4-6f49-839e-b3e5-8149d5135d54" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">127.0.0.1 - - [20/Apr/2026:10:01:15 +0900] &quot;GET /api/items HTTP/1.1&quot; 200 1234</code></pre><p id="212720e4-6f49-831e-aaff-81b4257042ea" class="" dir="auto">요청 정보는 큰따옴표 안에 있다.</p><pre id="e7e720e4-6f49-825b-906f-81edeba36901" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&quot;GET /api/items HTTP/1.1&quot;</code></pre><p id="605720e4-6f49-8245-b7bb-81c6fc7e3d55" class="" dir="auto">여기서 요청 경로는 <code>/api/items</code>이다.</p><hr id="61f720e4-6f49-826a-bb1f-819f3f215710" dir="auto"/><h2 id="7a8720e4-6f49-8225-a542-01e345b4188e" class="" dir="auto">3. 요청 경로별 집계 코드</h2><p id="f90720e4-6f49-8291-9c33-81a4e065d811" class="" dir="auto">파일명: <code>path_count.py</code></p><pre id="94c720e4-6f49-836f-9973-011e184c3b6e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import re
+from collections import Counter
+
+path_counter = Counter()
+
+with open(&quot;access.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        # 요청 경로(Path)를 추출하기 위한 정규표현식 매칭
+        match = re.search(r&#x27;&quot;[A-Z]+ ([^ ]+) HTTP/&#x27;, line)
+
+        if match:
+            path = match.group(1)
+            path_counter[path] += 1
+
+print(&quot;요청 경로별 개수&quot;)
+
+for path, count in path_counter.items():
+    print(f&quot;{path}: {count}&quot;)</code></pre><p id="eb1720e4-6f49-82e8-ba6b-813814d785ba" class="" dir="auto">실행한다.</p><pre id="df4720e4-6f49-830f-bc08-01b900efcb9c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python path_count.py</code></pre><p id="919720e4-6f49-83a8-9a36-01f79e836a06" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="a7f720e4-6f49-8294-afc3-01b50671590b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">요청 경로별 개수
+/api/items: 2
+/login: 1
+/admin: 1
+/health: 1</code></pre><hr id="3a2720e4-6f49-82e7-b550-01a02ff6319e" dir="auto"/><h2 id="138720e4-6f49-823f-bfb0-014cf5db4db9" class="" dir="auto">4. 정규표현식 설명</h2><p id="3cb720e4-6f49-83a3-987e-815881140c94" class="" dir="auto">사용한 패턴은 다음과 같다.</p><pre id="42f720e4-6f49-8221-92f8-81683b4458b8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">r&#x27;&quot;[A-Z]+ ([^ ]+) HTTP/&#x27;</code></pre><p id="598720e4-6f49-82e0-87d5-0162b6e81751" class="" dir="auto">각 부분의 의미는 다음과 같다.</p><table id="325720e4-6f49-82e3-a627-8128908dbd70" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="903720e4-6f49-828a-a2ad-81cd10252ae1" dir="ltr"><th id="E\[X" class="simple-table-header-color simple-table-header">패턴</th><th id="=eYx" class="simple-table-header-color simple-table-header">의미</th></tr></thead><tbody><tr id="256720e4-6f49-82fd-a6ee-014adcfd40f1" dir="ltr"><td id="E\[X" class=""><code>&quot;</code></td><td id="=eYx" class="">요청 정보가 시작되는 큰따옴표</td></tr><tr id="e9c720e4-6f49-82bc-8d91-81b28b3dd50a" dir="ltr"><td id="E\[X" class=""><code>[A-Z]+</code></td><td id="=eYx" class="">GET, POST 같은 대문자 메서드</td></tr><tr id="9bc720e4-6f49-822f-9b31-8133a4f5451b" dir="ltr"><td id="E\[X" class="">공백</td><td id="=eYx" class="">메서드와 경로 사이의 공백</td></tr><tr id="bf5720e4-6f49-824c-ba5a-0120f5f26add" dir="ltr"><td id="E\[X" class=""><code>([^ ]+)</code></td><td id="=eYx" class="">공백이 아닌 문자열을 추출</td></tr><tr id="957720e4-6f49-8326-bc07-01f1fe605c57" dir="ltr"><td id="E\[X" class="">공백</td><td id="=eYx" class="">경로와 HTTP 버전 사이의 공백</td></tr><tr id="203720e4-6f49-824e-b5f2-0187b21ee818" dir="ltr"><td id="E\[X" class=""><code>HTTP/</code></td><td id="=eYx" class="">HTTP 버전 시작 부분</td></tr></tbody></table><p id="3e9720e4-6f49-83e1-bd83-016c6cb12a29" class="" dir="auto"><code>([^ ]+)</code>가 요청 경로를 추출하는 핵심 부분이다.</p><p id="fe5720e4-6f49-82dc-8d54-81c04c63807f" class="" dir="auto"><code>[]</code> 안의 <code>^</code>는 “아닌 것”을 의미한다.</p><p id="616720e4-6f49-8203-bded-81d9e75e568c" class="" dir="auto">따라서 <code>[^ ]+</code>는 “공백이 아닌 문자가 하나 이상 반복”이라는 뜻이다.</p><hr id="fd0720e4-6f49-82ba-bfd5-816f4f1ef881" dir="auto"/><h1 id="260720e4-6f49-8232-91e7-011bccfc5e81" class="" dir="auto">6.11 시간대별 집계 기초</h1><h2 id="dfe720e4-6f49-8294-af28-811c9c7878dc" class="" dir="auto">1. 시간대별 집계가 필요한 이유</h2><p id="ecb720e4-6f49-8380-9432-0184a77b7e8b" class="" dir="auto">운영 환경에서는 특정 시간대에 요청이나 오류가 집중되는지 확인해야 할 때가 많다.</p><p id="c9e720e4-6f49-82e6-a31f-8144f27de8c5" class="" dir="auto">예를 들어 다음과 같은 질문을 할 수 있다.</p><ul id="e49720e4-6f49-834e-b204-0180aa3c31f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오전 10시에 오류가 집중되었는가</li></ul><ul id="264720e4-6f49-8358-8302-01d3e5195786" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 시간대에 요청 수가 급증했는가</li></ul><ul id="6e3720e4-6f49-823a-8b32-81757b2883c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 직후 500 오류가 증가했는가</li></ul><ul id="b35720e4-6f49-8371-9851-011c2243e38b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">야간 시간대에 비정상 접근이 있었는가</li></ul><p id="ce3720e4-6f49-83b3-adce-81ec432d6f0f" class="" dir="auto">처음부터 복잡한 시간 파싱을 하지 않아도, 로그 문자열 일부를 잘라 시간대별 집계를 할 수 있다.</p><hr id="aa1720e4-6f49-83d2-9385-81073f3f61ce" dir="auto"/><h2 id="204720e4-6f49-831e-bc30-818e13743ef0" class="" dir="auto">2. 텍스트 로그 시간대별 집계</h2><p id="056720e4-6f49-837e-b7d7-81703fb62a46" class="" dir="auto"><code>app.log</code>의 한 줄은 다음과 같다.</p><pre id="d2b720e4-6f49-82a8-bd96-015967b6a84c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:11 INFO service started</code></pre><p id="ad7720e4-6f49-82ee-a4c8-01b78c4f601a" class="" dir="auto">앞에서 13글자를 자르면 다음 값이 된다.</p><pre id="427720e4-6f49-8280-a44e-01eecbfbcc1c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10</code></pre><p id="9d3720e4-6f49-82af-aadc-8165c4713692" class="" dir="auto">이 값을 집계 키로 사용하면 날짜와 시간 단위로 묶을 수 있다.</p><p id="35e720e4-6f49-82dd-bac8-01ac617e397c" class="" dir="auto">파일명: <code>hour_count.py</code></p><pre id="14c720e4-6f49-825f-8566-01f4473180e2" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">hour_count = {}
+
+with open(&quot;app.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        # 시간대 키 추출 (예: 2026-05-04 12)
+        hour_key = line[:13]
+
+        if hour_key not in hour_count:
+            hour_count[hour_key] = 0
+        
+        # 1을 더하는 로직은 if문 밖에 있어야 누적됨
+        hour_count[hour_key] += 1
+
+# 모든 로그 처리가 끝난 후 한 번만 출력
+for hour, count in hour_count.items():
+    print(f&quot;{hour}: {count}&quot;)</code></pre><p id="de1720e4-6f49-83b9-85f0-81edcd4a0ec8" class="" dir="auto">실행한다.</p><pre id="c77720e4-6f49-8346-8371-81dad1266380" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python hour_count.py</code></pre><p id="b51720e4-6f49-82bc-a8b8-01d9a362f2a8" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="c27720e4-6f49-83e8-9d42-81a9b479b837" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10: 5</code></pre><hr id="e48720e4-6f49-82aa-a10a-01132b6a92ce" dir="auto"/><h2 id="c4d720e4-6f49-836e-b57a-01d7b0c5de56" class="" dir="auto">3. 코드 설명</h2><pre id="22a720e4-6f49-826e-ae47-819d999186e3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hour_key=line[:13]</code></pre><p id="956720e4-6f49-8327-927c-81c9109febf6" class="" dir="auto">문자열 슬라이싱을 사용한다.</p><p id="51a720e4-6f49-837e-8ee7-0139eca33eca" class="" dir="auto"><code>line[:13]</code>은 문자열의 처음부터 인덱스 13 이전까지 가져온다.</p><p id="14b720e4-6f49-83ae-80ca-01ebb981ab3c" class="" dir="auto">로그 형식이 일정하다면 이렇게 문자열 일부를 잘라 간단히 집계할 수 있다.</p><p id="028720e4-6f49-83e3-a201-01c5d65596f5" class="" dir="auto">다만 이 방식은 로그 형식이 바뀌면 정확하지 않을 수 있다.</p><p id="2f0720e4-6f49-82d2-8531-81dfb8cb0446" class="" dir="auto">운영 환경에서는 로그 형식이 일정한지 먼저 확인해야 한다.</p><hr id="dee720e4-6f49-82bd-a04a-01c1c3ee7046" dir="auto"/><h1 id="862720e4-6f49-828f-a87a-01450edbd452" class="" dir="auto">6.12 JSON 로그 읽기 기초</h1><h2 id="693720e4-6f49-82e9-b0fd-8102e8259eaf" class="" dir="auto">1. 실습 파일 준비</h2><p id="02c720e4-6f49-8397-8e72-810892f23d62" class="" dir="auto">파일명: <code>app_json.log</code></p><pre id="c40720e4-6f49-8314-9506-810e5d1c940c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{&quot;time&quot;:&quot;2026-04-20T10:01:11&quot;,&quot;level&quot;:&quot;INFO&quot;,&quot;message&quot;:&quot;service started&quot;}
+{&quot;time&quot;:&quot;2026-04-20T10:01:15&quot;,&quot;level&quot;:&quot;ERROR&quot;,&quot;message&quot;:&quot;database connection failed&quot;}
+{&quot;time&quot;:&quot;2026-04-20T10:01:20&quot;,&quot;level&quot;:&quot;INFO&quot;,&quot;message&quot;:&quot;retry started&quot;}
+{&quot;time&quot;:&quot;2026-04-20T10:01:25&quot;,&quot;level&quot;:&quot;ERROR&quot;,&quot;message&quot;:&quot;timeout occurred&quot;}</code></pre><p id="d78720e4-6f49-8348-8cef-811cf1fdae31" class="" dir="auto">이 파일은 한 줄에 JSON 하나가 들어 있는 로그이다.</p><p id="cd2720e4-6f49-8218-9958-81a8e4ba2d40" class="" dir="auto">이런 형식을 보통 JSON Lines 또는 NDJSON 형식이라고 부르기도 한다.</p><hr id="450720e4-6f49-83ba-99da-81de7652bf2b" dir="auto"/><h2 id="c84720e4-6f49-82bb-9cc7-81d285cf8b8a" class="" dir="auto">2. JSON 로그 한 줄씩 읽기</h2><p id="1b7720e4-6f49-83ce-a567-81360b0261a2" class="" dir="auto">파일명: <code>json_log_read.py</code></p><pre id="322720e4-6f49-8337-987d-0142f72007e3" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+with open(&quot;app_json.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file:
+	for line in file:
+		log=json.loads(line)
+		print(log)</code></pre><p id="5ef720e4-6f49-82e8-9979-81348f15fe4c" class="" dir="auto">실행한다.</p><pre id="188720e4-6f49-8201-8a19-01ffff80c403" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python json_log_read.py</code></pre><p id="283720e4-6f49-83b5-b12b-0141d6f66389" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="90f720e4-6f49-8361-99ec-81de9b5a39ce" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{&#x27;time&#x27;: &#x27;2026-04-20T10:01:11&#x27;, &#x27;level&#x27;: &#x27;INFO&#x27;, &#x27;message&#x27;: &#x27;service started&#x27;}
+{&#x27;time&#x27;: &#x27;2026-04-20T10:01:15&#x27;, &#x27;level&#x27;: &#x27;ERROR&#x27;, &#x27;message&#x27;: &#x27;database connection failed&#x27;}
+{&#x27;time&#x27;: &#x27;2026-04-20T10:01:20&#x27;, &#x27;level&#x27;: &#x27;INFO&#x27;, &#x27;message&#x27;: &#x27;retry started&#x27;}
+{&#x27;time&#x27;: &#x27;2026-04-20T10:01:25&#x27;, &#x27;level&#x27;: &#x27;ERROR&#x27;, &#x27;message&#x27;: &#x27;timeout occurred&#x27;}</code></pre><hr id="f12720e4-6f49-824c-99f6-01ce0da98254" dir="auto"/><h2 id="865720e4-6f49-83ba-9d6e-81ecda0ce9ac" class="" dir="auto">3. 코드 설명</h2><pre id="2d5720e4-6f49-8286-b744-81851f678920" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">importjson</code></pre><p id="608720e4-6f49-8399-86c6-81bb77a32144" class="" dir="auto">JSON 문자열을 Python 객체로 변환하기 위해 <code>json</code> 모듈을 가져온다.</p><pre id="76b720e4-6f49-82f4-bf09-810fda88e4c5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">log=json.loads(line)</code></pre><p id="f60720e4-6f49-82bb-a2ba-8154a1a744e3" class="" dir="auto"><code>json.loads()</code>는 문자열 형태의 JSON을 Python 딕셔너리로 변환한다.</p><p id="111720e4-6f49-837c-8de0-01165e2527de" class="" dir="auto">예를 들어 다음 JSON 문자열은</p><pre id="eaf720e4-6f49-82c8-b01e-812d0f7429d3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{&quot;time&quot;:&quot;2026-04-20T10:01:11&quot;,&quot;level&quot;:&quot;INFO&quot;,&quot;message&quot;:&quot;service started&quot;}</code></pre><p id="0c3720e4-6f49-82bb-ba3b-0160d27dacaf" class="" dir="auto">Python에서는 다음 딕셔너리처럼 다룰 수 있다.</p><pre id="68f720e4-6f49-834c-a428-813cf3ffe3fa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+	&quot;time&quot;:&quot;2026-04-20T10:01:11&quot;,
+	&quot;level&quot;:&quot;INFO&quot;,
+	&quot;message&quot;:&quot;service started&quot;
+}</code></pre><hr id="72e720e4-6f49-82b0-92f9-81121a0e44c1" dir="auto"/><h2 id="bbd720e4-6f49-8304-b1cc-01e7a2f82610" class="" dir="auto">4. JSON 로그에서 ERROR만 출력하기</h2><p id="f2a720e4-6f49-8211-95bd-812a7b63b066" class="" dir="auto">파일명: <code>json_log_filter.py</code></p><pre id="7b5720e4-6f49-8310-b418-01d85e2ee2f3" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+with open(&quot;app_json.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        # JSON 형식의 문자열을 파이썬 딕셔너리로 변환
+        log = json.loads(line)
+
+        # 로그 레벨이 ERROR인 경우에만 특정 필드 출력
+        if log[&quot;level&quot;] == &quot;ERROR&quot;:
+            print(f&quot;time={log[&#x27;time&#x27;]}, message={log[&#x27;message&#x27;]}&quot;)</code></pre><p id="2bc720e4-6f49-83a1-9f45-0158e99f19f4" class="" dir="auto">실행한다.</p><pre id="ec1720e4-6f49-82ca-8101-01b3fa3ce695" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python json_log_filter.py</code></pre><p id="f24720e4-6f49-83f2-8460-8116ff66c5f2" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="3fc720e4-6f49-82c3-b083-81a57960c0b0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">time=2026-04-20T10:01:15, message=database connection failed
+time=2026-04-20T10:01:25, message=timeout occurred</code></pre><hr id="5e0720e4-6f49-8233-9482-81bde3d26cb1" dir="auto"/><h2 id="32c720e4-6f49-82bb-bfb4-0161b1e501f1" class="" dir="auto">5. <code>log[&quot;level&quot;]</code>과 <code>log.get(&quot;level&quot;)</code>의 차이</h2><p id="e36720e4-6f49-83d8-8e52-811446447024" class="" dir="auto">딕셔너리에서 값을 가져오는 방법은 크게 두 가지가 있다.</p><pre id="a27720e4-6f49-83ae-8df3-01b6b5792145" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">log[&quot;level&quot;]</code></pre><p id="abd720e4-6f49-8373-8dd3-013276e583ac" class="" dir="auto">이 방식은 <code>level</code> 키가 반드시 있다고 가정한다.</p><p id="3f0720e4-6f49-82ec-a904-81df72c712a2" class="" dir="auto">만약 <code>level</code> 키가 없으면 오류가 발생한다.</p><pre id="18b720e4-6f49-8217-a8a2-013b1f19bcd0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">log.get(&quot;level&quot;)</code></pre><p id="9e8720e4-6f49-8225-bd7e-81662ef69b2a" class="" dir="auto">이 방식은 <code>level</code> 키가 없으면 <code>None</code>을 반환한다.</p><p id="bcb720e4-6f49-82b9-a76d-81df308ca5aa" class="" dir="auto">그래서 로그 형식이 완전히 일정하지 않을 수 있는 경우에는 <code>get()</code>을 사용하는 것이 더 안전하다.</p><pre id="557720e4-6f49-8233-a965-012bd1f69850" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if log.get(&quot;level&quot;) == &quot;ERROR&quot;:
+	print(log.get(&quot;message&quot;))</code></pre><h1 id="c4a720e4-6f49-82c0-8385-81c996e8b216" class="" dir="auto">6.13 잘못된 JSON 로그 건너뛰기</h1><h2 id="d85720e4-6f49-8246-a430-81663947a840" class="" dir="auto">1. 잘못된 로그 줄이 섞이는 경우</h2><p id="3a7720e4-6f49-8394-ae1c-010f5e51cb26" class="" dir="auto">실제 운영 환경에서는 로그 파일의 모든 줄이 정상 형식이라고 보장할 수 없다.</p><p id="c19720e4-6f49-838d-a700-01f6dc75305b" class="" dir="auto">예를 들어 JSON 로그 파일에 다음처럼 잘못된 줄이 섞일 수 있다.</p><p id="dee720e4-6f49-82fb-8b81-81902c3efc11" class="" dir="auto">파일명: <code>app_json_invalid.log</code></p><pre id="0a6720e4-6f49-820a-aa9c-81c781de1483" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{&quot;time&quot;:&quot;2026-04-20T10:01:11&quot;,&quot;level&quot;:&quot;INFO&quot;,&quot;message&quot;:&quot;service started&quot;}
+INVALID JSON LINE
+{&quot;time&quot;:&quot;2026-04-20T10:01:15&quot;,&quot;level&quot;:&quot;ERROR&quot;,&quot;message&quot;:&quot;database connection failed&quot;}
+{&quot;time&quot;:&quot;2026-04-20T10:01:25&quot;,&quot;level&quot;:&quot;ERROR&quot;,&quot;message&quot;:&quot;timeout occurred&quot;}</code></pre><p id="754720e4-6f49-82a6-b974-81a8aee7ebff" class="" dir="auto">이 상태에서 <code>json.loads()</code>를 그대로 사용하면 <code>INVALID JSON LINE</code>에서 오류가 발생한다.</p><p id="28f720e4-6f49-82d3-9585-81d83584133d" class="" dir="auto">운영 자동화 스크립트에서는 잘못된 한 줄 때문에 전체 분석이 중단되지 않도록 처리하는 것이 좋다.</p><hr id="c30720e4-6f49-832d-bc7f-017dc652ea41" dir="auto"/><h2 id="8fd720e4-6f49-824a-a2a2-018cb685e826" class="" dir="auto">2. 잘못된 JSON 줄 건너뛰기</h2><p id="4e5720e4-6f49-82f4-a17c-0117300a9965" class="" dir="auto">파일명: <code>json_log_safe_parse.py</code></p><pre id="675720e4-6f49-834f-95d0-014aad8d8bba" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+with open(&quot;app_json_invalid.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line_number, line in enumerate(file, start=1):
+        line = line.strip()
+
+        if not line:
+            continue
+
+        try:
+            # JSON 파싱 시도
+            log = json.loads(line)
+        except json.JSONDecodeError:
+            # 형식이 잘못된 경우 에러 메시지 출력 후 다음 줄로 이동
+            print(f&quot;{line_number}번째 줄은 JSON 형식이 아니어서 건너뜀&quot;)
+            continue
+
+        # level이 ERROR인 경우에만 안전하게(get 메서드 사용) 필드 값 출력
+        if log.get(&quot;level&quot;) == &quot;ERROR&quot;:
+            print(f&quot;time={log.get(&#x27;time&#x27;)}, message={log.get(&#x27;message&#x27;)}&quot;)</code></pre><p id="bd0720e4-6f49-8223-b021-01317f3c5617" class="" dir="auto">실행한다.</p><pre id="7f4720e4-6f49-820e-8426-01b55bde7130" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python json_log_safe_parse.py</code></pre><p id="317720e4-6f49-8345-b8eb-01c4613b4a9c" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="d55720e4-6f49-83d9-812a-81fac40a84cb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2번째 줄은 JSON 형식이 아니어서 건너뜀
+time=2026-04-20T10:01:15, message=database connection failed
+time=2026-04-20T10:01:25, message=timeout occurred</code></pre><hr id="2a4720e4-6f49-8307-b437-012d8aacda23" dir="auto"/><h2 id="24d720e4-6f49-82ce-aca1-810c7b2a8050" class="" dir="auto">3. 코드 설명</h2><pre id="123720e4-6f49-83e9-953b-81507eaa9aed" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">for line_number,line in enumerate(file,start=1):</code></pre><p id="f4f720e4-6f49-8336-90f0-8192894705db" class="" dir="auto"><code>enumerate()</code>는 반복문에서 인덱스와 값을 함께 가져온다.</p><p id="43f720e4-6f49-834c-bd71-01e5cb187c73" class="" dir="auto"><code>start=1</code>을 사용하면 줄 번호를 1부터 시작한다.</p><pre id="70f720e4-6f49-8238-9831-813d66322aad" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if not line:
+	continue</code></pre><p id="87c720e4-6f49-82a9-92bf-01f308cea571" class="" dir="auto">빈 줄이면 처리하지 않고 다음 줄로 넘어간다.</p><p id="151720e4-6f49-83cc-b351-0160b8b606b7" class="" dir="auto"><code>continue</code>는 현재 반복을 건너뛰고 다음 반복으로 이동한다.</p><pre id="fb0720e4-6f49-82c0-acf4-81c7c886ee22" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">try:
+	log = json.loads(line)
+except json.JSONDecodeError:</code></pre><p id="9ab720e4-6f49-82de-bddb-815a0f299eed" class="" dir="auto">JSON 파싱 중 오류가 발생하면 <code>except</code> 블록이 실행된다.</p><pre id="774720e4-6f49-83e3-ab15-01100c98d110" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">continue</code></pre><p id="9bf720e4-6f49-837c-a818-81f6530962e8" class="" dir="auto">잘못된 줄은 건너뛰고 다음 로그 줄을 계속 처리한다.</p><p id="d14720e4-6f49-830e-add2-8182b6991440" class="" dir="auto">이 구조는 운영 자동화에서 매우 중요하다.</p><p id="402720e4-6f49-83da-b46b-01b514c0a826" class="" dir="auto">오류가 일부 있어도 전체 분석은 계속 진행되어야 하기 때문이다.</p><hr id="a64720e4-6f49-839d-b41d-0160370346a4" dir="auto"/><h1 id="c4e720e4-6f49-839b-96c9-817f1f407d09" class="" dir="auto">6.14 에러 줄만 파일로 저장하기</h1><h2 id="b09720e4-6f49-8334-9211-814291b1ee17" class="" dir="auto">1. 분석 결과를 파일로 저장하는 이유</h2><p id="2bf720e4-6f49-8204-b6b7-815ad87958fc" class="" dir="auto">로그 분석 결과는 화면에 출력하는 것만으로 끝나지 않을 수 있다.</p><p id="9b9720e4-6f49-82fa-a8ae-01383ac5ad9a" class="" dir="auto">운영 환경에서는 필터링한 결과를 별도 파일로 저장해 다음 작업에 활용할 수 있다.</p><p id="043720e4-6f49-82ba-a691-814db0f33a96" class="" dir="auto">예를 들어 다음과 같은 작업이 가능하다.</p><ul id="4c2720e4-6f49-82fd-a7d5-014a6b8209fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ERROR 로그만 별도 파일로 저장</li></ul><ul id="943720e4-6f49-834f-94d8-81c4263c769c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">500 오류 로그만 저장</li></ul><ul id="b73720e4-6f49-8232-bb98-01563a27833a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 IP의 요청만 저장</li></ul><ul id="cb0720e4-6f49-8363-9333-0121af902ab2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 시간대 로그만 저장</li></ul><ul id="627720e4-6f49-82d8-933d-01ebb166fbeb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분석 결과를 보고서 파일로 저장</li></ul><hr id="c3a720e4-6f49-8311-b62a-0158ec19c3b2" dir="auto"/><h2 id="149720e4-6f49-8293-a37e-0100145b0b9c" class="" dir="auto">2. ERROR 로그만 저장하기</h2><p id="c5d720e4-6f49-82dc-b7be-010f816cc929" class="" dir="auto">파일명: <code>save_error_only.py</code></p><pre id="b6f720e4-6f49-82ae-b19d-011eca95ad23" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;app.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file, \
+     open(&quot;error_only.log&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as output_file:
+
+    for line in file:
+        # 줄 바꿈 기호를 포함한 한 줄 단위로 처리
+        if &quot;ERROR&quot; in line:
+            # &quot;ERROR&quot; 단어가 포함된 줄만 결과 파일에 기록
+            output_file.write(line)</code></pre><p id="424720e4-6f49-83b4-a42e-01c5f8e0c17d" class="" dir="auto">실행한다.</p><pre id="274720e4-6f49-833d-8d07-81d52a8c2ca3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python save_error_only.py</code></pre><p id="84f720e4-6f49-83f4-8a65-81e2f7aced48" class="" dir="auto">실행 후 <code>error_only.log</code> 파일이 생성된다.</p><p id="7c2720e4-6f49-83a0-b752-81bc3e176566" class="" dir="auto">파일 내용은 다음과 같다.</p><pre id="9cb720e4-6f49-832b-9853-019ab7cf01dd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:15 ERROR database connection failed
+2026-04-20 10:01:25 ERROR timeout occurred</code></pre><hr id="88e720e4-6f49-825b-aa85-01265ecbaa52" dir="auto"/><h2 id="f3c720e4-6f49-82aa-8c39-81eccb71cf2a" class="" dir="auto">3. 코드 설명</h2><pre id="ce3720e4-6f49-83e6-8255-0127cb027674" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">with open(&quot;app.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file, \
+open(&quot;error_only.log&quot;,&quot;w&quot;,encoding=&quot;utf-8&quot;) as output_file:</code></pre><p id="eaa720e4-6f49-82e1-aeaf-0143dc636d58" class="" dir="auto">두 개의 파일을 동시에 연다.</p><ul id="b8b720e4-6f49-82cf-b85f-81dab40e63dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>app.log</code>는 읽기 모드</li></ul><ul id="fc3720e4-6f49-8397-9b9e-81f402ebdd63" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>error_only.log</code>는 쓰기 모드</li></ul><pre id="c97720e4-6f49-83d1-af5e-81c2352c962a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">output_file.write(line)</code></pre><p id="aaa720e4-6f49-82dd-8661-810fe8809bbb" class="" dir="auto">조건에 맞는 로그 줄을 파일에 쓴다.</p><p id="eef720e4-6f49-82f1-a4bc-81561f80edab" class="" dir="auto"><code>line</code>에는 원래 줄바꿈 문자가 포함되어 있으므로 별도로 <code>\n</code>을 추가하지 않아도 된다.</p><hr id="767720e4-6f49-823f-a8b5-81c8488fa78f" dir="auto"/><h1 id="374720e4-6f49-8286-a361-814f7c468c23" class="" dir="auto">6.15 예외 처리 추가하기</h1><h2 id="11d720e4-6f49-82a8-8caf-01558618df1e" class="" dir="auto">1. 로그 분석에서 예외 처리가 필요한 이유</h2><p id="914720e4-6f49-828b-a76e-018bd8e3453e" class="" dir="auto">로그 분석 중에는 여러 오류가 발생할 수 있다.</p><p id="8b4720e4-6f49-8388-a86d-811676cf9cf6" class="" dir="auto">대표적인 경우는 다음과 같다.</p><ul id="a84720e4-6f49-82f4-bf25-01192e6dc92c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 파일이 없음</li></ul><ul id="c5a720e4-6f49-8299-9624-81dfa8af890e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 경로가 잘못됨</li></ul><ul id="f93720e4-6f49-82e8-9669-81527adc9985" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 권한이 없음</li></ul><ul id="454720e4-6f49-82e0-a55c-016985ff3814" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON 형식이 잘못됨</li></ul><ul id="8b5720e4-6f49-82ec-94a0-8175a22c90ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예상한 패턴이 없음</li></ul><ul id="72b720e4-6f49-8287-b4c8-81f0d89e6f36" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인코딩 문제가 발생함</li></ul><p id="8c4720e4-6f49-8286-864b-811eec08c39a" class="" dir="auto">자동화 스크립트는 오류가 발생했을 때 Python 오류 메시지를 그대로 보여주는 것보다, 사용자가 이해할 수 있는 메시지를 출력하는 것이 좋다.</p><hr id="2e3720e4-6f49-82c1-8394-0177d34e0534" dir="auto"/><h2 id="839720e4-6f49-836f-8f4d-0126de8ea14e" class="" dir="auto">2. 파일이 없을 때 처리하기</h2><p id="3e7720e4-6f49-83d8-b398-010e4ba66088" class="" dir="auto">파일명: <code>read_log_safe.py</code></p><pre id="86b720e4-6f49-827c-bed1-01977d118850" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">try:
+    with open(&quot;missing.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+        for line in file:
+            print(line.strip())
+
+except FileNotFoundError:
+    print(&quot;파일을 찾을 수 없음&quot;)
+
+except Exception as e:
+    print(&quot;로그 처리 중 오류 발생&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><p id="ca3720e4-6f49-83ef-9ac6-81af58b4db5f" class="" dir="auto">실행한다.</p><pre id="a6a720e4-6f49-839f-92cb-8118cefc9fb3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python read_log_safe.py</code></pre><p id="0b0720e4-6f49-8396-8b2e-012c02ebbfee" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="978720e4-6f49-8242-ac4a-8162f30db16a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">파일을 찾을 수 없음</code></pre><hr id="374720e4-6f49-825c-81a4-81f66bc4864b" dir="auto"/><h2 id="7a2720e4-6f49-8254-9785-81c0f16ce2d6" class="" dir="auto">3. 코드 설명</h2><pre id="ebd720e4-6f49-828e-87fb-8116db616732" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">try:</code></pre><p id="ad1720e4-6f49-8339-8a0c-8195092ce147" class="" dir="auto">오류가 발생할 수 있는 코드를 작성한다.</p><pre id="9fc720e4-6f49-82c5-b8db-013fa082fe8f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">except FileNotFoundError:</code></pre><p id="30d720e4-6f49-8283-81c6-01cd8d366020" class="" dir="auto">파일을 찾을 수 없을 때 실행된다.</p><pre id="86c720e4-6f49-82e6-892c-813fd5a379d1" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">except Exceptionase:</code></pre><p id="a39720e4-6f49-82ce-a627-017c15eb8e30" class="" dir="auto">그 외 예외가 발생했을 때 실행된다.</p><p id="6ba720e4-6f49-8365-bd5c-81dfd4673d93" class="" dir="auto"><code>e</code>에는 실제 오류 내용이 들어간다.</p><p id="541720e4-6f49-8375-a4b9-81fcc1dab311" class="" dir="auto">예외 처리를 사용하면 자동화 스크립트가 갑자기 중단되는 대신, 오류 원인을 사용자에게 설명할 수 있다.</p><hr id="cea720e4-6f49-82f8-835c-816655928a98" dir="auto"/><h1 id="6fd720e4-6f49-82d4-ba24-0156bf331852" class="" dir="auto">6.16 실행 인자로 파일명과 키워드 받기</h1><h2 id="dbf720e4-6f49-837f-8149-8126c6ff113d" class="" dir="auto">1. 실행 인자가 필요한 이유</h2><p id="80d720e4-6f49-834d-8040-0179647a6319" class="" dir="auto">지금까지 작성한 코드는 파일명이 코드 안에 고정되어 있었다.</p><p id="d31720e4-6f49-8307-8364-8178ca1fa9fa" class="" dir="auto">예를 들어 다음 코드에서는 항상 <code>app.log</code>만 읽는다.</p><pre id="c75720e4-6f49-83ae-8c5d-01fde68eb429" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">with open(&quot;app.log&quot;,&quot;r&quot;,encoding=&quot;utf-8&quot;) as file:</code></pre><p id="b3d720e4-6f49-8264-8003-813e0921d288" class="" dir="auto">하지만 운영 환경에서는 분석할 파일명이 매번 다를 수 있다.</p><p id="c7b720e4-6f49-820b-b992-01635d09314d" class="" dir="auto">예를 들어 다음과 같은 파일을 분석할 수 있다.</p><pre id="d43720e4-6f49-8312-bba7-81680af56050" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">app.log
+app-2026-04-20.log
+access.log
+access-2026-04-20.log
+error.log</code></pre><p id="315720e4-6f49-83a3-8c3d-01877a84b7ed" class="" dir="auto">이럴 때 파일명을 코드에 직접 고정하면 매번 코드를 수정해야 한다.</p><p id="545720e4-6f49-8384-aed9-81b52219d6c6" class="" dir="auto">자동화 스크립트에서는 실행할 때 파일명을 인자로 받는 방식이 좋다.</p><hr id="329720e4-6f49-8245-ac99-0169e14d67d5" dir="auto"/><h2 id="417720e4-6f49-824e-8a1a-81abe299bd24" class="" dir="auto">2. argparse 기본 구조</h2><p id="635720e4-6f49-820a-bae2-81f5147f77bf" class="" dir="auto">Python에서는 명령행 인자를 처리할 때 <code>argparse</code> 모듈을 많이 사용한다.</p><p id="239720e4-6f49-83a6-8b22-81632bf7590c" class="" dir="auto">파일명: <code>log_keyword_search.py</code></p><pre id="742720e4-6f49-82ca-aeea-81d822f28b7e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import argparse
+
+parser = argparse.ArgumentParser(description=&quot;로그 파일에서 특정 키워드가 포함된 줄을 검색한다.&quot;)
+parser.add_argument(&quot;--file&quot;, required=True, help=&quot;분석할 로그 파일 경로&quot;)
+parser.add_argument(&quot;--keyword&quot;, required=True, help=&quot;검색할 키워드&quot;)
+
+args = parser.parse_args()
+
+try:
+    with open(args.file, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+        for line in file:
+            if args.keyword in line:
+                print(line.strip())
+
+except FileNotFoundError:
+    print(f&quot;파일을 찾을 수 없음: {args.file}&quot;)
+
+except Exception as e:
+    print(&quot;로그 검색 중 오류 발생&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><p id="dfb720e4-6f49-8217-8644-01139115cccb" class="" dir="auto">실행한다.</p><pre id="c76720e4-6f49-835d-b4a0-81a7e6a11677" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python log_keyword_search.py --file app.log --keyword ERROR</code></pre><p id="ed8720e4-6f49-820a-ad03-0123e73f58f6" class="" dir="auto">실행 결과는 다음과 같다.</p><pre id="58e720e4-6f49-82b9-a1fb-81414447a1ed" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:15 ERROR database connection failed
+2026-04-20 10:01:25 ERROR timeout occurred</code></pre><hr id="dfc720e4-6f49-82c2-a729-016c63014292" dir="auto"/><h2 id="b00720e4-6f49-8341-95ed-014650d45bdb" class="" dir="auto">3. 코드 설명</h2><pre id="bdf720e4-6f49-8263-8504-81650c81f359" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">parser=argparse.ArgumentParser(description=&quot;로그 파일에서 특정 키워드가 포함된 줄을 검색한다.&quot;)</code></pre><p id="373720e4-6f49-826a-a4dd-013e5b69863b" class="" dir="auto">명령행 인자를 처리할 파서를 만든다.</p><p id="8c4720e4-6f49-8323-bc29-81f17a5b7e87" class="" dir="auto"><code>description</code>은 이 스크립트가 어떤 역할을 하는지 설명한다.</p><pre id="31d720e4-6f49-828b-8cd0-01c15e53c408" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">parser.add_argument(&quot;--file&quot;,required=True,help=&quot;분석할 로그 파일 경로&quot;)</code></pre><ul id="59a720e4-6f49-8337-8d8e-818749a2a98e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-file</code> 인자를 추가한다.</li></ul><p id="226720e4-6f49-8235-9305-01ab9995ee72" class="" dir="auto"><code>required=True</code>는 이 인자를 반드시 입력해야 한다는 의미이다.</p><pre id="018720e4-6f49-82d2-b901-0193e2f44392" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">parser.add_argument(&quot;--keyword&quot;,required=True,help=&quot;검색할 키워드&quot;)</code></pre><ul id="812720e4-6f49-83d3-a497-012eb98b251d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-keyword</code> 인자를 추가한다.</li></ul><pre id="95a720e4-6f49-827b-bf21-0189ee59613e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">args=parser.parse_args()</code></pre><p id="5b3720e4-6f49-83ef-90e8-81acfdb994ae" class="" dir="auto">실행 시 입력한 인자를 읽어온다.</p><pre id="811720e4-6f49-822e-83e0-01a057020bec" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">args.file
+args.keyword</code></pre><p id="427720e4-6f49-8301-9eba-01198dc2e9b0" class="" dir="auto">이렇게 입력값을 코드에서 사용할 수 있다.</p><hr id="117720e4-6f49-823d-9d4c-0107ea1afcbf" dir="auto"/><h2 id="93a720e4-6f49-82ac-a999-818b51d8bc6b" class="" dir="auto">4. 도움말 확인하기</h2><p id="d10720e4-6f49-8391-9945-0151ce16c9dd" class="" dir="auto">다음 명령어를 실행해보자.</p><pre id="459720e4-6f49-83dd-bfd1-01865d455fbf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python log_keyword_search.py --help</code></pre><p id="584720e4-6f49-8328-93c5-016f434998b5" class="" dir="auto">출력 예시는 다음과 같다.</p><pre id="0bf720e4-6f49-836d-99f8-8154f82a0b30" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">usage: log_keyword_search.py [-h] --file FILE --keyword KEYWORD
+
+로그 파일에서 특정 키워드가 포함된 줄을 검색한다.
+
+options:
+  -h, --help         show this help message and exit
+  --file FILE       분석할 로그 파일 경로
+  --keyword KEYWORD 검색할 키워드</code></pre><p id="23a720e4-6f49-8285-a80d-813e20199f07" class="" dir="auto"><code>argparse</code>를 사용하면 자동으로 도움말 기능도 제공된다.</p><hr id="bce720e4-6f49-82bf-a37a-81c1667e3f6c" dir="auto"/><h1 id="4aa720e4-6f49-834f-8331-818d4f642433" class="" dir="auto">6.17 생성형 AI로 로그 분석 코드 요청하기</h1><h2 id="c4b720e4-6f49-82c4-a74c-813851dc6b35" class="" dir="auto">1. 좋은 요청 방식</h2><p id="987720e4-6f49-832b-adbc-817cc85a8d35" class="" dir="auto">생성형 AI에게 로그 분석 코드를 요청할 때는 다음 정보를 함께 제공하는 것이 좋다.</p><ul id="5cc720e4-6f49-82a5-a7d5-81742f4dea35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 파일 이름</li></ul><ul id="787720e4-6f49-8261-b1ab-0142da562472" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 형식</li></ul><ul id="0ff720e4-6f49-83ea-b470-01312243782c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">찾고 싶은 값</li></ul><ul id="d0a720e4-6f49-82a3-b329-8130c4835f6b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">출력 형식</li></ul><ul id="73d720e4-6f49-8291-b253-01fe013465be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예외 처리 여부</li></ul><ul id="75e720e4-6f49-8372-8d97-813d4ebec595" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정규표현식 사용 여부</li></ul><ul id="729720e4-6f49-82dc-ac0d-01bae8729906" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수 분리 여부</li></ul><ul id="530720e4-6f49-82db-b0f4-01e9c3ecd0ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 인자 사용 여부</li></ul><hr id="eba720e4-6f49-8278-a385-018f0b3fcee8" dir="auto"/><h2 id="47a720e4-6f49-8283-b201-0191efb40407" class="" dir="auto">2. 텍스트 로그 분석 요청 예시</h2><pre id="072720e4-6f49-8366-8986-816de63ed14e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python 코드를 작성해줘.
+
+app.log 파일을 줄 단위로 읽어서 ERROR가 포함된 줄만 출력해줘.
+파일이 없을 때는 FileNotFoundError를 처리해줘.
+출력할 때는 줄바꿈 문자를 제거해서 보여줘.</code></pre><hr id="fc2720e4-6f49-830b-bad1-01cdc71953fb" dir="auto"/><h2 id="6c3720e4-6f49-82d5-b6af-81cde82c6d8e" class="" dir="auto">3. 액세스 로그 분석 요청 예시</h2><pre id="f41720e4-6f49-8395-bd01-81595aa791e1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python 코드를 작성해줘.
+
+access.log 파일을 줄 단위로 읽어서 HTTP 상태코드를 추출해줘.
+정규표현식을 사용해 상태코드를 추출해줘.
+4xx와 5xx 상태코드가 포함된 줄만 출력해줘.
+파일이 없을 때는 try/except로 오류 메시지를 출력해줘.</code></pre><hr id="3ac720e4-6f49-836a-a7fb-01da1a91e24e" dir="auto"/><h2 id="3e5720e4-6f49-8390-8e9a-81af1ac292ed" class="" dir="auto">4. JSON 로그 분석 요청 예시</h2><pre id="b99720e4-6f49-83c0-91a8-0177b8593bd4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python 코드를 작성해줘.
+
+app_json.log 파일을 줄 단위로 읽고 json.loads()로 파싱해줘.
+level 값이 ERROR인 로그만 출력해줘.
+출력 형식은 time=..., message=... 형태로 보여줘.
+잘못된 JSON 줄은 건너뛰고 몇 번째 줄이 잘못되었는지 출력해줘.</code></pre><hr id="fa8720e4-6f49-832f-a599-81f0f3c76460" dir="auto"/><h2 id="064720e4-6f49-83a1-bcf4-01d99728e5e8" class="" dir="auto">5. 자동화 스크립트 요청 예시</h2><pre id="096720e4-6f49-8223-9390-01c5a434917f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python 로그 분석 자동화 스크립트를 작성해줘.
+
+요구사항은 다음과 같아.
+
+1. argparse를 사용해서 --file 인자로 로그 파일 경로를 입력받아줘.
+2. access.log 형식의 로그를 분석해줘.
+3. 전체 요청 수를 출력해줘.
+4. 상태코드별 요청 수를 출력해줘.
+5. 4xx 요청 수와 5xx 요청 수를 출력해줘.
+6. IP별 요청 수를 출력해줘.
+7. 요청 경로별 요청 수를 출력해줘.
+8. 형식이 맞지 않는 줄은 건너뛰고 개수를 세어줘.
+9. 파일이 없을 때는 예외 처리해줘.
+10. 함수 단위로 코드를 나눠줘.</code></pre><hr id="dbf720e4-6f49-83a4-bc37-01b30ef7f79b" dir="auto"/><h1 id="384720e4-6f49-835c-a480-81dcb2e00195" class="" dir="auto">6.18 자동화 스타일 종합 예제</h1><h2 id="023720e4-6f49-8332-9aeb-81b3b8c599d0" class="" dir="auto">1. 실습 목표</h2><p id="90e720e4-6f49-8275-9117-012277cf7d79" class="" dir="auto">이번 실습에서는 <code>access.log</code> 파일을 분석해서 요약 리포트를 출력하는 자동화 스크립트를 작성한다.</p><p id="8cd720e4-6f49-82f6-a095-819ddc2072eb" class="" dir="auto">분석 항목은 다음과 같다.</p><ul id="365720e4-6f49-8245-950a-81c9eb0cf2bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전체 요청 수</li></ul><ul id="13e720e4-6f49-83f1-95bc-8150f93d0b82" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태코드별 요청 수</li></ul><ul id="be7720e4-6f49-8240-a1d1-81e63e0b8af2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">4xx 요청 수</li></ul><ul id="e3f720e4-6f49-8394-841a-81a8180b4910" class="bulleted-list" dir="auto"><li style="list-style-type:disc">5xx 요청 수</li></ul><ul id="fa0720e4-6f49-83ad-9601-8177eb3dde7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP별 요청 수</li></ul><ul id="6db720e4-6f49-8277-867d-81ea5edf77d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 경로별 요청 수</li></ul><ul id="e80720e4-6f49-8272-a3dd-81ef0087710a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">형식이 맞지 않는 로그 줄 수</li></ul><p id="8a5720e4-6f49-83ff-9535-017584ae0fec" class="" dir="auto">이 예제는 단순히 로그를 읽는 수준을 넘어 운영 자동화 스크립트 구조에 가깝게 작성한다.</p><hr id="3c4720e4-6f49-8342-b48f-01839d3b185a" dir="auto"/><h2 id="d37720e4-6f49-8364-bb80-81f99a3a5282" class="" dir="auto">2. 최종 코드</h2><p id="3f2720e4-6f49-8361-9229-0162eb279c3e" class="" dir="auto">파일명: <code>access_log_report.py</code></p><pre id="f59720e4-6f49-8296-ac32-81d4ca5d5483" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import re
+import argparse
+from collections import Counter
+
+
+def parse_access_log_line(line):
+    &quot;&quot;&quot;
+    access.log 한 줄에서 IP, 요청 경로, 상태코드를 추출한다.
+    정상적으로 추출하면 딕셔너리를 반환한다.
+    형식이 맞지 않으면 None을 반환한다.
+    &quot;&quot;&quot;
+
+    pattern = r&#x27;^([^ ]+) .* &quot;\w+ ([^ ]+) HTTP/[^&quot;]+&quot; (\d{3}) &#x27;
+    match = re.search(pattern, line)
+
+    if not match:
+        return None
+
+    return {
+        &quot;ip&quot;: match.group(1),
+        &quot;path&quot;: match.group(2),
+        &quot;status_code&quot;: match.group(3)
+    }
+
+
+def analyze_access_log(filename):
+    &quot;&quot;&quot;
+    access.log 파일 전체를 읽고 주요 항목을 집계한다.
+    &quot;&quot;&quot;
+
+    total_count = 0
+    status_counter = Counter()
+    ip_counter = Counter()
+    path_counter = Counter()
+    client_error_count = 0
+    server_error_count = 0
+    invalid_line_count = 0
+
+    with open(filename, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+        for line in file:
+            parsed = parse_access_log_line(line)
+
+            if parsed is None:
+                invalid_line_count += 1
+                continue
+
+            total_count += 1
+
+            ip = parsed[&quot;ip&quot;]
+            path = parsed[&quot;path&quot;]
+            status_code = parsed[&quot;status_code&quot;]
+
+            status_counter[status_code] += 1
+            ip_counter[ip] += 1
+            path_counter[path] += 1
+
+            if status_code.startswith(&quot;4&quot;):
+                client_error_count += 1
+            elif status_code.startswith(&quot;5&quot;):
+                server_error_count += 1
+
+    return {
+        &quot;total_count&quot;: total_count,
+        &quot;status_counter&quot;: status_counter,
+        &quot;ip_counter&quot;: ip_counter,
+        &quot;path_counter&quot;: path_counter,
+        &quot;client_error_count&quot;: client_error_count,
+        &quot;server_error_count&quot;: server_error_count,
+        &quot;invalid_line_count&quot;: invalid_line_count
+    }
+
+
+def print_report(result):
+    &quot;&quot;&quot;
+    분석 결과를 보기 좋은 형식으로 출력한다.
+    &quot;&quot;&quot;
+
+    print(&quot;===== Access Log Summary =====&quot;)
+    print(f&quot;전체 요청 수: {result[&#x27;total_count&#x27;]}&quot;)
+    print(f&quot;4xx 요청 수: {result[&#x27;client_error_count&#x27;]}&quot;)
+    print(f&quot;5xx 요청 수: {result[&#x27;server_error_count&#x27;]}&quot;)
+    print(f&quot;형식 오류 줄 수: {result[&#x27;invalid_line_count&#x27;]}&quot;)
+    print()
+
+    print(&quot;[상태코드별 요청 수]&quot;)
+    for status_code, count in result[&quot;status_counter&quot;].items():
+        print(f&quot;{status_code}: {count}&quot;)
+
+    print()
+    print(&quot;[IP별 요청 수]&quot;)
+    for ip, count in result[&quot;ip_counter&quot;].items():
+        print(f&quot;{ip}: {count}&quot;)
+
+    print()
+    print(&quot;[요청 경로별 요청 수]&quot;)
+    for path, count in result[&quot;path_counter&quot;].items():
+        print(f&quot;{path}: {count}&quot;)
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description=&quot;access.log 파일을 분석해서 요약 리포트를 출력한다.&quot;
+    )
+
+    parser.add_argument(
+        &quot;--file&quot;,
+        required=True,
+        help=&quot;분석할 access.log 파일 경로&quot;
+    )
+
+    args = parser.parse_args()
+
+    try:
+        result = analyze_access_log(args.file)
+        print_report(result)
+
+    except FileNotFoundError:
+        print(f&quot;파일을 찾을 수 없음: {args.file}&quot;)
+
+    except Exception as e:
+        print(&quot;로그 분석 중 오류 발생&quot;)
+        print(f&quot;오류 내용: {e}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><hr id="e08720e4-6f49-8242-89b7-81a4ab07b787" dir="auto"/><h2 id="0f0720e4-6f49-82e7-a9c6-01ad0595ec97" class="" dir="auto">3. 실행 방법</h2><pre id="cae720e4-6f49-8205-9a74-01994f52030c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python access_log_report.py--file access.log</code></pre><hr id="eb2720e4-6f49-8268-90ec-81b6bea2b5e7" dir="auto"/><h2 id="dbb720e4-6f49-8273-98b6-8106a6053166" class="" dir="auto">4. 실행 결과 예시</h2><pre id="397720e4-6f49-8256-9337-01e990870927" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">===== Access Log Summary =====
+전체 요청 수: 5
+4xx 요청 수: 2
+5xx 요청 수: 1
+형식 오류 줄 수: 0
+
+[상태코드별 요청 수]
+200: 2
+401: 1
+403: 1
+500: 1
+
+[IP별 요청 수]
+127.0.0.1: 2
+10.0.1.15: 1
+10.0.1.16: 1
+10.0.1.17: 1
+
+[요청 경로별 요청 수]
+/api/items: 2
+/login: 1
+/admin: 1
+/health: 1</code></pre><hr id="177720e4-6f49-82ef-8b91-01e96b7b0cfe" dir="auto"/><h2 id="908720e4-6f49-82c9-95ce-8196a0b690c8" class="" dir="auto">5. 함수별 역할</h2><h3 id="a8f720e4-6f49-8274-a541-0130e148e0c8" class="" dir="auto"><code>parse_access_log_line()</code></h3><pre id="d67720e4-6f49-83f8-9d41-01cc3b250b3e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">defparse_access_log_line(line):</code></pre><p id="7d7720e4-6f49-82d4-b676-01ee7551f2e1" class="" dir="auto">로그 한 줄에서 필요한 값을 추출하는 함수이다.</p><p id="6cd720e4-6f49-82c6-a0fd-81cf8ca9976f" class="" dir="auto">이 함수는 한 줄만 담당한다.</p><p id="a2d720e4-6f49-8370-9b6c-011974b2dfb7" class="" dir="auto">추출하는 값은 다음과 같다.</p><ul id="332720e4-6f49-831a-8609-0133923e4f4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 주소</li></ul><ul id="88a720e4-6f49-8326-94f4-813281a62623" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 경로</li></ul><ul id="042720e4-6f49-83c9-b0df-0198471e57f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태코드</li></ul><p id="b50720e4-6f49-83ed-bffe-816ffe383e2c" class="" dir="auto">형식이 맞지 않으면 <code>None</code>을 반환한다.</p><hr id="39c720e4-6f49-824c-b115-81feda9dc423" dir="auto"/><h3 id="dc4720e4-6f49-82c5-bdb1-0108468699d2" class="" dir="auto"><code>analyze_access_log()</code></h3><pre id="6b9720e4-6f49-8228-9a7f-81dd820ba0b0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">defanalyze_access_log(filename):</code></pre><p id="ecb720e4-6f49-831c-bb0c-01fe5ebf7497" class="" dir="auto">로그 파일 전체를 읽고 집계하는 함수이다.</p><p id="2e3720e4-6f49-8299-a76a-813dd644f8f3" class="" dir="auto">이 함수는 다음 값을 계산한다.</p><ul id="f79720e4-6f49-830c-a959-012a5ff38ab7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전체 요청 수</li></ul><ul id="59f720e4-6f49-82ff-8cbc-81c8e57038cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태코드별 요청 수</li></ul><ul id="d56720e4-6f49-83ae-ac77-811a954520a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP별 요청 수</li></ul><ul id="24f720e4-6f49-834d-b424-810ef2526222" class="bulleted-list" dir="auto"><li style="list-style-type:disc">경로별 요청 수</li></ul><ul id="8ff720e4-6f49-82f4-804d-81ea2d89bb71" class="bulleted-list" dir="auto"><li style="list-style-type:disc">4xx 요청 수</li></ul><ul id="40a720e4-6f49-8373-a155-817765a0e145" class="bulleted-list" dir="auto"><li style="list-style-type:disc">5xx 요청 수</li></ul><ul id="366720e4-6f49-83fd-aedf-01ed49cc444d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">형식 오류 줄 수</li></ul><hr id="071720e4-6f49-8346-b7c5-8138b1ee92b8" dir="auto"/><h3 id="ecf720e4-6f49-823e-936a-01371e411565" class="" dir="auto"><code>print_report()</code></h3><pre id="533720e4-6f49-8204-8c41-01501e420d7b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">defprint_report(result):</code></pre><p id="a43720e4-6f49-8281-a522-81d25686e8dd" class="" dir="auto">분석 결과를 화면에 출력하는 함수이다.</p><p id="6ed720e4-6f49-8274-9b8c-01d39e7d32fa" class="" dir="auto">분석과 출력 역할을 분리하면 코드 관리가 쉬워진다.</p><hr id="8e0720e4-6f49-82e5-9868-81c69c7b463a" dir="auto"/><h3 id="ef1720e4-6f49-82e5-88c4-01bb4d8b95ff" class="" dir="auto"><code>main()</code></h3><pre id="39e720e4-6f49-8357-812e-811931349dcc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">defmain():</code></pre><p id="ee2720e4-6f49-8235-9922-0163da923eaa" class="" dir="auto">전체 실행 흐름을 담당한다.</p><p id="7ee720e4-6f49-8218-9a1f-8183d85f6421" class="" dir="auto">이 함수는 다음 작업을 수행한다.</p><ol type="1" id="f4a720e4-6f49-83e7-838d-810e0e038dc2" class="numbered-list" start="1" dir="auto"><li>실행 인자를 읽는다.</li></ol><ol type="1" id="43c720e4-6f49-83d6-b0c9-815adba647c8" class="numbered-list" start="2" dir="auto"><li>로그 분석 함수를 호출한다.</li></ol><ol type="1" id="6d9720e4-6f49-8352-bdc8-01623055de6e" class="numbered-list" start="3" dir="auto"><li>결과 출력 함수를 호출한다.</li></ol><ol type="1" id="72e720e4-6f49-8308-a849-01dfc815ca4e" class="numbered-list" start="4" dir="auto"><li>오류가 발생하면 예외 처리한다.</li></ol><hr id="54f720e4-6f49-833e-ae25-81cee87f2e28" dir="auto"/><h3 id="659720e4-6f49-8305-8acf-8104e8de91bf" class="" dir="auto"><code>if __name__ == &quot;__main__&quot;:</code></h3><pre id="4ec720e4-6f49-8277-811c-81dce034edbb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">if__name__==&quot;__main__&quot;:
+main()</code></pre><p id="36f720e4-6f49-8274-bc71-8196bf5d1c54" class="" dir="auto">이 코드는 현재 파일이 직접 실행될 때만 <code>main()</code> 함수를 실행한다.</p><p id="a2e720e4-6f49-8213-8724-01331a36c406" class="" dir="auto">Python 자동화 스크립트에서 자주 사용하는 구조이다.</p><p id="41f720e4-6f49-8208-a7a0-8149a8c948fe" class="" dir="auto">이 구조를 사용하면 나중에 다른 Python 파일에서 이 코드를 가져와 함수만 재사용할 수도 있다.</p><hr id="cd2720e4-6f49-8376-99b1-819295519cae" dir="auto"/><h1 id="6c6720e4-6f49-8302-8198-81ff3f31d797" class="" dir="auto">6.19 실습 과제</h1><h2 id="f07720e4-6f49-8208-9c95-0129a27adfc9" class="" dir="auto">과제 1. ERROR 로그 검색 스크립트 작성</h2><h3 id="d28720e4-6f49-829b-885c-818cccd459bf" class="" dir="auto">요구사항</h3><p id="878720e4-6f49-8294-90b4-81b6ac811f81" class="" dir="auto"><code>app.log</code> 파일을 읽어서 <code>ERROR</code>가 포함된 줄만 출력하는 스크립트를 작성한다.</p><p id="e5d720e4-6f49-8396-b70b-8197dbd2b546" class="" dir="auto">조건은 다음과 같다.</p><ul id="7d8720e4-6f49-83f1-a403-01a1f21dc765" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일명은 <code>search_error.py</code>로 작성한다.</li></ul><ul id="9eb720e4-6f49-829b-9520-81a31c837d56" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>app.log</code> 파일을 줄 단위로 읽는다.</li></ul><ul id="e8b720e4-6f49-83ee-a79d-01db66ef947a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ERROR</code>가 포함된 줄만 출력한다.</li></ul><ul id="e3d720e4-6f49-8390-9977-01c453c09a3c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">출력할 때 줄바꿈 문자를 제거한다.</li></ul><ul id="432720e4-6f49-8331-952b-01dc0d76a7b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일이 없으면 <code>파일을 찾을 수 없음</code> 메시지를 출력한다.</li></ul><h3 id="d96720e4-6f49-8275-9b97-8103c020fb22" class="" dir="auto">실행 예시</h3><pre id="433720e4-6f49-8367-8795-81322726e798" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python search_error.py</code></pre><h3 id="3c4720e4-6f49-82d1-bccb-01cc7db5e19a" class="" dir="auto">출력 예시</h3><pre id="6d2720e4-6f49-8343-9b6b-01a2abe006ec" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-04-20 10:01:15 ERROR database connection failed
+2026-04-20 10:01:25 ERROR timeout occurred</code></pre><hr id="de1720e4-6f49-8280-8e79-013b32c2d734" dir="auto"/><h2 id="930720e4-6f49-83ee-87db-012bf898fa27" class="" dir="auto">과제 2. 상태코드별 개수 집계</h2><h3 id="b42720e4-6f49-8338-b4ee-81cde1b075de" class="" dir="auto">요구사항</h3><p id="3b8720e4-6f49-8310-aec0-81c46e6f8d19" class="" dir="auto"><code>access.log</code> 파일을 읽어서 상태코드별 개수를 출력하는 스크립트를 작성한다.</p><p id="53c720e4-6f49-8365-a2ec-81d22ce8817d" class="" dir="auto">조건은 다음과 같다.</p><ul id="49d720e4-6f49-82b9-82fc-81fd297b1882" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일명은 <code>count_status.py</code>로 작성한다.</li></ul><ul id="b15720e4-6f49-83a8-9997-01dfdbc17d3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정규표현식을 사용해 상태코드를 추출한다.</li></ul><ul id="c7d720e4-6f49-82c3-9308-810a539fd73c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태코드별 개수를 딕셔너리 또는 <code>Counter</code>로 집계한다.</li></ul><ul id="389720e4-6f49-83d7-8516-81ce3d1f61f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일이 없으면 예외 처리한다.</li></ul><h3 id="d4d720e4-6f49-83db-931d-81cff8833205" class="" dir="auto">실행 예시</h3><pre id="7f1720e4-6f49-835e-a078-8165420f504c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python count_status.py</code></pre><h3 id="919720e4-6f49-8254-a2dd-016e6afabc6e" class="" dir="auto">출력 예시</h3><pre id="e5b720e4-6f49-83ab-8c12-016488190f12" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">200: 2
+401: 1
+403: 1
+500: 1</code></pre><hr id="446720e4-6f49-82d6-a297-814765315481" dir="auto"/><h2 id="f2a720e4-6f49-83cf-b860-8195701b333e" class="" dir="auto">과제 3. IP별 요청 수 집계</h2><h3 id="bfb720e4-6f49-8329-b99b-814679c13150" class="" dir="auto">요구사항</h3><p id="360720e4-6f49-83ae-aa1d-81fb2cf30ccd" class="" dir="auto"><code>access.log</code> 파일을 읽어서 IP별 요청 수를 출력하는 스크립트를 작성한다.</p><p id="91c720e4-6f49-82af-a1ac-81665df04510" class="" dir="auto">조건은 다음과 같다.</p><ul id="f27720e4-6f49-8331-bc92-814c8b2628f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일명은 <code>count_ip.py</code>로 작성한다.</li></ul><ul id="8fc720e4-6f49-822e-bc0e-017324e119c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 한 줄을 <code>split()</code>으로 나눈다.</li></ul><ul id="759720e4-6f49-838e-9d3c-81d162567990" class="bulleted-list" dir="auto"><li style="list-style-type:disc">첫 번째 값을 IP 주소로 사용한다.</li></ul><ul id="078720e4-6f49-833e-994d-014f1e8e5ae8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP별 요청 수를 집계한다.</li></ul><ul id="d1c720e4-6f49-8245-bb2c-0142dc6537bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빈 줄은 건너뛴다.</li></ul><h3 id="8ab720e4-6f49-83d0-a9c6-81b9eed59624" class="" dir="auto">실행 예시</h3><pre id="057720e4-6f49-82f2-8836-81b5d29f4ec9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python count_ip.py</code></pre><h3 id="bee720e4-6f49-8341-8f16-013ce2b2f6e7" class="" dir="auto">출력 예시</h3><pre id="4e5720e4-6f49-83ae-9c69-01ad7a6f3540" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">127.0.0.1: 2
+10.0.1.15: 1
+10.0.1.16: 1
+10.0.1.17: 1</code></pre><hr id="fa4720e4-6f49-8297-a359-814ae67c70f8" dir="auto"/><h2 id="04e720e4-6f49-82e3-9e6e-01002ed41c43" class="" dir="auto">과제 4. JSON 로그에서 ERROR만 출력</h2><h3 id="acb720e4-6f49-8339-8fa1-0186386fb941" class="" dir="auto">요구사항</h3><p id="452720e4-6f49-83c5-8d97-81618a75096b" class="" dir="auto"><code>app_json.log</code> 파일을 읽어서 <code>level</code> 값이 <code>ERROR</code>인 로그만 출력한다.</p><p id="55c720e4-6f49-838c-a03b-81896bbd471c" class="" dir="auto">조건은 다음과 같다.</p><ul id="270720e4-6f49-82d8-b1a9-816960b04356" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일명은 <code>json_error_filter.py</code>로 작성한다.</li></ul><ul id="e98720e4-6f49-8291-adbd-01b557695b64" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>json.loads()</code>를 사용한다.</li></ul><ul id="adb720e4-6f49-8240-b7cd-81be22d35ea7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>level</code> 값이 <code>ERROR</code>인 경우만 출력한다.</li></ul><ul id="5c8720e4-6f49-8287-abbb-012220921c32" class="bulleted-list" dir="auto"><li style="list-style-type:disc">출력 형식은 <code>time=..., message=...</code> 형태로 한다.</li></ul><ul id="453720e4-6f49-83ec-a045-819ec2742d24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 JSON 줄은 건너뛴다.</li></ul><h3 id="968720e4-6f49-82f0-a923-01c256b60cf2" class="" dir="auto">실행 예시</h3><pre id="fc2720e4-6f49-82a2-bb12-0121f12c5ed5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python json_error_filter.py</code></pre><h3 id="e2e720e4-6f49-8271-8029-812ee19d599d" class="" dir="auto">출력 예시</h3><pre id="9a5720e4-6f49-8377-bed6-81ee1bcb6793" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">time=2026-04-20T10:01:15, message=database connection failed
+time=2026-04-20T10:01:25, message=timeout occurred</code></pre><hr id="bda720e4-6f49-83f0-8362-01acd161b571" dir="auto"/><h1 id="620720e4-6f49-8399-bed0-8138e782365e" class="" dir="auto">6.20 정리</h1><p id="217720e4-6f49-8305-8c5c-011fde621bc3" class="" dir="auto">이 장에서는 Python을 사용해 로그 파일을 분석하는 기본 흐름을 학습했다.</p><p id="5eb720e4-6f49-8244-a0f3-01fc75511903" class="" dir="auto">핵심 내용은 다음과 같다.</p><ul id="d3f720e4-6f49-8285-ae57-01d2b76a418a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그는 시스템과 애플리케이션의 동작 기록이다.</li></ul><ul id="cdf720e4-6f49-8362-b0ea-019558d6c394" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경에서는 로그를 통해 장애 원인, 오류 빈도, 요청 패턴을 확인한다.</li></ul><ul id="af6720e4-6f49-8375-9513-01ddd009f5dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python에서는 <code>open()</code>과 반복문을 사용해 로그 파일을 줄 단위로 읽을 수 있다.</li></ul><ul id="bda720e4-6f49-827e-aa38-81bc71e4a402" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>strip()</code>은 줄 끝의 줄바꿈 문자를 제거할 때 사용한다.</li></ul><ul id="cc1720e4-6f49-835e-b3ee-01d88ff9447c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>in</code>을 사용하면 특정 키워드가 포함된 로그만 찾을 수 있다.</li></ul><ul id="d98720e4-6f49-8228-8947-01cd9fee45d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단순 문자열 검색은 쉽지만 정확한 분석에는 한계가 있다.</li></ul><ul id="9c0720e4-6f49-82d7-8f70-01448ff0f601" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정규표현식을 사용하면 상태코드, IP, 요청 경로 같은 값을 추출할 수 있다.</li></ul><ul id="696720e4-6f49-8307-88b8-01314a5300b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">딕셔너리와 <code>Counter</code>는 로그 집계에 유용하다.</li></ul><ul id="704720e4-6f49-838a-bbd0-811348bc8944" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON 로그는 <code>json.loads()</code>로 파싱한 뒤 딕셔너리처럼 다룰 수 있다.</li></ul><ul id="baa720e4-6f49-8365-939d-013ff44deace" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 JSON 줄은 예외 처리로 건너뛸 수 있다.</li></ul><ul id="2dd720e4-6f49-821f-9daf-81def01140e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>argparse</code>를 사용하면 파일명이나 키워드를 실행 인자로 받을 수 있다.</li></ul><ul id="b67720e4-6f49-8327-94e8-018674e2e27a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수 분리, 예외 처리, 실행 인자 처리를 포함하면 운영 자동화 스크립트에 가까운 형태가 된다.</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

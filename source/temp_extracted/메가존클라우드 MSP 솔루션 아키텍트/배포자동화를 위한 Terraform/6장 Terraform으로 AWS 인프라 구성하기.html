@@ -1,0 +1,1108 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>6장. Terraform으로 AWS 인프라 구성하기</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="fcd720e4-6f49-826c-b748-81e47a10332b" class="page sans"><header><h1 class="page-title" dir="auto">6장. Terraform으로 AWS 인프라 구성하기</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="c9c720e4-6f49-828e-8855-81d2931e6c1f" class="" dir="auto">장 목표</h2><p id="3f6720e4-6f49-835a-a442-8183a754e43a" class="" dir="auto">이 장에서는 Terraform 기본 요소를 사용해서 실제 AWS 인프라를 구성하는 흐름을 학습한다.</p><p id="9c9720e4-6f49-8278-8e3e-81727839c99a" class="" dir="auto">이 장을 학습한 뒤에는 다음이 가능해야 한다.</p><ul id="439720e4-6f49-82d9-8e41-0140845d92bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC, Subnet, Internet Gateway, Route Table, Route Table Association의 역할을 설명할 수 있음</li></ul><ul id="49b720e4-6f49-838a-91d4-01af1a7dda9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group의 역할을 설명할 수 있음</li></ul><ul id="b8d720e4-6f49-8223-88a2-0140de36844f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform으로 EC2를 포함한 기본 퍼블릭 인프라 구성을 이해할 수 있음</li></ul><ul id="264720e4-6f49-8297-994d-01fc2821724c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스 간 참조 방식이 실제 의존 관계를 어떻게 만드는지 설명할 수 있음</li></ul><ul id="fd4720e4-6f49-8310-84b5-012a2a787f02" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>depends_on</code>의 의미와 사용 시점을 설명할 수 있음</li></ul><ul id="bba720e4-6f49-8281-9936-013fd74378ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform plan</code> 결과를 읽고 어떤 리소스가 어떤 순서로 만들어질지 해석할 수 있음</li></ul><ul id="e0e720e4-6f49-82dc-b0b0-81950a680ac6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 서브넷 기반의 기본 네트워크 구성 흐름을 설명할 수 있음</li></ul><hr id="d22720e4-6f49-837f-8f4b-816ac10dca41" dir="auto"/><h2 id="14b720e4-6f49-831e-8d4f-01ccf1598b2c" class="" dir="auto">1. 기본 구성 흐름 </h2><p id="aa2720e4-6f49-8295-a096-8169c60c0538" class="" dir="auto">이번 장에서 다룰 가장 기본적인 퍼블릭 인프라 구성 흐름은 다음과 같다.</p><ol type="1" id="3ef720e4-6f49-828c-844f-012d46f51c38" class="numbered-list" start="1" dir="auto"><li>VPC 생성</li></ol><ol type="1" id="379720e4-6f49-833b-95e5-81c25b398de8" class="numbered-list" start="2" dir="auto"><li>Subnet 생성</li></ol><ol type="1" id="dad720e4-6f49-823b-a1e4-0119a658d304" class="numbered-list" start="3" dir="auto"><li>Internet Gateway 생성 후 VPC 연결</li></ol><ol type="1" id="23b720e4-6f49-8350-bbb3-817f8e500328" class="numbered-list" start="4" dir="auto"><li>Route Table 생성</li></ol><ol type="1" id="d8a720e4-6f49-82e3-839c-816c03b97b73" class="numbered-list" start="5" dir="auto"><li>기본 경로 <code>0.0.0.0/0</code> 를 Internet Gateway로 연결</li></ol><ol type="1" id="9b7720e4-6f49-8301-b392-81d0637668be" class="numbered-list" start="6" dir="auto"><li>Route Table을 Subnet에 연결</li></ol><ol type="1" id="560720e4-6f49-83a3-80dc-81371954ab4f" class="numbered-list" start="7" dir="auto"><li>Security Group 생성</li></ol><ol type="1" id="37d720e4-6f49-82a1-b8cf-012eb8e12e96" class="numbered-list" start="8" dir="auto"><li>EC2 생성</li></ol><p id="d57720e4-6f49-820d-badf-81f48c448a67" class="" dir="auto">이 흐름은 AWS 네트워크 실습의 가장 기본적인 형태다.</p><p id="3a8720e4-6f49-833a-a3c6-811d7a58e39c" class="" dir="auto">즉, “인터넷에 나갈 수 있는 퍼블릭 서브넷에 EC2를 배치하는 구조”다.</p><hr id="589720e4-6f49-83cf-9c16-81933bf5c7ae" dir="auto"/><h2 id="fc8720e4-6f49-8339-b351-01a965cc3189" class="" dir="auto">2. VPC</h2><h3 id="c14720e4-6f49-8258-84ac-01eb0645217a" class="" dir="auto">2.1 VPC의 역할</h3><p id="e9e720e4-6f49-826a-85b7-816eaeaf96cc" class="" dir="auto">VPC는 AWS에서 네트워크의 가장 큰 논리적 경계다.</p><p id="8f6720e4-6f49-833f-86c7-01dd0f406e37" class="" dir="auto">쉽게 말하면 내가 사용할 사설 네트워크 공간을 정의하는 것이다.</p><p id="105720e4-6f49-8293-bc50-01e4731b4902" class="" dir="auto">예를 들어 다음처럼 생성할 수 있다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="91b720e4-6f49-8203-842a-81636269298a" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.10.0.0/16&quot;
+
+  tags = {
+    Name = &quot;main-vpc&quot;
+  }
+}</code></pre><p id="0c2720e4-6f49-8231-9dc6-01b2093c366c" class="" dir="auto">이 코드는 <code>10.10.0.0/16</code> 대역을 사용하는 VPC를 생성한다.</p><hr id="18f720e4-6f49-83e6-ba03-017c33c30d58" dir="auto"/><h3 id="ac4720e4-6f49-83e9-8be4-01544bf36db3" class="" dir="auto">2.2 CIDR 블록 의미</h3><p id="225720e4-6f49-8352-91bb-0145b7d96607" class="" dir="auto"><code>cidr_block = &quot;10.10.0.0/16&quot;</code> 은 이 VPC가 사용할 전체 IP 범위를 뜻한다.</p><p id="2ae720e4-6f49-821e-b9e4-01382e9a7b5b" class="" dir="auto">즉, 이후 생성할 Subnet은 이 범위 안에서 잘라서 사용해야 한다.</p><p id="f68720e4-6f49-83c0-b34d-019c464a5c69" class="" dir="auto">예를 들어 다음 같은 서브넷을 만들 수 있다.</p><ul id="699720e4-6f49-827b-9f43-0120c86306c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>10.10.1.0/24</code></li></ul><ul id="5fd720e4-6f49-83cb-a1f9-01b5c0fd1b2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>10.10.2.0/24</code></li></ul><p id="b28720e4-6f49-83c4-87b4-81f31d2a4add" class="" dir="auto">즉, VPC는 전체 네트워크 범위를 정하고,</p><p id="c3e720e4-6f49-8280-98a5-01ff15a03165" class="" dir="auto">Subnet은 그 범위를 더 작게 나눠 사용하는 구조다.</p><hr id="c63720e4-6f49-834b-ba83-8185188f2085" dir="auto"/><h2 id="449720e4-6f49-8265-84fd-812288781b0f" class="" dir="auto">3. Subnet</h2><h3 id="54b720e4-6f49-826f-8f50-81499171487d" class="" dir="auto">3.1 Subnet의 역할</h3><p id="98b720e4-6f49-82a6-a962-01a76fbecc60" class="" dir="auto">Subnet은 VPC 내부를 더 작은 네트워크 단위로 나눈 것이다.</p><p id="560720e4-6f49-829c-93fc-0188da3fda9d" class="" dir="auto">EC2 같은 리소스는 실제로 Subnet 안에 배치된다.</p><p id="265720e4-6f49-839c-96c3-014024c57963" class="" dir="auto">예시:</p><pre id="6c3720e4-6f49-8394-a90c-81100b2abd10" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_subnet&quot; &quot;public&quot; {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = &quot;10.10.1.0/24&quot;
+  availability_zone       = &quot;ap-northeast-2a&quot;
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = &quot;public-subnet-a&quot;
+  }
+}</code></pre><hr id="25c720e4-6f49-82c7-bb2c-0181ffdbf246" dir="auto"/><h3 id="20c720e4-6f49-827c-8ab6-8164acc38ac0" class="" dir="auto">3.2 중요한 인자 설명</h3><h3 id="8b3720e4-6f49-8395-86d9-0117ff12f7b7" class="" dir="auto"><code>vpc_id</code></h3><p id="2ca720e4-6f49-8238-bc1c-0126e4fcb387" class="" dir="auto">이 Subnet이 어느 VPC에 속하는지 지정한다.</p><pre id="7e3720e4-6f49-83a6-b66f-81e806bf6173" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">vpc_id = aws_vpc.main.id</code></pre><p id="1a6720e4-6f49-8328-b1b9-81e91a00f23b" class="" dir="auto">즉, 앞에서 생성한 <code>aws_vpc.main</code> 리소스의 ID를 참조한다.</p><hr id="c44720e4-6f49-83d0-806d-01b25ea74d4a" dir="auto"/><h3 id="92b720e4-6f49-8313-a66e-81da60eaac18" class="" dir="auto"><code>cidr_block</code></h3><p id="714720e4-6f49-83e5-bfbc-815403d769f3" class="" dir="auto">이 Subnet이 사용할 IP 범위다.</p><pre id="6fd720e4-6f49-8253-b3f2-016ccd2c7f86" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cidr_block = &quot;10.10.1.0/24&quot;</code></pre><p id="439720e4-6f49-820e-8d64-010d1debaea1" class="" dir="auto">이 값은 반드시 VPC CIDR 범위 안에 있어야 한다.</p><hr id="66d720e4-6f49-83a8-8868-815a0308229f" dir="auto"/><h3 id="c9f720e4-6f49-82e8-bb84-01b7cdb83f2b" class="" dir="auto"><code>availability_zone</code></h3><p id="9b6720e4-6f49-82e7-a166-017ada78c314" class="" dir="auto">어느 가용 영역에 만들지 지정한다.</p><pre id="782720e4-6f49-82fe-9d8e-8124bba4ee5d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">availability_zone = &quot;ap-northeast-2a&quot;</code></pre><hr id="1b6720e4-6f49-82fb-9fdc-011205d03af0" dir="auto"/><h3 id="238720e4-6f49-8305-8710-8199d102d770" class="" dir="auto"><code>map_public_ip_on_launch</code></h3><p id="251720e4-6f49-82e1-aef7-81ae08f41b5c" class="" dir="auto">이 값이 <code>true</code>이면 이 Subnet에 생성되는 인스턴스가 퍼블릭 IP를 자동으로 받을 수 있다.</p><pre id="216720e4-6f49-8320-810d-810a9480e192" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">map_public_ip_on_launch = true</code></pre><p id="169720e4-6f49-8330-8e39-81b3e4141cf7" class="" dir="auto">이 설정이 있다고 해서 바로 인터넷 통신이 되는 것은 아니다.</p><p id="2c7720e4-6f49-83c2-a878-01df1fe16325" class="" dir="auto">Internet Gateway와 Route Table 설정도 함께 필요하다.</p><hr id="faf720e4-6f49-8227-a9b7-01c377647f73" dir="auto"/><h2 id="4cc720e4-6f49-8339-8d77-81ef3adfb647" class="" dir="auto">4. Internet Gateway</h2><h3 id="225720e4-6f49-83bc-86c1-011696dc7c41" class="" dir="auto">4.1 역할</h3><p id="ec8720e4-6f49-83e1-b1d4-817b7002ba8a" class="" dir="auto">Internet Gateway는 VPC가 인터넷과 통신할 수 있도록 연결해주는 구성 요소다.</p><p id="96b720e4-6f49-830d-87ed-81aceee2b4bd" class="" dir="auto">예시:</p><pre id="dd7720e4-6f49-827e-a88f-01cd2645b6b1" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_internet_gateway&quot; &quot;igw&quot; {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = &quot;main-igw&quot;
+  }
+}</code></pre><p id="1fa720e4-6f49-8373-a931-81242b6d4453" class="" dir="auto">이 리소스는 생성과 동시에 특정 VPC에 연결된다.</p><hr id="773720e4-6f49-8259-98d6-015370c721a6" dir="auto"/><h3 id="cff720e4-6f49-8318-8a34-81cbcfca3ef8" class="" dir="auto">4.2 왜 필요한가</h3><p id="733720e4-6f49-8251-8034-018e3464aaff" class="" dir="auto">퍼블릭 서브넷이라고 해서 자동으로 인터넷 연결이 되는 것은 아니다.</p><p id="7e5720e4-6f49-82dd-9784-81b99b66b3dc" class="" dir="auto">Subnet은 단지 네트워크 구간일 뿐이고,</p><p id="cef720e4-6f49-8326-af21-01e96143aabf" class="" dir="auto">외부 인터넷으로 나가려면 VPC 자체가 Internet Gateway와 연결되어 있어야 한다.</p><p id="068720e4-6f49-822f-a4f7-016f66e40a9b" class="" dir="auto">즉,</p><ul id="41e720e4-6f49-8371-8bcf-01449c035e7f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 IP만 있어도 부족함</li></ul><ul id="63f720e4-6f49-82b6-80b6-016f198ed368" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway만 있어도 부족함</li></ul><ul id="f3a720e4-6f49-8243-89aa-01619e411126" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅까지 연결되어야 실제 인터넷 통신 가능함</li></ul><hr id="64d720e4-6f49-82d1-831c-81a40ca36564" dir="auto"/><h2 id="1dc720e4-6f49-836a-94a6-015a44538f35" class="" dir="auto">5. Route Table</h2><h3 id="6bf720e4-6f49-829b-b700-01833dfaa94d" class="" dir="auto">5.1 역할</h3><p id="d3c720e4-6f49-827f-8252-0134f957ec75" class="" dir="auto">Route Table은 네트워크 트래픽이 어디로 가야 하는지 규칙을 정의한다.</p><p id="555720e4-6f49-82b8-be57-81d7ad04931e" class="" dir="auto">예시:</p><pre id="1b4720e4-6f49-821a-8f96-013e09f7d908" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_route_table&quot; &quot;public&quot; {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = &quot;public-rt&quot;
+  }
+}</code></pre><p id="c49720e4-6f49-8317-91e5-817d90b40e74" class="" dir="auto">이 자체로는 단지 라우팅 테이블만 만든 것이다.</p><p id="158720e4-6f49-82c8-9c8b-81fff49b5920" class="" dir="auto">실제 인터넷 경로는 별도 route 리소스로 추가한다.</p><hr id="13c720e4-6f49-8267-9628-01cd9bd13606" dir="auto"/><h3 id="09a720e4-6f49-838f-abba-81dae960e693" class="" dir="auto">5.2 기본 인터넷 경로 추가</h3><p id="744720e4-6f49-82f1-9e09-01ffb85c97e5" class="" dir="auto">퍼블릭 서브넷에서 인터넷으로 나가려면</p><p id="555720e4-6f49-8326-a28b-01b78ef576e4" class="" dir="auto">기본 경로 <code>0.0.0.0/0</code> 를 Internet Gateway로 보내야 한다.</p><p id="f1d720e4-6f49-830b-b30b-81f7e8d165fe" class="" dir="auto">예시:</p><pre id="4fd720e4-6f49-825f-839b-0160ada08f03" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_route&quot; &quot;public_internet_access&quot; {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = &quot;0.0.0.0/0&quot;
+  gateway_id             = aws_internet_gateway.igw.id
+}</code></pre><hr id="665720e4-6f49-83d1-af02-8180f7d5b6d7" dir="auto"/><h3 id="011720e4-6f49-82fb-9106-8161d3927c05" class="" dir="auto">5.3 각 인자 설명</h3><h3 id="afd720e4-6f49-8281-9a95-8121beb046df" class="" dir="auto"><code>route_table_id</code></h3><p id="e6e720e4-6f49-838f-abb5-019316942f51" class="" dir="auto">어느 Route Table에 경로를 추가할지 지정한다.</p><h3 id="aaa720e4-6f49-8315-a286-81dda247903b" class="" dir="auto"><code>destination_cidr_block</code></h3><p id="542720e4-6f49-826c-9f52-01e871bb5e46" class="" dir="auto">목적지 대역이다. <code>0.0.0.0/0</code> 는 모든 외부 대역을 의미한다.</p><h3 id="635720e4-6f49-83b3-8a7c-01ccf06c3b15" class="" dir="auto"><code>gateway_id</code></h3><p id="801720e4-6f49-823d-8a40-01002a5578d7" class="" dir="auto">그 목적지로 갈 때 어느 게이트웨이를 사용할지 지정한다.</p><p id="334720e4-6f49-8313-a2ea-818a3b958765" class="" dir="auto">여기서는 Internet Gateway를 사용한다.</p><hr id="33d720e4-6f49-83ad-a10f-01c60ab2d194" dir="auto"/><h2 id="c54720e4-6f49-83d8-a726-01f104692aab" class="" dir="auto">6. Route Table Association</h2><h3 id="3ca720e4-6f49-8322-987e-01c6e41a3195" class="" dir="auto">6.1 역할</h3><p id="ca5720e4-6f49-82f0-b219-014850489a4e" class="" dir="auto">Route Table을 만들고 route까지 넣었다고 끝이 아니다.</p><p id="5ca720e4-6f49-8238-b445-8142e0d4f9a5" class="" dir="auto">그 Route Table이 어떤 Subnet에 적용되는지도 연결해야 한다.</p><p id="6ea720e4-6f49-829e-8d1d-018237247a01" class="" dir="auto">예시:</p><pre id="dc5720e4-6f49-82ca-8984-01fe3b7cd943" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_route_table_association&quot; &quot;public_assoc&quot; {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
+}</code></pre><hr id="693720e4-6f49-8251-a231-01a9ccd2b207" dir="auto"/><h3 id="56b720e4-6f49-8391-8dc7-812494c2d8ef" class="" dir="auto">6.2 왜 필요한가</h3><p id="9e1720e4-6f49-828a-bac5-811013568eb7" class="" dir="auto">AWS에서는 Route Table이 존재한다고 해서 모든 Subnet에 자동 적용되지 않는다.</p><p id="d2d720e4-6f49-82ec-b182-81c0b04a28fd" class="" dir="auto">특정 Subnet과 명시적으로 연결되어야 한다.</p><p id="53f720e4-6f49-82f9-8f47-01a7354ed409" class="" dir="auto">즉, 퍼블릭 서브넷이 되려면 보통 다음 세 가지가 함께 맞아야 한다.</p><ol type="1" id="3c9720e4-6f49-8218-b6d8-816858cddb82" class="numbered-list" start="1" dir="auto"><li>퍼블릭 IP 할당 가능</li></ol><ol type="1" id="5b3720e4-6f49-8355-9889-81ec4ad9cfc3" class="numbered-list" start="2" dir="auto"><li>Internet Gateway 연결 존재</li></ol><ol type="1" id="d06720e4-6f49-83df-b0df-814b1544361f" class="numbered-list" start="3" dir="auto"><li>해당 Subnet에 연결된 Route Table에 <code>0.0.0.0/0 -&gt; IGW</code> 경로 존재</li></ol><p id="b08720e4-6f49-830b-9ac0-015524f3343d" class="" dir="auto">이 세 가지가 맞아야 실제로 퍼블릭 통신이 가능해진다.</p><hr id="ea1720e4-6f49-83ab-a1d1-815f0e61224a" dir="auto"/><h2 id="567720e4-6f49-8206-b3b6-81317888a8b3" class="" dir="auto">7. Security Group</h2><h3 id="fb7720e4-6f49-8279-8c8a-01bc68faadaa" class="" dir="auto">7.1 역할</h3><p id="1c7720e4-6f49-83ce-8122-01eaa28aea05" class="" dir="auto">Security Group은 인스턴스 수준의 가상 방화벽이다.</p><p id="065720e4-6f49-83be-9ebe-01bb33cbb115" class="" dir="auto">인바운드와 아웃바운드 트래픽을 제어한다.</p><p id="669720e4-6f49-83c8-8dce-0141f9704074" class="" dir="auto">예시:</p><p id="5ed720e4-6f49-82f8-836e-81cf1f77f704" class="" dir="auto">인라인 방식</p><pre id="20c720e4-6f49-83bc-a4be-0145ec764466" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_security_group&quot; &quot;web_sg&quot; {
+  name        = &quot;web-sg&quot;
+  description = &quot;Allow SSH and HTTP&quot;
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = &quot;SSH&quot;
+    from_port   = 22
+    to_port     = 22
+    protocol    = &quot;tcp&quot;
+    cidr_blocks = [&quot;0.0.0.0/0&quot;]
+  }
+
+  ingress {
+    description = &quot;HTTP&quot;
+    from_port   = 80
+    to_port     = 80
+    protocol    = &quot;tcp&quot;
+    cidr_blocks = [&quot;0.0.0.0/0&quot;]
+  }
+
+  egress {
+    description = &quot;All outbound&quot;
+    from_port   = 0
+    to_port     = 0
+    protocol    = &quot;-1&quot;
+    cidr_blocks = [&quot;0.0.0.0/0&quot;]
+  }
+
+  tags = {
+    Name = &quot;web-sg&quot;
+  }
+}</code></pre><p id="dc1720e4-6f49-83e0-9986-012e3bcde2fb" class="" dir="auto">독립형 방식</p><pre id="d76720e4-6f49-83ef-8d2f-017a2883371e" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all"># 1. 보안 그룹 본체 (껍데기)
+resource &quot;aws_security_group&quot; &quot;web_sg&quot; {
+  name        = &quot;web-sg&quot;
+  description = &quot;Allow SSH and HTTP&quot;
+  vpc_id      = aws_vpc.main.id
+
+  tags = {
+    Name = &quot;web-sg&quot;
+  }
+}
+
+# 2. 인바운드 규칙: SSH (22)
+resource &quot;aws_vpc_security_group_ingress_rule&quot; &quot;allow_ssh&quot; {
+  security_group_id = aws_security_group.web_sg.id
+  description       = &quot;SSH&quot;
+  from_port         = 22
+  to_port           = 22
+  ip_protocol       = &quot;tcp&quot;
+  cidr_ipv4         = &quot;0.0.0.0/0&quot;
+}
+
+# 3. 인바운드 규칙: HTTP (80)
+resource &quot;aws_vpc_security_group_ingress_rule&quot; &quot;allow_http&quot; {
+  security_group_id = aws_security_group.web_sg.id
+  description       = &quot;HTTP&quot;
+  from_port         = 80
+  to_port           = 80
+  ip_protocol       = &quot;tcp&quot;
+  cidr_ipv4         = &quot;0.0.0.0/0&quot;
+}
+
+# 4. 아웃바운드 규칙: All Traffic
+resource &quot;aws_vpc_security_group_egress_rule&quot; &quot;allow_all_outbound&quot; {
+  security_group_id = aws_security_group.web_sg.id
+  description       = &quot;All outbound&quot;
+  ip_protocol       = &quot;-1&quot; # 모든 프로토콜 및 포트 허용
+  cidr_ipv4         = &quot;0.0.0.0/0&quot;
+}</code></pre><hr id="52e720e4-6f49-835b-b8bf-01cbfbf494bb" dir="auto"/><h3 id="7f9720e4-6f49-83bc-b544-811c48b1d4fb" class="" dir="auto">7.2 ingress와 egress</h3><h3 id="bf3720e4-6f49-8212-8c72-8172ce1d93c1" class="" dir="auto">ingress</h3><p id="733720e4-6f49-82dc-8190-01b69d24295c" class="" dir="auto">외부에서 인스턴스로 들어오는 트래픽 규칙이다.</p><h3 id="d5f720e4-6f49-8326-a90d-81f92e7f19fb" class="" dir="auto">egress</h3><p id="971720e4-6f49-83ac-9195-815e26b4cca6" class="" dir="auto">인스턴스에서 외부로 나가는 트래픽 규칙이다.</p><p id="5a5720e4-6f49-82e1-9511-01560cbc78fa" class="" dir="auto">초기 실습에서는 다음처럼 이해하면 된다.</p><ul id="e81720e4-6f49-8398-80d9-012a86ce54c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH 접속용 22 포트 허용</li></ul><ul id="186720e4-6f49-83a5-8c5f-81f583de3428" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 확인용 80 포트 허용</li></ul><ul id="607720e4-6f49-8347-b7ce-810cc4359c46" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부로 나가는 트래픽은 전체 허용</li></ul><hr id="df9720e4-6f49-83ba-b752-014eaf9f217c" dir="auto"/><h2 id="0e0720e4-6f49-83a9-b9da-013873a099c1" class="" dir="auto">8. EC2</h2><h3 id="382720e4-6f49-828c-8f05-01c0d9edee20" class="" dir="auto">8.1 역할</h3><p id="76a720e4-6f49-8309-bb6d-814df5003d45" class="" dir="auto">EC2는 실제 서버 인스턴스다.</p><p id="7ab720e4-6f49-83cb-a9bf-81d5592c4d44" class="" dir="auto">이전까지 만든 네트워크 구성 요소 위에 실제 컴퓨팅 리소스를 배치하는 단계다.</p><p id="707720e4-6f49-8363-9d94-010ee4565ddf" class="" dir="auto">예시:</p><pre id="a3e720e4-6f49-8299-861b-81aa6d23289b" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  key_name               = var.key_name
+
+  tags = merge(local.common_tags, {
+    Name = var.instance_name
+  })
+}</code></pre><hr id="9d3720e4-6f49-8367-bfd4-81f740d05f55" dir="auto"/><h3 id="df8720e4-6f49-82f9-af16-81bea81c30fe" class="" dir="auto">8.2 주요 인자 설명</h3><h3 id="865720e4-6f49-8233-aa12-81a770262da6" class="" dir="auto"><code>ami</code></h3><p id="2c8720e4-6f49-8270-9baf-814522e61e6a" class="" dir="auto">어떤 OS 이미지로 인스턴스를 생성할지 지정한다.</p><h3 id="c7a720e4-6f49-8208-897d-01e1920edf55" class="" dir="auto"><code>instance_type</code></h3><p id="d70720e4-6f49-8273-ac22-01713bdde6a3" class="" dir="auto">인스턴스 사양이다.</p><h3 id="212720e4-6f49-8309-b2d4-0199f7b631f9" class="" dir="auto"><code>subnet_id</code></h3><p id="afd720e4-6f49-83c1-971d-813a093a3b4d" class="" dir="auto">어느 Subnet에 배치할지 지정한다.</p><h3 id="96e720e4-6f49-8376-a516-01b165d3e811" class="" dir="auto"><code>vpc_security_group_ids</code></h3><p id="cde720e4-6f49-83d8-bb88-01bebcd4631c" class="" dir="auto">어떤 Security Group을 적용할지 지정한다.</p><h3 id="96c720e4-6f49-8339-b060-013469f0406d" class="" dir="auto"><code>key_name</code></h3><p id="0dc720e4-6f49-8278-a475-014d8c792e4c" class="" dir="auto">SSH 접속용 키페어 이름이다.</p><hr id="e86720e4-6f49-82ce-bea1-817bb838c2f0" dir="auto"/><h2 id="3d2720e4-6f49-8206-94f8-0132cd41ebea" class="" dir="auto">9. 리소스 참조</h2><p id="7ae720e4-6f49-83a9-82c6-81fa4c884ab6" class="" dir="auto">Terraform의 강점 중 하나는 리소스를 문자열로 연결하지 않고</p><p id="694720e4-6f49-833e-aec7-81cae573bd00" class="" dir="auto">참조로 연결한다는 점이다.</p><p id="740720e4-6f49-83cf-8997-01b0bf96e5b0" class="" dir="auto">예를 들어 다음 코드를 보자.</p><pre id="80f720e4-6f49-834d-a2f4-01b8f5a73ac3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">vpc_id = aws_vpc.main.id</code></pre><p id="805720e4-6f49-822e-9305-811605826c8b" class="" dir="auto">이 표현은 단순히 값을 끼워 넣는 것이 아니다.</p><p id="543720e4-6f49-827e-8327-01057305fa38" class="" dir="auto">Terraform에게 다음을 알려준다.</p><ul id="dd1720e4-6f49-83df-9858-01e4636db692" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_subnet.public</code> 은 <code>aws_vpc.main</code> 이 먼저 필요함</li></ul><ul id="473720e4-6f49-8389-9cd2-01d89135e0d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">따라서 생성 순서상 VPC가 먼저 만들어져야 함</li></ul><p id="81f720e4-6f49-83f4-b1ae-0113270be621" class="" dir="auto">즉, 참조는 단순한 값 전달이 아니라 <strong>의존 관계 선언</strong>이기도 하다.</p><h2 id="c3c720e4-6f49-8265-b981-01953b00e8f2" class="" dir="auto">10. 참조 기반 의존성</h2><p id="fcf720e4-6f49-83de-a4c1-0151a7baea5b" class="" dir="auto">Terraform은 리소스 간 참조를 분석해서 어떤 리소스를 먼저 만들고 나중에 만들어야 하는지를 계산한다.</p><p id="f68720e4-6f49-839b-8ed0-019217e87fef" class="" dir="auto">예를 들어 다음 관계가 있다고 하자.</p><ul id="e35720e4-6f49-8235-86bd-0191b6ac1192" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet은 VPC ID가 필요함</li></ul><ul id="927720e4-6f49-8320-85be-010902713ef1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway는 VPC ID가 필요함</li></ul><ul id="27f720e4-6f49-82c9-97b9-8154c9caf1a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route는 Route Table ID와 IGW ID가 필요함</li></ul><ul id="c46720e4-6f49-82ab-a435-817bc166c4b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2는 Subnet ID와 Security Group ID가 필요함</li></ul><p id="ded720e4-6f49-8257-8484-81b27b21e7aa" class="" dir="auto">이 경우 Terraform은 자동으로 대략 다음 순서를 계산한다.</p><ol type="1" id="f99720e4-6f49-820e-b89f-015f7be17753" class="numbered-list" start="1" dir="auto"><li>VPC</li></ol><ol type="1" id="e77720e4-6f49-836f-a181-01c9582650fb" class="numbered-list" start="2" dir="auto"><li>Subnet / IGW / Route Table / Security Group</li></ol><ol type="1" id="f5f720e4-6f49-82e4-89ce-0160c9342867" class="numbered-list" start="3" dir="auto"><li>Route Table Association / Route</li></ol><ol type="1" id="c14720e4-6f49-82f3-9e23-818d504f0e1a" class="numbered-list" start="4" dir="auto"><li>EC2</li></ol><p id="bb3720e4-6f49-8334-b98e-81b35c54ee16" class="" dir="auto">즉, Terraform이 대부분의 생성 순서를 자동으로 계산한다.</p><hr id="d15720e4-6f49-8336-86b3-81d564f45d54" dir="auto"/><h2 id="353720e4-6f49-8380-ae71-0140756968d7" class="" dir="auto">11. depends_on</h2><h3 id="e75720e4-6f49-8344-868d-01a0b6b9cd4c" class="" dir="auto">11.1 의미</h3><p id="af0720e4-6f49-83de-b31a-019bd52ae5bc" class="" dir="auto"><code>depends_on</code>은 Terraform에게</p><p id="376720e4-6f49-8331-a9de-813314df22d9" class="" dir="auto">“이 리소스는 저 리소스가 끝난 뒤에 처리해야 한다”고 명시적으로 알려주는 설정이다.</p><p id="68a720e4-6f49-820e-b3d5-01875f95383f" class="" dir="auto">예시:</p><pre id="601720e4-6f49-838d-8201-819c12113643" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  key_name               = var.key_name
+
+  depends_on = [
+    aws_route.public_internet_access
+  ]
+}</code></pre><hr id="6c4720e4-6f49-830a-a73e-8194ddccead6" dir="auto"/><h3 id="f58720e4-6f49-83a5-9f4a-813fdfdabb8c" class="" dir="auto">11.2 언제 쓰는가</h3><p id="ca7720e4-6f49-8275-b114-81c7686333ba" class="" dir="auto">보통은 참조만으로 충분하다.</p><p id="5a5720e4-6f49-82d5-86e6-8128ef58d5df" class="" dir="auto">하지만 다음처럼 <strong>직접 참조는 없는데 논리적으로 먼저 준비되어야 하는 경우</strong>에 쓴다.</p><p id="68d720e4-6f49-82e7-9d84-016b78669777" class="" dir="auto"><strong>EIP</strong>와 <strong>인터넷 게이트웨이(IGW)</strong> 사이의 관계를 코드로 작성할 때</p><pre id="6c8720e4-6f49-83f7-94fe-010869b09567" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all"># 인터넷 게이트웨이
+resource &quot;aws_internet_gateway&quot; &quot;igw&quot; {
+  vpc_id = aws_vpc.main.id
+}
+
+# 탄력적 IP (EIP)
+resource &quot;aws_eip&quot; &quot;nat_eip&quot; {
+  domain = &quot;vpc&quot;
+  # 여기에 IGW의 ID를 참조하는 코드가 없음!
+}
+
+# NAT 게이트웨이
+resource &quot;aws_nat_gateway&quot; &quot;nat_gw&quot; {
+  allocation_id = aws_eip.nat_eip.id
+  subnet_id     = aws_subnet.public.id
+}</code></pre><p id="cec720e4-6f49-83e6-af22-8176a68e2309" class="" dir="auto">EIP가 VPC 내부에서 정상적으로 동작하려면(특히 NAT 게이트웨이용으로 쓰이려면), 해당 VPC에 IGW가 붙어 있는 상태여야 API 호출이 성공함.</p><p id="3e8720e4-6f49-839e-b606-81e696970a6e" class="" dir="auto">순서가 꼬이면 다음과 같은 일이 발생함.</p><ol type="1" id="e0a720e4-6f49-8345-af22-01cc28604b61" class="numbered-list" start="1" dir="auto"><li>테라폼이 IGW와 EIP 생성을 동시에 요청함.</li></ol><ol type="1" id="02c720e4-6f49-833a-b95c-017a9d1b9028" class="numbered-list" start="2" dir="auto"><li>AWS가 IGW를 붙이는 동안, EIP 생성이 먼저 끝나거나 혹은 IGW가 채 붙기도 전에 EIP 관련 설정이 진행됨.</li></ol><ol type="1" id="837720e4-6f49-82a6-8f28-816fa78df874" class="numbered-list" start="3" dir="auto"><li>결과적으로 &quot;VPC에 인터넷 경로가 없어서 설정을 완료할 수 없다&quot;는 식의 에러를 뱉으며 멈춰버림.</li></ol><p id="801720e4-6f49-83d3-be2f-8121988fa08e" class="" dir="auto">따라서, 다음 코드처럼 IGW 생성 후에 EIP가 할당되도록 할 수 있음.</p><pre id="17b720e4-6f49-8247-8aa9-01546d9cbdfc" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_eip&quot; &quot;nat_eip&quot; {
+  domain     = &quot;vpc&quot;
+  depends_on = [aws_internet_gateway.igw] # &quot;IGW가 다 만들어질 때까지 기다려!&quot;
+}</code></pre><hr id="3a9720e4-6f49-824c-aa4d-8160ce68ec74" dir="auto"/><h3 id="87f720e4-6f49-831d-93cd-8107905ede02" class="" dir="auto">11.3 주의점</h3><p id="dc6720e4-6f49-834f-b9d5-81154c5f13e1" class="" dir="auto"><code>depends_on</code>은 필요할 때만 써야 한다.</p><p id="972720e4-6f49-82af-b179-81433c691718" class="" dir="auto">Terraform은 원래 참조 기반으로 의존성을 잘 계산하므로,</p><p id="7ae720e4-6f49-8233-bd71-81371c8fdb89" class="" dir="auto">무조건 많이 넣는 방식은 오히려 코드 가독성을 해칠 수 있다.</p><p id="36d720e4-6f49-838e-b394-015bb257b229" class="" dir="auto">즉,</p><ul id="412720e4-6f49-82ce-9976-811b6754c925" class="bulleted-list" dir="auto"><li style="list-style-type:disc">참조로 표현 가능하면 참조를 우선 사용</li></ul><ul id="880720e4-6f49-83a7-94f6-010f9bc34467" class="bulleted-list" dir="auto"><li style="list-style-type:disc">참조로 드러나지 않는 논리적 선후관계가 있을 때만 <code>depends_on</code> 사용</li></ul><p id="42c720e4-6f49-82bb-a768-81bb33f83d9c" class="" dir="auto">이 원칙이 좋다.</p><hr id="fe7720e4-6f49-820a-8114-811869456327" dir="auto"/><h2 id="7e2720e4-6f49-827c-8246-01daa1e0efe0" class="" dir="auto">12. plan 결과 해석</h2><h3 id="a69720e4-6f49-820f-a7c5-01c052f52c07" class="" dir="auto">12.1 왜 plan 해석이 중요한가</h3><p id="a86720e4-6f49-8278-94ec-81be8971698e" class="" dir="auto">Terraform은 선언형 도구이기 때문에</p><p id="c7d720e4-6f49-8253-920e-81245ff17bd3" class="" dir="auto">코드를 썼다고 바로 apply부터 하는 습관은 좋지 않다.</p><p id="d3b720e4-6f49-8388-871c-8157fb209b41" class="" dir="auto">항상 <code>terraform plan</code> 결과를 보고 다음을 확인해야 한다.</p><ul id="e46720e4-6f49-8297-b499-018aeba1b4c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 리소스가 생성되는가</li></ul><ul id="df7720e4-6f49-83b7-939c-8178aec459e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 값이 들어가는가</li></ul><ul id="46c720e4-6f49-82e4-bdfe-01e042159a47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변경인지 생성인지 삭제인지</li></ul><ul id="db2720e4-6f49-820d-a3b6-015961416555" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예상한 구조와 맞는가</li></ul><hr id="76d720e4-6f49-8391-9167-813c5fd89577" dir="auto"/><h3 id="97d720e4-6f49-83b9-86a5-01a959c296f5" class="" dir="auto">12.2 plan에서 확인할 것</h3><p id="6d8720e4-6f49-836d-a883-016e8c9512fe" class="" dir="auto">예를 들어 이번 장의 구성을 plan하면 다음 같은 리소스들이 보일 것이다.</p><ul id="bad720e4-6f49-83ef-8e9f-01ba88a727a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_vpc.main</code></li></ul><ul id="b56720e4-6f49-8386-9b6d-816ac57e7e97" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_subnet.public</code></li></ul><ul id="af4720e4-6f49-825c-9831-01af6f094f34" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_internet_gateway.igw</code></li></ul><ul id="cea720e4-6f49-82e9-989c-015072cb731e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_route_table.public</code></li></ul><ul id="7cd720e4-6f49-8298-972a-01c9a16bd404" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_route.public_internet_access</code></li></ul><ul id="e4b720e4-6f49-834c-9421-812c602fee83" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_route_table_association.public_assoc</code></li></ul><ul id="9d6720e4-6f49-83b3-bf41-0162bbba424c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_security_group.web_sg</code></li></ul><ul id="077720e4-6f49-82d3-9e37-81c21b27bf29" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_instance.web</code></li></ul><p id="84a720e4-6f49-831e-98b3-0120b36bef3e" class="" dir="auto">즉, plan 결과를 보면</p><p id="a86720e4-6f49-837d-8ec7-01205d6cd15d" class="" dir="auto">Terraform이 지금 어떤 인프라 구조를 이해하고 있는지 확인할 수 있다.</p><hr id="7bc720e4-6f49-820d-bab3-01395e490332" dir="auto"/><h3 id="45f720e4-6f49-83c3-a87a-01b17c2e0863" class="" dir="auto">12.3 plan은 설계 검토 단계다</h3><p id="dc9720e4-6f49-8295-bb4a-01b9768ce8e2" class="" dir="auto"><code>terraform plan</code>은 단순 미리보기가 아니라</p><p id="c73720e4-6f49-8372-abc8-01f5eebd26fa" class="" dir="auto">실제 설계 검토 단계라고 보는 것이 더 맞다.</p><p id="14d720e4-6f49-8339-9aef-01ea42f8f7da" class="" dir="auto">즉, 다음을 확인해야 한다.</p><ul id="64e720e4-6f49-82da-979c-01cf9fc43ed1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CIDR 범위가 맞는가</li></ul><ul id="2be720e4-6f49-837e-a39c-8126e38b2121" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전과 AZ가 맞는가</li></ul><ul id="713720e4-6f49-83ce-ae62-819a436dafc7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group 포트가 맞는가</li></ul><ul id="012720e4-6f49-82b5-90a6-017096b0e98d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Key pair 이름이 맞는가</li></ul><ul id="cef720e4-6f49-8362-88d6-819467c60f8c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2가 원하는 Subnet에 배치되는가</li></ul><p id="c28720e4-6f49-8387-b6c3-01b67bc19dca" class="" dir="auto">이 확인 없이 apply하면 불필요한 비용이나 잘못된 구성이 생길 수 있다.</p><hr id="d36720e4-6f49-83e0-9142-81a5e5275134" dir="auto"/><h2 id="0b1720e4-6f49-8371-95b5-0102258af05e" class="" dir="auto">13. 퍼블릭 인프라 조합 흐름 정리</h2><p id="e70720e4-6f49-8212-b36f-01d073e02633" class="" dir="auto">이번 장에서 구성하는 기본 퍼블릭 인프라 흐름은 아래처럼 정리할 수 있다.</p><h3 id="85c720e4-6f49-83e0-81ee-013902dd93d8" class="" dir="auto">네트워크 계층</h3><ul id="a0a720e4-6f49-8375-ae15-81f67170c535" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 생성</li></ul><ul id="424720e4-6f49-83f7-9d0e-01ebaa4bbba7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 Subnet 생성</li></ul><h3 id="a4b720e4-6f49-8229-8982-81466159d6db" class="" dir="auto">인터넷 연결 계층</h3><ul id="ba6720e4-6f49-8272-bb3c-8180997911d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway 생성 및 연결</li></ul><ul id="d1c720e4-6f49-8281-ac88-8198c332387e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table 생성</li></ul><ul id="b5c720e4-6f49-83c2-926e-017ca5a34449" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 경로를 IGW로 연결</li></ul><ul id="fef720e4-6f49-8392-b521-014a5fa8bb49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table을 Subnet에 연결</li></ul><h3 id="476720e4-6f49-82b1-a56a-815bb4e4f344" class="" dir="auto">보안 계층</h3><ul id="92d720e4-6f49-83a7-aeba-81c8e6989d11" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group 생성</li></ul><ul id="b71720e4-6f49-82b8-b9a6-01cfa37c9c04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요한 포트만 허용</li></ul><h3 id="af5720e4-6f49-8252-805a-01eac9b9842b" class="" dir="auto">컴퓨팅 계층</h3><ul id="6d6720e4-6f49-8213-8350-8166449fa85a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AMI 조회</li></ul><ul id="b63720e4-6f49-82f8-93a9-8159a4be99f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 생성</li></ul><ul id="ce4720e4-6f49-830f-a63b-8144c3bc6e41" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet과 Security Group 연결</li></ul><p id="6f5720e4-6f49-83dc-a62b-8184d333e4af" class="" dir="auto">즉, AWS 인프라는 개별 리소스를 따로따로 만드는 것이 아니라</p><p id="1ce720e4-6f49-830e-8af6-01b40aaffeac" class="" dir="auto"><strong>네트워크, 라우팅, 보안, 컴퓨팅을 조합해서 하나의 구조로 만드는 것</strong>이다.</p><p id="411720e4-6f49-8338-a74f-81863d265547" class="" dir="auto">Terraform은 이 구조를 코드로 선언하는 도구다.</p><hr id="cb4720e4-6f49-8341-8407-014d9b09e5c5" dir="auto"/><h2 id="5e6720e4-6f49-82b0-9434-819a13325fc0" class="" dir="auto">15. 장 정리</h2><p id="557720e4-6f49-82ce-97d9-013c4f9aeb34" class="" dir="auto">이 장에서는 Terraform을 이용해 AWS의 기본 퍼블릭 인프라를 구성하는 흐름을 정리했다.</p><p id="1e8720e4-6f49-8371-b556-81b592703026" class="" dir="auto">핵심은 다음과 같다.</p><ul id="6d3720e4-6f49-82b5-bdcf-810abe0a0a74" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC는 전체 네트워크 범위다.</li></ul><ul id="b77720e4-6f49-82b1-967c-01ab928f4dd5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet은 VPC를 나눈 실제 배치 구간이다.</li></ul><ul id="3c6720e4-6f49-8218-9556-017af41e210d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway는 VPC의 인터넷 연결 지점이다.</li></ul><ul id="722720e4-6f49-8204-8a49-011f5058a274" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table과 Route는 트래픽 경로를 정의한다.</li></ul><ul id="17e720e4-6f49-831d-b4c8-812af293df5f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table Association은 특정 Subnet에 라우팅 규칙을 적용한다.</li></ul><ul id="c55720e4-6f49-82fa-8040-81a8ed6a766d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group은 인스턴스 수준의 방화벽이다.</li></ul><ul id="fc6720e4-6f49-824e-9296-01d7ebd6b474" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2는 이 모든 구성 위에 배치되는 실제 서버다.</li></ul><ul id="447720e4-6f49-83c0-9954-81aa1f563f84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스 참조는 값 전달이면서 동시에 의존 관계 선언이다.</li></ul><ul id="125720e4-6f49-8283-bd07-01f3bf828c97" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform은 참조를 바탕으로 생성 순서를 계산한다.</li></ul><ul id="820720e4-6f49-82d7-8299-01f03c77d351" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요할 때는 <code>depends_on</code>으로 명시적 의존성을 줄 수 있다.</li></ul><p id="692720e4-6f49-8222-8784-0126abefeb26" class="" dir="auto">즉, Terraform은 단일 리소스 생성 도구가 아니라 <strong>여러 AWS 리소스를 구조적으로 연결하는 도구다.</strong></p><hr id="7cd720e4-6f49-830f-ab49-81ca08a2a7b4" dir="auto"/><h1 id="2d4720e4-6f49-8247-9d6b-0114a514ce70" class="" dir="auto">실습 6. Terraform으로 AWS 퍼블릭 인프라 구성하기</h1><h2 id="2a4720e4-6f49-839f-87e6-81ac3859c89b" class="" dir="auto">실습 목표</h2><p id="258720e4-6f49-8364-9458-819c4a8036f2" class="" dir="auto">이 실습에서는 다음을 확인한다.</p><ul id="c3a720e4-6f49-8201-a648-0126f6e47c7e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform으로 VPC, Subnet, Internet Gateway, Route Table, Route Table Association 생성</li></ul><ul id="e51720e4-6f49-8246-b27e-811980eb6a6b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group 생성</li></ul><ul id="386720e4-6f49-831a-9cf2-81557f93ac7e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최신 AMI 조회 후 EC2 생성</li></ul><ul id="8cb720e4-6f49-8337-9393-81bf09fa16ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스 참조를 통한 의존 관계 이해</li></ul><ul id="712720e4-6f49-824d-84ea-812b8cd23f95" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform plan</code>과 <code>terraform apply</code> 결과 확인</li></ul><hr id="aef720e4-6f49-82ed-8625-0134e3a2463f" dir="auto"/><h2 id="9e7720e4-6f49-829d-8938-816f992ae336" class="" dir="auto">실습 구성 개요</h2><p id="6db720e4-6f49-83d1-b5ba-010a168accb5" class="" dir="auto">이번 실습은 서울 리전에서 다음 구성을 만든다.</p><ul id="327720e4-6f49-82d6-8ff5-0195895faa60" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 1개</li></ul><ul id="568720e4-6f49-8344-be57-0130c33376ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 Subnet 1개</li></ul><ul id="5bc720e4-6f49-825c-93ec-018462baa8f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway 1개</li></ul><ul id="f3f720e4-6f49-834d-833a-81baa2f1353a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table 1개</li></ul><ul id="fc3720e4-6f49-82ef-816c-01dedc8cadab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 인터넷 경로 1개</li></ul><ul id="e55720e4-6f49-830c-81b9-01f1072f3241" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table Association 1개</li></ul><ul id="749720e4-6f49-8326-9d32-815b84445981" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group 1개</li></ul><ul id="a2b720e4-6f49-821b-a727-81f77746d1e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 1개</li></ul><p id="12d720e4-6f49-838e-8c1c-01d53d93ba3c" class="" dir="auto">즉, 인터넷 접속이 가능한 가장 기본적인 퍼블릭 EC2 실습이다.</p><hr id="197720e4-6f49-83a8-afdd-012c7452788b" dir="auto"/><h2 id="fb8720e4-6f49-8345-9fe0-817ab3ce9ade" class="" dir="auto">실습 1. 프로젝트 파일 구성</h2><h3 id="3ef720e4-6f49-8294-9fa5-81560b234b05" class="" dir="auto">디렉터리 구조 예시</h3><pre id="29b720e4-6f49-8376-b569-014ef8c08d57" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform-aws-network-lab/
+├── main.tf
+├── variables.tf
+├── locals.tf
+├── outputs.tf
+├── terraform.tfvars
+├── .terraform.lock.hcl
+└── .terraform/</code></pre><hr id="06f720e4-6f49-82ae-b18f-81a4074fe670" dir="auto"/><h2 id="54e720e4-6f49-8393-8d56-815843920f11" class="" dir="auto">실습 2. 변수 정의</h2><h3 id="4bc720e4-6f49-8341-8f28-81df52d10692" class="" dir="auto"><code>variables.tf</code></h3><pre id="a0f720e4-6f49-8346-92f0-01ce9adf9137" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;region&quot; {
+  type        = string
+  description = &quot;AWS region&quot;
+  default     = &quot;ap-northeast-2&quot;
+}
+
+variable &quot;vpc_cidr&quot; {
+  type        = string
+  description = &quot;VPC CIDR block&quot;
+  default     = &quot;10.10.0.0/16&quot;
+}
+
+variable &quot;public_subnet_cidr&quot; {
+  type        = string
+  description = &quot;Public subnet CIDR block&quot;
+  default     = &quot;10.10.1.0/24&quot;
+}
+
+variable &quot;availability_zone&quot; {
+  type        = string
+  description = &quot;Availability Zone for public subnet&quot;
+  default     = &quot;ap-northeast-2a&quot;
+}
+
+variable &quot;instance_type&quot; {
+  type        = string
+  description = &quot;EC2 instance type&quot;
+  default     = &quot;t3.micro&quot;
+}
+
+variable &quot;instance_name&quot; {
+  type        = string
+  description = &quot;EC2 Name tag&quot;
+  default     = &quot;tf-web-01&quot;
+}
+
+variable &quot;key_name&quot; {
+  type        = string
+  description = &quot;Existing AWS key pair name for SSH access&quot;
+}</code></pre><hr id="a70720e4-6f49-82f5-ba98-8100ec8f78d4" dir="auto"/><h2 id="a67720e4-6f49-835e-a10d-01b59db7ff6e" class="" dir="auto">실습 3. 로컬값 정의</h2><h3 id="d44720e4-6f49-83cf-ae85-810ef854be63" class="" dir="auto"><code>locals.tf</code></h3><pre id="11b720e4-6f49-82eb-8de9-017b6fe4aa71" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">locals {
+  common_tags = {
+    Environment = &quot;lab&quot;
+    Project     = &quot;terraform-network&quot;
+    ManagedBy   = &quot;terraform&quot;
+  }
+}</code></pre><hr id="074720e4-6f49-82d0-880e-0182703c2b56" dir="auto"/><h2 id="9f5720e4-6f49-8255-8373-81ae0166a98e" class="" dir="auto">실습 4. 실제 인프라 코드 작성</h2><h3 id="a54720e4-6f49-82cb-8ee1-01f1548415a1" class="" dir="auto"><code>main.tf</code></h3><pre id="bd5720e4-6f49-8311-b9a7-818f5543edbc" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;
+
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;~&gt; 5.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = var.region
+}
+
+data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+
+  owners = [&quot;amazon&quot;]
+
+  filter {
+    name   = &quot;name&quot;
+    values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+  }
+}
+
+resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = var.vpc_cidr
+
+  tags = merge(local.common_tags, {
+    Name = &quot;main-vpc&quot;
+  })
+}
+
+resource &quot;aws_subnet&quot; &quot;public&quot; {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_cidr
+  availability_zone       = var.availability_zone
+  map_public_ip_on_launch = true
+
+  tags = merge(local.common_tags, {
+    Name = &quot;public-subnet-a&quot;
+  })
+}
+
+resource &quot;aws_internet_gateway&quot; &quot;igw&quot; {
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(local.common_tags, {
+    Name = &quot;main-igw&quot;
+  })
+}
+
+resource &quot;aws_route_table&quot; &quot;public&quot; {
+  vpc_id = aws_vpc.main.id
+
+  tags = merge(local.common_tags, {
+    Name = &quot;public-rt&quot;
+  })
+}
+
+resource &quot;aws_route&quot; &quot;public_internet_access&quot; {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = &quot;0.0.0.0/0&quot;
+  gateway_id             = aws_internet_gateway.igw.id
+}
+
+resource &quot;aws_route_table_association&quot; &quot;public_assoc&quot; {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
+}
+
+resource &quot;aws_security_group&quot; &quot;web_sg&quot; {
+  name        = &quot;web-sg&quot;
+  description = &quot;Allow SSH and HTTP&quot;
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    description = &quot;SSH&quot;
+    from_port   = 22
+    to_port     = 22
+    protocol    = &quot;tcp&quot;
+    cidr_blocks = [&quot;0.0.0.0/0&quot;]
+  }
+
+  ingress {
+    description = &quot;HTTP&quot;
+    from_port   = 80
+    to_port     = 80
+    protocol    = &quot;tcp&quot;
+    cidr_blocks = [&quot;0.0.0.0/0&quot;]
+  }
+
+  egress {
+    description = &quot;All outbound&quot;
+    from_port   = 0
+    to_port     = 0
+    protocol    = &quot;-1&quot;
+    cidr_blocks = [&quot;0.0.0.0/0&quot;]
+  }
+
+  tags = merge(local.common_tags, {
+    Name = &quot;web-sg&quot;
+  })
+}
+
+resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = var.instance_type
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  key_name               = var.key_name
+
+  depends_on = [
+    aws_route.public_internet_access
+  ]
+
+  tags = merge(local.common_tags, {
+    Name = var.instance_name
+  })
+}</code></pre><hr id="f03720e4-6f49-83e8-9993-8136c331c3a3" dir="auto"/><h2 id="59f720e4-6f49-836a-8f1c-01190a970aae" class="" dir="auto">실습 5. 출력값 정의</h2><h3 id="277720e4-6f49-8282-8d9a-818ff6d0edbb" class="" dir="auto"><code>outputs.tf</code></h3><pre id="f9c720e4-6f49-82b2-bbc2-01a9b867a6d6" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;vpc_id&quot; {
+  description = &quot;Created VPC ID&quot;
+  value       = aws_vpc.main.id
+}
+
+output &quot;public_subnet_id&quot; {
+  description = &quot;Created public subnet ID&quot;
+  value       = aws_subnet.public.id
+}
+
+output &quot;security_group_id&quot; {
+  description = &quot;Created security group ID&quot;
+  value       = aws_security_group.web_sg.id
+}
+
+output &quot;instance_id&quot; {
+  description = &quot;Created EC2 instance ID&quot;
+  value       = aws_instance.web.id
+}
+
+output &quot;instance_public_ip&quot; {
+  description = &quot;Created EC2 public IP&quot;
+  value       = aws_instance.web.public_ip
+}</code></pre><hr id="7f7720e4-6f49-834b-ae6b-815ba41caa29" dir="auto"/><h2 id="f74720e4-6f49-8372-849f-01bc82479e31" class="" dir="auto">실습 6. 변수값 입력</h2><h3 id="f57720e4-6f49-825f-9464-015fc61c79c0" class="" dir="auto"><code>terraform.tfvars</code></h3><pre id="60c720e4-6f49-83e1-b69e-0149c62fd6c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">key_name = &quot;my-keypair&quot;</code></pre><hr id="94e720e4-6f49-8345-b994-81229dd4226f" dir="auto"/><h3 id="0ac720e4-6f49-8224-a84a-814ea784778f" class="" dir="auto">설명</h3><p id="2af720e4-6f49-8323-a427-818e5d0f2445" class="" dir="auto">여기서 <code>key_name</code>은 반드시 AWS 계정에 이미 존재하는 키페어 이름이어야 한다.</p><p id="a3d720e4-6f49-83c5-b75f-017dbb2686fe" class="" dir="auto">존재하지 않는 키 이름을 넣으면 EC2 생성 단계에서 오류가 발생한다.</p><p id="415720e4-6f49-8272-b87e-01d0172ccac9" class="" dir="auto">AWS 콘솔에서 미리 키페어를 생성해두거나,</p><p id="352720e4-6f49-832e-b68d-015d71693b1f" class="" dir="auto">CLI로 다음 명령을 사용해 확인할 수 있다.</p><pre id="731720e4-6f49-8251-8440-01c0588a5085" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws ec2 describe-key-pairs --region ap-northeast-2</code></pre><hr id="66c720e4-6f49-8338-a924-81f29566b554" dir="auto"/><h2 id="77d720e4-6f49-82d1-ad82-81daa5a129ab" class="" dir="auto">실습 7. 실행 순서</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="bcb720e4-6f49-8220-a61d-81523df3b1f6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">terraform init
+terraform fmt
+terraform validate
+terraform plan
+terraform apply -auto-approve
+terraform output</code></pre><hr id="c3f720e4-6f49-83db-8966-81ec8e5f8b99" dir="auto"/><h2 id="05e720e4-6f49-82f7-a673-01fa9cc5f703" class="" dir="auto">실습 8. plan 결과에서 확인할 포인트</h2><p id="a38720e4-6f49-8300-a361-81f171c1c380" class="" dir="auto"><code>terraform plan</code> 결과를 볼 때 다음을 확인한다.</p><ul id="a1d720e4-6f49-830d-95ca-011c57bf9010" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC가 새로 생성되는지</li></ul><ul id="3dc720e4-6f49-8356-8a25-8198838c0053" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 Subnet이 올바른 CIDR과 AZ로 생성되는지</li></ul><ul id="d95720e4-6f49-8334-b1b6-01fcbcb1feaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway와 Route Table이 생성되는지</li></ul><ul id="c8b720e4-6f49-83c0-a0fc-81a2127c4a71" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>0.0.0.0/0</code> 경로가 Internet Gateway로 향하는지</li></ul><ul id="2c4720e4-6f49-8269-8ef3-81b8f8c487d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group에 22, 80 포트가 열리는지</li></ul><ul id="0ec720e4-6f49-82b0-a957-01bebe18ee12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2가 올바른 Subnet과 Security Group에 연결되는지</li></ul><p id="116720e4-6f49-83a1-8ab8-81ecc583246f" class="" dir="auto">즉, plan은 단순히 “몇 개 만든다”가 아니라</p><p id="386720e4-6f49-82e6-8db7-0125939666cc" class="" dir="auto"><strong>내가 설계한 인프라 구조가 코드대로 표현되고 있는지 확인하는 단계</strong>다.</p><hr id="f53720e4-6f49-8379-8951-817ede5a78ee" dir="auto"/><h2 id="9fa720e4-6f49-8321-a093-018a348c6c81" class="" dir="auto">실습 9. 접속 및 확인</h2><p id="02e720e4-6f49-8224-9718-815b2441765b" class="" dir="auto">EC2가 생성된 뒤 퍼블릭 IP를 확인한다.</p><pre id="126720e4-6f49-82a3-a27c-81a439900600" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform output instance_public_ip</code></pre><p id="246720e4-6f49-821c-a629-011ba0078419" class="" dir="auto">SSH 접속 예시:</p><pre id="6d1720e4-6f49-829f-b018-8131c3914347" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh -i /path/to/my-keypair.pem ec2-user@&lt;PUBLIC_IP&gt;</code></pre><p id="0ec720e4-6f49-839f-b47d-01daf723a1da" class="" dir="auto">Amazon Linux 2023 계열에서는 기본 사용자 이름으로 <code>ec2-user</code>를 사용한다.</p><hr id="856720e4-6f49-828b-8d97-81de1c2e9adb" dir="auto"/><h2 id="3be720e4-6f49-83b3-9d70-01194322a117" class="" dir="auto">실습 11. 리소스 정리</h2><p id="ad4720e4-6f49-8371-8abd-01d02aad8c8e" class="" dir="auto">실습이 끝났으면 반드시 삭제한다.</p><pre id="10f720e4-6f49-8288-bfdd-813c664b6d0c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform destroy -auto-approve</code></pre><p id="dd0720e4-6f49-83c0-a660-01ee6821d22f" class="" dir="auto">이 명령은 Terraform state에 기록된 리소스를 기준으로 생성한 인프라를 삭제한다.</p><p id="b03720e4-6f49-8368-8f1d-0127a1e6bd79" class="" dir="auto">즉, 이번 실습에서 생성한 다음 리소스가 삭제 대상이 된다.</p><ul id="361720e4-6f49-83f9-b276-812334eb8ffd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC</li></ul><ul id="9b9720e4-6f49-820a-805a-014ec9c5d095" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet</li></ul><ul id="c5f720e4-6f49-8351-a46b-8175e54598d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway</li></ul><ul id="a2b720e4-6f49-82bc-bd2e-01c24293615c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table</li></ul><ul id="61e720e4-6f49-827a-9d11-81547510da93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table Association</li></ul><ul id="fe8720e4-6f49-8355-9916-811add8dc56d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group</li></ul><ul id="70b720e4-6f49-8356-af0e-81925ec3ecd8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

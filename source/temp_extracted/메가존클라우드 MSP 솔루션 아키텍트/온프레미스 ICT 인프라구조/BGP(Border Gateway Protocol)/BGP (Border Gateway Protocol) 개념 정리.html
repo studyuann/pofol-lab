@@ -1,0 +1,775 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>BGP (Border Gateway Protocol) 개념 정리</title><meta name="data-notion-page-icon" content="📗"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%93%97%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="9db720e4-6f49-82a3-85b9-81559ce5c323" class="page sans" data-notion-page-icon="📗"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="📗"></span></div><h1 class="page-title" dir="auto"><strong>BGP (Border Gateway Protocol) 개념 정리</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="06c720e4-6f49-82a5-81b0-81a4bec4e0ed" class="" dir="auto"><strong>1. BGP란?</strong></h2><ul id="581720e4-6f49-8286-924a-01deba12346e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BGP (Border Gateway Protocol)은 인터넷에서 <strong>자율 시스템(AS, Autonomous System)</strong> 간의 </li></ul><p id="888720e4-6f49-827f-8656-019ea5c6347a" class="" dir="auto">      라우팅 정보를 교환하는 프로토콜입니다.</p><p id="427720e4-6f49-82b7-8f18-01ba33b10228" class="" dir="auto">      인터넷을 구성하는 여러 네트워크 간에 <strong>최적의 경로를 찾고 유지</strong>하는 역할을 합니다.</p><hr id="508720e4-6f49-83a4-861c-018fe5f7faa6" dir="auto"/><h2 id="e05720e4-6f49-8366-a100-01f1d1579fbf" class="" dir="auto"><strong>2. BGP의 주요 특징</strong></h2><p id="bb6720e4-6f49-8386-bb8c-812a5b6364cc" class="" dir="auto">✅ <strong>인터넷의 핵심 라우팅 프로토콜</strong></p><p id="a69720e4-6f49-83f3-8a74-013af5eddb50" class="" dir="auto">✅ <strong>AS(자율 시스템) 간의 경로를 설정하고 최적화</strong></p><p id="adf720e4-6f49-82ff-909e-81e0e22cceb1" class="" dir="auto">✅ <strong>경로 벡터 프로토콜(Path Vector Protocol)</strong> 사용</p><p id="27f720e4-6f49-8344-b2d5-01e25befb6c4" class="" dir="auto">✅ <strong>Path Attribute (경로 속성)를 기반으로 라우팅 결정</strong></p><p id="a19720e4-6f49-824e-a336-01cbb22bcea6" class="" dir="auto">✅ <strong>신뢰성이 높은 연결을 위해 TCP(포트 179) 사용</strong></p><hr id="472720e4-6f49-82c0-b458-81e6ae642a43" dir="auto"/><h2 id="69f720e4-6f49-82af-bfcc-010bf62bed34" class="" dir="auto"><strong>3. BGP의 작동 방식</strong></h2><h3 id="578720e4-6f49-833a-9bb5-0194e88c5640" class="" dir="auto"><strong>🔹 3.1. BGP 라우터 간의 관계</strong></h3><p id="205720e4-6f49-83ca-817c-8162e4382c1c" class="" dir="auto">BGP는 AS 간의 경로를 관리하기 위해 BGP 피어링(Peering)을 설정합니다.</p><p id="4e8720e4-6f49-82ae-aa12-815fad291a53" class="" dir="auto">BGP 라우터 간의 관계는 크게 두 가지로 나뉩니다.</p><p id="757720e4-6f49-835e-927d-01dc963a9651" class="" dir="auto">1️⃣ <strong>eBGP (External BGP)</strong></p><ul id="dbf720e4-6f49-834f-94eb-81224f33b706" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서로 다른 AS 간에 BGP 정보를 교환</li></ul><ul id="a00720e4-6f49-83f1-90b4-016d144db458" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인터넷 서비스 제공자(ISP) 간에 사용됨</li></ul><ul id="524720e4-6f49-8265-ae63-8135231ad113" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보통 직접 연결된 네트워크에서 실행됨</li></ul><p id="08e720e4-6f49-8364-97ec-01a89a800336" class="" dir="auto">2️⃣ <strong>iBGP (Internal BGP)</strong></p><ul id="598720e4-6f49-82b2-aa8d-012e46be32f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 AS 내부에서 BGP 정보를 공유</li></ul><ul id="472720e4-6f49-82b6-9aac-81a7369e8667" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 라우터가 있을 때 AS 내부에서 BGP 경로를 유지하기 위해 사용</li></ul><ul id="671720e4-6f49-8277-98f2-81e6f88addf8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스플릿 호라이즌(Split Horizon) 규칙 적용 (Loop 방지)</li></ul><hr id="76a720e4-6f49-8208-aa68-810fec340e66" dir="auto"/><h3 id="297720e4-6f49-824a-9fdc-8179ac5c4b94" class="" dir="auto"><strong>🔹 3.2. BGP 메시지 유형</strong></h3><p id="998720e4-6f49-8285-a128-81a5ad570860" class="" dir="auto">BGP는 4가지 주요 메시지를 사용하여 피어링을 설정하고 경로를 업데이트합니다.</p><table id="2a2720e4-6f49-8308-874c-8109ed32cf59" class="simple-table" dir="ltr"><tbody><tr id="251720e4-6f49-837a-a559-81e27eb8e9da" dir="ltr"><td id="@jxO" class="">메시지 유형</td><td id="&lt;|hy" class="">설명</td></tr><tr id="d21720e4-6f49-83de-b31d-013b85091828" dir="ltr"><td id="@jxO" class=""><strong>OPEN</strong></td><td id="&lt;|hy" class="">BGP 피어링 관계 설정</td></tr><tr id="b79720e4-6f49-837e-96a2-01a0895c41c9" dir="ltr"><td id="@jxO" class=""><strong>UPDATE</strong></td><td id="&lt;|hy" class="">네트워크 경로 정보 업데이트</td></tr><tr id="1ba720e4-6f49-8386-aae3-014c7ef57818" dir="ltr"><td id="@jxO" class=""><strong>KEEPALIVE</strong></td><td id="&lt;|hy" class="">피어 간 연결 유지 (주기적 전송)</td></tr><tr id="552720e4-6f49-83bf-9281-8196cc25ef5e" dir="ltr"><td id="@jxO" class=""><strong>NOTIFICATION</strong></td><td id="&lt;|hy" class="">에러 발생 시 피어 연결 종료</td></tr></tbody></table><hr id="71a720e4-6f49-83e1-919c-01bd37ce9f68" dir="auto"/><h3 id="130720e4-6f49-82b6-9413-0151f4db235b" class="" dir="auto"><strong>🔹 3.3. BGP 경로 선택 과정</strong></h3><p id="7d4720e4-6f49-83f2-a4a4-8137ae9189b8" class="" dir="auto">BGP는 단순히 <strong>가장 짧은 경로를 선택하지 않고</strong> 다양한 속성을 기반으로 최적의 경로를 선택합니다.</p><p id="357720e4-6f49-838b-86c2-810bde1d9aa4" class="" dir="auto">1️⃣ <strong>선호도 높은 경로 선택 (Weight 값이 높은 경로 우선)</strong></p><p id="186720e4-6f49-8312-bbf6-01957c1aacc7" class="" dir="auto">2️⃣ <strong>Local Preference (지역 우선순위가 높은 경로 선택)</strong></p><p id="3e8720e4-6f49-835a-9c09-018e80bdb581" class="" dir="auto">3️⃣ <strong>AS Path (경로가 짧은 AS를 선호)</strong></p><p id="efb720e4-6f49-82de-919e-815ee0458d57" class="" dir="auto">4️⃣ <strong>Origin Type (IGP &gt; EGP &gt; Unknown 순서로 선호)</strong></p><p id="905720e4-6f49-8290-86bd-81655cae20ba" class="" dir="auto">5️⃣ <strong>Multi-Exit Discriminator (MED) 값이 작은 경로 선호</strong></p><p id="295720e4-6f49-8355-a663-018bc4864ca7" class="" dir="auto">6️⃣ <strong>eBGP 경로가 iBGP 경로보다 우선됨</strong></p><p id="afb720e4-6f49-830f-a8e6-810cc206a9cb" class="" dir="auto">7️⃣ <strong>라우터 ID가 작은 경로 선택</strong></p><p id="e73720e4-6f49-83e1-9135-01f3061fe68e" class="" dir="auto">💡 <strong>BGP는 최적의 경로를 선택할 때 위의 기준을 차례대로 비교하여 결정합니다.</strong></p><hr id="fe1720e4-6f49-825f-a985-81704c08c7f7" dir="auto"/><h2 id="4e1720e4-6f49-8264-b682-013debd2431b" class="" dir="auto"><strong>4. BGP 경로 속성 (Path Attributes)</strong></h2><p id="ebd720e4-6f49-8372-b54c-01a133638444" class="" dir="auto">BGP 경로를 제어하는 중요한 속성들입니다.</p><table id="6a0720e4-6f49-83ba-8482-81db23539e52" class="simple-table" dir="ltr"><tbody><tr id="171720e4-6f49-8281-b665-81ea50942b31" dir="ltr"><td id="^jK}" class="">속성</td><td id="Brib" class="">설명</td><td id="`zEs" class="">필수 여부</td></tr><tr id="f76720e4-6f49-8298-a877-012b8ce72b73" dir="ltr"><td id="^jK}" class=""><strong>AS_PATH</strong></td><td id="Brib" class="">지나온 AS 목록</td><td id="`zEs" class="">✅ 필수</td></tr><tr id="a62720e4-6f49-833a-ac00-01ae90f78f41" dir="ltr"><td id="^jK}" class=""><strong>NEXT_HOP</strong></td><td id="Brib" class="">다음 목적지 라우터 IP 주소</td><td id="`zEs" class="">✅ 필수</td></tr><tr id="e82720e4-6f49-82d8-a4b0-81880bd51635" dir="ltr"><td id="^jK}" class=""><strong>LOCAL_PREF</strong></td><td id="Brib" class="">AS 내부에서 우선순위 결정</td><td id="`zEs" class="">선택</td></tr><tr id="cea720e4-6f49-82f9-8fda-01415ae2142c" dir="ltr"><td id="^jK}" class=""><strong>MED (Metric)</strong></td><td id="Brib" class="">특정 경로를 선호하도록 조정</td><td id="`zEs" class="">선택</td></tr><tr id="5ea720e4-6f49-83a7-b96f-81184166038f" dir="ltr"><td id="^jK}" class=""><strong>COMMUNITY</strong></td><td id="Brib" class="">특정 그룹 내에서 정책 적용</td><td id="`zEs" class="">선택</td></tr></tbody></table><hr id="243720e4-6f49-8328-8d95-0116d1cc1a7e" dir="auto"/><h2 id="b2c720e4-6f49-836d-ba6e-816ff4932e4b" class="" dir="auto"><strong>5. BGP와 IGP (내부 게이트웨이 프로토콜) 비교</strong></h2><table id="da9720e4-6f49-83d6-88cd-01fb67db814d" class="simple-table" dir="ltr"><tbody><tr id="a32720e4-6f49-8319-babf-810105d8ccf6" dir="ltr"><td id="g_pu" class="">항목</td><td id="rcv]" class="" style="width:320px">BGP (Border Gateway Protocol)</td><td id="|bO`" class="" style="width:325.03125px">IGP (OSPF, EIGRP, RIP 등)</td></tr><tr id="7d8720e4-6f49-822f-affc-01ea28113fc0" dir="ltr"><td id="g_pu" class=""><strong>역할</strong></td><td id="rcv]" class="" style="width:320px">AS 간 라우팅 (인터넷)</td><td id="|bO`" class="" style="width:325.03125px">AS 내부 라우팅</td></tr><tr id="393720e4-6f49-823d-973d-0131686e1e09" dir="ltr"><td id="g_pu" class=""><strong>프로토콜 유형</strong></td><td id="rcv]" class="" style="width:320px">Path Vector Protocol</td><td id="|bO`" class="" style="width:325.03125px">Link-State 또는 Distance Vector</td></tr><tr id="17f720e4-6f49-83a6-a690-0134eb285879" dir="ltr"><td id="g_pu" class=""><strong>라우팅 대상</strong></td><td id="rcv]" class="" style="width:320px">인터넷 전체 경로</td><td id="|bO`" class="" style="width:325.03125px">내부 네트워크 경로</td></tr><tr id="d97720e4-6f49-828e-be20-018b7a85bafa" dir="ltr"><td id="g_pu" class=""><strong>경로 결정 기준</strong></td><td id="rcv]" class="" style="width:320px">Path Attributes (AS_PATH, LOCAL_PREF 등)</td><td id="|bO`" class="" style="width:325.03125px">메트릭 (Cost, Hop Count 등)</td></tr><tr id="714720e4-6f49-8326-b2a0-819fa52362ec" dir="ltr"><td id="g_pu" class=""><strong>속도</strong></td><td id="rcv]" class="" style="width:320px">느림 (수초~수분)</td><td id="|bO`" class="" style="width:325.03125px">빠름 (밀리초~초)</td></tr><tr id="0b7720e4-6f49-8239-93b4-015cdc61d009" dir="ltr"><td id="g_pu" class=""><strong>규모</strong></td><td id="rcv]" class="" style="width:320px">대규모 네트워크 (인터넷)</td><td id="|bO`" class="" style="width:325.03125px">소규모, 중규모 네트워크</td></tr></tbody></table><hr id="9ee720e4-6f49-8361-ad4e-01e49b1839d7" dir="auto"/><h2 id="b7b720e4-6f49-83fb-b03a-01b9d50a833a" class="" dir="auto"><strong>6. BGP의 장점과 단점</strong></h2><h3 id="db4720e4-6f49-8251-8156-01b5108b1f88" class="" dir="auto"><strong>✅ BGP의 장점</strong></h3><p id="40f720e4-6f49-8368-b1e7-81fc48d41f04" class="" dir="auto">✔ 인터넷에서 <strong>가장 안정적인 라우팅 프로토콜</strong></p><p id="fc3720e4-6f49-835c-8962-01e8966fcccd" class="" dir="auto">✔ 다양한 <strong>경로 선택 기준 제공 (정책 기반 라우팅 가능)</strong></p><p id="27b720e4-6f49-83ba-a720-812d15c2cc73" class="" dir="auto">✔ <strong>대규모 네트워크 확장 가능</strong></p><h3 id="80f720e4-6f49-82da-b712-81d66e6e4747" class="" dir="auto"><strong>❌ BGP의 단점</strong></h3><p id="376720e4-6f49-831e-b82b-0166c247af28" class="" dir="auto">❌ <strong>설정이 복잡하고 운영이 어려움</strong></p><p id="e5c720e4-6f49-826c-ae31-818238db0178" class="" dir="auto">❌ <strong>라우팅 갱신 속도가 느림 (Failover가 느릴 수 있음)</strong></p><p id="a2e720e4-6f49-83f1-a237-0112bd912c19" class="" dir="auto">❌ <strong>초기 설정 및 튜닝 필요 (Best Path Selection)</strong></p><hr id="e25720e4-6f49-82ba-abab-01a8fd67fad5" dir="auto"/><h2 id="fe9720e4-6f49-8225-a24b-01f5b990629c" class="" dir="auto"><strong>7. BGP 구성 예제 (Cisco 설정 예시)</strong></h2><h3 id="93c720e4-6f49-82e9-b11a-81a57de8e2f0" class="" dir="auto"><strong>🔹 eBGP 설정 (AS 65001 ↔ AS 65002)</strong></h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="872720e4-6f49-83fa-98db-0178df30a8af" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">Router_A(config)# router bgp 65001
+Router_A(config-router)# neighbor 192.168.1.2 remote-as 65002
+Router_A(config-router)# network 10.10.10.0 mask 255.255.255.0
+</code></pre><h3 id="40c720e4-6f49-825c-8605-0127cc10d771" class="" dir="auto"><strong>🔹 iBGP 설정 (AS 65001 내부)</strong></h3><pre id="766720e4-6f49-83ff-8e5c-01d342cf33a9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">Router_B(config)# router bgp 65001
+Router_B(config-router)# neighbor 192.168.2.1 remote-as 65001
+Router_B(config-router)# network 10.20.20.0 mask 255.255.255.0
+</code></pre><hr id="864720e4-6f49-83eb-ae2f-01eba118bbe0" dir="auto"/><h2 id="46a720e4-6f49-838e-8978-819b0859ad1b" class="" dir="auto"><strong>8. BGP 활용 사례</strong></h2><p id="b48720e4-6f49-8237-9b15-01f218eabf24" class="" dir="auto">📌 <strong>ISP (인터넷 서비스 제공자) 간의 연결</strong></p><p id="1ab720e4-6f49-832e-8910-01417cf4bf52" class="" dir="auto">📌 <strong>대기업 및 클라우드 네트워크 (Google, AWS, Azure)</strong></p><p id="ff9720e4-6f49-8304-9452-812de195cdc0" class="" dir="auto">📌 <strong>CDN (Content Delivery Network) 트래픽 관리</strong></p><p id="0e3720e4-6f49-83df-926c-81152f0c00ba" class="" dir="auto">📌 <strong>멀티홈 네트워크 (하나의 AS가 여러 ISP와 연결된 환경)</strong></p><hr id="733720e4-6f49-8318-8559-018c0bd8aa2c" dir="auto"/><h2 id="a89720e4-6f49-8386-a4f0-81fd090e8f18" class="" dir="auto"><strong>결론</strong></h2><ul id="005720e4-6f49-8369-a984-01a8f2b7ce02" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>BGP는 인터넷에서 사용되는 가장 중요한 라우팅 프로토콜</strong></li></ul><ul id="c8c720e4-6f49-83d1-a476-810fe783bcb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>AS 간에 최적의 경로를 선택하여 안정적인 네트워크 운영</strong></li></ul><ul id="4f2720e4-6f49-82db-b0a3-814f8dcbabfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>정책 기반 라우팅 가능하지만 설정 및 운영이 복잡</strong></li></ul><ul id="982720e4-6f49-8384-912f-81adafa52610" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>인터넷 백본(Backbone) 네트워크를 구성하는 핵심 요소</strong></li></ul><p id="834720e4-6f49-8235-8296-01ad2ff7af0d" class="" dir="auto">BGP는 <strong>인터넷 라우팅의 핵심 기술</strong>이므로, 네트워크 엔지니어나 시스템 관리자는 기본적인 개념을 이해하는 것이 중요하다. </p><p id="dca720e4-6f49-83ee-9990-8112e7b921b5" class="" dir="auto">
+</p><p id="75b720e4-6f49-8203-a86b-81aed4bbba9d" class="" dir="auto">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

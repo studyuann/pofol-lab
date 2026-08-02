@@ -1,0 +1,792 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>ACM with ELB 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="5c7720e4-6f49-8247-8735-81ca11fe6283" class="page sans"><header><h1 class="page-title" dir="auto">ACM with ELB 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="e6a720e4-6f49-8248-a4fc-01993d32fb6d" class="" dir="auto">실습 주제</h2><p id="751720e4-6f49-83f0-b67d-01f57b05b484" class="" dir="auto">AWS Certificate Manager(ACM)를 이용해 SSL/TLS 인증서를 발급하고, Elastic Load Balancer 중 Application Load Balancer(ALB)에 연결하여 HTTPS 서비스를 제공하는 실습</p><hr id="5ed720e4-6f49-83bb-bc32-817f868a220f" dir="auto"/><h2 id="fa2720e4-6f49-8339-b123-81b8fa4185d9" class="" dir="auto">실습 목표</h2><p id="819720e4-6f49-82d2-8888-01e32b19f301" class="" dir="auto">이 실습에서는 다음 내용을 수행한다.</p><ul id="573720e4-6f49-8221-b316-012e05a30553" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ACM의 역할을 이해한다</li></ul><ul id="5f5720e4-6f49-8333-b537-0107897b63d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 인증서를 ACM에서 발급한다</li></ul><ul id="0bf720e4-6f49-8243-ae0e-81782c65673a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB에 HTTPS 리스너를 구성한다</li></ul><ul id="6b0720e4-6f49-835f-a891-810fdf38e51a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP 요청을 HTTPS로 리다이렉트한다</li></ul><ul id="9f1720e4-6f49-8359-8271-812cfad7ad48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53을 이용해 도메인을 ALB에 연결한다</li></ul><ul id="a00720e4-6f49-822f-973c-819586356e20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브라우저에서 HTTPS 접속이 정상적으로 되는지 확인한다</li></ul><hr id="adb720e4-6f49-823e-b9c9-81af5333b114" dir="auto"/><h2 id="737720e4-6f49-8259-a920-815fa35eb092" class="" dir="auto">실습 개요</h2><p id="eec720e4-6f49-82c1-979a-0105e1ab8f82" class="" dir="auto">웹 서비스에서 HTTPS를 사용하려면 인증서가 필요하다.</p><p id="c4d720e4-6f49-83ea-9121-81824eb9a2fb" class="" dir="auto">기존에는 웹 서버(Apache, Nginx)에 직접 인증서를 설치하고 관리하는 경우가 많았음.</p><p id="36d720e4-6f49-835f-a5c3-811ac0785a96" class="" dir="auto">하지만 AWS 환경에서는 ACM이 인증서를 관리하고, ALB가 HTTPS 연결을 처리하는 구조를 많이 사용한다.</p><p id="bda720e4-6f49-8397-bb63-810386b186f0" class="" dir="auto">이 방식에서는 다음과 같이 동작한다.</p><ul id="899720e4-6f49-820f-a89a-01cf484d0c44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 HTTPS로 ALB에 접속한다</li></ul><ul id="bf2720e4-6f49-837a-b525-8197a487e062" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB가 인증서를 사용자에게 제시한다</li></ul><ul id="24d720e4-6f49-8262-931d-0124dba100e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB가 TLS 핸드셰이크를 처리한다</li></ul><ul id="f13720e4-6f49-825a-b944-819ac8d8b2d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB는 백엔드 EC2로 요청을 전달한다</li></ul><p id="ad0720e4-6f49-82e2-9234-8103cb9488a0" class="" dir="auto">즉, HTTPS 처리를 EC2가 아니라 ALB가 담당하는 구조다.</p><hr id="a7d720e4-6f49-8257-bbc7-81f1394afe31" dir="auto"/><h2 id="f67720e4-6f49-8320-8d01-012b354ce526" class="" dir="auto">아키텍처</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="d46720e4-6f49-8219-a88a-811ab9a89e8a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 브라우저
+      │
+      │ HTTPS(443)
+      ▼
+Application Load Balancer
+      │
+      │ HTTP(80)
+      ▼
+EC2 Web Server 1
+EC2 Web Server 2</code></pre><p id="c72720e4-6f49-8363-bfc5-014a75da4c9e" class="" dir="auto">도메인 연결 구조는 다음과 같다.</p><pre id="75e720e4-6f49-82ea-a32d-81ffe71d8d3d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.도메인명
+    │
+    ▼
+Route 53 Alias Record
+    │
+    ▼
+ALB DNS Name
+    │
+    ▼
+Target Group
+    │
+    ▼
+EC2 Instances</code></pre><hr id="d9e720e4-6f49-8267-951c-0160f34fe954" dir="auto"/><h2 id="d0f720e4-6f49-83f7-843a-0179b7968586" class="" dir="auto">주요 개념 정리</h2><h3 id="b33720e4-6f49-8381-bd39-01d7c5653110" class="" dir="auto">ACM이란</h3><p id="c13720e4-6f49-8321-9501-016bc9d8a64b" class="" dir="auto">ACM(AWS Certificate Manager)은 AWS에서 SSL/TLS 인증서를 발급하고 관리하는 서비스다.</p><p id="3c8720e4-6f49-826d-9d67-817edcbe2b52" class="" dir="auto">주요 특징은 다음과 같다.</p><ul id="4de720e4-6f49-82c9-b02c-813ed1e16716" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 인증서를 무료로 발급 가능</li></ul><ul id="993720e4-6f49-820c-a676-8178086aebd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 서비스와 쉽게 연동 가능</li></ul><ul id="e83720e4-6f49-82d0-abf6-81174ddfa79a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 갱신 지원</li></ul><ul id="4ea720e4-6f49-83cc-a5ae-816ffb605ff5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증서를 EC2에 직접 복사하지 않아도 됨</li></ul><ul id="6f5720e4-6f49-83c9-a38d-01f82683c729" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증서 만료 관리 부담이 줄어듦</li></ul><p id="e4b720e4-6f49-8229-960b-0131b6101646" class="" dir="auto">즉, 운영자가 인증서를 직접 설치하고 갱신하는 수고를 줄여주는 서비스라고 이해하면 된다.</p><hr id="766720e4-6f49-8235-959f-81d89bdd5399" dir="auto"/><h3 id="f65720e4-6f49-826d-a7c7-814be51a7af9" class="" dir="auto">ELB에 인증서를 연결한다는 의미</h3><p id="3e1720e4-6f49-8297-a2f6-01ae8a8f565c" class="" dir="auto">이번 실습에서는 ELB 중 ALB를 사용한다.</p><p id="656720e4-6f49-8395-9ad8-011959f14271" class="" dir="auto">ALB에 인증서를 연결하면 다음이 가능하다.</p><ul id="2f1720e4-6f49-82a5-a02a-8122d6dd85ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자가 <code>https://도메인명</code> 으로 접속 가능</li></ul><ul id="931720e4-6f49-8361-99ae-810f21a676e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB가 TLS 핸드셰이크를 수행함</li></ul><ul id="8d6720e4-6f49-824e-af97-813e3fa6de85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드 EC2는 인증서를 몰라도 됨</li></ul><ul id="86a720e4-6f49-82ce-9cfd-0192ef4f529d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버 설정이 단순해짐</li></ul><p id="72d720e4-6f49-83bd-91c7-818bcd7c5f6a" class="" dir="auto">즉, 외부 사용자가 보는 HTTPS 종단점은 EC2가 아니라 ALB가 된다.</p><hr id="44e720e4-6f49-8304-a6ce-01fe60292d77" dir="auto"/><h3 id="876720e4-6f49-8265-a58a-01d4bb7a1b43" class="" dir="auto">SSL Termination이란</h3><p id="2d9720e4-6f49-82b2-a70f-81d6518f542a" class="" dir="auto">SSL Termination은 HTTPS 연결을 로드밸런서에서 종료하는 구조를 의미한다.</p><p id="66e720e4-6f49-83be-8c74-01212706d5a9" class="" dir="auto">흐름은 다음과 같다.</p><ol type="1" id="cda720e4-6f49-8315-8ec7-81dd6cb23775" class="numbered-list" start="1" dir="auto"><li>사용자가 HTTPS로 ALB에 접속한다</li></ol><ol type="1" id="0b7720e4-6f49-82f4-9d14-816eec38fac0" class="numbered-list" start="2" dir="auto"><li>ALB가 인증서를 제시한다</li></ol><ol type="1" id="64c720e4-6f49-82fe-8ce1-01beb3cac642" class="numbered-list" start="3" dir="auto"><li>ALB가 TLS 세션을 종료한다</li></ol><ol type="1" id="6e9720e4-6f49-832a-be6a-819a96d47087" class="numbered-list" start="4" dir="auto"><li>ALB가 백엔드 EC2로 요청을 전달한다</li></ol><p id="df0720e4-6f49-8201-8e23-017b9a939b76" class="" dir="auto">이 구조의 장점은 다음과 같다.</p><ul id="c76720e4-6f49-8259-a832-01fdb28355e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2마다 인증서를 설치할 필요가 없음</li></ul><ul id="504720e4-6f49-83cf-af06-0198d259b826" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증서 관리를 중앙화할 수 있음</li></ul><ul id="465720e4-6f49-8238-9c50-01b934a023d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling 환경에서 매우 유리함</li></ul><ul id="035720e4-6f49-8335-bf6f-01860fb01adc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버 설정이 단순해짐</li></ul><hr id="079720e4-6f49-8253-97de-8108d715be16" dir="auto"/><h3 id="5d9720e4-6f49-82c2-a0c3-8196b744b979" class="" dir="auto">도메인이 필요한 이유</h3><p id="351720e4-6f49-82b8-ab82-815ba7b7e7f5" class="" dir="auto">ACM 퍼블릭 인증서는 도메인 검증 과정을 거쳐 발급된다.</p><p id="1e6720e4-6f49-820a-bc6b-81dec99e8518" class="" dir="auto">즉, 내가 <code>www.example.com</code> 인증서를 요청했다면, AWS는 정말 내가 그 도메인을 제어하는지 확인해야 한다.</p><p id="df8720e4-6f49-8341-b299-0133f164191b" class="" dir="auto">검증 방식은 보통 다음 두 가지가 있다.</p><ul id="f74720e4-6f49-83f1-a4dd-811e0bff4c6f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DNS 검증</li></ul><ul id="081720e4-6f49-8201-bbed-016b52486daa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이메일 검증</li></ul><p id="5ed720e4-6f49-837f-a0a7-81c9fe3e978f" class="" dir="auto">실무에서는 대부분 DNS 검증을 사용한다.</p><p id="113720e4-6f49-8252-8b7c-81aed3828c74" class="" dir="auto">자동화가 쉽고 인증서 갱신에도 유리하기 때문이다.</p><hr id="de7720e4-6f49-8220-8805-81b4229c36de" dir="auto"/><h2 id="def720e4-6f49-82f9-896a-81fffc655ba7" class="" dir="auto">실습 환경</h2><h3 id="4f5720e4-6f49-833f-b92f-8123c53492a8" class="" dir="auto">준비물</h3><ul id="3a6720e4-6f49-833c-879c-81d6c3ad39e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 계정</li></ul><ul id="33a720e4-6f49-838b-85a3-01d6d473e070" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 도메인 1개</li></ul><ul id="b2a720e4-6f49-8249-b85e-8149cc05b1a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53 Hosted Zone 또는 외부 DNS</li></ul><ul id="9dd720e4-6f49-82d9-a7f2-81fe0efc95df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 인스턴스 2대</li></ul><ul id="9f7720e4-6f49-83fa-bf5d-816fcebac808" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB 1대</li></ul><ul id="ecd720e4-6f49-8359-bc6d-810fee5e6745" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹 설정 가능 상태</li></ul><hr id="96c720e4-6f49-8261-a2aa-01d50c3293ab" dir="auto"/><h3 id="006720e4-6f49-824e-9835-011c71a5688a" class="" dir="auto">리전 주의사항</h3><p id="93a720e4-6f49-829e-965d-812994d5b907" class="" dir="auto">ACM 인증서는 ALB와 같은 리전에 있어야 한다.</p><p id="d00720e4-6f49-831f-9bfc-01c459453cac" class="" dir="auto">예를 들어</p><ul id="c78720e4-6f49-8210-bd8e-819faa12f028" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB가 서울 리전(ap-northeast-2)에 있으면</li></ul><ul id="c54720e4-6f49-8351-900b-817b93bf2f13" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ACM 인증서도 서울 리전에서 발급해야 한다</li></ul><p id="ce9720e4-6f49-8319-8c8c-81b5e2da8551" class="" dir="auto">이 부분은 실습 중 자주 발생하는 실수다.</p><hr id="832720e4-6f49-83b2-981a-019a274ba99c" dir="auto"/><h2 id="499720e4-6f49-83e2-8139-8187fa07c57a" class="" dir="auto">실습 시나리오</h2><p id="34d720e4-6f49-827b-a7d0-81c2542b297c" class="" dir="auto">이번 실습은 다음 순서로 진행한다.</p><ol type="1" id="8cf720e4-6f49-83fd-87d3-0174dc704ba9" class="numbered-list" start="1" dir="auto"><li>웹 서버 2대를 준비한다</li></ol><ol type="1" id="eda720e4-6f49-828d-a72f-01b1592fd619" class="numbered-list" start="2" dir="auto"><li>Target Group을 생성한다</li></ol><ol type="1" id="60c720e4-6f49-823c-b752-81a93a7eaaf6" class="numbered-list" start="3" dir="auto"><li>ALB를 생성한다</li></ol><ol type="1" id="e0b720e4-6f49-8381-b4c5-819fb8eb5aa5" class="numbered-list" start="4" dir="auto"><li>ACM에서 인증서를 발급받는다</li></ol><ol type="1" id="c45720e4-6f49-83d5-a340-0116546b3194" class="numbered-list" start="5" dir="auto"><li>ALB에 HTTPS 리스너를 추가한다</li></ol><ol type="1" id="dac720e4-6f49-8330-aff4-0152b8ef4150" class="numbered-list" start="6" dir="auto"><li>HTTP 요청을 HTTPS로 리다이렉트한다</li></ol><ol type="1" id="054720e4-6f49-8253-b2bb-0103dc3c9e02" class="numbered-list" start="7" dir="auto"><li>Route 53에서 도메인을 ALB에 연결한다</li></ol><ol type="1" id="b02720e4-6f49-82d0-9bbe-01955b0cded1" class="numbered-list" start="8" dir="auto"><li>브라우저에서 HTTPS 접속을 확인한다</li></ol><hr id="c18720e4-6f49-827d-be44-817d35dbac2a" dir="auto"/><h1 id="c68720e4-6f49-8272-9e0f-81267437131b" class="" dir="auto">1. EC2 웹 서버 준비</h1><h2 id="d7d720e4-6f49-8255-85ad-0152a0006944" class="" dir="auto">1-1. EC2 인스턴스 생성</h2><p id="c86720e4-6f49-8365-89a0-81de1ecfc0bd" class="" dir="auto">다음과 같은 이름으로 EC2 인스턴스 2대를 생성한다.</p><ul id="d29720e4-6f49-835d-94c6-014d85c9454e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이니셜-ec2-web-01</li></ul><ul id="0eb720e4-6f49-8240-9d8d-810cb8f18785" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이니셜-ec2-web-02</li></ul><p id="571720e4-6f49-82ed-8157-010fa534348b" class="" dir="auto">Amazon Linux 2023 기준으로 진행한다.</p><hr id="f03720e4-6f49-822f-b362-0142e1f577a3" dir="auto"/><h2 id="d53720e4-6f49-8249-b8ff-81a86a29e9e4" class="" dir="auto">1-2. Apache 설치 및 기본 페이지 생성</h2><h3 id="4c0720e4-6f49-83ed-82c1-01046d823589" class="" dir="auto">Web Server 1</h3><pre id="850720e4-6f49-8342-87a9-01dfd6b1f09b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo dnf install-y httpd
+sudo systemctl enable--now httpd
+echo&quot;&lt;h1&gt;Web Server 1&lt;/h1&gt;&quot; |sudotee /var/www/html/index.html</code></pre><h3 id="87e720e4-6f49-8248-a3db-018565a7c98e" class="" dir="auto">Web Server 2</h3><pre id="b35720e4-6f49-82c3-ad89-010a291c1080" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo dnf install-y httpd
+sudo systemctl enable--now httpd
+echo&quot;&lt;h1&gt;Web Server 2&lt;/h1&gt;&quot; |sudotee /var/www/html/index.html</code></pre><hr id="789720e4-6f49-8211-97bf-01560c564acf" dir="auto"/><h2 id="982720e4-6f49-82be-bfbe-812b0ff375ea" class="" dir="auto">1-3. 명령어 설명</h2><h3 id="72f720e4-6f49-830e-9a9b-0107fc3677dc" class="" dir="auto"><code>sudo dnf install -y httpd</code></h3><ul id="798720e4-6f49-8247-91c1-815e44ed82bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Apache 웹 서버 패키지를 설치한다</li></ul><ul id="4b9720e4-6f49-8294-96cc-010985d456f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>y</code> 옵션은 설치 과정에서 묻는 질문에 자동으로 yes를 선택하게 해준다</li></ul><h3 id="12d720e4-6f49-838f-9b0c-8129e6e45a8e" class="" dir="auto"><code>sudo systemctl enable --now httpd</code></h3><ul id="bad720e4-6f49-821c-9622-81cec10b0b81" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>enable</code> 은 부팅 시 자동 시작되도록 등록한다</li></ul><ul id="112720e4-6f49-8248-b67f-811f4ab86174" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-now</code> 는 지금 즉시 서비스를 시작한다</li></ul><ul id="e04720e4-6f49-83d6-905f-8151be0f2114" class="bulleted-list" dir="auto"><li style="list-style-type:disc">즉, 현재 실행도 하고 다음 부팅 후 자동 시작도 설정하는 명령이다</li></ul><h3 id="da5720e4-6f49-82ba-b320-01b7030a26d4" class="" dir="auto"><code>echo &quot;&lt;h1&gt;Web Server 1&lt;/h1&gt;&quot; | sudo tee /var/www/html/index.html</code></h3><ul id="662720e4-6f49-82d6-ac42-016784cd108b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Apache 기본 문서 루트 경로에 HTML 파일을 생성한다</li></ul><ul id="ad5720e4-6f49-8207-a08a-818fcbaf9103" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>tee</code> 를 사용하는 이유는 root 권한으로 파일에 쓰기 위해서다</li></ul><hr id="6db720e4-6f49-83a9-ae25-81f6e966f72e" dir="auto"/><h2 id="1b9720e4-6f49-8300-8f25-81b18b63f562" class="" dir="auto">1-4. 웹 서버 보안 그룹 설정</h2><p id="b7f720e4-6f49-8314-a219-01da358ba0f8" class="" dir="auto">EC2 웹 서버용 보안 그룹 인바운드 규칙 예시는 다음과 같다.</p><ul id="f75720e4-6f49-828a-b7c1-01020066956a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH(22): 관리자 공인 IP 허용</li></ul><ul id="0c3720e4-6f49-8298-ab6b-0112852d4dd8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP(80): ALB 보안 그룹만 허용</li></ul><p id="8e8720e4-6f49-8292-a3ac-81999e842db7" class="" dir="auto">실무에서는 EC2의 80 포트를 전체 인터넷에 직접 열지 않고, ALB를 통해서만 접근되도록 구성하는 것이 일반적이다.</p><hr id="400720e4-6f49-8238-804a-010ba4aab331" dir="auto"/><h1 id="691720e4-6f49-8214-94f0-81564626f007" class="" dir="auto">2. Target Group 생성</h1><h2 id="3f2720e4-6f49-83de-bcb6-81d7d8f5affd" class="" dir="auto">2-1. Target Group의 역할</h2><p id="f46720e4-6f49-82be-8a97-819604ea2448" class="" dir="auto">ALB는 요청을 직접 EC2에 보내지 않고 Target Group을 통해 전달한다.</p><p id="bcd720e4-6f49-83e3-b79c-01b61976d9f9" class="" dir="auto">Target Group은 다음 역할을 수행한다.</p><ul id="634720e4-6f49-83f7-ad39-014ca794c982" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 서버에게 요청을 전달할지 결정</li></ul><ul id="543720e4-6f49-831c-a911-01852b0fdef3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check를 수행해 정상 서버를 판별</li></ul><ul id="79b720e4-6f49-8336-8d8e-014092c3d668" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정상 상태의 서버에만 트래픽 전달</li></ul><hr id="6e9720e4-6f49-8322-8800-81dc7add5bfa" dir="auto"/><h2 id="efc720e4-6f49-83f9-8a85-0110a40764e4" class="" dir="auto">2-2. 생성 절차</h2><p id="d73720e4-6f49-821c-831b-8188d8683579" class="" dir="auto">EC2 콘솔 → Load Balancing → Target Groups → Create target group</p><p id="eee720e4-6f49-828f-b13b-81cfce61151e" class="" dir="auto">다음과 같이 설정한다.</p><ul id="272720e4-6f49-8241-95bf-01d039c1e33d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Target type: Instances</li></ul><ul id="300720e4-6f49-8345-b158-81a3d250b684" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Name: 이니셜-tg-web</li></ul><ul id="2b7720e4-6f49-8368-8dec-814da50e4e4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Protocol: HTTP</li></ul><ul id="36c720e4-6f49-82d2-ba2d-01f73770137c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Port: 80</li></ul><ul id="951720e4-6f49-820a-bf93-0109e9e2ed55" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC: 실습용 VPC 선택</li></ul><ul id="17c720e4-6f49-833c-8a65-01ebafca28bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health check path: <code>/</code></li></ul><p id="fa7720e4-6f49-83de-8714-012b3591cb54" class="" dir="auto">생성 후 EC2 웹 서버 2대를 등록한다.</p><hr id="b61720e4-6f49-83cf-a549-01c60fc777c9" dir="auto"/><h2 id="c08720e4-6f49-83cc-aff8-81be97499fd5" class="" dir="auto">2-3. Health Check 설명</h2><p id="bfd720e4-6f49-839c-84ae-8156a3071aea" class="" dir="auto">Health Check는 ALB가 백엔드 서버 상태를 점검하는 기능이다.</p><p id="768720e4-6f49-82de-b249-01d890faa32f" class="" dir="auto">예를 들어 다음처럼 설정했다면</p><ul id="825720e4-6f49-8371-a035-819c9c524369" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Protocol: HTTP</li></ul><ul id="c34720e4-6f49-8262-9980-0138be8024ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Port: 80</li></ul><ul id="980720e4-6f49-8382-8d08-8133275f09b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Path: <code>/</code></li></ul><p id="5fd720e4-6f49-8363-8556-818a6bf30e5a" class="" dir="auto">ALB는 각 EC2에 대해 <code>http://대상IP:80/</code> 요청을 주기적으로 보낸다.</p><p id="061720e4-6f49-8208-8d7c-01661604d535" class="" dir="auto">정상 응답 코드(예: 200 OK)가 돌아오면 Healthy 상태로 판단한다.</p><p id="cf7720e4-6f49-834f-9c2b-01827ee31e3b" class="" dir="auto">웹 서버가 중지되었거나 응답이 비정상이면 Unhealthy 상태가 된다.</p><hr id="4bf720e4-6f49-82a1-8f6f-81041c4c52c1" dir="auto"/><h1 id="0ce720e4-6f49-8386-a930-01fe59e47491" class="" dir="auto">3. ALB 생성</h1><h2 id="af9720e4-6f49-822e-b749-817c132d4eb5" class="" dir="auto">3-1. ALB 생성</h2><p id="8c9720e4-6f49-8374-8421-818191953e0d" class="" dir="auto">EC2 콘솔 → Load Balancers → Create Load Balancer → Application Load Balancer 선택</p><p id="946720e4-6f49-8396-ac01-818730659348" class="" dir="auto">다음과 같이 설정한다.</p><ul id="b1c720e4-6f49-8323-a660-01a0974185cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Name: 이니셜-alb-web</li></ul><ul id="d75720e4-6f49-8265-a92c-812395cc6bf2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Scheme: Internet-facing</li></ul><ul id="1a5720e4-6f49-82c7-9628-0126048a4335" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP address type: IPv4</li></ul><ul id="11b720e4-6f49-83d0-ad76-8109a452dc9b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC: 실습 VPC</li></ul><ul id="f1d720e4-6f49-82aa-99d8-013ffb48e7c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnets: 서로 다른 AZ의 퍼블릭 서브넷 2개 이상 선택</li></ul><p id="e04720e4-6f49-8332-bc25-8169f40726b4" class="" dir="auto">ALB는 고가용성을 위해 최소 2개의 AZ에 걸쳐 배치하는 것이 일반적이다.</p><hr id="38d720e4-6f49-83ed-a044-0109e505071b" dir="auto"/><h2 id="b81720e4-6f49-83e3-a4a5-817e55725343" class="" dir="auto">3-2. ALB 보안 그룹 설정</h2><p id="82a720e4-6f49-8351-b560-011ecbb729ea" class="" dir="auto">ALB용 보안 그룹 인바운드 규칙은 다음처럼 설정한다.</p><ul id="092720e4-6f49-830f-8eb3-81b5818ca391" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP(80): 0.0.0.0/0</li></ul><ul id="806720e4-6f49-839a-9b28-81e43bbac2cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPS(443): 0.0.0.0/0</li></ul><p id="4cc720e4-6f49-82bf-ae5d-81a8b774fcbb" class="" dir="auto">설명은 다음과 같다.</p><ul id="b5e720e4-6f49-82e7-a8e5-01c2d8cd2a1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">80 포트는 HTTP 접속을 받은 뒤 HTTPS로 리다이렉트하기 위해 사용</li></ul><ul id="d47720e4-6f49-83bf-b646-01bf3bfadc09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">443 포트는 실제 HTTPS 통신을 위해 사용</li></ul><hr id="942720e4-6f49-829f-8087-017cd715285d" dir="auto"/><h2 id="f41720e4-6f49-82a8-9fbd-81367e8d63ee" class="" dir="auto">3-3. 초기 리스너 설정</h2><p id="28d720e4-6f49-8206-aa1e-01974ba4f8f7" class="" dir="auto">처음에는 다음처럼 생성해도 된다.</p><ul id="2ed720e4-6f49-8395-aaaf-014d1a873ff9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Listener: HTTP 80</li></ul><ul id="469720e4-6f49-83e1-8e12-015140e1852a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Default action: Forward to 이니셜-tg-web</li></ul><p id="b1c720e4-6f49-83ce-b983-81bd3632cc1d" class="" dir="auto">이후 ACM 인증서를 발급한 뒤 443 리스너를 추가한다.</p><hr id="2ce720e4-6f49-821d-9e9c-81b007b6f568" dir="auto"/><h1 id="ff6720e4-6f49-82cf-8a6f-015a64d91632" class="" dir="auto">4. ACM 인증서 발급</h1><h2 id="f85720e4-6f49-82da-9da8-019c0a69dfa6" class="" dir="auto">4-1. ACM 콘솔 이동</h2><p id="c8c720e4-6f49-83a6-b506-8133ad9db246" class="" dir="auto">반드시 ALB와 같은 리전으로 이동한 뒤 ACM 콘솔을 연다.</p><hr id="fcc720e4-6f49-82ad-af56-014acfa2b2fd" dir="auto"/><h2 id="cec720e4-6f49-83ec-8d55-014742812895" class="" dir="auto">4-2. 인증서 요청</h2><p id="254720e4-6f49-8262-b852-01922dee73d8" class="" dir="auto">ACM 콘솔 → Request a certificate → Request a public certificate 선택</p><p id="45a720e4-6f49-830b-a90a-819f051f3b9f" class="" dir="auto">예시 도메인 입력</p><ul id="3cb720e4-6f49-8317-97c7-810a2375484c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>www.example.com</code></li></ul><p id="45f720e4-6f49-8317-a4d3-0148800454f1" class="" dir="auto">또는 필요 시 와일드카드 사용 가능</p><ul id="a9f720e4-6f49-8389-a2f1-01c528b30c61" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>.example.com</code></li></ul><p id="535720e4-6f49-8246-abc9-01367bd1c181" class="" dir="auto">실습 초반에는 개별 FQDN으로 진행하는 것이 이해하기 쉽다.</p><hr id="486720e4-6f49-82f8-8de4-01fe63dc153f" dir="auto"/><h2 id="ae7720e4-6f49-83af-9e76-01847d25c615" class="" dir="auto">4-3. 검증 방식 선택</h2><p id="c12720e4-6f49-8245-9e83-018b1cedaa1e" class="" dir="auto">Validation method는 <strong>DNS validation</strong> 을 선택한다.</p><p id="038720e4-6f49-8368-9137-0134e42fbba1" class="" dir="auto">DNS validation을 선택하는 이유는 다음과 같다.</p><ul id="0a9720e4-6f49-82e5-8cf7-01b1132330b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무에서 가장 많이 사용함</li></ul><ul id="abf720e4-6f49-832f-98cb-81865f384161" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화에 유리함</li></ul><ul id="7fd720e4-6f49-8211-a01b-81ef451d0aa5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">갱신 시에도 편리함</li></ul><hr id="bd3720e4-6f49-835a-a35f-819f10a69c2c" dir="auto"/><h2 id="290720e4-6f49-8370-b66f-8140d143a9a5" class="" dir="auto">4-4. DNS 검증 이해</h2><p id="566720e4-6f49-8306-820d-01fd63de526d" class="" dir="auto">인증서를 요청하면 ACM은 해당 도메인을 내가 실제로 제어하는지 확인하기 위해 DNS 레코드 추가를 요구한다.</p><p id="304720e4-6f49-8349-89eb-81491357a8e4" class="" dir="auto">예를 들면 다음과 같은 CNAME 레코드가 제시될 수 있다.</p><ul id="c0d720e4-6f49-836c-8bb5-0194b441f167" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Name: <code>_xxxx.www.example.com</code></li></ul><ul id="d4b720e4-6f49-82c7-b1f7-016a36817fc7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Value: <code>_yyyy.acm-validations.aws</code></li></ul><p id="c4d720e4-6f49-8321-b040-01e116f1fee7" class="" dir="auto">이 레코드를 DNS에 등록하면 AWS가 이를 조회해 도메인 소유 여부를 검증한다.</p><hr id="358720e4-6f49-823e-a1b0-01c3cc429680" dir="auto"/><h2 id="7ad720e4-6f49-83e1-9475-016184a10654" class="" dir="auto">4-5. Route 53 사용 시</h2><p id="583720e4-6f49-83dc-a28e-812b43254045" class="" dir="auto">도메인을 Route 53에서 관리하고 있다면 ACM 콘솔에서 <strong>Create records in Route 53</strong> 버튼으로 검증 레코드를 자동 생성할 수 있다.</p><p id="24f720e4-6f49-82e1-a65f-011be938b776" class="" dir="auto">즉, CNAME 값을 수동으로 복사하지 않아도 된다.</p><hr id="4b0720e4-6f49-839a-8643-010136663aaa" dir="auto"/><h2 id="f73720e4-6f49-8229-b0e6-81706b737c1f" class="" dir="auto">4-6. 외부 DNS 사용 시</h2><p id="3d2720e4-6f49-839d-b7a4-01be8988e0b8" class="" dir="auto">도메인이 외부 DNS 서비스에 있다면 ACM에서 안내한 CNAME 레코드를 해당 DNS 관리 화면에 직접 등록해야 한다.</p><p id="8cc720e4-6f49-839e-875c-01a0b2d71d26" class="" dir="auto">예시:</p><ul id="800720e4-6f49-836a-82cc-0190fb77b159" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가비아</li></ul><ul id="cc5720e4-6f49-836b-8657-015f78a67751" class="bulleted-list" dir="auto"><li style="list-style-type:disc">후이즈</li></ul><ul id="81e720e4-6f49-83f3-920a-81d852ec9321" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloudflare 등</li></ul><p id="49f720e4-6f49-8262-96a7-813968405a49" class="" dir="auto">이 경우 DNS 전파 시간이 다소 걸릴 수 있다.</p><hr id="07d720e4-6f49-8271-9735-8138ba3a7bff" dir="auto"/><h2 id="21a720e4-6f49-8384-a94a-81ee5a221ca8" class="" dir="auto">4-7. 인증서 상태 확인</h2><p id="f6d720e4-6f49-83ee-92d3-01f9a9e4a1bd" class="" dir="auto">인증서 상태가 다음과 같이 바뀌는지 확인한다.</p><ul id="5d2720e4-6f49-82dd-ab42-81f239cd051d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pending validation</li></ul><ul id="588720e4-6f49-836a-8584-81ac62397035" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Issued</li></ul><p id="55b720e4-6f49-8236-9389-81859f835d7a" class="" dir="auto">반드시 <strong>Issued</strong> 상태가 되어야 ALB에 연결할 수 있다.</p><hr id="8ad720e4-6f49-83fc-ad5a-01c0815c8e11" dir="auto"/><h1 id="a5d720e4-6f49-835b-8170-01b9e5a48373" class="" dir="auto">5. ALB에 HTTPS 리스너 추가</h1><h2 id="df8720e4-6f49-8221-b3d0-81ba234417d2" class="" dir="auto">5-1. 443 리스너 추가</h2><p id="aeb720e4-6f49-8346-b2e3-81e3d6ab8442" class="" dir="auto">EC2 콘솔 → Load Balancers → 생성한 ALB 선택 → Listeners and rules → Add listener</p><p id="c0d720e4-6f49-8307-bbfa-011121f286db" class="" dir="auto">다음과 같이 설정한다.</p><ul id="6da720e4-6f49-8315-abc0-812f7504344d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Protocol: HTTPS</li></ul><ul id="d11720e4-6f49-831d-966b-01ad26d87e1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Port: 443</li></ul><ul id="b66720e4-6f49-838d-894f-814195e4255f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Default action: Forward to 이니셜-tg-web</li></ul><ul id="d4c720e4-6f49-8303-a214-0123278ddedd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Default SSL/TLS certificate: 발급받은 ACM 인증서 선택</li></ul><p id="16b720e4-6f49-82ba-bbca-012c03fb0a2e" class="" dir="auto">저장한다.</p><hr id="c4d720e4-6f49-837a-8998-81708769af32" dir="auto"/><h2 id="61f720e4-6f49-8207-a695-813efa2e7d89" class="" dir="auto">5-2. Security Policy 설명</h2><p id="704720e4-6f49-824a-9803-8112495d56fd" class="" dir="auto">HTTPS 리스너에는 TLS 정책(Security Policy)이 존재한다.</p><p id="a76720e4-6f49-82a0-84c6-01430207578f" class="" dir="auto">이 정책은 다음을 결정한다.</p><ul id="017720e4-6f49-8257-b777-81ec56534760" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 TLS 버전을 허용할지</li></ul><ul id="692720e4-6f49-82c5-8e12-8100eac2b1b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 암호 스위트를 허용할지</li></ul><p id="e01720e4-6f49-827e-8191-0144be27d9ab" class="" dir="auto">교육용 실습에서는 기본값을 사용해도 충분하다.</p><p id="c8b720e4-6f49-8311-8504-81b8c52ecae3" class="" dir="auto">운영 환경에서는 보안 정책에 맞는 TLS 정책을 선택해야 한다.</p><hr id="f02720e4-6f49-8358-96aa-814ec390fba1" dir="auto"/><h1 id="bf5720e4-6f49-829e-ae45-81825381e93f" class="" dir="auto">6. HTTP를 HTTPS로 리다이렉트</h1><h2 id="38a720e4-6f49-8313-9b13-014b7f540ebf" class="" dir="auto">6-1. 리다이렉트 설정 목적</h2><p id="49a720e4-6f49-83a3-8a1c-81359674625a" class="" dir="auto">사용자가 <code>http://도메인명</code> 으로 접속하더라도 자동으로 <code>https://도메인명</code> 으로 이동하게 만들어야 한다.</p><p id="3b5720e4-6f49-830a-8859-0139d8162e86" class="" dir="auto">그래야 사용자가 평문 HTTP를 계속 사용하지 않게 된다.</p><hr id="bb0720e4-6f49-827e-9dfa-8162a3373436" dir="auto"/><h2 id="a54720e4-6f49-8368-bc5f-017ba06f6b3e" class="" dir="auto">6-2. 설정 절차</h2><p id="8b9720e4-6f49-8256-9157-01548cb353e0" class="" dir="auto">ALB → Listeners and rules → HTTP:80 리스너 선택 → Edit rules</p><p id="04f720e4-6f49-82d9-9ec6-019c31ce631b" class="" dir="auto">기존 Forward 동작 대신 Redirect 동작으로 변경한다.</p><p id="077720e4-6f49-8224-975f-81747d53e70f" class="" dir="auto">설정 예시는 다음과 같다.</p><ul id="79b720e4-6f49-821f-8510-8197ba949d49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Protocol: HTTPS</li></ul><ul id="0aa720e4-6f49-83ee-aacc-813335e7a057" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Port: 443</li></ul><ul id="e73720e4-6f49-824f-b5ae-019db19c8402" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Host: <code>#{host}</code></li></ul><ul id="2ec720e4-6f49-8393-8802-815b18162033" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Path: <code>/#{path}</code></li></ul><ul id="9e9720e4-6f49-82b8-8350-81f702d2ff9e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Query: <code>#{query}</code></li></ul><ul id="cb3720e4-6f49-82ac-b95e-81e29a20f7f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Status code: HTTP_301</li></ul><hr id="b6b720e4-6f49-82df-ac74-81ef365a3b7f" dir="auto"/><h2 id="0d6720e4-6f49-83a5-9b32-81508067b5cc" class="" dir="auto">6-3. 각 항목 설명</h2><h3 id="812720e4-6f49-8239-80de-81af184b0c85" class="" dir="auto"><code>#{host}</code></h3><p id="ce4720e4-6f49-83eb-aff6-017a3d0bfe3c" class="" dir="auto">원래 요청한 호스트명을 그대로 유지한다.</p><p id="ab1720e4-6f49-8370-bcbd-013bf0b21af7" class="" dir="auto">예:</p><ul id="83a720e4-6f49-82f3-8bd7-011dcbc9df60" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>www.example.com</code></li></ul><ul id="7c3720e4-6f49-8353-9d87-81d30003f754" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>app.example.com</code></li></ul><h3 id="d22720e4-6f49-839b-9b70-01435d39b6f4" class="" dir="auto"><code>/#{path}</code></h3><p id="f28720e4-6f49-83e8-8f0e-013177576dd6" class="" dir="auto">사용자가 요청한 경로를 그대로 유지한다.</p><p id="5fe720e4-6f49-83b8-bdc3-8116771137cd" class="" dir="auto">예:</p><ul id="8e7720e4-6f49-8210-b4be-817fd4ff8e78" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/</code></li></ul><ul id="ba5720e4-6f49-837f-a426-01f02a123049" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/login</code></li></ul><ul id="50a720e4-6f49-82e0-98d0-81565aebc5ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/images/logo.png</code></li></ul><h3 id="cb9720e4-6f49-832d-a7e7-81bcea1bffa4" class="" dir="auto"><code>#{query}</code></h3><p id="cc7720e4-6f49-8217-99af-81be8eda6769" class="" dir="auto">URL 뒤의 쿼리 문자열을 유지한다.</p><p id="595720e4-6f49-8319-959d-01dc35b5fecd" class="" dir="auto">예:</p><ul id="b12720e4-6f49-824c-88e7-019c9b0ea2d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>?page=1</code></li></ul><ul id="608720e4-6f49-8304-aa4e-81c6b5e9a8be" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>?id=100&amp;sort=desc</code></li></ul><h3 id="3a2720e4-6f49-833d-b607-81f6e25eb670" class="" dir="auto"><code>HTTP_301</code></h3><p id="d5e720e4-6f49-82b9-958b-016008a0383a" class="" dir="auto">영구 이동(Permanent Redirect)을 의미한다.</p><p id="fbd720e4-6f49-838d-a893-8100233c3e03" class="" dir="auto">브라우저와 검색엔진에게 해당 리소스가 HTTPS로 영구 이동했음을 알리는 응답 코드다.</p><hr id="43e720e4-6f49-821b-b76e-01701ad76828" dir="auto"/><h1 id="857720e4-6f49-83ca-be60-01ab8132f7fd" class="" dir="auto">7. Route 53에서 도메인 연결</h1><h2 id="ede720e4-6f49-8321-8ade-01c953560e2b" class="" dir="auto">7-1. ALB DNS 이름 확인</h2><p id="426720e4-6f49-8353-b816-81c8300488d3" class="" dir="auto">ALB에는 AWS가 자동 생성한 DNS 이름이 있다.</p><p id="572720e4-6f49-83ff-80ab-815f842718de" class="" dir="auto">예시:</p><pre id="b60720e4-6f49-8274-b5c0-815c00ef8b56" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-alb-web-123456789.ap-northeast-2.elb.amazonaws.com</code></pre><p id="987720e4-6f49-838b-babc-0132eb0985cc" class="" dir="auto">사용자는 이 주소가 아니라 <code>www.example.com</code> 같은 도메인으로 접속하게 해야 한다.</p><hr id="0de720e4-6f49-8298-bdd5-81bee87aaf6d" dir="auto"/><h2 id="46d720e4-6f49-834b-a754-01e0542563c8" class="" dir="auto">7-2. Route 53 Alias 레코드 생성</h2><p id="ea0720e4-6f49-830b-b471-8139580e7f22" class="" dir="auto">Route 53 콘솔 → Hosted Zones → 해당 도메인 선택 → Create record</p><p id="971720e4-6f49-82e2-b99c-814a79169c5e" class="" dir="auto">다음과 같이 설정한다.</p><ul id="a6d720e4-6f49-8273-a77a-8182f8f03881" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Record name: <code>www</code></li></ul><ul id="71f720e4-6f49-8280-a157-8172675eacad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Record type: A</li></ul><ul id="0db720e4-6f49-83ae-ba09-81582678dfb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Alias: On</li></ul><ul id="d44720e4-6f49-83a3-87bc-8146580b2659" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route traffic to: Alias to Application and Classic Load Balancer</li></ul><ul id="0f5720e4-6f49-83fd-b846-01e72a99081f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Region: ALB가 있는 리전 선택</li></ul><ul id="b24720e4-6f49-83dc-b891-8108ca6b0cd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Load balancer: 생성한 ALB 선택</li></ul><p id="554720e4-6f49-83e9-a599-0132ef49506a" class="" dir="auto">저장한다.</p><hr id="579720e4-6f49-8276-8c6b-810dd5c86111" dir="auto"/><h2 id="2d5720e4-6f49-826c-81cd-01f759778d3d" class="" dir="auto">7-3. Alias 레코드 설명</h2><p id="06f720e4-6f49-82bb-8a81-01eac0435e64" class="" dir="auto">Alias 레코드는 Route 53에서 AWS 리소스를 대상으로 연결할 때 사용하는 특별한 레코드다.</p><p id="662720e4-6f49-83c0-93ab-817426a60e34" class="" dir="auto">장점은 다음과 같다.</p><ul id="812720e4-6f49-836b-a799-014be7e7b200" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB와 쉽게 연결 가능</li></ul><ul id="d8e720e4-6f49-82be-9766-81bc3d7c4050" class="bulleted-list" dir="auto"><li style="list-style-type:disc">루트 도메인에도 사용 가능</li></ul><ul id="df1720e4-6f49-8212-a34d-8186215e7369" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 리소스와 연동성이 좋음</li></ul><hr id="f0e720e4-6f49-834a-8cc1-011720e9f077" dir="auto"/><h1 id="0ac720e4-6f49-8289-a663-81e3236b6520" class="" dir="auto">8. 접속 확인</h1><h2 id="5a0720e4-6f49-8347-b7c0-819c89642e6d" class="" dir="auto">8-1. HTTPS 접속 확인</h2><p id="b65720e4-6f49-83a6-9f8b-0137b1219984" class="" dir="auto">브라우저에서 다음 주소로 접속한다.</p><pre id="d8c720e4-6f49-82d2-bdac-01efaf1bc344" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">https://www.example.com</code></pre><p id="fe1720e4-6f49-83c6-b250-0199efb0a6d0" class="" dir="auto">다음 항목을 확인한다.</p><ul id="fa7720e4-6f49-83df-9c22-0134279192d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자물쇠 표시가 보이는지</li></ul><ul id="cdc720e4-6f49-8361-bf7d-81f586e9efd3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증서 경고가 발생하지 않는지</li></ul><ul id="1e1720e4-6f49-833c-ab2e-01f395a885c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 페이지가 정상 출력되는지</li></ul><ul id="5ef720e4-6f49-8263-bcdc-813abf0a9994" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새로고침 시 Web Server 1, Web Server 2가 번갈아 표시되는지</li></ul><hr id="677720e4-6f49-83a3-88d1-813a394010c0" dir="auto"/><h2 id="ed2720e4-6f49-82da-8d72-819ad0cb9b93" class="" dir="auto">8-2. HTTP 접속 후 리다이렉트 확인</h2><p id="c88720e4-6f49-82f0-b3c1-816ac7272ac8" class="" dir="auto">브라우저에서 다음 주소로 접속한다.</p><pre id="0a9720e4-6f49-82ef-a94a-81394573146c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://www.example.com</code></pre><p id="d3a720e4-6f49-825c-b1a9-01872319698d" class="" dir="auto">다음 항목을 확인한다.</p><ul id="9c9720e4-6f49-837a-865c-01df74d65bbe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동으로 <code>https://www.example.com</code> 으로 이동하는지</li></ul><hr id="e46720e4-6f49-835e-b350-018d1c8cf49d" dir="auto"/><h2 id="dbe720e4-6f49-83d1-9cbb-013f20f1aef6" class="" dir="auto">8-3. curl 명령으로 확인</h2><h3 id="e5f720e4-6f49-82f9-839a-81a0ff496f3a" class="" dir="auto">HTTP 확인</h3><pre id="ca8720e4-6f49-83a6-8249-816b187dcb75" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl-I http://www.example.com</code></pre><p id="892720e4-6f49-829f-bfda-01072db7c23d" class="" dir="auto">예상 결과</p><ul id="524720e4-6f49-8303-8667-018d02817a34" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>301 Moved Permanently</code></li></ul><ul id="724720e4-6f49-82af-8eda-0184af63ff87" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Location: https://www.example.com/...</code></li></ul><h3 id="08f720e4-6f49-821e-af56-8188187d6084" class="" dir="auto">HTTPS 확인</h3><pre id="dd4720e4-6f49-820b-b4c2-811790bc9354" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl-I https://www.example.com</code></pre><p id="d56720e4-6f49-8237-895c-01d5ed763e18" class="" dir="auto">예상 결과</p><ul id="fd0720e4-6f49-8204-a40f-01754f9e4536" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>HTTP/2 200</code><p id="c33720e4-6f49-83ef-b1ab-814ec3c648be" class="" dir="auto">또는</p></li></ul><ul id="c8e720e4-6f49-824b-ae0e-8146e85f7764" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>HTTP/1.1 200 OK</code></li></ul><hr id="33f720e4-6f49-82b7-bdc6-8145de13d1b1" dir="auto"/><h2 id="77f720e4-6f49-8264-965b-01a16bd5ed5a" class="" dir="auto">8-4. openssl로 인증서 확인</h2><pre id="76b720e4-6f49-8392-913b-01fad56fd976" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">openssl s_client-connect www.example.com:443-servername www.example.com</code></pre><h3 id="1c0720e4-6f49-821d-9e98-019053677703" class="" dir="auto">명령어 설명</h3><h3 id="d77720e4-6f49-8381-81dc-01cf73fa6ecc" class="" dir="auto"><code>openssl s_client</code></h3><p id="001720e4-6f49-82ef-a077-01343b1340bf" class="" dir="auto">TLS/SSL 서버와 직접 연결해 인증서와 핸드셰이크 정보를 확인하는 도구다.</p><h3 id="488720e4-6f49-8389-a1d4-01c1d81d8137" class="" dir="auto"><code>connect www.example.com:443</code></h3><p id="f61720e4-6f49-8375-abe9-0136662fa3e7" class="" dir="auto">대상 호스트의 443 포트로 연결한다.</p><h3 id="cb0720e4-6f49-834b-b794-01f66d438bb8" class="" dir="auto"><code>servername www.example.com</code></h3><p id="74d720e4-6f49-8255-ae6e-818d99eb0afa" class="" dir="auto">SNI(Server Name Indication) 값을 함께 전달한다.</p><p id="934720e4-6f49-8222-ad8c-014843617599" class="" dir="auto">하나의 ALB에 여러 도메인 인증서가 있을 때 매우 중요하다.</p><p id="165720e4-6f49-83ec-92e4-812383d6cf10" class="" dir="auto">출력 결과에서 다음을 확인할 수 있다.</p><ul id="956720e4-6f49-8229-be93-81bcb7006ccc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버가 제시한 인증서</li></ul><ul id="3ff720e4-6f49-82f3-802f-019ede95c986" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증서 체인</li></ul><ul id="a78720e4-6f49-83d4-90dc-01f4c62b2dd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TLS 버전</li></ul><ul id="734720e4-6f49-82bf-923e-016132ffd0fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cipher Suite</li></ul><ul id="d1e720e4-6f49-83e2-af3c-0114752f8b7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증서 검증 결과</li></ul><hr id="d27720e4-6f49-824f-bc5a-81f2efc1820c" dir="auto"/><h1 id="f5e720e4-6f49-8379-a2a7-81dbb5b7683e" class="" dir="auto">9. 전체 실습 흐름 정리</h1><p id="e58720e4-6f49-824f-a0ce-81c55b899953" class="" dir="auto">다음 순서로 실습이 진행된다.</p><ol type="1" id="e8b720e4-6f49-835d-8ed8-81ac7c3567f6" class="numbered-list" start="1" dir="auto"><li>EC2 웹 서버 2대 준비</li></ol><ol type="1" id="6ee720e4-6f49-828b-9166-811489fada34" class="numbered-list" start="2" dir="auto"><li>Apache 설치 및 index.html 작성</li></ol><ol type="1" id="98a720e4-6f49-82e7-a777-815f76da14ec" class="numbered-list" start="3" dir="auto"><li>Target Group 생성</li></ol><ol type="1" id="6c3720e4-6f49-839b-9f8a-81109b1e483d" class="numbered-list" start="4" dir="auto"><li>ALB 생성</li></ol><ol type="1" id="259720e4-6f49-83e2-b6bc-01e229b91266" class="numbered-list" start="5" dir="auto"><li>ACM 퍼블릭 인증서 요청</li></ol><ol type="1" id="91d720e4-6f49-8278-a5f4-012b4fd5a0b5" class="numbered-list" start="6" dir="auto"><li>DNS validation 수행</li></ol><ol type="1" id="c07720e4-6f49-8309-b89b-81d4809fb559" class="numbered-list" start="7" dir="auto"><li>인증서가 Issued 상태가 되면 ALB에 443 리스너 추가</li></ol><ol type="1" id="0c0720e4-6f49-82f9-a677-014a243af7b7" class="numbered-list" start="8" dir="auto"><li>80 리스너는 443으로 Redirect 설정</li></ol><ol type="1" id="f24720e4-6f49-8244-99d7-01d5c4c377f3" class="numbered-list" start="9" dir="auto"><li>Route 53 Alias 레코드 생성</li></ol><ol type="1" id="d5b720e4-6f49-8363-868d-818e9ba29b5a" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>브라우저와 CLI로 HTTPS 동작 확인</li></ol></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

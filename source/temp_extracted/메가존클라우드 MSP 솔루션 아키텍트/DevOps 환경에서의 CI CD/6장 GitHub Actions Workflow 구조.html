@@ -1,0 +1,820 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>6장. GitHub Actions Workflow 구조</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="910720e4-6f49-8226-b83c-012d438f02f0" class="page sans"><header><h1 class="page-title" dir="auto">6장. GitHub Actions Workflow 구조</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="e15720e4-6f49-83b7-99ac-81c7b61a63b1" class="" dir="auto">장 목표</h2><p id="f7e720e4-6f49-8387-87a5-816718ffe5fa" class="" dir="auto">이 장에서는 GitHub Actions Workflow가 어떤 구조로 작성되는지 이해하고, Workflow를 구성하는 핵심 문법 요소를 체계적으로 학습한다.</p><p id="e4d720e4-6f49-82db-b515-01fe2206c4b2" class="" dir="auto">또한 Jenkins Pipeline과 비교했을 때 GitHub Actions의 Workflow가 어떤 방식으로 자동화 절차를 표현하는지 이해하고, <strong>YAML 기반 자동화 정의를 읽고 설명할 수 있는 수준</strong>을 목표로 한다.</p><hr id="e64720e4-6f49-8265-8296-8166abc8674f" dir="auto"/><h2 id="282720e4-6f49-83dd-bff7-01d0762887ae" class="" dir="auto">핵심 주제</h2><ul id="ed2720e4-6f49-82ee-abe3-018367516abf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Workflow 파일의 위치와 역할</li></ul><ul id="847720e4-6f49-821d-a155-015e30c1abb7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">YAML 기반 Workflow 정의 구조</li></ul><ul id="1ed720e4-6f49-839d-8120-81df82e39d22" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>name</code>, <code>on</code>, <code>jobs</code>, <code>steps</code> 개념</li></ul><ul id="9fd720e4-6f49-8307-b4a0-015aa48fd7b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>runs-on</code>, <code>uses</code>, <code>run</code> 차이</li></ul><ul id="7e9720e4-6f49-8324-86aa-811e30d9c73b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>env</code>, <code>defaults</code>, <code>if</code>, <code>needs</code>, <code>strategy</code>, <code>matrix</code> 개요</li></ul><ul id="990720e4-6f49-83d7-afc3-01b000618701" class="bulleted-list" dir="auto"><li style="list-style-type:disc">아티팩트, 시크릿, 변수 개념</li></ul><ul id="73f720e4-6f49-82f1-80eb-01c89d25d1a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조건 분기와 병렬 실행 구조</li></ul><ul id="368720e4-6f49-83d7-a9e0-8103e8e31f04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub Actions Workflow를 설계할 때의 실무 관점</li></ul><hr id="e15720e4-6f49-82bf-a8da-81323c9674c0" dir="auto"/><h2 id="d02720e4-6f49-82b9-8337-81ead41837fb" class="" dir="auto">1. Workflow란 무엇인가</h2><h3 id="ccf720e4-6f49-8326-ac64-81953db4408f" class="" dir="auto">1.1 Workflow의 정의</h3><p id="469720e4-6f49-83de-bdc7-81dfde0b5af3" class="" dir="auto">GitHub Actions에서 Workflow는 자동화 절차 전체를 정의하는 단위다.</p><p id="85b720e4-6f49-834c-9d01-81a882594192" class="" dir="auto">하나의 Workflow는 보통 하나의 목적을 가진다.</p><p id="cc6720e4-6f49-8372-b01d-8177b8328f10" class="" dir="auto">예를 들면 다음과 같은 Workflow를 각각 만들 수 있음.</p><ul id="791720e4-6f49-8339-8e0a-810abba09075" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 push 시 빌드/테스트 수행</li></ul><ul id="5ec720e4-6f49-8356-a8a0-0194b73c75f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pull Request 생성 시 검증 수행</li></ul><ul id="955720e4-6f49-824b-a96a-01ed9e23cd25" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 생성 시 릴리스 빌드 수행</li></ul><ul id="139720e4-6f49-824f-8220-81276435799c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 배포용 Workflow 수행</li></ul><ul id="e8b720e4-6f49-8316-bfe5-0149bc5db287" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스케줄 기반 점검 작업 수행</li></ul><p id="ded720e4-6f49-82ba-9d11-816fa33ac08d" class="" dir="auto">즉, Workflow는 Jenkins에서의 Pipeline과 유사하게, <strong>자동화된 작업 흐름 하나를 정의하는 파일 단위</strong>라고 보면 됨.</p><hr id="4d8720e4-6f49-8222-b37c-819a7de97ba7" dir="auto"/><h3 id="0b3720e4-6f49-834c-a258-01e05056d6c0" class="" dir="auto">1.2 Workflow 파일의 위치</h3><p id="25b720e4-6f49-8301-9e2b-01d6f4c854a7" class="" dir="auto">GitHub Actions Workflow는 저장소 내부의 다음 경로에 위치해야 함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="0a8720e4-6f49-82e8-bebd-811dc5769bf6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">.github/workflows/</code></pre><p id="12a720e4-6f49-83a6-8caf-81e2b915c8a9" class="" dir="auto">예를 들면 다음과 같음.</p><pre id="400720e4-6f49-83bd-8732-012d0b0a7f9e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">my-app/
+ ├─ src/
+ ├─ tests/
+ ├─ Dockerfile
+ └─ .github/
+     └─ workflows/
+         ├─ ci.yml
+         ├─ pr-check.yml
+         └─ deploy.yml</code></pre><p id="985720e4-6f49-8322-8b25-81cbe44dfd1f" class="" dir="auto">GitHub는 이 디렉터리 안의 YAML 파일을 Workflow로 인식함.</p><p id="cf4720e4-6f49-82af-bd60-018e5f58c2e3" class="" dir="auto">즉, Workflow는 GitHub UI에서 따로 클릭해서 만드는 것이 아니라,</p><p id="fe2720e4-6f49-83f1-a20b-81358b28fb90" class="" dir="auto"><strong>저장소 안의 파일로 정의되고 버전 관리되는 구조</strong>다.</p><hr id="e67720e4-6f49-8380-834e-81f16eba9b36" dir="auto"/><h2 id="80f720e4-6f49-83ba-9ec8-016abd561a50" class="" dir="auto">2. YAML 기반 Workflow 정의</h2><h3 id="c8d720e4-6f49-8272-bf7d-81e07fcc39ea" class="" dir="auto">2.1 왜 YAML을 사용하는가</h3><p id="72b720e4-6f49-83dd-9d15-01510fb57364" class="" dir="auto">GitHub Actions는 Workflow를 YAML 형식으로 정의함.</p><p id="743720e4-6f49-83d0-9a11-81060133e376" class="" dir="auto">YAML은 구조적 데이터를 사람이 읽기 쉽게 표현하기 위한 형식으로, 설정 파일에서 많이 사용됨.</p><p id="632720e4-6f49-83ce-b815-815a44ad4f04" class="" dir="auto">GitHub Actions에서 YAML을 쓰는 이유는 다음과 같음.</p><ul id="212720e4-6f49-8274-84da-014adeb61cdf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">구조를 계층적으로 표현하기 쉬움</li></ul><ul id="bb7720e4-6f49-8246-8615-0131be8f5762" class="bulleted-list" dir="auto"><li style="list-style-type:disc">텍스트 기반이라 Git으로 관리하기 쉬움</li></ul><ul id="10e720e4-6f49-8384-a9f2-8112281fef1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 정의를 코드처럼 저장할 수 있음</li></ul><ul id="973720e4-6f49-82ae-9e12-01be4a03269a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사람이 읽고 수정하기 상대적으로 편함</li></ul><p id="56f720e4-6f49-83ae-9b65-01c595fe6764" class="" dir="auto">즉, GitHub Actions는 <strong>UI 기반 설정보다 파일 기반 선언형 정의</strong>를 중심으로 동작함.</p><hr id="5bc720e4-6f49-82b4-8137-012d031a67a6" dir="auto"/><h3 id="dad720e4-6f49-8285-ab33-81bae19ab9f1" class="" dir="auto">2.2 선언형 구조의 특징</h3><p id="0a5720e4-6f49-838b-9e83-811017da1d2a" class="" dir="auto">GitHub Actions Workflow는 절차를 명령형 스크립트로만 길게 작성하는 방식이 아니라,</p><p id="8eb720e4-6f49-838f-96ba-81a5c7015d38" class="" dir="auto">&quot;무엇을 언제 어떤 환경에서 실행할지&quot;를 선언형으로 기술하는 성격이 강함.</p><p id="373720e4-6f49-8323-9e19-0148e58af9be" class="" dir="auto">예를 들어 다음 항목을 선언함.</p><ul id="8cc720e4-6f49-82a3-a0e9-01a735269843" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 이벤트에서 실행할지</li></ul><ul id="b53720e4-6f49-820e-8e0a-816c9efec5ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Runner에서 실행할지</li></ul><ul id="b1c720e4-6f49-8238-ae18-01c55d33fe3a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Job이 먼저 실행될지</li></ul><ul id="007720e4-6f49-8262-8e95-813bc6faa95f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Step을 거칠지</li></ul><ul id="9ad720e4-6f49-82a0-bc18-81599d2daaee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 조건일 때 실행할지</li></ul><p id="666720e4-6f49-8341-9196-817273bdd2c0" class="" dir="auto">이 구조는 Jenkins Declarative Pipeline과 유사한 면이 있음.</p><hr id="9f1720e4-6f49-8286-a542-81ac1136f1d4" dir="auto"/><h2 id="3ab720e4-6f49-8223-8b2b-813cbb8b19f6" class="" dir="auto">3. Workflow 기본 골격</h2><p id="3fa720e4-6f49-8306-89f2-01210728163c" class="" dir="auto">GitHub Actions Workflow는 보통 다음과 같은 형태를 가짐.</p><pre id="9b1720e4-6f49-829e-967e-810ce881c94b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">name: CI Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 소스코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: 메시지 출력
+        run: echo &quot;hello github actions&quot;</code></pre><ul id="3b1720e4-6f49-827f-ab0e-813d9214f6d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>name</code></li></ul><ul id="9ce720e4-6f49-8295-85d5-012a97b0374e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>on</code></li></ul><ul id="00f720e4-6f49-826d-9496-8178f271f020" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>jobs</code></li></ul><ul id="c46720e4-6f49-830d-b915-815b7763d83e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>runs-on</code></li></ul><ul id="fbf720e4-6f49-82cd-85b7-01a4523ab9b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>steps</code></li></ul><ul id="657720e4-6f49-83ff-8ab8-01eaac1d7667" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>uses</code></li></ul><ul id="aaa720e4-6f49-822a-9644-01bbbf24b868" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>run</code></li></ul><hr id="f5d720e4-6f49-8396-a0ec-0123276e2774" dir="auto"/><h2 id="23d720e4-6f49-8319-8193-01e261de3c7c" class="" dir="auto">4. <code>name</code> 요소</h2><h3 id="5c3720e4-6f49-83cf-a2bc-81a0b223dc04" class="" dir="auto">4.1 역할</h3><p id="b40720e4-6f49-82b1-b188-81a1fb634424" class="" dir="auto"><code>name</code>은 Workflow의 표시 이름이다.</p><p id="169720e4-6f49-836c-9b7d-8180d1a73789" class="" dir="auto">GitHub Actions UI에서 사용자가 보게 되는 Workflow 이름이라고 생각하면 됨.</p><p id="5a5720e4-6f49-8206-8b13-81a9761a98de" class="" dir="auto">예:</p><pre id="bb1720e4-6f49-83af-b183-01c44f6015f5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">name: CI Workflow</code></pre><p id="344720e4-6f49-82e9-871b-01f4b5592693" class="" dir="auto">이 이름은 실행 결과 목록, Workflow 화면, 실행 이력에서 보이게 됨.</p><hr id="8d2720e4-6f49-833c-a176-81dc9f00a0d6" dir="auto"/><h3 id="942720e4-6f49-82b8-99d0-81b088234b01" class="" dir="auto">4.2 왜 중요한가</h3><p id="061720e4-6f49-83bf-b20d-81ed68600473" class="" dir="auto">이름은 단순 라벨처럼 보일 수 있지만, 실무에서는 꽤 중요함.</p><p id="df6720e4-6f49-8305-8fcd-01257a5f9fa1" class="" dir="auto">이유는 다음과 같음.</p><ul id="eae720e4-6f49-82bf-b567-817bb729679f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 Workflow를 쉽게 구분할 수 있음</li></ul><ul id="f15720e4-6f49-8270-9226-81cdfb7e82bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">목적이 명확한 이름일수록 운영성이 좋아짐</li></ul><ul id="03f720e4-6f49-83cd-82c6-81f4fe19ef54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드용, 배포용, 릴리스용 Workflow를 분리해 인식하기 쉬움</li></ul><p id="438720e4-6f49-8359-8b56-0184e552f5fe" class="" dir="auto">좋은 예:</p><ul id="715720e4-6f49-8302-acbe-81c23b604790" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>CI</code></li></ul><ul id="5d8720e4-6f49-82d6-9ceb-01f64fe5c650" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Pull Request Validation</code></li></ul><ul id="319720e4-6f49-8372-b1bf-019038d675f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Build and Push Docker Image</code></li></ul><ul id="a7b720e4-6f49-82e8-a932-01f80642224c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Deploy to Staging</code></li></ul><p id="0cb720e4-6f49-83f3-8c86-81c66fff1df2" class="" dir="auto">애매한 예:</p><ul id="aad720e4-6f49-82fc-b346-01d7e76bb7a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>test</code></li></ul><ul id="13b720e4-6f49-8347-8a7d-017db354d7c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>run</code></li></ul><ul id="1d7720e4-6f49-8236-98d5-014bb2698708" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>workflow1</code></li></ul><p id="337720e4-6f49-8262-8369-01c187513ac9" class="" dir="auto">즉, 이름만 봐도 무슨 자동화인지 알 수 있게 정하는 편이 좋음.</p><hr id="b1f720e4-6f49-829b-b98d-817a1abaf9c3" dir="auto"/><h2 id="778720e4-6f49-8232-9db9-018496838594" class="" dir="auto">5. <code>on</code> 요소</h2><h3 id="43c720e4-6f49-826e-ade6-81d394550700" class="" dir="auto">5.1 역할</h3><p id="b31720e4-6f49-8255-b1d1-81623970639b" class="" dir="auto"><code>on</code>은 이 Workflow가 <strong>어떤 이벤트를 기준으로 실행될 것인지</strong>를 정의하는 부분이다.</p><p id="6c4720e4-6f49-82f1-9853-01b0ef57bf5d" class="" dir="auto">GitHub Actions의 핵심 문법 중 하나다.</p><p id="b48720e4-6f49-8206-a8c9-819bfa092450" class="" dir="auto">예:</p><pre id="da9720e4-6f49-820f-850f-01b01286cf65" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">on:
+  push:
+    branches:
+      - main</code></pre><p id="18f720e4-6f49-82be-8638-01e74c0bbb68" class="" dir="auto">이 설정은 <code>main</code> 브랜치에 push가 발생했을 때 Workflow를 실행하라는 의미다.</p><hr id="9e9720e4-6f49-8276-97be-81c118e18342" dir="auto"/><h3 id="2cf720e4-6f49-8380-bad2-01595251373e" class="" dir="auto">5.2 이벤트 기반 구조의 핵심</h3><p id="721720e4-6f49-8253-832b-01d58ed7144b" class="" dir="auto">GitHub Actions는 GitHub 안에서 발생하는 이벤트를 기준으로 자동화가 시작됨.</p><p id="811720e4-6f49-823d-9d24-81d98c69b387" class="" dir="auto">따라서 <code>on</code>은 &quot;트리거 정의&quot;라고 이해하면 됨.</p><p id="64c720e4-6f49-8306-8135-81db71435be7" class="" dir="auto">대표 이벤트는 다음과 같음.</p><ul id="525720e4-6f49-8218-a56c-01febab2e856" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>push</code></li></ul><ul id="1dd720e4-6f49-83e0-bb18-81173b17218d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>pull_request</code></li></ul><ul id="1b2720e4-6f49-8328-9f16-01508086affb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>workflow_dispatch</code></li></ul><ul id="286720e4-6f49-83d5-8fc6-81cb4df75e29" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>release</code></li></ul><ul id="b96720e4-6f49-82cc-9038-818630e153c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>schedule</code></li></ul><ul id="589720e4-6f49-8352-b50d-01a1128834f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>pull_request_target</code></li></ul><ul id="c8b720e4-6f49-8381-b666-01af94342d07" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>issues</code></li></ul><p id="a69720e4-6f49-83be-b9b9-01389f5c03fc" class="" dir="auto">즉, <code>on</code>은 Workflow의 시작 조건이다.</p><hr id="d61720e4-6f49-829b-8394-8108d2d33953" dir="auto"/><h3 id="acf720e4-6f49-83d3-b775-012b68075e59" class="" dir="auto">5.3 대표적인 <code>on</code> 사용 예</h3><h3 id="6e7720e4-6f49-8220-a3ad-0168b72ab4c4" class="" dir="auto">1) push 기준 실행</h3><pre id="c18720e4-6f49-82ab-ae2a-81646e153076" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">on:
+  push:
+    branches:
+      - main</code></pre><p id="8dc720e4-6f49-83e2-bd72-8152f9930be1" class="" dir="auto">의미:</p><ul id="d32720e4-6f49-8203-8358-819072cb9971" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치로 코드가 push되면 실행</li></ul><hr id="7cb720e4-6f49-828f-86be-0130bfc72263" dir="auto"/><h3 id="1aa720e4-6f49-8285-8e08-8199e29cc8ec" class="" dir="auto">2) pull request 기준 실행</h3><pre id="f8a720e4-6f49-83b3-9ff8-016ccaabd9e5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">on:
+  pull_request:
+    branches:
+      - main</code></pre><p id="c6c720e4-6f49-83a5-932a-8148a4641fcf" class="" dir="auto">의미:</p><ul id="23d720e4-6f49-8228-8bcf-817ee8c927ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치를 대상으로 Pull Request가 생성/업데이트될 때 실행</li></ul><hr id="fa4720e4-6f49-832a-acce-81ae8b8db7e7" dir="auto"/><h3 id="9b6720e4-6f49-83c6-9752-014db42818c9" class="" dir="auto">3) 수동 실행</h3><pre id="248720e4-6f49-82eb-9c17-015a5931a7da" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">on:
+  workflow_dispatch:</code></pre><p id="ad3720e4-6f49-82c2-b161-019662ce4d67" class="" dir="auto">의미:</p><ul id="cc6720e4-6f49-83aa-9f81-01eee0b1bd80" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub UI에서 사용자가 수동 실행 버튼을 눌렀을 때 실행</li></ul><p id="84a720e4-6f49-8258-b923-016c694456eb" class="" dir="auto">이 기능은 배포 Workflow나 운영 점검 Workflow에서 자주 사용됨.</p><hr id="feb720e4-6f49-8325-8958-01566966ae30" dir="auto"/><h3 id="b5c720e4-6f49-8392-9432-815e4e54da02" class="" dir="auto">4) 여러 이벤트 동시 지정</h3><pre id="47b720e4-6f49-8300-8af6-01a90612dd6a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main</code></pre><p id="673720e4-6f49-83a4-b5f0-81a2e47a23c1" class="" dir="auto">의미:</p><ul id="37b720e4-6f49-82a7-a8c4-01754dd790ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치 push 시 실행</li></ul><ul id="a81720e4-6f49-82b6-a779-81f0a6cbac48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 대상 PR 시 실행</li></ul><p id="f79720e4-6f49-82c8-ab50-81797bbb392f" class="" dir="auto">즉, 하나의 Workflow가 여러 이벤트에 반응할 수도 있음.</p><hr id="521720e4-6f49-826a-8860-818c0678167c" dir="auto"/><h3 id="599720e4-6f49-82a9-bdaa-81c066a9ae65" class="" dir="auto">5.4 브랜치, 태그, 경로 기준 필터링</h3><p id="f1f720e4-6f49-83bb-a5c6-01896688e71b" class="" dir="auto"><code>on</code>은 이벤트만 지정하는 것이 아니라, 어떤 브랜치나 태그, 파일 경로에 반응할지도 제한할 수 있음.</p><p id="a00720e4-6f49-838a-892e-01dbe57fd310" class="" dir="auto">예:</p><ul id="fa5720e4-6f49-82a8-b7e4-81cc3b2105f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치에만 반응</li></ul><ul id="617720e4-6f49-833f-b1d9-010d6614b7d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">release 태그에만 반응</li></ul><ul id="f11720e4-6f49-8363-8bc1-01764a44eac7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 디렉터리 변경 시에만 반응</li></ul><p id="f68720e4-6f49-8332-bb44-01d5ce613b3d" class="" dir="auto">이런 필터링은 불필요한 Workflow 실행을 줄이는 데 중요함.</p><hr id="d48720e4-6f49-828c-a211-8160a274e8b4" dir="auto"/><h2 id="6c7720e4-6f49-83d3-83c0-011168a90669" class="" dir="auto">6. <code>jobs</code> 요소</h2><h3 id="ca8720e4-6f49-8273-90cb-0185c25791dc" class="" dir="auto">6.1 역할</h3><p id="a17720e4-6f49-82fc-8f0f-815766328412" class="" dir="auto"><code>jobs</code>는 Workflow 안에서 실제로 수행할 작업 단위들을 정의하는 영역이다.</p><p id="607720e4-6f49-824f-a131-0115f81fed67" class="" dir="auto">예:</p><pre id="f5e720e4-6f49-8254-a57a-01fb21726a95" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: hello
+        run: echo &quot;build&quot;</code></pre><p id="62d720e4-6f49-82f3-9d93-01184c640d83" class="" dir="auto">여기서 <code>build</code>는 Job 이름(정확히는 Job ID)에 해당함.</p><hr id="ee6720e4-6f49-82a7-b7aa-81a972625dfd" dir="auto"/><h3 id="e2d720e4-6f49-820b-9c66-01592ca8adff" class="" dir="auto">6.2 Workflow와 Job의 관계</h3><ul id="963720e4-6f49-8208-bdad-811bf1b5fdd9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Workflow는 전체 자동화 흐름</li></ul><ul id="833720e4-6f49-82ec-a9a5-015651ee851a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Job은 그 안의 큰 작업 블록</li></ul><p id="eea720e4-6f49-83ae-94c7-811553883b9d" class="" dir="auto">예를 들어 하나의 Workflow 안에 다음 Job을 둘 수 있음.</p><ul id="213720e4-6f49-82bf-91b1-8197d5884895" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>build</code></li></ul><ul id="604720e4-6f49-8325-b166-8127698d52ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>test</code></li></ul><ul id="ca9720e4-6f49-8285-8242-8182bf3da2aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker</code></li></ul><ul id="c35720e4-6f49-83a3-aa65-0101fe87bdaf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>deploy</code></li></ul><p id="319720e4-6f49-8370-a13f-81336f83a45e" class="" dir="auto">즉, Job은 Jenkins Pipeline의 Stage보다 조금 더 큰 단위로 보는 것이 자연스러움.</p><p id="425720e4-6f49-83c3-988f-01348525c5d3" class="" dir="auto">각 Job은 독립 실행 환경을 가질 수 있고, 병렬 실행도 가능함.</p><hr id="2f7720e4-6f49-823e-9b42-81202f3084f7" dir="auto"/><h3 id="198720e4-6f49-82af-b42e-8176517f6b5b" class="" dir="auto">6.3 Job이 중요한 이유</h3><p id="707720e4-6f49-8207-895b-81b16b6474ce" class="" dir="auto">Job 단위로 다음을 나눌 수 있음.</p><ul id="f42720e4-6f49-8280-b284-81e4963f375e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 환경 분리</li></ul><ul id="27a720e4-6f49-8351-844e-016abee61737" class="bulleted-list" dir="auto"><li style="list-style-type:disc">의존 관계 설정</li></ul><ul id="603720e4-6f49-834b-adf8-010de3de53aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">병렬 수행</li></ul><ul id="6ef720e4-6f49-8347-b9c3-8118326f25a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조건부 실행</li></ul><ul id="703720e4-6f49-83c1-838e-019bcd8f7dff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">역할 구분</li></ul><p id="0fd720e4-6f49-82b0-80ab-8155f2b7efdb" class="" dir="auto">예:</p><ul id="717720e4-6f49-82c0-b8fe-81894cb43526" class="bulleted-list" dir="auto"><li style="list-style-type:disc">build Job은 Ubuntu에서</li></ul><ul id="783720e4-6f49-837d-8391-019bc6b32f1b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">test Job은 matrix로 여러 버전에서</li></ul><ul id="155720e4-6f49-8346-8656-815346db8210" class="bulleted-list" dir="auto"><li style="list-style-type:disc">deploy Job은 build 성공 후에만</li></ul><p id="2c4720e4-6f49-8261-92a3-81064bb1b0eb" class="" dir="auto">이처럼 Job은 Workflow 구조 설계의 중심이다.</p><hr id="be7720e4-6f49-8396-8527-01ab0c28df4d" dir="auto"/><h2 id="a26720e4-6f49-8304-b228-8131e973edcd" class="" dir="auto">7. <code>runs-on</code> 요소</h2><h3 id="b65720e4-6f49-82c0-8a4c-011182d558a7" class="" dir="auto">7.1 역할</h3><p id="605720e4-6f49-83a1-86a1-815c96b84a77" class="" dir="auto"><code>runs-on</code>은 해당 Job이 어떤 Runner 환경에서 실행될지를 지정하는 요소다.</p><p id="59f720e4-6f49-8218-a703-0193c16c705b" class="" dir="auto">예:</p><pre id="7a5720e4-6f49-82e9-a6a1-017bdecf9382" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">runs-on: ubuntu-latest</code></pre><p id="dbe720e4-6f49-83e1-ac1b-8169f59efda4" class="" dir="auto">의미:</p><ul id="668720e4-6f49-8226-b99d-8112b1182402" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 Job은 Ubuntu 최신 Runner에서 실행하라는 뜻</li></ul><hr id="3cc720e4-6f49-8398-8b06-017d57a5a2b7" dir="auto"/><h3 id="4c1720e4-6f49-8367-aea8-81da4d3b82c9" class="" dir="auto">7.2 왜 필요한가</h3><p id="671720e4-6f49-835d-b849-01f3ab2d89ec" class="" dir="auto">GitHub Actions는 실제로 Job을 수행할 실행 환경이 필요함.</p><p id="68c720e4-6f49-8265-bd7c-0101ed26efdc" class="" dir="auto">Job은 Runner 위에서 동작하므로, 어떤 OS/환경을 사용할지 지정해야 함.</p><p id="ce3720e4-6f49-82a4-8049-01d550b4be25" class="" dir="auto">대표 예:</p><ul id="e9b720e4-6f49-83bd-8c5c-81ce6df6683e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ubuntu-latest</code></li></ul><ul id="132720e4-6f49-82d7-b784-819310e25433" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>windows-latest</code></li></ul><ul id="0c6720e4-6f49-8304-9750-81a6c74637bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>macos-latest</code></li></ul><ul id="32f720e4-6f49-82b0-a567-81a3a086c845" class="bulleted-list" dir="auto"><li style="list-style-type:disc">self-hosted</li></ul><hr id="132720e4-6f49-836c-947b-811c1f30cd9e" dir="auto"/><h3 id="8e0720e4-6f49-83af-a40e-8124c6b62bd0" class="" dir="auto">7.3 <code>runs-on</code>을 이해할 때 중요한 점</h3><p id="e5e720e4-6f49-8272-a7ed-013d2adebf8f" class="" dir="auto">Job마다 서로 다른 Runner를 사용할 수 있음.</p><p id="d3f720e4-6f49-82b3-90c3-019e5a526147" class="" dir="auto">예:</p><ul id="e51720e4-6f49-832e-ba60-810f27f8317f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">build Job은 Ubuntu</li></ul><ul id="6fd720e4-6f49-823a-83ec-8129b06a45a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">test Job은 Windows</li></ul><ul id="d16720e4-6f49-8227-84ae-016c5142c3c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">release Job은 macOS</li></ul><p id="eba720e4-6f49-83f2-bad7-01194eeef58a" class="" dir="auto">즉, Workflow 전체가 하나의 머신에서 도는 것이 아니라,</p><p id="fa9720e4-6f49-82a0-b28d-81b2c0cedb22" class="" dir="auto"><strong>Job마다 별도의 실행 환경에서 독립적으로 수행될 수 있음</strong>.</p><p id="f1e720e4-6f49-8266-ba28-8119cafc4bf5" class="" dir="auto">이 점은 Jenkins와 비교했을 때 사고방식 차이로 이어짐.</p><hr id="ace720e4-6f49-828c-a979-012595bc50ef" dir="auto"/><h2 id="8f9720e4-6f49-8297-b8c0-01944542bbff" class="" dir="auto">8. <code>steps</code> 요소</h2><h3 id="22d720e4-6f49-8254-bdfe-819bdc5e90bb" class="" dir="auto">8.1 역할</h3><p id="39d720e4-6f49-8354-8a1d-813dcef78b3b" class="" dir="auto"><code>steps</code>는 Job 안에서 실제로 수행할 세부 실행 단계를 나열하는 부분이다.</p><p id="8a3720e4-6f49-82e4-bad8-01dca5f571f2" class="" dir="auto">예:</p><pre id="3a1720e4-6f49-8209-8e70-012e829904e1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">steps:
+  - name: 소스코드 체크아웃
+    uses: actions/checkout@v4
+
+  - name: 테스트 실행
+    run: pytest</code></pre><p id="3d5720e4-6f49-837f-a59f-0162f49c7cd9" class="" dir="auto">즉, Job이 큰 작업 단위라면 Step은 그 안의 세부 명령 단위다.</p><hr id="7a5720e4-6f49-8243-a177-81daab2048dd" dir="auto"/><h3 id="63b720e4-6f49-8385-99fa-819e16b82fc5" class="" dir="auto">8.2 실행 순서</h3><p id="2a6720e4-6f49-8329-a987-811d938fa84e" class="" dir="auto">Step은 기본적으로 위에서 아래로 순차 실행됨.</p><p id="126720e4-6f49-826c-93c6-81f9c196e8e7" class="" dir="auto">앞 단계가 실패하면 보통 다음 Step은 실행되지 않음.</p><p id="efb720e4-6f49-8295-b7bd-81c0636aadbf" class="" dir="auto">이 구조는 Jenkins Pipeline의 <code>steps</code>와 유사하게 이해할 수 있음.</p><hr id="a5c720e4-6f49-8313-b0a0-0142bf92010a" dir="auto"/><h3 id="06f720e4-6f49-83ea-8c59-0153063d9acc" class="" dir="auto">8.3 Step에 이름을 붙이는 이유</h3><p id="627720e4-6f49-8388-972f-814bc2b44b6b" class="" dir="auto"><code>name</code>은 각 Step의 표시 이름이다.</p><p id="b97720e4-6f49-83b7-bd0b-81185f8ad203" class="" dir="auto">예:</p><pre id="19b720e4-6f49-83eb-bcb2-01801e57f0de" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- name: Docker 로그인</code></pre><p id="1a4720e4-6f49-836d-9be5-01dc844ad4a5" class="" dir="auto">이름을 잘 붙이면 실행 로그와 UI에서 현재 무엇을 하고 있는지 쉽게 파악할 수 있음.</p><p id="c02720e4-6f49-8236-9998-81a288295b30" class="" dir="auto">좋은 예:</p><ul id="09c720e4-6f49-820e-ae8f-81469a6f4869" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Checkout source</code></li></ul><ul id="c5b720e4-6f49-8321-90bd-01c93833410e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Set up Python</code></li></ul><ul id="c4a720e4-6f49-82b5-860a-8125964d542a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Install dependencies</code></li></ul><ul id="f5f720e4-6f49-833f-97c1-8112b957d0ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Run unit tests</code></li></ul><ul id="648720e4-6f49-82b3-9419-01048d753537" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Build Docker image</code></li></ul><p id="1be720e4-6f49-822b-9872-0133e52bd309" class="" dir="auto">애매한 예:</p><ul id="941720e4-6f49-8236-a39b-813e433b7b4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>run</code></li></ul><ul id="33a720e4-6f49-82dd-be2d-818fce874597" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>step1</code></li></ul><ul id="256720e4-6f49-83a8-8114-81497a8d8303" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>do it</code></li></ul><p id="99e720e4-6f49-82e2-ac70-01dbd2464ef7" class="" dir="auto">즉, Step 이름도 운영성과 가독성에 영향을 줌.</p><hr id="707720e4-6f49-83b3-add7-819f172d8f6d" dir="auto"/><h2 id="bb8720e4-6f49-8315-a215-01ca3d211cfc" class="" dir="auto">9. <code>uses</code>와 <code>run</code>의 차이</h2><p id="9d6720e4-6f49-82a8-9e4f-8126d396e308" class="" dir="auto">GitHub Actions Step을 이해할 때 가장 중요한 포인트 중 하나가 <code>uses</code>와 <code>run</code>의 차이임.</p><hr id="3e4720e4-6f49-8292-9cdb-014f753dd884" dir="auto"/><h3 id="c97720e4-6f49-8311-922a-016a6ac86708" class="" dir="auto">9.1 <code>uses</code></h3><p id="ac6720e4-6f49-835c-9fac-017e2aaa6eb4" class="" dir="auto"><code>uses</code>는 이미 만들어진 Action을 재사용하는 방식이다.</p><p id="3dd720e4-6f49-82ad-bbc1-81820a14f75e" class="" dir="auto">예:</p><pre id="7ae720e4-6f49-83f0-927a-014f069ed4a6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- name: 소스코드 체크아웃
+  uses: actions/checkout@v4</code></pre><p id="0e3720e4-6f49-829f-840e-8103701b474d" class="" dir="auto">이 의미는 GitHub가 제공하거나 외부에서 제공하는 Action을 가져와 실행하라는 뜻이다.</p><p id="4e6720e4-6f49-835e-982c-8174ac1cb3c1" class="" dir="auto">즉, <code>uses</code>는 <strong>재사용 가능한 자동화 컴포넌트 호출</strong>에 해당함.</p><hr id="edb720e4-6f49-8343-b6c2-81a409de51c7" dir="auto"/><h3 id="8f6720e4-6f49-834f-b7f4-817b9e336010" class="" dir="auto">9.2 <code>run</code></h3><p id="3df720e4-6f49-8283-8977-011e2693ceef" class="" dir="auto"><code>run</code>은 Runner 안에서 직접 쉘 명령을 실행하는 방식이다.</p><p id="36c720e4-6f49-83cb-bb5e-017b2d4cfefb" class="" dir="auto">예:</p><pre id="a56720e4-6f49-82ab-a2d7-012ae76afb58" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- name: 테스트 실행
+  run: pytest</code></pre><p id="d80720e4-6f49-82ec-990a-019bc7a869dd" class="" dir="auto">이 의미는 현재 Runner 환경에서 <code>pytest</code> 명령을 실행하라는 뜻이다.</p><p id="515720e4-6f49-834c-a80c-8116c05580d7" class="" dir="auto">즉, <code>run</code>은 <strong>직접 명령 실행</strong>이다.</p><hr id="d41720e4-6f49-8377-8f48-8175aab50c05" dir="auto"/><h3 id="5ae720e4-6f49-83f6-a8aa-8170e2cd7c02" class="" dir="auto">9.3 둘의 차이를 정리하면</h3><ul id="595720e4-6f49-83cf-b37b-81fba11a3229" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>uses</code>: 미리 만들어진 Action 사용</li></ul><ul id="5dc720e4-6f49-8357-bafc-0134edc42903" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>run</code>: 직접 명령어 실행</li></ul><p id="b3e720e4-6f49-83e7-b469-0109a8a0d016" class="" dir="auto">예를 들어,</p><ul id="505720e4-6f49-83e6-9301-012906936bf1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">저장소 checkout은 <code>uses</code></li></ul><ul id="171720e4-6f49-8314-ba8f-013190edad04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패키지 설치나 테스트 명령은 <code>run</code></li></ul><p id="989720e4-6f49-83fd-aa45-0150b93d555f" class="" dir="auto">이렇게 많이 구성됨.</p><hr id="b31720e4-6f49-839b-b9ec-8103e2705ef2" dir="auto"/><h2 id="362720e4-6f49-83d0-a0ef-81dd5d04f6a1" class="" dir="auto">10. 자주 사용하는 Workflow 구성 요소</h2><p id="3e3720e4-6f49-83e1-8380-819e42675c8b" class="" dir="auto">기본 구조 외에도 실무에서는 몇 가지 요소를 자주 함께 사용함.</p><hr id="1e0720e4-6f49-83b7-92ff-0186f5ccf41e" dir="auto"/><h2 id="581720e4-6f49-827f-a298-01127b4190af" class="" dir="auto">10.1 <code>env</code></h2><p id="90b720e4-6f49-82d8-be22-816ce20a805a" class="" dir="auto"><code>env</code>는 환경 변수를 정의하는 영역이다.</p><p id="2a3720e4-6f49-8330-80d9-01d69562c5bf" class="" dir="auto">예:</p><pre id="c36720e4-6f49-833a-a317-81e13528998e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">env:
+  APP_NAME: sample-app
+  ENV: dev</code></pre><p id="401720e4-6f49-82e8-a2cd-0158eb444601" class="" dir="auto">이렇게 정의한 값은 Step 안에서 공통으로 참조할 수 있음.</p><hr id="aaa720e4-6f49-8393-a7f5-0129371690d9" dir="auto"/><h3 id="8f3720e4-6f49-83cf-8c75-81a04b06d3bb" class="" dir="auto">왜 필요한가</h3><p id="c51720e4-6f49-83a1-b6b1-817f445ec9f8" class="" dir="auto">파이프라인에는 반복되는 값이 많음.</p><p id="000720e4-6f49-83b7-b55e-0177c4e051b6" class="" dir="auto">예:</p><ul id="5c9720e4-6f49-82a0-8d4a-017e4b36987f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 이름</li></ul><ul id="56f720e4-6f49-8389-a7a0-01c62f6ed5cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 이름</li></ul><ul id="115720e4-6f49-82ed-a17e-8193cb71da81" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 환경</li></ul><ul id="11a720e4-6f49-82f2-842a-01816a87ce09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레지스트리 주소</li></ul><p id="56b720e4-6f49-8349-ba94-812ef844ae42" class="" dir="auto">이를 직접 여러 번 쓰는 대신 변수화하면 유지보수가 쉬워짐.</p><hr id="bbd720e4-6f49-8327-a397-0121d858cfe4" dir="auto"/><h2 id="267720e4-6f49-8266-9495-81f2bca2e25b" class="" dir="auto">10.2 <code>defaults</code></h2><p id="0fa720e4-6f49-83bc-9917-8172d64d8294" class="" dir="auto"><code>defaults</code>는 기본 실행 옵션을 지정할 때 사용함.</p><p id="663720e4-6f49-8383-9eed-01c1595a999d" class="" dir="auto">예를 들어 모든 <code>run</code> 명령에 대해 bash 쉘을 기본으로 쓰거나, 특정 working-directory를 지정할 수 있음.</p><p id="14e720e4-6f49-8342-a583-81f0244c87a9" class="" dir="auto">즉, 반복 설정을 줄이는 데 사용됨.</p><hr id="578720e4-6f49-82e8-a8a6-017298b41b18" dir="auto"/><h2 id="de1720e4-6f49-82eb-9023-0104a4bd700a" class="" dir="auto">10.3 <code>if</code></h2><p id="219720e4-6f49-824e-b54b-810e08ab9e41" class="" dir="auto"><code>if</code>는 특정 조건에서만 Job 또는 Step이 실행되도록 제어하는 기능이다.</p><p id="73f720e4-6f49-83b5-a6d7-01c24d9cac13" class="" dir="auto">예:</p><ul id="85c720e4-6f49-82b5-83fd-01e5bdecf986" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치일 때만 실행</li></ul><ul id="05e720e4-6f49-82cd-8b9a-0167dbaaa1ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PR 이벤트일 때만 실행</li></ul><ul id="631720e4-6f49-83c6-9662-817613e0a504" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 입력값이 있을 때만 실행</li></ul><p id="cae720e4-6f49-8276-9ec9-01089a9e0d7b" class="" dir="auto">이 기능은 실무에서 매우 중요함.</p><p id="3d7720e4-6f49-828f-8f61-01a2dc7aaabd" class="" dir="auto">모든 상황에서 같은 Workflow가 동일하게 동작할 필요는 없기 때문임.</p><hr id="dfa720e4-6f49-82e7-9779-81319531b710" dir="auto"/><h2 id="355720e4-6f49-8365-a4f0-81127fec358f" class="" dir="auto">10.4 <code>needs</code></h2><p id="589720e4-6f49-8266-89ae-01857f5c0609" class="" dir="auto"><code>needs</code>는 Job 간 실행 순서를 정의하는 데 사용함.</p><p id="428720e4-6f49-8300-b57b-01a9f70f2d3e" class="" dir="auto">예:</p><ul id="3c0720e4-6f49-83ab-a9ac-8155b9edb939" class="bulleted-list" dir="auto"><li style="list-style-type:disc">build Job이 끝난 뒤 test Job 실행</li></ul><ul id="618720e4-6f49-830a-aef6-81f43e3cf9c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">test가 성공해야 deploy 실행</li></ul><p id="61d720e4-6f49-821b-bfa1-01d85d5c801a" class="" dir="auto">즉, Job 간 의존 관계를 나타냄.</p><p id="d12720e4-6f49-82b1-80bd-01561823055d" class="" dir="auto">아무 설정이 없으면 Job은 병렬 실행될 수 있지만, <code>needs</code>를 쓰면 순서를 강제할 수 있음.</p><hr id="11d720e4-6f49-835c-bfe5-81f960c88ecb" dir="auto"/><h2 id="58c720e4-6f49-8216-bb72-01ff2e2a36cd" class="" dir="auto">10.5 <code>strategy</code>와 <code>matrix</code></h2><p id="77a720e4-6f49-8231-b541-011c6be56f99" class="" dir="auto"><code>strategy</code>와 <code>matrix</code>는 같은 Job을 여러 조건으로 반복 실행할 때 사용함.</p><p id="d80720e4-6f49-82b7-abaf-01e3c7e127e1" class="" dir="auto">예:</p><ul id="4f1720e4-6f49-8285-a2ff-0167228a63ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python 3.10, 3.11에서 테스트</li></ul><ul id="60f720e4-6f49-8248-b987-01519713fc22" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ubuntu와 Windows에서 동시에 테스트</li></ul><ul id="5fa720e4-6f49-8373-9a5d-81a72b35a414" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 Node.js 버전에서 빌드 확인</li></ul><p id="7c6720e4-6f49-82f6-90ee-014dc21b2b60" class="" dir="auto">이 구조는 GitHub Actions의 강력한 장점 중 하나다.</p><p id="aaf720e4-6f49-8251-9379-012f344f6b98" class="" dir="auto">동일한 Workflow 논리를 여러 환경에 쉽게 확장할 수 있기 때문임.</p><hr id="75a720e4-6f49-82a3-a458-811cdf7c11cc" dir="auto"/><h2 id="eed720e4-6f49-8387-8e6c-819c92bc147e" class="" dir="auto">11. Job 간 관계 이해</h2><h3 id="1af720e4-6f49-8356-9212-01205b1e674a" class="" dir="auto">11.1 기본은 병렬</h3><p id="55c720e4-6f49-8210-ac4b-81b2e80b7c63" class="" dir="auto">GitHub Actions에서 여러 Job을 정의하면, 별도의 의존 관계가 없을 때는 병렬 실행될 수 있음.</p><p id="ab1720e4-6f49-83c1-9036-81035b82d12e" class="" dir="auto">예:</p><ul id="2e2720e4-6f49-8278-bdf6-813b6bd080ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">lint Job</li></ul><ul id="ce4720e4-6f49-8332-b948-01051eebe684" class="bulleted-list" dir="auto"><li style="list-style-type:disc">unit-test Job</li></ul><ul id="255720e4-6f49-8235-bf49-81b316554111" class="bulleted-list" dir="auto"><li style="list-style-type:disc">security-scan Job</li></ul><p id="714720e4-6f49-8210-8458-81b9c961fa68" class="" dir="auto">이 셋은 서로 독립적이면 동시에 실행 가능함.</p><hr id="c65720e4-6f49-8283-bfa0-01f7d6711753" dir="auto"/><h3 id="1d8720e4-6f49-83a2-934e-81ba23929029" class="" dir="auto">11.2 순차 실행이 필요한 경우</h3><p id="4e8720e4-6f49-8223-9546-8144dbc5d3f0" class="" dir="auto">하지만 모든 Job이 병렬이면 안 되는 경우도 많음.</p><p id="0c5720e4-6f49-8398-9f81-8120132af92a" class="" dir="auto">예:</p><ul id="29d720e4-6f49-8324-8acb-81dcf1c3d279" class="bulleted-list" dir="auto"><li style="list-style-type:disc">build 후에만 docker build 가능</li></ul><ul id="a67720e4-6f49-8258-8554-81fa7f15b76f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">docker push 후에만 deploy 가능</li></ul><ul id="989720e4-6f49-828a-b4b7-81b4d11925ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">test 실패 시 deploy 금지</li></ul><p id="275720e4-6f49-82e1-a2e0-0123caf2405d" class="" dir="auto">이 경우 <code>needs</code>를 이용해 의존 관계를 설정함.</p><p id="ae4720e4-6f49-82a4-9bd3-81862c2fbec0" class="" dir="auto">즉, GitHub Actions Workflow 설계에서는 <strong>무엇을 병렬로 하고 무엇을 순차로 할지</strong>를 나누는 것이 중요함.</p><hr id="afe720e4-6f49-82d5-b412-81f6d21140e0" dir="auto"/><h2 id="4c5720e4-6f49-838e-b43c-8155f4bd97be" class="" dir="auto">12. 변수, Secret, 입력값 개념</h2><h3 id="dc1720e4-6f49-8375-85cc-818baa29a981" class="" dir="auto">12.1 변수와 Secret의 차이</h3><p id="8a7720e4-6f49-8377-a565-01cc2e7646d5" class="" dir="auto">Workflow에는 일반 변수와 민감 정보가 함께 등장할 수 있음.</p><ul id="3e8720e4-6f49-8204-8279-018935d9e1ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일반 변수: 환경 이름, 앱 이름, 버전 문자열</li></ul><ul id="b84720e4-6f49-8388-b6d5-81d0218d1433" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secret: 토큰, 비밀번호, API Key</li></ul><p id="cd0720e4-6f49-83b9-9549-81dafa281887" class="" dir="auto">민감 정보는 일반 <code>env</code>에 직접 적는 것이 아니라 GitHub Secret 기능을 사용해야 함.</p><p id="490720e4-6f49-8393-95ae-81ff65b64686" class="" dir="auto">즉, 편의성과 보안은 구분해서 생각해야 함.</p><hr id="2bf720e4-6f49-8327-8871-817b06991160" dir="auto"/><h3 id="79c720e4-6f49-8252-96a5-811e43fd4e33" class="" dir="auto">12.2 Secret이 중요한 이유</h3><p id="6fb720e4-6f49-8296-91e0-0121bee153e4" class="" dir="auto">Workflow는 코드 파일이므로 저장소에 남음.</p><p id="5d4720e4-6f49-821a-9582-814ea9ef3082" class="" dir="auto">여기에 토큰이나 비밀번호를 직접 적으면 즉시 보안 문제가 생김.</p><p id="fd0720e4-6f49-832d-8bf3-017e8c2f76e7" class="" dir="auto">따라서 다음 정보는 Secret으로 관리해야 함.</p><ul id="244720e4-6f49-824b-a681-819a14740744" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Registry 비밀번호</li></ul><ul id="b83720e4-6f49-83fa-95c7-019cb6d5febd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클라우드 Access Key</li></ul><ul id="c35720e4-6f49-829e-828a-01c5c5a8e99c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH Key</li></ul><ul id="5d0720e4-6f49-831d-9d87-8196a32d9ff6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Token</li></ul><p id="eb1720e4-6f49-833f-b22e-01bd9aa02e6f" class="" dir="auto">이 점은 Jenkins의 Credential 관리와 같은 맥락으로 매우 중요함.</p><hr id="1da720e4-6f49-82ba-8e79-811eeb6f5205" dir="auto"/><h3 id="24a720e4-6f49-8386-9198-8194bd30e80c" class="" dir="auto">12.3 수동 실행 입력값</h3><p id="07e720e4-6f49-83b1-9a7f-818fa08dfef0" class="" dir="auto"><code>workflow_dispatch</code>를 사용하면 수동 실행 시 입력값을 받을 수도 있음.</p><p id="488720e4-6f49-8307-a4dd-81924e333235" class="" dir="auto">예:</p><ul id="51e720e4-6f49-83cc-a97b-0165a36d3765" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 환경 선택</li></ul><ul id="d90720e4-6f49-8288-ac51-016c16c9ac65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 태그 입력</li></ul><ul id="a80720e4-6f49-82e2-a22b-818a2845c5e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 배포 여부 확인</li></ul><p id="712720e4-6f49-82f5-8717-01e51e6b7cad" class="" dir="auto">즉, GitHub Actions도 완전 자동만이 아니라 <strong>통제된 수동 실행</strong>이 가능함.</p><hr id="89c720e4-6f49-8309-9f87-017a2bcc79c2" dir="auto"/><h2 id="667720e4-6f49-8336-ab35-010b2ea1d694" class="" dir="auto">13. 아티팩트와 결과물 개념</h2><p id="689720e4-6f49-82c1-9474-0128f5ef1d7c" class="" dir="auto">Workflow는 실행 중에 생성한 결과물을 다음 단계나 나중 실행에서 사용할 수 있어야 할 때가 있음.</p><p id="2c0720e4-6f49-8264-8661-81ed5947d50d" class="" dir="auto">이때 아티팩트 개념이 중요해짐.</p><p id="3b3720e4-6f49-823b-9b42-81969297dac3" class="" dir="auto">예:</p><ul id="a76720e4-6f49-82d9-a0fe-81391c2bc875" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 결과 ZIP 파일 저장</li></ul><ul id="998720e4-6f49-83cd-81c8-018f2b55247e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 리포트 업로드</li></ul><ul id="a4a720e4-6f49-827c-9ce6-819371981a3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 파일 저장</li></ul><ul id="b33720e4-6f49-827a-ab09-012c3475102a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패키지 결과물 보관</li></ul><p id="a74720e4-6f49-831f-ad6e-811e1d6d9fb2" class="" dir="auto">즉, GitHub Actions도 단순히 명령만 실행하는 것이 아니라,</p><p id="73f720e4-6f49-8355-905a-01e21d1433a2" class="" dir="auto"><strong>결과물을 저장하고 전달하는 흐름</strong>을 갖는다.</p><hr id="def720e4-6f49-8239-a329-81a99e1c1036" dir="auto"/><h2 id="49a720e4-6f49-836e-9d0d-819a4c5772c6" class="" dir="auto">14. Workflow 설계 관점</h2><h3 id="710720e4-6f49-83b4-9ccd-81d4fab10d4c" class="" dir="auto">14.1 Workflow를 너무 크게 만들지 말 것</h3><p id="5b2720e4-6f49-83cc-b323-817a47a820d0" class="" dir="auto">하나의 YAML 안에 CI, Docker Build, Release, Deploy, 운영 점검까지 모두 넣으면 관리가 어려워질 수 있음.</p><p id="43e720e4-6f49-82ad-a06b-816fb639210c" class="" dir="auto">보통 목적별로 나누는 편이 좋음.</p><p id="040720e4-6f49-832c-a4ad-81a6434a9280" class="" dir="auto">예:</p><ul id="a11720e4-6f49-823a-8259-01bf0cfcca4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ci.yml</code></li></ul><ul id="7f2720e4-6f49-82b1-b4da-81336904015b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker.yml</code></li></ul><ul id="b3f720e4-6f49-83f7-9a95-01ffe6dcfd38" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>deploy.yml</code></li></ul><hr id="d8e720e4-6f49-826a-a4b5-018ad78898a8" dir="auto"/><h3 id="e03720e4-6f49-83a8-889c-81845d542569" class="" dir="auto">14.2 Job 단위 역할을 명확히 나눌 것</h3><p id="82f720e4-6f49-8358-a010-81b0c20a0518" class="" dir="auto">Job 이름과 역할이 분명해야 함.</p><p id="f26720e4-6f49-8365-b33f-8159df84ca5a" class="" dir="auto">예:</p><ul id="3db720e4-6f49-8340-9537-81ee3ffd451c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>lint</code></li></ul><ul id="69a720e4-6f49-83f2-95a0-810e5b5dd7d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>test</code></li></ul><ul id="2be720e4-6f49-8347-9406-015af65c56b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>build-image</code></li></ul><ul id="fc6720e4-6f49-8344-9bda-81b39f095036" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>deploy-staging</code></li></ul><p id="4cd720e4-6f49-831d-9926-8181f43747f3" class="" dir="auto">애매한 Job 구분은 로그 해석을 어렵게 만듦.</p><hr id="a27720e4-6f49-8240-9f31-813e7911412c" dir="auto"/><h3 id="edc720e4-6f49-834f-9540-01f0e5bed4aa" class="" dir="auto">14.3 재사용 가능한 Action과 직접 명령을 적절히 조합할 것</h3><p id="a49720e4-6f49-8294-8cf0-01160f7c002b" class="" dir="auto">모든 것을 <code>run</code>으로만 작성하면 길고 복잡해질 수 있음.</p><p id="b5c720e4-6f49-8236-a20e-81defa4d324c" class="" dir="auto">반대로 모든 것을 외부 Action에만 의존하면 내부 동작이 보이지 않을 수 있음.</p><p id="4ff720e4-6f49-82d1-b623-01dac671237c" class="" dir="auto">즉, 적절한 균형이 필요함.</p><hr id="0f0720e4-6f49-820b-8c3c-813148160bab" dir="auto"/><h3 id="fd3720e4-6f49-83c2-9291-81ebb6aa2309" class="" dir="auto">14.4 브랜치 전략과 Workflow를 함께 설계할 것</h3><p id="033720e4-6f49-82ba-be3f-81f792e31460" class="" dir="auto">예:</p><ul id="a41720e4-6f49-8294-af92-81de78fc8ae2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">feature 브랜치: 빠른 테스트만</li></ul><ul id="c3e720e4-6f49-82ad-ae86-01b219fb5398" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치: Docker Build 포함</li></ul><ul id="60f720e4-6f49-82d3-8784-8185be309a8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">tag: release workflow 실행</li></ul><p id="5a7720e4-6f49-8295-9cdf-81dbdc0c5ae1" class="" dir="auto">이처럼 브랜치 목적과 Workflow 수준은 함께 가야 함.</p><hr id="f4a720e4-6f49-828c-ac61-816d8af58593" dir="auto"/><h2 id="b47720e4-6f49-8200-a6c1-01a7ad4b1da1" class="" dir="auto">15. Jenkins Pipeline과의 비교 관점</h2><p id="061720e4-6f49-83c6-a143-81308876f525" class="" dir="auto">GitHub Actions Workflow를 Jenkins Pipeline과 비교하면 다음처럼 이해할 수 있음.</p><table id="9ad720e4-6f49-83e0-8d6f-0161544e4541" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="f9e720e4-6f49-83fa-b1cd-01cf620538d5" dir="ltr"><th id="wMFg" class="simple-table-header-color simple-table-header">Jenkins</th><th id="YsJL" class="simple-table-header-color simple-table-header">GitHub Actions</th></tr></thead><tbody><tr id="bc9720e4-6f49-824c-a806-8182183a6700" dir="ltr"><td id="wMFg" class="">Jenkinsfile</td><td id="YsJL" class="">Workflow YAML</td></tr><tr id="a61720e4-6f49-82a6-b737-01230cebef5b" dir="ltr"><td id="wMFg" class="">Pipeline</td><td id="YsJL" class="">Workflow</td></tr><tr id="c79720e4-6f49-83e4-89d5-01d2631104b0" dir="ltr"><td id="wMFg" class="">Stage</td><td id="YsJL" class="">Job 또는 Step 관점으로 분산</td></tr><tr id="ffd720e4-6f49-8392-bf8b-8152c193c8d1" dir="ltr"><td id="wMFg" class="">Agent</td><td id="YsJL" class="">Runner</td></tr><tr id="c73720e4-6f49-821b-8a05-01a73ff62585" dir="ltr"><td id="wMFg" class="">steps 블록</td><td id="YsJL" class="">steps</td></tr><tr id="34d720e4-6f49-8367-830e-814503c66fcc" dir="ltr"><td id="wMFg" class="">environment</td><td id="YsJL" class="">env</td></tr><tr id="381720e4-6f49-8338-9c9d-81fd26b7229c" dir="ltr"><td id="wMFg" class="">post 처리</td><td id="YsJL" class="">별도 step 조건 처리 또는 후속 job</td></tr></tbody></table><p id="09c720e4-6f49-837a-8bfd-010082f34877" class="" dir="auto">완전히 1:1 대응은 아니지만, 이런 식으로 연결해서 보면 이해가 쉬움.</p><p id="d6f720e4-6f49-8302-993b-016f21257df5" class="" dir="auto">특히 GitHub Actions는 Jenkins보다 <strong>Job 중심 분리와 이벤트 중심 실행</strong> 색채가 강하다고 볼 수 있음.</p><hr id="8e9720e4-6f49-8311-ba99-812dada685df" dir="auto"/><h2 id="517720e4-6f49-8315-9ae1-81e8c5f27c29" class="" dir="auto">요약</h2><ul id="746720e4-6f49-8377-8eea-01dabf6f6866" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Workflow는 GitHub Actions의 자동화 흐름 전체를 정의하는 파일 단위임</li></ul><ul id="7e5720e4-6f49-8262-b195-0100bd0d7397" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Workflow 파일은 <code>.github/workflows</code> 경로에 YAML로 저장됨</li></ul><ul id="623720e4-6f49-821b-96cf-017de32876ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">핵심 구성 요소는 <code>name</code>, <code>on</code>, <code>jobs</code>, <code>runs-on</code>, <code>steps</code>임</li></ul><ul id="832720e4-6f49-83ec-9c44-8143573af898" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>on</code>은 실행 이벤트, <code>jobs</code>는 큰 작업 단위, <code>steps</code>는 실제 실행 단계임</li></ul><ul id="601720e4-6f49-82d6-8a91-810a65fff40b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>uses</code>는 재사용 Action 호출, <code>run</code>은 직접 명령 실행임</li></ul><ul id="050720e4-6f49-82d9-8a6b-01d857c333a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>env</code>, <code>if</code>, <code>needs</code>, <code>strategy</code>, <code>matrix</code> 등을 통해 실무형 제어가 가능함</li></ul><ul id="c8a720e4-6f49-83e8-969a-0181da688d40" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secret과 변수는 반드시 구분해서 관리해야 함</li></ul><ul id="919720e4-6f49-8399-9ca7-81eaa87f7872" class="bulleted-list" dir="auto"><li style="list-style-type:disc">좋은 Workflow는 단순히 동작하는 것이 아니라 읽기 쉽고 역할이 분명해야 함</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

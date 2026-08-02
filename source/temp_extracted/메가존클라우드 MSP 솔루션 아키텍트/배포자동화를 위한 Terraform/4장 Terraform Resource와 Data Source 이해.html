@@ -1,0 +1,963 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>4장. Terraform Resource와 Data Source 이해</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="db2720e4-6f49-8210-98f8-01fd842ab0aa" class="page sans"><header><h1 class="page-title" dir="auto">4장. Terraform Resource와 Data Source 이해</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="c54720e4-6f49-8260-92f9-81ab4b260547" class="" dir="auto">장 목표</h2><p id="d27720e4-6f49-8301-8148-8100d994d945" class="" dir="auto">이 장에서는 Terraform에서 실제 인프라를 다룰 때 가장 자주 만나게 되는 두 가지 개념인 <strong>Resource</strong>와 <strong>Data Source</strong>를 학습한다.</p><p id="ef9720e4-6f49-8340-a47b-811fbcc06b3b" class="" dir="auto">이 장을 학습한 뒤에는 다음이 가능해진다.</p><ul id="3ed720e4-6f49-8373-86b4-014ce56cd921" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>resource</code>의 의미와 구조를 설명할 수 있음</li></ul><ul id="f96720e4-6f49-8244-80c4-017f7d0a6d99" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data source</code>의 의미와 구조를 설명할 수 있음</li></ul><ul id="cee720e4-6f49-83e7-a7f4-01bc81f8fcdd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성과 조회의 차이를 구분할 수 있음</li></ul><ul id="cbe720e4-6f49-82e9-8f39-01d02ec362de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Resource와 state의 관계를 설명할 수 있음</li></ul><ul id="e01720e4-6f49-8287-a2ae-81bb9e8f0801" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Source와 state의 관계를 설명할 수 있음</li></ul><ul id="14c720e4-6f49-83d2-ae5c-8111e9dfa86c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_ami</code>, <code>aws_vpc</code>, <code>aws_subnets</code>를 이용한 조회 예제를 이해할 수 있음</li></ul><ul id="894720e4-6f49-832c-9c28-817f14ea7711" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 결과를 다른 리소스에서 참조할 수 있음</li></ul><ul id="899720e4-6f49-8268-af94-81c3405766b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>most_recent = true</code>의 의미를 설명할 수 있음</li></ul><ul id="0ca720e4-6f49-8209-b6c3-815d14aa4070" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 조회 / 실행 시 선택 / 직접 지정 방식의 차이를 설명할 수 있음</li></ul><ul id="efa720e4-6f49-830e-9fda-81c1d03f8823" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무에서 Resource와 Data Source를 어떻게 조합하는지 이해할 수 있음</li></ul><hr id="706720e4-6f49-82b4-8a4e-81168dbd7325" dir="auto"/><h1 id="b7d720e4-6f49-83f8-87c9-01c22cfe50bc" class="" dir="auto">1. 왜 Resource와 Data Source를 구분해야 하는가</h1><p id="03d720e4-6f49-82b9-bd02-818a7838cc0c" class="" dir="auto">실무에서는 다음과 같은 상황이 매우 자주 나온다.</p><ul id="810720e4-6f49-8317-829e-817f175b7459" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미 존재하는 VPC 안에 Subnet과 EC2를 만들어야 함</li></ul><ul id="262720e4-6f49-8342-aba3-016ced7e3c94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존에 만들어둔 보안 기준용 AMI를 찾아서 EC2를 띄워야 함</li></ul><ul id="a02720e4-6f49-83e7-a91f-01ef0306b738" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크팀이 미리 만든 VPC를 조회해서 애플리케이션 리소스를 배치해야 함</li></ul><ul id="ec2720e4-6f49-82da-965f-01ca0709a78b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 인프라는 기존 것을 쓰고, 애플리케이션 리소스만 새로 만들어야 함</li></ul><p id="201720e4-6f49-8295-b816-0153efd9494a" class="" dir="auto">즉, Terraform은 단순히 <strong>새로 생성만 하는 도구</strong>가 아니라</p><p id="82a720e4-6f49-830e-aaeb-811116676f95" class="" dir="auto"><strong>이미 존재하는 값을 조회해서 재사용하는 도구</strong>이기도 하다.</p><p id="898720e4-6f49-820a-8065-01247b288fec" class="" dir="auto">이때 역할이 나뉜다.</p><ul id="3c8720e4-6f49-82a9-9d8d-81f43e760f9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Resource</strong> → 새로 생성하거나 관리 대상으로 선언하는 것</li></ul><ul id="e25720e4-6f49-8302-a24b-81a9afa3b6da" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Data Source</strong> → 이미 존재하는 것을 조회해서 가져오는 것</li></ul><p id="82d720e4-6f49-82ee-8978-01e64c3f707c" class="" dir="auto">이 차이를 정확히 이해해야 Terraform 코드를 제대로 읽고 설계할 수 있다.</p><hr id="2c9720e4-6f49-8308-be11-01c1b0d09959" dir="auto"/><h1 id="14e720e4-6f49-82be-861c-81ef80e09b52" class="" dir="auto">2. Resource의 의미와 구조</h1><h2 id="51f720e4-6f49-82d6-af54-8192351d6194" class="" dir="auto">2.1 Resource란 무엇인가</h2><p id="7f4720e4-6f49-83d9-b87e-81eb22526cb8" class="" dir="auto"><code>resource</code>는 Terraform이 <strong>생성, 변경, 삭제를 관리하는 대상</strong>을 의미한다.</p><p id="d0b720e4-6f49-82c4-b79a-01e5ed4b6034" class="" dir="auto">쉽게 말하면 다음과 같다.</p><ul id="6cd720e4-6f49-82d0-948b-015c6e21eb9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC를 새로 만든다</li></ul><ul id="d72720e4-6f49-8363-888e-812e551865dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 인스턴스를 새로 만든다</li></ul><ul id="87f720e4-6f49-8230-b36c-01968a4765d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group을 새로 만든다</li></ul><ul id="2a9720e4-6f49-83e2-9a64-812675bca5b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet을 새로 만든다</li></ul><p id="d26720e4-6f49-8254-b4c7-813f63588d24" class="" dir="auto">즉, Terraform이 직접 <strong>desired state</strong>를 선언하고, 그 상태에 맞게 실제 인프라를 맞춰가는 대상이 Resource다.</p><hr id="340720e4-6f49-82a5-8464-8125dbf0ea65" dir="auto"/><h2 id="f73720e4-6f49-82bb-ba48-01a2a304e0ea" class="" dir="auto">2.2 기본 구조</h2><p id="7cd720e4-6f49-82fb-923a-01050455f4b0" class="" dir="auto"><code>resource</code> 블록의 기본 구조는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="ed8720e4-6f49-82a8-a3fa-015f00c2a95c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;리소스타입&quot; &quot;이름&quot; {
+  인자 = 값
+}</code></pre><p id="330720e4-6f49-82f5-94de-01335dd166e6" class="" dir="auto">예를 들어 AWS에서 VPC를 생성하는 코드는 다음과 같다.</p><pre id="4cd720e4-6f49-825b-82cb-010fe3c0e19d" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.10.0.0/16&quot;
+}</code></pre><p id="696720e4-6f49-83b9-876e-81e82f15df77" class="" dir="auto">이 코드를 구성 요소별로 나누면 다음과 같다.</p><ul id="175720e4-6f49-83d3-ba17-01813d879bc2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>resource</code> → 블록 종류</li></ul><ul id="9c7720e4-6f49-83f4-a447-811dc8109aa9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;aws_vpc&quot;</code> → 리소스 타입</li></ul><ul id="b56720e4-6f49-82a9-abda-81b0c8da4eea" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;main&quot;</code> → 로컬 이름</li></ul><ul id="984720e4-6f49-824c-bbfd-01e337659819" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>cidr_block = &quot;10.10.0.0/16&quot;</code> → 설정 인자</li></ul><hr id="071720e4-6f49-831b-8828-01c551d4989a" dir="auto"/><h2 id="221720e4-6f49-8291-b01e-819043158a6e" class="" dir="auto">2.3 리소스 타입과 이름의 의미</h2><h3 id="d3b720e4-6f49-8399-8ee0-8119c85d8dc2" class="" dir="auto">리소스 타입</h3><p id="f0f720e4-6f49-827b-8610-811e4e209fe5" class="" dir="auto"><code>aws_vpc</code>는 AWS Provider가 제공하는 리소스 타입이다.</p><p id="8c3720e4-6f49-82d9-951a-810046472764" class="" dir="auto">즉, AWS의 VPC를 만들겠다는 의미다.</p><p id="d9b720e4-6f49-83fc-85e5-8165871d020c" class="" dir="auto">다른 예시는 다음과 같다.</p><ul id="26f720e4-6f49-8384-b191-01d3c6002016" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_subnet</code></li></ul><ul id="0f0720e4-6f49-836a-a97b-019a30057df0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_instance</code></li></ul><ul id="e90720e4-6f49-8209-9353-81c8ea6a7f85" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_security_group</code></li></ul><ul id="843720e4-6f49-82b9-a4ff-81e6005d7387" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_internet_gateway</code></li></ul><hr id="44d720e4-6f49-8304-941a-0123432083b6" dir="auto"/><h3 id="5be720e4-6f49-83f5-9893-015fe451ba55" class="" dir="auto">로컬 이름</h3><p id="470720e4-6f49-82f5-83cb-01675fdf509c" class="" dir="auto"><code>main</code>은 Terraform 코드 내부에서 이 리소스를 식별하기 위한 이름이다.</p><p id="a76720e4-6f49-82ca-87b5-010d1648a250" class="" dir="auto">AWS 콘솔의 리소스 이름과는 다르다.</p><p id="cfb720e4-6f49-82d7-a517-01a6573a2d3b" class="" dir="auto">즉, 다음 코드에서</p><pre id="5e2720e4-6f49-83b1-9079-8181294421f3" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.10.0.0/16&quot;
+}</code></pre><p id="674720e4-6f49-8202-9d60-018523ccf271" class="" dir="auto"><code>main</code>은 Terraform 내부 참조용 이름이다.</p><p id="e93720e4-6f49-8388-aaac-01eea94969e2" class="" dir="auto">이 이름을 이용해서 다른 곳에서 다음처럼 참조할 수 있다.</p><pre id="436720e4-6f49-820c-98a4-81d7a3d46d4e" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">aws_vpc.main.id</code></pre><p id="887720e4-6f49-827d-a22c-8157f8106b2a" class="" dir="auto">즉, <code>aws_vpc.main.id</code>는</p><p id="305720e4-6f49-83a3-8cb0-811ae6ae3bc3" class="" dir="auto">“Terraform 코드 안에서 <code>aws_vpc</code> 타입의 <code>main</code>이라는 리소스의 id 값”이라는 뜻이다.</p><hr id="15d720e4-6f49-8315-ac48-81bc96a3096b" dir="auto"/><h1 id="fdd720e4-6f49-8229-979c-81c85ae592ca" class="" dir="auto">3. Data Source의 의미와 구조</h1><h2 id="501720e4-6f49-8204-92b9-010b4ea30439" class="" dir="auto">3.1 Data Source란 무엇인가</h2><p id="b61720e4-6f49-82de-874f-8109d17b6e72" class="" dir="auto"><code>data source</code>는 Terraform이 <strong>이미 존재하는 외부 정보를 조회해서 가져오는 대상</strong>이다.</p><p id="1ce720e4-6f49-8282-9644-81d7943b2f80" class="" dir="auto">쉽게 말하면 다음과 같다.</p><ul id="a61720e4-6f49-82e4-a526-01d4758acc18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미 존재하는 VPC를 찾는다</li></ul><ul id="ba4720e4-6f49-823a-9f6a-018531272a80" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 조건에 맞는 AMI를 찾는다</li></ul><ul id="d11720e4-6f49-8338-b7a0-010d7b92aee4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 Subnet 목록을 가져온다</li></ul><ul id="51a720e4-6f49-82fa-9888-81d74569954d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 계정 정보나 리전 정보를 조회한다</li></ul><p id="eee720e4-6f49-82e8-a448-01f695d712a7" class="" dir="auto">즉, Terraform이 직접 생성하지 않고 <strong>읽기(read)</strong> 용도로 사용하는 정보가 Data Source다.</p><hr id="0c0720e4-6f49-83f3-a6b5-81e5117b0009" dir="auto"/><h2 id="96e720e4-6f49-82f4-9830-81fb3c4f4568" class="" dir="auto">3.2 기본 구조</h2><p id="364720e4-6f49-826b-bfa4-81fb079707d2" class="" dir="auto"><code>data</code> 블록의 기본 구조는 다음과 같다.</p><pre id="ef8720e4-6f49-823b-9a6d-0169b972d91e" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;데이터타입&quot; &quot;이름&quot; {
+  조건 = 값
+}</code></pre><p id="604720e4-6f49-8310-9ffc-018ba1b87cee" class="" dir="auto">예를 들어 특정 VPC를 조회하는 코드는 다음과 같다.</p><pre id="d2c720e4-6f49-822d-bc25-018b8d2485a2" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_vpc&quot; &quot;selected&quot; {
+  id = &quot;vpc-1234567890abcdef0&quot;
+}</code></pre><p id="da7720e4-6f49-83de-b533-8178abe7ba79" class="" dir="auto">구성 요소는 다음과 같다.</p><ul id="e6c720e4-6f49-83a5-98f2-81e9b31c3eed" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data</code> → 블록 종류</li></ul><ul id="791720e4-6f49-820a-8c91-0128a96d19ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;aws_vpc&quot;</code> → 데이터 타입</li></ul><ul id="0cf720e4-6f49-8352-8126-812c31ec9b3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;selected&quot;</code> → 로컬 이름</li></ul><ul id="180720e4-6f49-8308-a752-01fb5ca2dd28" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>id = &quot;vpc-1234567890abcdef0&quot;</code> → 조회 조건</li></ul><hr id="3ad720e4-6f49-8277-bdbc-016bde2ac0db" dir="auto"/><h2 id="345720e4-6f49-83ba-ad1c-01b4a77fd892" class="" dir="auto">3.3 Resource와 Data Source는 문법도 닮아 있다</h2><p id="7e8720e4-6f49-8381-bb58-819d4fdd326b" class="" dir="auto">Terraform 초보자가 헷갈리는 이유 중 하나는 두 문법이 매우 비슷하기 때문이다.</p><p id="489720e4-6f49-82c1-b73e-01315db10ec8" class="" dir="auto">예를 들어:</p><h3 id="3da720e4-6f49-8213-86c5-81915b5f1b7e" class="" dir="auto">Resource</h3><pre id="bcb720e4-6f49-82f8-9e33-8165b32a1566" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.10.0.0/16&quot;
+}</code></pre><h3 id="658720e4-6f49-8312-b141-817c7a270697" class="" dir="auto">Data Source</h3><pre id="688720e4-6f49-8258-beac-814822a4042b" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_vpc&quot; &quot;selected&quot; {
+  id = &quot;vpc-1234567890abcdef0&quot;
+}</code></pre><p id="0c5720e4-6f49-83b8-80e4-0123c429a103" class="" dir="auto">둘 다 VPC와 관련되어 있고, 블록 구조도 비슷하다.</p><p id="19b720e4-6f49-8321-b193-014bc7ff024e" class="" dir="auto">하지만 의미는 완전히 다르다.</p><ul id="18b720e4-6f49-8383-8363-01964ff81f95" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>resource &quot;aws_vpc&quot;</code> → VPC를 <strong>생성/관리</strong></li></ul><ul id="9e4720e4-6f49-83c8-bf4f-019a5ffa9dd5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data &quot;aws_vpc&quot;</code> → 기존 VPC를 <strong>조회</strong></li></ul><hr id="fb9720e4-6f49-8303-9e88-814221672472" dir="auto"/><h1 id="d4d720e4-6f49-82aa-b685-010c81dc3092" class="" dir="auto">4. 생성과 조회의 차이</h1><h2 id="494720e4-6f49-8366-90f5-81a08a4fc220" class="" dir="auto">4.1 Resource는 만든다</h2><p id="6e0720e4-6f49-8322-af87-812c35af6568" class="" dir="auto">Resource는 Terraform이 원하는 상태를 선언하고, 실제 클라우드에 그 상태를 맞추는 역할을 한다.</p><p id="12b720e4-6f49-8320-a85c-81f0cbbab7ea" class="" dir="auto">예를 들어</p><pre id="b4d720e4-6f49-82ea-89e6-819cbd516db9" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = &quot;ami-xxxxxxxx&quot;
+  instance_type = &quot;t3.micro&quot;
+}</code></pre><p id="aae720e4-6f49-828f-b2e8-816ffde5380c" class="" dir="auto">이 코드는 EC2 인스턴스를 새로 만들겠다는 뜻이다.</p><p id="49a720e4-6f49-8340-8dc7-81337ce6d047" class="" dir="auto">Terraform은 이 코드를 보고 다음과 같은 작업을 한다.</p><ul id="7d4720e4-6f49-8362-a7fd-011e1fc60474" class="bulleted-list" dir="auto"><li style="list-style-type:disc">아직 없으면 생성함</li></ul><ul id="772720e4-6f49-835b-bf12-01194b593487" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정이 바뀌면 변경함</li></ul><ul id="8bf720e4-6f49-8368-a50d-81ffbd90a315" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드에서 제거되면 삭제 대상으로 판단할 수 있음</li></ul><p id="baf720e4-6f49-82e2-8f19-01522a1ee98a" class="" dir="auto">즉, 수명주기를 관리한다.</p><hr id="22f720e4-6f49-826f-956a-819ce25255b3" dir="auto"/><h2 id="046720e4-6f49-829c-9775-815b189e32bd" class="" dir="auto">4.2 Data Source는 찾는다</h2><p id="eaa720e4-6f49-83e4-a8f4-0164dc876e61" class="" dir="auto">반면 Data Source는 조회만 한다.</p><pre id="9ff720e4-6f49-8327-b67a-01a3f54f38df" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+}</code></pre><p id="58e720e4-6f49-834a-a707-01f3cef21982" class="" dir="auto">이 코드는 “조건에 맞는 AMI를 조회한다”는 뜻이지, AMI를 새로 만드는 뜻이 아니다.</p><p id="e13720e4-6f49-83a8-ae88-81f4646586d8" class="" dir="auto">Terraform은 Data Source를 통해 값을 읽어오고, 그 값을 다른 리소스에 전달하는 데 사용한다.</p><p id="ee5720e4-6f49-82c9-b87d-81581476f385" class="" dir="auto">즉, Data Source는 <strong>생성 도구가 아니라 입력값 공급 도구</strong>에 가깝다.</p><hr id="006720e4-6f49-8216-bec3-015a0b833281" dir="auto"/><h1 id="b6c720e4-6f49-8212-81db-016092820e62" class="" dir="auto">5. State와의 관계</h1><h2 id="d60720e4-6f49-832d-92e5-81dd084ef708" class="" dir="auto">5.1 Resource와 state의 관계</h2><p id="5c6720e4-6f49-82a2-b4ff-01d35ba06b2f" class="" dir="auto">Terraform에서 <code>state</code>는 매우 중요하다.</p><p id="791720e4-6f49-8352-bab1-81e96aae990e" class="" dir="auto">Terraform은 자신이 관리하는 리소스의 현재 상태를 state 파일에 기록한다.</p><p id="d99720e4-6f49-839d-a751-01f5a2ac18d7" class="" dir="auto">예를 들어 다음 리소스를 만들었다고 해보자.</p><pre id="0c4720e4-6f49-825a-acd6-8186cf08b1ad" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.10.0.0/16&quot;
+}</code></pre><p id="ee9720e4-6f49-8339-8382-01a7e0f14fa3" class="" dir="auto"><code>terraform apply</code>를 수행해서 실제 VPC가 생성되면, Terraform은 그 결과를 state에 기록한다.</p><p id="594720e4-6f49-8218-aa25-01a3a43b1cb1" class="" dir="auto">예를 들어 state에는 다음과 같은 정보가 연결된다.</p><ul id="fb9720e4-6f49-83e2-955c-8102a2c92b22" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 리소스의 실제 AWS 리소스 ID</li></ul><ul id="97e720e4-6f49-8386-8789-81a835b9edc5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 속성값</li></ul><ul id="f2e720e4-6f49-8347-851d-015b8f5cb549" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform 코드상의 주소</li></ul><ul id="84f720e4-6f49-82a7-b254-019f8fde4810" class="bulleted-list" dir="auto"><li style="list-style-type:disc">의존 관계</li></ul><p id="7a1720e4-6f49-8331-ad5a-012b8a90f903" class="" dir="auto">즉, Resource는 Terraform이 <strong>지속적으로 추적하는 관리 대상</strong>이다.</p><hr id="57f720e4-6f49-822c-b52c-01ce21c79ec3" dir="auto"/><h2 id="5f1720e4-6f49-82ac-b1f5-813f5f6c1a44" class="" dir="auto">5.2 Data Source와 state의 관계</h2><p id="fa1720e4-6f49-82dd-95ef-01db84d6a627" class="" dir="auto">Data Source도 실행 시 조회 결과가 state에 반영될 수는 있다.</p><p id="738720e4-6f49-8288-b960-015c85bdc03d" class="" dir="auto">하지만 Resource처럼 “내가 관리하는 대상”으로 저장되는 것은 아니다.</p><p id="0e6720e4-6f49-8233-9d8d-81cabee52fc2" class="" dir="auto">이 차이가 중요하다.</p><ul id="133720e4-6f49-82bd-8ebe-81fb66a36afa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Resource → Terraform이 생성/변경/삭제까지 관리하는 대상</li></ul><ul id="06c720e4-6f49-82a1-879a-819bfb84ffe4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Source → 조회 결과를 계산 과정에서 사용하기 위한 대상</li></ul><p id="fd4720e4-6f49-827d-890e-815c74139f5d" class="" dir="auto">즉, Data Source는 state에 값이 반영되더라도, 그것이 곧 Terraform 관리 리소스라는 뜻은 아님.</p><p id="b5b720e4-6f49-830d-8fa3-01d5a87a04bd" class="" dir="auto">간단히 말하면</p><ul id="08a720e4-6f49-82ef-8e29-81554885c5a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Resource는 <strong>관리 대상</strong></li></ul><ul id="026720e4-6f49-82a5-9c3a-015124c99085" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Source는 <strong>참조 정보</strong></li></ul><p id="483720e4-6f49-829c-8b89-813dee8d92c6" class="" dir="auto">라고 보면 된다.</p><hr id="b91720e4-6f49-82cd-99fb-01077918bf53" dir="auto"/><p id="356720e4-6f49-82df-8ee8-01d272c448b4" class="" dir="auto">Terraform은 그 VPC를 조회해서 값을 읽어온 것뿐이다.</p><p id="c3e720e4-6f49-8386-aa46-81df8cd36773" class="" dir="auto">생성, 변경, 삭제를 관리하겠다고 선언한 것이 아니다.</p><p id="adb720e4-6f49-83f2-ac8a-81dfb437fa91" class="" dir="auto">즉, <code>data &quot;aws_vpc&quot;</code>는 기존 VPC를 <strong>참조</strong>하는 것이고,</p><p id="98d720e4-6f49-82fd-b9af-81cbae112c76" class="" dir="auto"><code>resource &quot;aws_vpc&quot;</code>는 Terraform이 그 VPC를 <strong>관리</strong>하는 것이다.</p><hr id="8f1720e4-6f49-8305-b564-0152ce6d48d9" dir="auto"/><h1 id="98e720e4-6f49-82b5-8b1c-813b2275d901" class="" dir="auto">6. Resource 예제: VPC 생성</h1><p id="7e7720e4-6f49-8352-8131-01ee344eae4f" class="" dir="auto">먼저 생성부터 보자.</p><pre id="39f720e4-6f49-827e-b3a4-81b80fc30602" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.10.0.0/16&quot;
+
+  tags = {
+    Name = &quot;terraform-main-vpc&quot;
+  }
+}</code></pre><p id="1df720e4-6f49-8356-9ac7-81d001f8b092" class="" dir="auto">이 코드는 다음 의미를 가진다.</p><ul id="fc9720e4-6f49-83d4-adc4-812ab72b2cc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS에 VPC를 새로 만든다</li></ul><ul id="e82720e4-6f49-82d1-86f0-816abd7a623e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CIDR은 <code>10.10.0.0/16</code></li></ul><ul id="64c720e4-6f49-8297-85c7-01a47e1977b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 Name은 <code>terraform-main-vpc</code></li></ul><p id="822720e4-6f49-828b-9daf-818276ce68e8" class="" dir="auto">생성 후에는 다른 리소스가 이 VPC를 참조할 수 있다.</p><p id="526720e4-6f49-8380-b44b-0162027266ba" class="" dir="auto">예를 들면</p><pre id="851720e4-6f49-825d-83e3-816210e2b4c9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws_vpc.main.id</code></pre><p id="2a4720e4-6f49-82b7-96b9-817118fc4ef2" class="" dir="auto">이 값은 생성된 VPC의 실제 ID를 의미한다.</p><hr id="9e6720e4-6f49-8251-8dcc-8117d3a7262a" dir="auto"/><h1 id="78c720e4-6f49-821f-b8a6-8102ffb112fe" class="" dir="auto">7. Data Source 예제: aws_ami</h1><h2 id="c56720e4-6f49-8266-a5cf-0181733b518b" class="" dir="auto">7.1 왜 AMI를 Data Source로 자주 조회하는가</h2><p id="3ff720e4-6f49-8224-9c64-017f667d12ab" class="" dir="auto">EC2를 만들 때 반드시 필요한 것 중 하나가 AMI다.</p><p id="ee6720e4-6f49-827f-bc58-81c827e3a6ff" class="" dir="auto">그런데 AMI ID는 고정값처럼 보이지만 실제로는 자주 달라질 수 있다.</p><p id="2b6720e4-6f49-8232-a440-014711abfee9" class="" dir="auto">예를 들어 Amazon Linux 2, Amazon Linux 2023, Ubuntu 이미지 등은</p><p id="b13720e4-6f49-83f5-92bd-8141252f9347" class="" dir="auto">리전별로 ID가 다를 수 있고, 업데이트 버전이 계속 새로 나올 수 있다.</p><p id="f35720e4-6f49-8334-ad31-81a2c7011ebb" class="" dir="auto">그래서 실무에서는 하드코딩보다 <strong>조건으로 조회</strong>하는 방식을 많이 쓴다.</p><hr id="184720e4-6f49-83ca-bc16-0144d599b552" dir="auto"/><h2 id="c62720e4-6f49-8282-a3c2-01ea8d4d6051" class="" dir="auto">7.2 기본 예제</h2><pre id="d2e720e4-6f49-82b5-929b-01089235a595" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+
+  owners = [&quot;amazon&quot;]
+
+  filter {
+    name   = &quot;name&quot;
+    values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+  }
+}</code></pre><p id="ed7720e4-6f49-8314-b87d-8142c0680980" class="" dir="auto">이 코드는 대략 다음 의미다.</p><ul id="6ee720e4-6f49-8213-abfa-81dbcad7b393" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon이 제공한 AMI 중에서</li></ul><ul id="9fa720e4-6f49-82eb-b3fb-8162f491d499" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름 패턴이 <code>al2023-ami-2023.*-x86_64</code>에 맞는 것들을 찾고</li></ul><ul id="f9a720e4-6f49-8342-8e8f-811343bde9dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그중 가장 최신 이미지를 선택한다</li></ul><hr id="429720e4-6f49-82dd-beee-81d54d6fb16e" dir="auto"/><h2 id="b0d720e4-6f49-82af-9820-0129c532ec41" class="" dir="auto">7.3 owners의 의미</h2><pre id="095720e4-6f49-82d4-a6aa-81a0c7dc3bce" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">owners = [&quot;amazon&quot;]</code></pre><p id="a1c720e4-6f49-8350-b123-81174cd4a2e1" class="" dir="auto">이 설정은 AMI 소유자를 제한한다.</p><p id="ee1720e4-6f49-8344-82fe-01dee9685bd8" class="" dir="auto">즉, Amazon이 제공한 이미지 중에서만 찾겠다는 뜻이다.</p><p id="9d1720e4-6f49-83bc-a946-812553c8ab98" class="" dir="auto">왜 필요한가?</p><p id="cc5720e4-6f49-8327-8376-010e0e1f6c8f" class="" dir="auto">AMI는 같은 이름 패턴을 가진 이미지가 다른 계정에도 있을 수 있기 때문이다.</p><p id="46e720e4-6f49-8244-b5f5-81f7bb715fb3" class="" dir="auto">소유자를 제한하지 않으면 의도치 않은 이미지를 잡을 위험이 있다.</p><hr id="95c720e4-6f49-827f-8ead-01c21e096938" dir="auto"/><h2 id="0ab720e4-6f49-82eb-89e3-81a329b16f0c" class="" dir="auto">7.4 filter 블록의 의미</h2><pre id="d54720e4-6f49-8383-9c1c-815a73847dc3" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">filter {
+  name   = &quot;name&quot;
+  values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+}</code></pre><p id="88c720e4-6f49-83d4-a5ba-816135085b15" class="" dir="auto">이 블록은 조회 조건을 걸어준다.</p><ul id="e1f720e4-6f49-837d-8615-81e9f90fe266" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>name = &quot;name&quot;</code> → AMI의 이름 속성을 기준으로 검색</li></ul><ul id="796720e4-6f49-8299-8fbc-0191b3a8730c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>values = [...]</code> → 해당 패턴과 일치하는 값을 찾음</li></ul><p id="fe5720e4-6f49-83da-bf09-81229ab98b35" class="" dir="auto">즉, AMI 목록 전체를 가져오는 것이 아니라 조건을 걸어 원하는 후보군만 추린다.</p><hr id="853720e4-6f49-83d8-ad39-012c737f5a94" dir="auto"/><h2 id="796720e4-6f49-82ac-b66b-8143737c15c9" class="" dir="auto">7.5 most_recent = true</h2><pre id="841720e4-6f49-8341-8374-01c70fbf3323" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">most_recent = true</code></pre><p id="899720e4-6f49-8245-83df-81b52a060206" class="" dir="auto">이 옵션은 여러 결과가 나왔을 때 <strong>가장 최신 것 하나를 선택</strong>하겠다는 뜻이다.</p><p id="0e9720e4-6f49-83b6-809f-8133f0217b83" class="" dir="auto">예를 들어 AMI가 여러 개 존재할 수 있다.</p><ul id="878720e4-6f49-836c-84a2-013fc5887f50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">al2023-ami-2023.0.x</li></ul><ul id="d1d720e4-6f49-8337-8a67-8196fdf221a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">al2023-ami-2023.1.x</li></ul><ul id="b9a720e4-6f49-8298-875d-818d1f240a3a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">al2023-ami-2023.2.x</li></ul><p id="aa6720e4-6f49-82a7-9843-0188dae5911c" class="" dir="auto">이 중 최신 이미지를 자동으로 선택하려면 <code>most_recent = true</code>를 사용한다.</p><p id="ec2720e4-6f49-83a1-9158-0180548ac8e0" class="" dir="auto">이 옵션은 실습과 운영 모두에서 매우 자주 사용된다.</p><hr id="6f8720e4-6f49-82ad-86e3-01779e15fcaa" dir="auto"/><h1 id="a62720e4-6f49-8239-9e67-8189d45d06b2" class="" dir="auto">8. Data Source 예제: aws_vpc</h1><h2 id="db0720e4-6f49-82e6-b548-018488e9f291" class="" dir="auto">8.1 특정 VPC를 ID로 조회</h2><p id="81d720e4-6f49-836a-a6da-01877681a903" class="" dir="auto">이미 존재하는 VPC를 조회하는 가장 단순한 예시는 다음과 같다.</p><pre id="cd7720e4-6f49-8338-8d9e-01389cdc43c2" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_vpc&quot; &quot;selected&quot; {
+  id = &quot;vpc-1234567890abcdef0&quot;
+}</code></pre><p id="3d0720e4-6f49-82c0-9e6f-8135847b1817" class="" dir="auto">의미는 매우 단순하다.</p><ul id="b79720e4-6f49-83ea-a8b8-0155ba0b27cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ID가 <code>vpc-1234567890abcdef0</code>인 기존 VPC를 찾아라</li></ul><p id="6af720e4-6f49-82ad-bc28-01461096f260" class="" dir="auto">그리고 나서 다음처럼 참조할 수 있다.</p><pre id="782720e4-6f49-82ff-bf36-8195fa282fa9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">data.aws_vpc.selected.id</code></pre><p id="eb5720e4-6f49-827e-8781-81a2692fcc58" class="" dir="auto">또는 CIDR을 가져올 수도 있다.</p><pre id="4da720e4-6f49-838e-b3f5-8164aa5ccce7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">data.aws_vpc.selected.cidr_block</code></pre><hr id="1ce720e4-6f49-8268-a117-81ea0a8626fb" dir="auto"/><h2 id="0ab720e4-6f49-82c3-9840-81f66fcc3712" class="" dir="auto">8.2 태그 기반으로 조회하는 방식</h2><p id="692720e4-6f49-83e7-a73c-811554f349d2" class="" dir="auto">실무에서는 VPC ID를 직접 입력하지 않고 태그를 조건으로 찾는 경우도 많다.</p><p id="9bf720e4-6f49-82bf-bc42-81bd366b5551" class="" dir="auto">예시:</p><pre id="7fe720e4-6f49-82dc-bf8c-81a04ed29023" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_vpc&quot; &quot;selected&quot; {
+  filter {
+    name   = &quot;tag:Name&quot;
+    values = [&quot;shared-vpc&quot;]
+  }
+}</code></pre><p id="537720e4-6f49-83ce-a92b-010bde57ab59" class="" dir="auto">이 코드는 Name 태그가 <code>shared-vpc</code>인 VPC를 조회한다.</p><p id="03d720e4-6f49-837e-a285-012289d8628e" class="" dir="auto">이 방식은 ID를 직접 쓰지 않아도 되기 때문에 코드 이식성이 좋아질 수 있다.</p><p id="265720e4-6f49-82ab-9267-01cc641776b4" class="" dir="auto">다만 조건에 맞는 VPC가 여러 개일 경우 의도와 다를 수 있으므로 태그 체계가 명확해야 한다.</p><hr id="b58720e4-6f49-832f-9112-017db132b9ad" dir="auto"/><h1 id="5c4720e4-6f49-8353-bc99-01a9487976d5" class="" dir="auto">9. Data Source 예제: aws_subnets</h1><h2 id="b24720e4-6f49-827f-9e89-81bf45f9baf2" class="" dir="auto">9.1 Subnet 목록 조회가 왜 필요한가</h2><p id="814720e4-6f49-833c-a9b9-81828197ab0f" class="" dir="auto">실무에서는 특정 VPC 안의 Subnet 목록을 가져와서 다음 작업에 연결하는 경우가 많다.</p><p id="bc2720e4-6f49-830c-b356-017bab2b87b9" class="" dir="auto">예를 들면</p><ul id="c3b720e4-6f49-83a9-b09b-81e72e4b8be6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB를 여러 Subnet에 배치</li></ul><ul id="712720e4-6f49-8286-a2f4-01a90d00e206" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2를 특정 Subnet 집합 중 하나에 배치</li></ul><ul id="c20720e4-6f49-831c-8021-017b678a7ed0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EKS, RDS, NAT Gateway 구성 시 Subnet 목록 활용</li></ul><ul id="690720e4-6f49-8393-ac31-81b5ffb1a599" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 네트워크 안에서만 애플리케이션 구성</li></ul><p id="d8c720e4-6f49-82ad-af3a-0128cbf0b0a9" class="" dir="auto">이럴 때 <code>aws_subnets</code>를 사용한다.</p><hr id="d2d720e4-6f49-82a3-9c63-81cf33556859" dir="auto"/><h2 id="686720e4-6f49-8288-b787-012cca594089" class="" dir="auto">9.2 기본 예제</h2><pre id="485720e4-6f49-821f-83ec-0144a94713cb" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_subnets&quot; &quot;selected&quot; {
+  filter {
+    name   = &quot;vpc-id&quot;
+    values = [data.aws_vpc.selected.id]
+  }
+}</code></pre><p id="e48720e4-6f49-8341-9bee-01eb5a509ac2" class="" dir="auto">의미는 다음과 같다.</p><ul id="bc3720e4-6f49-8251-9dee-0120e12974e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">앞에서 조회한 VPC의 ID를 기준으로</li></ul><ul id="610720e4-6f49-82e8-a857-81377edc03bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그 VPC에 속한 Subnet들을 모두 조회한다</li></ul><p id="16a720e4-6f49-830f-8f42-01f1f34ce165" class="" dir="auto">즉, VPC를 먼저 찾고, 그 VPC에 연결된 Subnet 목록을 가져오는 흐름이다.</p><hr id="80d720e4-6f49-82db-805e-010c9bad17ca" dir="auto"/><h2 id="8fd720e4-6f49-832c-a492-011622d8fb91" class="" dir="auto">9.3 조회 결과 참조</h2><p id="cd4720e4-6f49-837f-950c-01f9382d216f" class="" dir="auto"><code>aws_subnets</code>는 여러 개의 Subnet ID를 리스트 형태로 반환할 수 있다.</p><p id="ccf720e4-6f49-8271-b37d-815adbb2cc96" class="" dir="auto">예를 들어 다음처럼 사용할 수 있다.</p><pre id="0b6720e4-6f49-83c3-bdd5-015e8a19cd23" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data.aws_subnets.selected.ids</code></pre><p id="2b7720e4-6f49-821b-a0dc-8194019c275e" class="" dir="auto">이 값은 Subnet ID들의 목록이다.</p><p id="6cb720e4-6f49-826a-9560-012a826a7a46" class="" dir="auto">예를 들면 내부적으로 다음 같은 형태라고 이해하면 된다.</p><pre id="540720e4-6f49-833d-b4b0-81293900a807" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">[
+  &quot;subnet-aaaa1111&quot;,
+  &quot;subnet-bbbb2222&quot;,
+  &quot;subnet-cccc3333&quot;
+]</code></pre><p id="c1e720e4-6f49-8240-a77b-81d3d6337039" class="" dir="auto">이 값을 다른 리소스에 그대로 전달할 수 있다.</p><hr id="bfb720e4-6f49-8365-8b8f-816f1399f38d" dir="auto"/><h1 id="e81720e4-6f49-83e6-a352-0158c22fbf54" class="" dir="auto">10. 조회 결과 참조 방식</h1><p id="cb7720e4-6f49-8392-831e-816b6763d8a3" class="" dir="auto">Terraform에서는 Resource와 Data Source 모두 속성 참조가 가능하다.</p><p id="3ac720e4-6f49-837a-a974-8110a073b1e3" class="" dir="auto">다만 주소 형식이 다르다.</p><hr id="038720e4-6f49-823b-aecf-812af2ca5d97" dir="auto"/><h2 id="335720e4-6f49-838d-9885-0148a43828a5" class="" dir="auto">10.1 Resource 참조 방식</h2><p id="e9f720e4-6f49-8336-a8b1-813492066b31" class="" dir="auto">형식:</p><pre id="cfe720e4-6f49-83b4-9b80-01fdfdc83881" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">리소스타입.이름.속성</code></pre><p id="268720e4-6f49-82cf-822c-8154a2475271" class="" dir="auto">예시:</p><pre id="122720e4-6f49-83b0-b4e7-81eb83844d1a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws_vpc.main.id</code></pre><p id="3cf720e4-6f49-83aa-8c3d-0186c4e15002" class="" dir="auto">의미:</p><ul id="d1e720e4-6f49-8230-911a-819d216b2fbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_vpc</code> 타입의</li></ul><ul id="b40720e4-6f49-8354-876c-81a97e1d2930" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>main</code>이라는 이름을 가진 리소스의</li></ul><ul id="603720e4-6f49-8370-874a-8162f2ccb17b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>id</code> 속성</li></ul><hr id="327720e4-6f49-83b3-80dc-014d18e9055e" dir="auto"/><h2 id="d37720e4-6f49-8352-a540-81e8e0eb67ed" class="" dir="auto">10.2 Data Source 참조 방식</h2><p id="8b2720e4-6f49-83f3-9c4e-81707118a4cb" class="" dir="auto">형식:</p><pre id="70b720e4-6f49-8361-af3c-0177f58f3f3b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">data.데이터타입.이름.속성</code></pre><p id="555720e4-6f49-83a8-883f-8136108bd630" class="" dir="auto">예시:</p><pre id="76a720e4-6f49-830a-aaf2-81c4d499deb4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">data.aws_vpc.selected.id</code></pre><p id="284720e4-6f49-82eb-a7c2-016081039d66" class="" dir="auto">의미:</p><ul id="c35720e4-6f49-82d5-81ac-01a77443e922" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data</code> 블록 중에서</li></ul><ul id="fe4720e4-6f49-8260-9a3f-8110a3405393" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_vpc</code> 타입의</li></ul><ul id="bcc720e4-6f49-82a4-986c-81e1787bad72" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>selected</code>라는 이름을 가진 데이터의</li></ul><ul id="0c6720e4-6f49-835b-b18d-8177a6ac2f89" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>id</code> 속성</li></ul><hr id="38f720e4-6f49-82c3-87a3-81cb6a00ad1e" dir="auto"/><h2 id="f03720e4-6f49-8352-a701-011a63bc494b" class="" dir="auto">10.3 왜 data 접두사가 붙는가</h2><p id="8f9720e4-6f49-82cf-8b34-81d51a48b73a" class="" dir="auto">Resource와 Data Source는 타입 이름이 겹칠 수 있다.</p><p id="162720e4-6f49-820b-8dc1-811f5a60a5b0" class="" dir="auto">예를 들어 둘 다 <code>aws_vpc</code>를 사용할 수 있다.</p><p id="3b4720e4-6f49-8369-a5f5-01bf1357ff6e" class="" dir="auto">그래서 Terraform은 Data Source일 때 앞에 <code>data.</code>를 붙여 구분한다.</p><p id="743720e4-6f49-8368-9c19-814ca44b9e78" class="" dir="auto">예를 들어</p><ul id="466720e4-6f49-8273-9bb2-8169fa96c93e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_vpc.main.id</code> → 내가 관리하는 VPC</li></ul><ul id="448720e4-6f49-831a-ac4f-811ed5554e22" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data.aws_vpc.selected.id</code> → 조회한 기존 VPC</li></ul><p id="196720e4-6f49-8365-a4b3-81e836f80d6c" class="" dir="auto">이렇게 구분된다.</p><h1 id="347720e4-6f49-8363-865a-817c0bf9c69f" class="" dir="auto">11. Resource와 Data Source를 함께 쓰는 예제</h1><p id="69c720e4-6f49-83c9-a492-0136e59560b6" class="" dir="auto">이제 두 개념을 연결해보자.</p><p id="992720e4-6f49-822a-8bb9-81b027419d3f" class="" dir="auto">목표는 다음과 같다.</p><ul id="4d5720e4-6f49-82e3-bb71-813bf768d993" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존에 있는 최신 Amazon Linux AMI를 조회한다</li></ul><ul id="023720e4-6f49-83b4-9449-81d494c36fcd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회한 AMI를 사용해서 EC2를 새로 생성한다</li></ul><pre id="a76720e4-6f49-8222-91a4-81a9930ed4e1" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+
+  owners = [&quot;amazon&quot;]
+
+  filter {
+    name   = &quot;name&quot;
+    values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+  }
+}
+
+resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = &quot;t3.micro&quot;
+
+  tags = {
+    Name = &quot;tf-web-instance&quot;
+  }
+}</code></pre><p id="26a720e4-6f49-8311-a6a4-81a8e8e594d9" class="" dir="auto">이 코드는 아주 중요한 흐름을 보여준다.</p><ol type="1" id="4a2720e4-6f49-82cd-88e1-013a00b03e9d" class="numbered-list" start="1" dir="auto"><li><code>data.aws_ami.amazon_linux</code> 가 먼저 실행되어 AMI를 찾음</li></ol><ol type="1" id="776720e4-6f49-833f-a5cd-81ab7adbf31a" class="numbered-list" start="2" dir="auto"><li>그 결과의 <code>id</code> 값을</li></ol><ol type="1" id="f58720e4-6f49-82c6-8034-81ae1a75b8e1" class="numbered-list" start="3" dir="auto"><li><code>aws_instance.web</code>의 <code>ami</code> 인자에 전달함</li></ol><ol type="1" id="2ff720e4-6f49-824c-b61a-016c6aa536f8" class="numbered-list" start="4" dir="auto"><li>Terraform은 조회된 최신 AMI를 사용해 EC2를 생성함</li></ol><p id="6b3720e4-6f49-839d-9198-0133338792de" class="" dir="auto">즉, Data Source는 Resource의 입력값을 공급하는 역할을 한다.</p><hr id="f7a720e4-6f49-82c7-9e89-017fc713a86a" dir="auto"/><h1 id="2dd720e4-6f49-8254-9f25-01b859d0c590" class="" dir="auto">12. 자동 조회 / 실행 시 선택 / 직접 지정</h1><p id="85d720e4-6f49-82e2-88ea-0162cbf688a5" class="" dir="auto">AMI나 VPC 같은 값을 Terraform 코드에 넣는 방식은 크게 세 가지로 볼 수 있다.</p><hr id="73b720e4-6f49-8358-9b44-01be2531156f" dir="auto"/><h2 id="41b720e4-6f49-8326-92b4-812646c883b8" class="" dir="auto">12.1 직접 지정</h2><p id="49c720e4-6f49-83e9-b285-011f5044d7d6" class="" dir="auto">예시:</p><pre id="4ce720e4-6f49-821e-bcd7-8176b7aa626f" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = &quot;ami-0abc123456789def0&quot;
+  instance_type = &quot;t3.micro&quot;
+}</code></pre><p id="ba7720e4-6f49-82a4-a4a7-015a853335bc" class="" dir="auto">이 방식은 가장 단순하다.</p><p id="db5720e4-6f49-8314-bdc4-81d291e05dc2" class="" dir="auto">하지만 단점도 분명하다.</p><ul id="2ca720e4-6f49-8292-aaaa-0132a12bfbe6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전이 바뀌면 ID가 달라질 수 있음</li></ul><ul id="d09720e4-6f49-8358-8424-8100d0899326" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 업데이트가 반영되지 않음</li></ul><ul id="9db720e4-6f49-8370-85ef-818d57896500" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 이식성이 떨어질 수 있음</li></ul><p id="f47720e4-6f49-8261-9c97-81f202453211" class="" dir="auto">실습 초기에는 이해하기 쉽지만, 운영 코드에서는 주의가 필요하다.</p><hr id="02e720e4-6f49-83e4-8629-81cb5b4d1c84" dir="auto"/><h2 id="b2d720e4-6f49-82d0-acf1-01ba007c4987" class="" dir="auto">12.2 Data Source로 자동 조회</h2><p id="1f6720e4-6f49-8370-8784-01262b64bfea" class="" dir="auto">예시:</p><pre id="aa1720e4-6f49-8399-9e27-81cd4cea952e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ami = data.aws_ami.amazon_linux.id</code></pre><p id="b9c720e4-6f49-82ee-8602-812cda563bbf" class="" dir="auto">이 방식은 Terraform 실행 시 조건에 맞는 값을 자동으로 찾는다.</p><p id="aac720e4-6f49-83b2-86b2-8137c9101186" class="" dir="auto">장점:</p><ul id="13b720e4-6f49-83d4-be66-01a1473f22b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최신 이미지 자동 반영 가능</li></ul><ul id="c62720e4-6f49-8286-9132-8159cecac69f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전별 차이를 코드가 흡수할 수 있음</li></ul><ul id="652720e4-6f49-83e8-95a8-01fce097eacb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하드코딩을 줄일 수 있음</li></ul><p id="de8720e4-6f49-821b-96cc-8171d435ea55" class="" dir="auto">단점:</p><ul id="b07720e4-6f49-83ca-9181-8193321d3b43" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필터 조건이 불명확하면 예상과 다른 결과가 나올 수 있음</li></ul><ul id="cde720e4-6f49-82ef-9468-81e03631e203" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 결과가 변동되면 재현성이 낮아질 수 있음</li></ul><hr id="f2a720e4-6f49-8369-b651-8188c3b6f524" dir="auto"/><h2 id="f75720e4-6f49-838e-91cc-81380a5130b1" class="" dir="auto">12.3 변수로 직접 선택</h2><p id="1c6720e4-6f49-83bc-92d0-81fe4ee4c575" class="" dir="auto">예시:</p><pre id="79b720e4-6f49-8371-b0a4-010d76d0f567" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;ami_id&quot; {
+  type = string
+}
+
+resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = var.ami_id
+  instance_type = &quot;t3.micro&quot;
+}</code></pre><p id="38e720e4-6f49-82ff-91a4-0125594c97e1" class="" dir="auto">이 방식은 AMI 값을 외부에서 입력받는다.</p><p id="0c7720e4-6f49-83e8-9892-01f8d7860e68" class="" dir="auto">장점:</p><ul id="f8b720e4-6f49-8304-b502-01462a62aef3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경별로 값 제어가 쉬움</li></ul><ul id="fae720e4-6f49-830d-b80d-81dce3c518ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영에서 승인된 값만 주입 가능</li></ul><ul id="e12720e4-6f49-82d4-a8fa-01771496cb74" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재현성이 높음</li></ul><p id="41d720e4-6f49-83fc-9f24-0105968e2d8c" class="" dir="auto">단점:</p><ul id="7cb720e4-6f49-8363-9e5d-811a95d1fc46" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자가 값을 관리해야 함</li></ul><ul id="83c720e4-6f49-83dc-a2b4-81e504ec3fb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 수준은 다소 낮아질 수 있음</li></ul><hr id="962720e4-6f49-83d7-b5e5-81545e14a185" dir="auto"/><h2 id="45f720e4-6f49-82cb-9720-019f64b4e4eb" class="" dir="auto">12.4 세 가지 방식을 비교하면</h2><h3 id="c25720e4-6f49-8396-8423-81d1158732f0" class="" dir="auto">직접 지정</h3><ul id="7d6720e4-6f49-831a-80b4-814d68485646" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가장 단순함</li></ul><ul id="9f8720e4-6f49-824c-a289-014093dcd3ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고정값</li></ul><ul id="a28720e4-6f49-8267-a371-019bef3374a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습 초반에 이해하기 쉬움</li></ul><h3 id="177720e4-6f49-82da-b05d-01583cf95377" class="" dir="auto">자동 조회</h3><ul id="3da720e4-6f49-83b2-8195-01ece0cb63ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">유연함</li></ul><ul id="ba5720e4-6f49-8233-98aa-01fdde6c221f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최신값 활용 가능</li></ul><ul id="916720e4-6f49-838a-b176-811a23a44d4f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무에서 자주 사용됨</li></ul><h3 id="49e720e4-6f49-83f8-b466-8153bf11da68" class="" dir="auto">변수 입력</h3><ul id="e53720e4-6f49-8398-868a-817a83da0ee2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">통제력이 높음</li></ul><ul id="450720e4-6f49-83c1-87f7-01559a825034" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영에서 많이 사용됨</li></ul><ul id="45a720e4-6f49-8362-b400-81535bafa447" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경별 관리에 유리함</li></ul><p id="391720e4-6f49-83aa-bad4-014c18767176" class="" dir="auto">실무에서는 세 방식을 상황에 따라 섞어서 쓴다.</p><hr id="d39720e4-6f49-83a0-9f05-01c577bf650a" dir="auto"/><h1 id="7a0720e4-6f49-82c4-9a47-01471c63a918" class="" dir="auto">13. 실무에서의 활용 방식</h1><h2 id="96e720e4-6f49-827a-bd5f-813acf05fcda" class="" dir="auto">13.1 공통 인프라는 조회, 애플리케이션은 생성</h2><p id="6f4720e4-6f49-82e4-b6e6-818afc662885" class="" dir="auto">실무에서 매우 흔한 패턴은 다음과 같다.</p><ul id="931720e4-6f49-8253-ad16-81fd02b07b04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크팀이 VPC, Subnet, 라우팅 등 공통 인프라를 미리 생성</li></ul><ul id="be5720e4-6f49-82df-83b7-818ecd4155ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 팀은 그 인프라를 Data Source로 조회</li></ul><ul id="124720e4-6f49-82ba-bd30-01572256691b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그 안에 EC2, ALB, Auto Scaling, EKS 등을 Resource로 생성</li></ul><p id="1b5720e4-6f49-8321-9812-81c41d556ac7" class="" dir="auto">즉,</p><ul id="ff6720e4-6f49-8257-a0d1-01f3d46bc6e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 기반 → Data Source</li></ul><ul id="f3c720e4-6f49-82db-9417-81a06d4ba4dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내가 배포하는 대상 → Resource</li></ul><p id="d4e720e4-6f49-82fe-b733-81eb72581525" class="" dir="auto">이런 구조가 많다.</p><hr id="5c3720e4-6f49-8275-892c-01d21a8c340c" dir="auto"/><h2 id="92d720e4-6f49-82e5-a4ae-010e4f278d6d" class="" dir="auto">13.2 승인된 골든 이미지 조회</h2><p id="ef0720e4-6f49-8395-bd76-011c8950fc69" class="" dir="auto">운영 환경에서는 아무 AMI나 쓰지 않고, 보안팀이나 플랫폼팀이 검증한 이미지 집합만 사용하기도 한다.</p><p id="00c720e4-6f49-82f3-a6ec-0109dbe6e468" class="" dir="auto">이 경우 다음처럼 한다.</p><ul id="946720e4-6f49-8248-b285-81ddc5b2f4ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 소유자만 허용</li></ul><ul id="d0f720e4-6f49-8280-96f2-013ae7577792" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 태그나 이름 패턴으로 필터링</li></ul><ul id="048720e4-6f49-8234-8d12-81972b0630df" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>most_recent = true</code>로 최신 승인 이미지 선택</li></ul><p id="70b720e4-6f49-83c2-bdcc-01a5bd5418ea" class="" dir="auto">즉, Data Source는 단순 조회를 넘어 <strong>운영 정책을 코드화하는 수단</strong>이 되기도 한다.</p><hr id="f00720e4-6f49-826d-bb3f-01ca488fafeb" dir="auto"/><h2 id="f66720e4-6f49-8237-9fda-012c9561595e" class="" dir="auto">13.3 환경 분리와 결합</h2><p id="d81720e4-6f49-82af-bd14-015ca0fd3b68" class="" dir="auto">예를 들어 dev / stage / prod 환경이 있다고 해보자.</p><ul id="456720e4-6f49-8275-90a6-81a142ad5cd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC는 환경별로 다름</li></ul><ul id="b03720e4-6f49-8245-a13e-816855f6797b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet도 환경별로 다름</li></ul><ul id="1dc720e4-6f49-8276-8527-01fc0a633253" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하지만 EC2 생성 방식은 동일함</li></ul><p id="e12720e4-6f49-8292-9bae-0111f103b052" class="" dir="auto">이때 VPC와 Subnet은 환경별 Data Source 또는 변수로 바꾸고,</p><p id="0ee720e4-6f49-8357-9bf8-81fb16845f3b" class="" dir="auto">리소스 구조는 공통으로 유지할 수 있다.</p><p id="841720e4-6f49-82d4-993c-8134adba8437" class="" dir="auto">이런 설계가 가능해지는 이유가 바로 Resource와 Data Source의 분리 덕분이다.</p><hr id="5c5720e4-6f49-827e-a1b3-0115e0e03da5" dir="auto"/><h1 id="dc8720e4-6f49-835a-a1e2-01cd46e026de" class="" dir="auto">14. 실습 1: 최신 AMI 조회하기</h1><h2 id="bcf720e4-6f49-829e-b39c-813a71429a36" class="" dir="auto">14.1 실습 목표</h2><ul id="e10720e4-6f49-8242-8376-81829ac443a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_ami</code> Data Source를 사용해 최신 Amazon Linux AMI 조회</li></ul><ul id="b35720e4-6f49-82d3-be83-01b81c4574d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 결과를 output으로 확인</li></ul><hr id="2b9720e4-6f49-82c8-8b0c-81fb6eea53a5" dir="auto"/><h2 id="853720e4-6f49-82f3-b60f-0162ad9525bc" class="" dir="auto">14.2 예제 코드</h2><p id="30e720e4-6f49-82cd-ab69-8132225cb088" class="" dir="auto">파일명: <code>main.tf</code></p><pre id="1ae720e4-6f49-83d9-b032-0115789a32c4" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;
+
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;~&gt; 5.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}
+
+data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+
+  owners = [&quot;amazon&quot;]
+
+  filter {
+    name   = &quot;name&quot;
+    values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+  }
+}
+
+output &quot;selected_ami_id&quot; {
+  value = data.aws_ami.amazon_linux.id
+}
+
+output &quot;selected_ami_name&quot; {
+  value = data.aws_ami.amazon_linux.name
+}</code></pre><hr id="b46720e4-6f49-8235-b7a9-81232b3f7c05" dir="auto"/><h2 id="770720e4-6f49-8334-b6cb-015c16b0b07b" class="" dir="auto">14.3 실행 순서</h2><pre id="fca720e4-6f49-82ee-915f-81ff7e64aa95" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform init
+terraform plan</code></pre><p id="226720e4-6f49-82db-8a47-015b7dc5da7f" class="" dir="auto">또는 실제 조회 결과를 더 명확히 확인하려면:</p><pre id="3f2720e4-6f49-82fb-84d5-01e6e70f044d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform apply -auto-approve</code></pre><hr id="6c5720e4-6f49-831d-9904-01214b54f269" dir="auto"/><h2 id="619720e4-6f49-83aa-8377-01bb0551f330" class="" dir="auto">14.4 확인 포인트</h2><ul id="988720e4-6f49-82b6-998c-81e9ebf2b473" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AMI가 생성되는 것은 아님</li></ul><ul id="ea6720e4-6f49-83c8-b4bb-810ba394a0cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform이 조회한 AMI ID와 이름이 출력됨</li></ul><ul id="06b720e4-6f49-8392-918c-81a8a57f4da2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Source는 값을 읽어오는 용도라는 점을 확인할 수 있음</li></ul><hr id="c4c720e4-6f49-83f7-b8d4-01cc6ad2f6d7" dir="auto"/><h1 id="b4b720e4-6f49-82cf-9534-8147e37e1d81" class="" dir="auto">15. 실습 2: 조회한 AMI로 EC2 생성하기</h1><h2 id="fc0720e4-6f49-82a7-8a7c-0141db46458e" class="" dir="auto">15.1 실습 목표</h2><ul id="bd0720e4-6f49-826f-a778-81faf889e5d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_ami</code> Data Source로 AMI 조회</li></ul><ul id="02f720e4-6f49-82f4-a4cd-815a52f05c9b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 결과를 <code>aws_instance</code> Resource에 연결</li></ul><ul id="0ed720e4-6f49-8276-9836-014d44bc9b16" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회와 생성이 연결되는 흐름 이해</li></ul><hr id="678720e4-6f49-8381-86e2-0159c5736155" dir="auto"/><h2 id="f34720e4-6f49-8332-809d-01a27e840939" class="" dir="auto">15.2 예제 코드</h2><pre id="569720e4-6f49-82d3-b661-8165f40c0676" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;
+
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;~&gt; 5.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}
+
+data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+
+  owners = [&quot;amazon&quot;]
+
+  filter {
+    name   = &quot;name&quot;
+    values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+  }
+}
+
+resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami           = data.aws_ami.amazon_linux.id
+  instance_type = &quot;t3.micro&quot;
+
+  tags = {
+    Name = &quot;tf-data-source-web&quot;
+  }
+}
+
+output &quot;instance_id&quot; {
+  value = aws_instance.web.id
+}
+
+output &quot;ami_id_used&quot; {
+  value = data.aws_ami.amazon_linux.id
+}</code></pre><hr id="0f8720e4-6f49-82b6-92cb-01a5cc7bab48" dir="auto"/><h2 id="4c8720e4-6f49-836f-b585-01994f166e5d" class="" dir="auto">15.3 실행 명령</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="8a9720e4-6f49-82de-8573-81ca9c742c2b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">terraform init
+terraform plan
+terraform apply-auto-approve</code></pre><hr id="129720e4-6f49-83e1-8949-813fcb383318" dir="auto"/><h2 id="f33720e4-6f49-8200-940a-01edc57f80e7" class="" dir="auto">15.4 명령어 설명</h2><h3 id="304720e4-6f49-831b-b68c-01558a826db7" class="" dir="auto"><code>terraform init</code></h3><p id="71d720e4-6f49-82ff-9caf-01c78bff64bd" class="" dir="auto">현재 디렉터리를 초기화하고 AWS Provider를 준비한다.</p><h3 id="61f720e4-6f49-826d-a336-0168e5a904c9" class="" dir="auto"><code>terraform plan</code></h3><p id="ade720e4-6f49-8340-8df4-81409094ec41" class="" dir="auto">Terraform이 실제로 어떤 작업을 하려는지 미리 계산한다.</p><p id="638720e4-6f49-8256-9522-810052973683" class="" dir="auto">이 단계에서 Data Source도 함께 평가되어 어떤 AMI가 선택될지 확인 흐름에 반영된다.</p><h3 id="9db720e4-6f49-838b-8d1d-81b2d7b20680" class="" dir="auto"><code>terraform apply</code></h3><p id="935720e4-6f49-823d-b11e-819efce50fc4" class="" dir="auto">실제 AWS에 EC2를 생성한다.</p><p id="942720e4-6f49-8339-9934-81a46fcccc5e" class="" dir="auto">이때 <code>ami</code> 값은 하드코딩된 값이 아니라 Data Source 조회 결과로 채워진다.</p><hr id="e92720e4-6f49-83a8-8894-8169f28af86c" dir="auto"/><h2 id="9a8720e4-6f49-82ca-aa9b-811055ed409f" class="" dir="auto">15.5 정리 명령</h2><p id="9de720e4-6f49-8381-943d-81e6e1806a00" class="" dir="auto">실습 후에는 반드시 리소스를 정리한다.</p><pre id="dd0720e4-6f49-82ce-a157-012123ccfd4a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform destroy-auto-approve</code></pre><p id="8a6720e4-6f49-835e-9d13-81dfdaf1e194" class="" dir="auto">이 명령은 Terraform이 관리하는 Resource를 삭제한다.</p><p id="a28720e4-6f49-8248-857b-01a80c663158" class="" dir="auto">중요한 점은 다음이다.</p><ul id="d56720e4-6f49-837d-8a89-817b6aa6b036" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws_instance.web</code>는 삭제 대상임</li></ul><ul id="b41720e4-6f49-8226-90b9-8112bb4aa9ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data.aws_ami.amazon_linux</code>는 삭제 대상이 아님</li></ul><p id="309720e4-6f49-8203-b7ab-81ef7b860f83" class="" dir="auto">왜냐하면 Data Source는 원래 생성한 것이 아니라 조회한 정보이기 때문이다.</p><hr id="8e2720e4-6f49-832c-9494-0102963810b4" dir="auto"/><h1 id="e60720e4-6f49-833b-b57f-01aa1f305041" class="" dir="auto">16. 실습 3: 기존 VPC와 Subnet 조회하기</h1><h2 id="882720e4-6f49-823c-b5e2-812967fefa84" class="" dir="auto">16.1 실습 목표</h2><ul id="e35720e4-6f49-8310-9984-012db8fccf39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 VPC를 조회</li></ul><ul id="015720e4-6f49-8221-b455-0111f15fa7cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 VPC의 Subnet 목록을 조회</li></ul><ul id="280720e4-6f49-825a-ac10-01e69b019d88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 결과를 output으로 확인</li></ul><hr id="901720e4-6f49-830e-b79c-81f637139820" dir="auto"/><h2 id="31d720e4-6f49-83ec-8c06-01af0abafa25" class="" dir="auto">16.2 예제 코드</h2><p id="bb7720e4-6f49-838e-a224-01577ff1dc93" class="" dir="auto">아래 예제는 특정 Name 태그를 가진 VPC를 찾는 방식이다.</p><pre id="040720e4-6f49-8290-8314-015cfe5496d3" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;
+
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;~&gt; 5.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}
+
+data &quot;aws_vpc&quot; &quot;selected&quot; {
+  filter {
+    name   = &quot;tag:Name&quot;
+    values = [&quot;shared-vpc&quot;]
+  }
+}
+
+data &quot;aws_subnets&quot; &quot;selected&quot; {
+  filter {
+    name   = &quot;vpc-id&quot;
+    values = [data.aws_vpc.selected.id]
+  }
+}
+
+output &quot;vpc_id&quot; {
+  value = data.aws_vpc.selected.id
+}
+
+output &quot;subnet_ids&quot; {
+  value = data.aws_subnets.selected.ids
+}</code></pre><hr id="f90720e4-6f49-83ed-8759-01cce6ab9819" dir="auto"/><h2 id="acd720e4-6f49-820c-b00a-019f83db7177" class="" dir="auto">16.3 실행 전 주의</h2><p id="927720e4-6f49-8235-aa91-01d6a5cea44d" class="" dir="auto">이 실습은 실제로 <code>Name=shared-vpc</code> 태그를 가진 VPC가 있어야 한다.</p><p id="1d6720e4-6f49-825f-a632-816a1f7a0934" class="" dir="auto">없다면 조회 실패가 발생할 수 있다.</p><p id="606720e4-6f49-82ac-ad90-01643039932c" class="" dir="auto">그래서 교육 환경에서는 다음 둘 중 하나로 진행하면 된다.</p><ul id="040720e4-6f49-82d3-9104-81d2ad7ed62c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">미리 생성된 VPC 이름을 알려주고 조회하게 하기</li></ul><ul id="000720e4-6f49-8217-a887-01bca8a5cc2e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC ID를 직접 입력하는 형태로 바꾸기</li></ul><p id="410720e4-6f49-820e-83ce-818fb0d9017f" class="" dir="auto">예를 들어 ID 직접 지정 방식은 다음과 같다.</p><pre id="c81720e4-6f49-83b8-a0ed-01bd2fc37b9c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_vpc&quot; &quot;selected&quot; {
+  id = &quot;vpc-1234567890abcdef0&quot;
+}</code></pre><hr id="a4f720e4-6f49-830e-801c-81ea003693e8" dir="auto"/><h1 id="ee9720e4-6f49-8326-ad19-81279bc5e101" class="" dir="auto">18. Resource와 Data Source를 보는 관점 정리</h1><p id="368720e4-6f49-8254-bea7-019e0bacb983" class="" dir="auto">Terraform 코드를 볼 때 다음 질문을 던지면 구조가 빠르게 읽힌다.</p><h2 id="25d720e4-6f49-8213-bbbb-8196467cf283" class="" dir="auto">18.1 이 블록은 새로 만드는가, 기존 것을 찾는가</h2><ul id="ef6720e4-6f49-8258-9165-017158dcf2df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새로 만든다 → <code>resource</code></li></ul><ul id="6bc720e4-6f49-836f-828d-81d8c0bcb52b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 것을 찾는다 → <code>data</code></li></ul><hr id="f0b720e4-6f49-83b7-b4d8-81c06b740beb" dir="auto"/><h2 id="741720e4-6f49-833b-a0f2-81f6b41ce866" class="" dir="auto">18.2 이 대상은 Terraform이 수명주기를 관리하는가</h2><ul id="6b1720e4-6f49-83eb-a1f5-81ae733e5c2a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리한다 → <code>resource</code></li></ul><ul id="e33720e4-6f49-820d-a6e0-0173f9f78ce2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리하지 않고 읽기만 한다 → <code>data</code></li></ul><hr id="e8f720e4-6f49-82a1-8db5-81a7012e6827" dir="auto"/><h2 id="949720e4-6f49-8294-9e1d-8186110fdfce" class="" dir="auto">18.3 다른 블록의 입력값 역할을 하는가</h2><ul id="48c720e4-6f49-833b-8b0b-81f4f2ea0b5b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Source는 자주 입력값 공급 역할을 함</li></ul><ul id="8f4720e4-6f49-83c8-83a2-014f438df095" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Resource도 다른 Resource의 입력값이 될 수 있음</li></ul><p id="2a6720e4-6f49-83ca-bca7-818af40709db" class="" dir="auto">즉, Terraform 코드는 하나의 블록만 보는 것이 아니라</p><p id="ff8720e4-6f49-823d-9dd2-8116b4f98c77" class="" dir="auto"><strong>생성 흐름과 참조 흐름</strong>을 같이 읽어야 한다.</p><hr id="c4f720e4-6f49-8373-a91c-814087d8f1df" dir="auto"/><h1 id="e6a720e4-6f49-829d-9d1c-01bb6391e82e" class="" dir="auto">19. 장 마무리</h1><p id="697720e4-6f49-8206-ab77-81dadcc44829" class="" dir="auto">이 장에서는 Terraform의 핵심 개념인 Resource와 Data Source를 구분했다.</p><p id="40c720e4-6f49-8208-944c-8113eb64e1af" class="" dir="auto">핵심은 다음이다.</p><ul id="fdf720e4-6f49-83b3-8a9a-01914b3d96dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>resource</code>는 Terraform이 생성/변경/삭제를 관리하는 대상이다</li></ul><ul id="65a720e4-6f49-83e1-ae0f-81dff30591aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data</code>는 이미 존재하는 값을 조회해서 가져오는 대상이다</li></ul><ul id="fa1720e4-6f49-8241-9549-015902061615" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Resource는 관리 대상이므로 state와 강하게 연결된다</li></ul><ul id="493720e4-6f49-8330-bf57-0184c812e0f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Source는 조회 결과를 참조용으로 사용한다</li></ul><ul id="88d720e4-6f49-83b9-b40d-0195e9b9bccc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무에서는 둘 중 하나만 쓰는 경우보다 둘을 함께 쓰는 경우가 훨씬 많다</li></ul><p id="3a7720e4-6f49-821c-b823-01550b47c9fa" class="" dir="auto">특히 다음 예시는 반드시 익숙해져야 한다.</p><ul id="920720e4-6f49-83e7-b5d9-0132c7000dde" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data &quot;aws_ami&quot;</code>로 최신 이미지 조회</li></ul><ul id="7ca720e4-6f49-8258-9878-811f10573f4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data &quot;aws_vpc&quot;</code>로 기존 네트워크 조회</li></ul><ul id="da7720e4-6f49-82c7-92dc-817047d6cc06" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data &quot;aws_subnets&quot;</code>로 Subnet 목록 조회</li></ul><ul id="594720e4-6f49-83c3-a852-010f3a856ddb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 결과를 <code>resource</code>의 인자로 참조</li></ul><p id="1ec720e4-6f49-83d9-b1c5-817687136e2c" class="" dir="auto">즉, Terraform 실전 코드는 보통 이렇게 읽으면 된다.</p><blockquote id="396720e4-6f49-8323-8d80-81668b800ef3" class="" dir="auto">필요한 기존 정보를 먼저 조회하고,<p id="63e720e4-6f49-8367-92cd-01ea560356ff" class="" dir="auto">그 값을 이용해서 새 리소스를 생성한다.</p></blockquote></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

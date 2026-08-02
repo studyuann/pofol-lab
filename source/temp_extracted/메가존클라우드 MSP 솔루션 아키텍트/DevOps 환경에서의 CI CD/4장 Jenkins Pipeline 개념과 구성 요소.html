@@ -1,0 +1,846 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>4장. Jenkins Pipeline 개념과 구성 요소</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="bb0720e4-6f49-824b-a0a0-01a54987af19" class="page sans"><header><h1 class="page-title" dir="auto">4장. Jenkins Pipeline 개념과 구성 요소</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="de4720e4-6f49-83fa-8a4b-019a87ad2879" class="" dir="auto">1. Jenkins Pipeline이란 무엇인가</h2><h3 id="4d4720e4-6f49-8393-8e37-018dd380333c" class="" dir="auto">1.1 Pipeline의 정의</h3><p id="087720e4-6f49-8263-90a8-01aa60b20c26" class="" dir="auto">Jenkins Pipeline은 빌드, 테스트, 패키징, 배포 같은 여러 작업을 <strong>단계별 흐름으로 정의하고 실행하는 방식</strong>이다.</p><p id="180720e4-6f49-8264-87b8-012c9091f64d" class="" dir="auto">즉, 단순히 &quot;명령어 몇 개 실행&quot;이 아니라, <strong>작업 순서, 실행 조건, 실패 처리, 후속 동작</strong>까지 포함해 전체 자동화 흐름을 코드 형태로 표현하는 구조다.</p><p id="ab3720e4-6f49-82b4-8ade-81b50cd59506" class="" dir="auto">예를 들어 다음과 같은 흐름을 하나의 Pipeline으로 정의할 수 있음.</p><ul id="64b720e4-6f49-82a3-bfe6-81ae6f6b6270" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git에서 소스코드 가져오기</li></ul><ul id="415720e4-6f49-83b1-add5-811e6a624e83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 빌드</li></ul><ul id="e3c720e4-6f49-82fd-abfe-01c58257fe0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단위 테스트 수행</li></ul><ul id="c6d720e4-6f49-83f1-8714-01c2ecd5d7c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 이미지 생성</li></ul><ul id="ee7720e4-6f49-8324-89ca-81d41ee81809" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 레지스트리 업로드</li></ul><ul id="b50720e4-6f49-8272-9b32-8179cdfbb09f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 환경에 배포</li></ul><ul id="52d720e4-6f49-8348-996a-01a84116960b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과 알림 전송</li></ul><p id="64d720e4-6f49-8290-85b9-81ce85a6ea4f" class="" dir="auto">이처럼 Pipeline은 CI/CD 절차 전체를 <strong>하나의 실행 가능한 프로세스</strong>로 묶어준다.</p><hr id="486720e4-6f49-822a-a666-81c32951034b" dir="auto"/><h3 id="68a720e4-6f49-82b7-b339-81e0692fb2d0" class="" dir="auto">1.2 왜 Pipeline이 중요한가</h3><p id="73e720e4-6f49-8307-b54e-812a6919e678" class="" dir="auto">Jenkins 초창기에는 Freestyle Job 방식이 많이 사용됐음.</p><p id="3b7720e4-6f49-82ad-8d0a-017d7b77fd05" class="" dir="auto">하지만 Job이 많아지고 절차가 복잡해질수록 UI 기반 설정만으로는 한계가 뚜렷해졌음.</p><p id="963720e4-6f49-826c-b7a6-0123a488a385" class="" dir="auto">대표적인 한계는 다음과 같음.</p><ul id="3a0720e4-6f49-833d-874d-01c431be3ea8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누가 어떤 설정을 바꿨는지 추적하기 어려움</li></ul><ul id="546720e4-6f49-8244-8d91-01d0c99eb513" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Job 설정을 다른 환경으로 복제하기 어려움</li></ul><ul id="5a1720e4-6f49-835a-84bd-8189ce3d4a3c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브랜치별로 다른 흐름을 반영하기 어려움</li></ul><ul id="a41720e4-6f49-82c3-b1eb-01d34032f842" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조건 분기, 병렬 실행, 승인 단계 같은 복잡한 흐름 표현이 불편함</li></ul><ul id="911720e4-6f49-838b-b006-81d73390e42c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 리뷰 없이 운영 파이프라인이 변경될 수 있음</li></ul><p id="600720e4-6f49-82f9-8650-81712e1965a4" class="" dir="auto">Pipeline은 이런 문제를 해결하기 위해 등장한 방식이며, 핵심은 <strong>파이프라인을 코드로 관리한다</strong>는 데 있음.</p><hr id="bf0720e4-6f49-839c-94d2-81af0d759b5f" dir="auto"/><h2 id="99f720e4-6f49-837b-ac7f-017ec62fd1c4" class="" dir="auto">2. Pipeline as Code 개념</h2><h3 id="23d720e4-6f49-8211-903a-015e16e82129" class="" dir="auto">2.1 Pipeline as Code란</h3><p id="5a7720e4-6f49-83c8-9566-812a7080d22c" class="" dir="auto">Pipeline as Code는 말 그대로 파이프라인 정의를 웹 UI에만 저장하지 않고,</p><p id="b85720e4-6f49-8271-ad7a-810027819fa7" class="" dir="auto"><strong>코드 파일 형태로 저장소에 함께 보관하는 방식</strong>이다.</p><p id="1ef720e4-6f49-82f0-8222-81cdd29e516b" class="" dir="auto">Jenkins에서는 이 파일이 보통 <code>Jenkinsfile</code>이다.</p><p id="263720e4-6f49-83b7-816d-81d6be31ff76" class="" dir="auto">즉, 애플리케이션 코드와 같은 저장소 안에 다음이 함께 존재할 수 있음.</p><ul id="4a2720e4-6f49-833b-b437-01eff338fe91" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 소스코드</li></ul><ul id="2bd720e4-6f49-82dc-8fbf-01e83852ce95" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dockerfile</li></ul><ul id="17c720e4-6f49-8324-9593-0134406af398" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes 배포 매니페스트</li></ul><ul id="c7c720e4-6f49-837a-a968-015642d8d9fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkinsfile</li></ul><p id="856720e4-6f49-82e2-bf5d-812e2e27c285" class="" dir="auto">이 구조가 되면 CI/CD 절차도 애플리케이션과 함께 버전 관리할 수 있음.</p><hr id="e1a720e4-6f49-8220-9e41-01a3a05647d5" dir="auto"/><h3 id="e81720e4-6f49-8235-9ef7-01b6327c229b" class="" dir="auto">2.2 Pipeline as Code의 장점</h3><h3 id="825720e4-6f49-8367-bcc1-8101780a56ce" class="" dir="auto">1) 변경 이력 추적 가능</h3><p id="b8e720e4-6f49-83d8-8b35-01939a38ffb6" class="" dir="auto">누가 언제 어떤 파이프라인 단계를 수정했는지 Git 기록으로 남음.</p><h3 id="892720e4-6f49-83e2-a617-01ccbad8b35a" class="" dir="auto">2) 코드 리뷰 가능</h3><p id="489720e4-6f49-8279-ab2e-01a9866320e2" class="" dir="auto">파이프라인 변경도 Pull Request 리뷰 대상으로 포함할 수 있음.</p><h3 id="95f720e4-6f49-8308-9669-81af94b546c1" class="" dir="auto">3) 재현성 향상</h3><p id="903720e4-6f49-830c-9ccb-01de815ea32f" class="" dir="auto">환경이 바뀌어도 같은 Jenkinsfile을 사용하면 같은 흐름을 다시 만들 수 있음.</p><h3 id="a50720e4-6f49-8241-82f1-81f2682221e8" class="" dir="auto">4) 프로젝트와 파이프라인의 일체화</h3><p id="db6720e4-6f49-8251-934d-8164b644db1c" class="" dir="auto">소스 변경과 파이프라인 변경이 함께 관리되므로 운영 흐름이 분리되지 않음.</p><h3 id="c56720e4-6f49-83b9-9528-01a6dc1e6fa3" class="" dir="auto">5) 브랜치별 독립성</h3><p id="d93720e4-6f49-8347-baca-01231fde97d2" class="" dir="auto">브랜치마다 Jenkinsfile이 다를 수 있으므로, 브랜치 목적에 맞는 파이프라인을 자연스럽게 적용할 수 있음.</p><p id="39b720e4-6f49-831b-8ed6-816bda84dd30" class="" dir="auto">즉, Pipeline as Code는 단순 편의 기능이 아니라,</p><p id="898720e4-6f49-8312-8ede-816c5eec0e92" class="" dir="auto"><strong>CI/CD 자체를 형상관리 대상에 포함시키는 DevOps 방식</strong>이라고 볼 수 있음.</p><hr id="eef720e4-6f49-8226-a08d-8199cb4f0d53" dir="auto"/><h2 id="09f720e4-6f49-828d-9a78-01153628bcd6" class="" dir="auto">3. Jenkinsfile의 역할</h2><h3 id="b74720e4-6f49-83e7-bd30-817e6ad019d5" class="" dir="auto">3.1 Jenkinsfile이란</h3><p id="bd8720e4-6f49-823c-b70d-018dd9365106" class="" dir="auto"><code>Jenkinsfile</code>은 Jenkins Pipeline을 정의하는 파일이다.</p><p id="aa3720e4-6f49-831a-b575-012aa82dc796" class="" dir="auto">이 파일 안에는 다음 내용이 들어갈 수 있음.</p><ul id="71c720e4-6f49-8307-8486-011197eb4620" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Agent에서 실행할지</li></ul><ul id="76d720e4-6f49-8290-aafa-81f42c73aec0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Stage를 거칠지</li></ul><ul id="286720e4-6f49-8342-8cc3-816565f01509" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 Stage에서 어떤 명령을 수행할지</li></ul><ul id="bb0720e4-6f49-821c-9b02-01dd1ab9ec81" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경 변수는 무엇인지</li></ul><ul id="6c5720e4-6f49-83a8-a61f-01537051db22" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실패했을 때 어떤 처리를 할지</li></ul><ul id="839720e4-6f49-826b-beb5-812b081ff4e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 브랜치에서만 어떤 단계를 실행할지</li></ul><ul id="674720e4-6f49-82aa-a211-81c9fc5d0d5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 승인을 어디서 받을지</li></ul><p id="8d9720e4-6f49-82fa-90c6-81a2033c698c" class="" dir="auto">즉, Jenkinsfile은 <strong>CI/CD 절차의 설계도</strong>라고 볼 수 있음.</p><hr id="1c5720e4-6f49-8263-89f0-817bf7318680" dir="auto"/><h3 id="70e720e4-6f49-831e-a218-813b2a5ab812" class="" dir="auto">3.2 Jenkinsfile의 위치</h3><p id="18a720e4-6f49-82bf-a195-01178cc35f76" class="" dir="auto">보통 Jenkinsfile은 저장소 루트에 두는 경우가 많음.</p><p id="698720e4-6f49-8361-b56a-812b532e727b" class="" dir="auto">예:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="408720e4-6f49-8272-89b7-01b02570fe83" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">my-app/
+ ├─ src/
+ ├─ tests/
+ ├─ Dockerfile
+ ├─ package.json
+ └─ Jenkinsfile</code></pre><p id="bfe720e4-6f49-8281-b810-01bffaf22f39" class="" dir="auto">이렇게 하면 저장소를 기준으로 Jenkins가 Jenkinsfile을 자동 인식해서 파이프라인을 실행할 수 있음.</p><hr id="359720e4-6f49-82cb-9013-010fb5a70028" dir="auto"/><h3 id="b85720e4-6f49-83dc-9e63-81ed4932e7d5" class="" dir="auto">3.3 Jenkinsfile이 중요한 이유</h3><p id="1d6720e4-6f49-83d5-850d-817aa2d2b2bd" class="" dir="auto">Jenkinsfile이 없으면 파이프라인 설정이 Jenkins 서버 안에만 머무르게 됨.</p><p id="921720e4-6f49-83ef-829b-01f853faf88e" class="" dir="auto">이 경우 다음 문제가 생기기 쉬움.</p><ul id="bb8720e4-6f49-83cf-8b61-0113e701a411" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버를 옮기면 설정 복원이 번거로움</li></ul><ul id="bb2720e4-6f49-839d-8e4f-811c41224c84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Job이 많아질수록 관리가 어려움</li></ul><ul id="aef720e4-6f49-8275-be46-011fcae8aaf2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로젝트 코드와 자동화 흐름이 분리됨</li></ul><ul id="28f720e4-6f49-8296-96f5-81cdf8b99845" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브랜치 전략과 연결이 약해짐</li></ul><p id="6c5720e4-6f49-83ce-ba7c-8124c142ed2b" class="" dir="auto">반면 Jenkinsfile을 사용하면 파이프라인이 프로젝트의 일부가 됨.</p><hr id="7ed720e4-6f49-82e3-85e1-017dac79752d" dir="auto"/><h2 id="453720e4-6f49-82cb-8176-81f4b6b9e3f4" class="" dir="auto">4. Declarative Pipeline과 Scripted Pipeline</h2><p id="742720e4-6f49-8231-911e-81463e9cc6d9" class="" dir="auto">Jenkins Pipeline은 크게 두 가지 스타일로 작성할 수 있음.</p><ul id="d9c720e4-6f49-8379-b51c-817ed6d53ae0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Declarative Pipeline</li></ul><ul id="b96720e4-6f49-8288-9be0-018fff64b521" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Scripted Pipeline</li></ul><p id="861720e4-6f49-8365-8dcd-01bb852bdcce" class="" dir="auto">둘 다 Pipeline이지만, 표현 방식과 관리 난이도가 다름.</p><hr id="442720e4-6f49-8371-9c8d-81dbf6f1f7a1" dir="auto"/><h3 id="f5e720e4-6f49-83d4-a0db-018dc6c20380" class="" dir="auto">4.1 Declarative Pipeline</h3><p id="7a1720e4-6f49-8317-8a36-01813bbdde8a" class="" dir="auto">Declarative Pipeline은 구조가 비교적 명확하고, 미리 정해진 문법 틀 안에서 파이프라인을 작성하는 방식이다.</p><p id="6c1720e4-6f49-822d-a712-018f37f4ed15" class="" dir="auto">대표 형태는 다음과 같음.</p><pre id="725720e4-6f49-834b-b27f-81aea7f2c212" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pipeline {
+    agent any
+
+    stages {
+        stage(&#x27;Build&#x27;) {
+            steps {
+                echo &#x27;build&#x27;
+            }
+        }
+    }
+}</code></pre><h3 id="39d720e4-6f49-82ff-afa6-81f0cf6a4cdd" class="" dir="auto">특징</h3><ul id="cc6720e4-6f49-8216-b064-011ca2e53c81" class="bulleted-list" dir="auto"><li style="list-style-type:disc">구조가 명확함</li></ul><ul id="2eb720e4-6f49-83d1-a23f-81996125b98a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">읽기 쉬움</li></ul><ul id="777720e4-6f49-828b-8fe0-0135630d2b94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">표준화된 작성이 쉬움</li></ul><ul id="0cb720e4-6f49-835e-9232-81737403ff90" class="bulleted-list" dir="auto"><li style="list-style-type:disc">입문자가 이해하기 좋음</li></ul><ul id="d0d720e4-6f49-83dd-9cb7-81c7bdee1d8a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무에서 공통 규칙을 적용하기 좋음</li></ul><hr id="d71720e4-6f49-83d3-ab08-812e8b9360fe" dir="auto"/><h3 id="646720e4-6f49-8258-945f-814c8d2d1773" class="" dir="auto">4.2 Scripted Pipeline</h3><p id="b42720e4-6f49-821e-86f6-01c005ac9ab9" class="" dir="auto">Scripted Pipeline은 Groovy 스크립트 방식으로 보다 자유롭게 작성하는 형태다.</p><p id="f63720e4-6f49-838e-bd7d-819e044bf5eb" class="" dir="auto">예를 들면 다음과 비슷한 스타일이다.</p><pre id="6e9720e4-6f49-835f-b51d-81d506c3c0ec" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">node {
+    stage(&#x27;Build&#x27;) {
+        echo &#x27;build&#x27;
+    }
+}</code></pre><h3 id="e95720e4-6f49-8365-9256-01f15fd3bbbb" class="" dir="auto">특징</h3><ul id="f00720e4-6f49-8251-b14f-81e6d4d118bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자유도가 높음</li></ul><ul id="39b720e4-6f49-8318-b93e-0136856177d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복잡한 로직 구현 가능</li></ul><ul id="7b4720e4-6f49-82a7-87fe-81de69848681" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세밀한 제어가 가능함</li></ul><h3 id="068720e4-6f49-83c8-b2e5-014495138888" class="" dir="auto">한계</h3><ul id="4c0720e4-6f49-836f-af09-015a3aa4b381" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가독성이 떨어질 수 있음</li></ul><ul id="862720e4-6f49-8357-a644-0127ca5d9f32" class="bulleted-list" dir="auto"><li style="list-style-type:disc">팀 공통 규칙 유지가 어려울 수 있음</li></ul><ul id="a2f720e4-6f49-8228-a0e7-81ad4d104a0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">초보자가 이해하기 어려움</li></ul><p id="ebf720e4-6f49-82a7-9da5-81f6fa9b5b29" class="" dir="auto">즉, Scripted는 강력하지만 관리 난이도가 올라감.</p><hr id="65f720e4-6f49-8257-b3e7-81f8df7e805d" dir="auto"/><h3 id="a3b720e4-6f49-82e7-8a8e-8197100796a8" class="" dir="auto">4.3 어떤 방식을 우선 이해해야 하는가</h3><p id="29c720e4-6f49-832c-8f0d-01f74b3d1382" class="" dir="auto">대부분의 강의나 실무 입문에서는 <strong>Declarative Pipeline</strong>을 먼저 이해하는 것이 좋음.</p><p id="b50720e4-6f49-821e-9efb-81af1bdc0761" class="" dir="auto">그 이유는 다음과 같음.</p><ul id="1c3720e4-6f49-83fa-a21c-819a9f6f55d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">구조가 안정적임</li></ul><ul id="b97720e4-6f49-8359-836d-0152aba6bef9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 공식 권장 방향과 잘 맞음</li></ul><ul id="04a720e4-6f49-82e3-94a1-01c2ab617b0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 템플릿화가 쉬움</li></ul><ul id="ac0720e4-6f49-832f-901b-8116d15d830f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 리뷰가 쉬움</li></ul><p id="0b0720e4-6f49-82bf-91f7-01f592af19c4" class="" dir="auto">실무에서도 Scripted가 완전히 사라진 것은 아니지만, 기본 설명과 표준 파이프라인 작성은 Declarative 중심으로 가져가는 경우가 많음.</p><hr id="bd3720e4-6f49-82bf-a656-81d8c1f18453" dir="auto"/><h2 id="03c720e4-6f49-826b-b07f-81f46764b07e" class="" dir="auto">5. Declarative Pipeline의 기본 구조</h2><p id="ef1720e4-6f49-8269-821e-8139b5814aff" class="" dir="auto">Declarative Pipeline은 보통 다음 구조를 가짐.</p><pre id="e89720e4-6f49-8201-b81d-81aa9e9d38c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pipeline {
+    agent any
+
+    stages {
+        stage(&#x27;Checkout&#x27;) {
+            steps {
+                echo &#x27;checkout&#x27;
+            }
+        }
+
+        stage(&#x27;Build&#x27;) {
+            steps {
+                echo &#x27;build&#x27;
+            }
+        }
+
+        stage(&#x27;Test&#x27;) {
+            steps {
+                echo &#x27;test&#x27;
+            }
+        }
+    }
+
+    post {
+        success {
+            echo &#x27;success&#x27;
+        }
+        failure {
+            echo &#x27;failure&#x27;
+        }
+    }
+}</code></pre><p id="219720e4-6f49-8395-ab19-01299dd892c6" class="" dir="auto">이 구조를 정확히 이해하는 것이 Jenkins Pipeline 학습의 핵심이다.</p><hr id="bad720e4-6f49-83c0-a74a-0138f209b62d" dir="auto"/><h2 id="dfc720e4-6f49-833a-80c1-01f8e492958e" class="" dir="auto">6. 주요 구성 요소 상세 설명</h2><h2 id="ef1720e4-6f49-82ef-80bb-01c8ba68ac40" class="" dir="auto">6.1 <code>pipeline</code></h2><p id="4af720e4-6f49-827d-89e0-01814f43d557" class="" dir="auto"><code>pipeline</code> 블록은 Declarative Pipeline 전체를 감싸는 최상위 영역이다.</p><p id="cec720e4-6f49-82b3-af0c-010281ae5189" class="" dir="auto">이 안에서 Agent, Stage, 환경 변수, 후처리 등을 정의함.</p><p id="4fa720e4-6f49-8350-94e8-01050ac1da13" class="" dir="auto">즉, Jenkins는 <code>pipeline { ... }</code> 구조를 기준으로 하나의 파이프라인 실행 단위를 이해함.</p><hr id="3be720e4-6f49-832a-805a-81c709ae3955" dir="auto"/><h2 id="468720e4-6f49-83fd-8c42-017339bc870f" class="" dir="auto">6.2 <code>agent</code></h2><h3 id="f5e720e4-6f49-838e-9be5-811b7d8cf775" class="" dir="auto">의미</h3><p id="819720e4-6f49-834a-8bb8-817c2e14bf50" class="" dir="auto"><code>agent</code>는 이 파이프라인 또는 특정 Stage가 <strong>어느 실행 환경에서 동작할지</strong>를 지정하는 요소다.</p><p id="f58720e4-6f49-82c2-8000-8196b1c96a0f" class="" dir="auto">예:</p><pre id="a49720e4-6f49-83e3-a7b0-0158d25bb585" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">agent any</code></pre><p id="205720e4-6f49-8317-a87a-010234f994dd" class="" dir="auto">이 의미는 Jenkins가 사용할 수 있는 어떤 Agent든 선택해서 실행하라는 뜻이다.</p><hr id="a32720e4-6f49-8364-a675-81b63fe0e1e7" dir="auto"/><h3 id="bac720e4-6f49-83fd-9efd-812f730bca87" class="" dir="auto">왜 필요한가</h3><p id="edf720e4-6f49-839c-a5b5-01257f0687f1" class="" dir="auto">Jenkins는 Controller / Agent 구조를 가질 수 있기 때문에,</p><p id="366720e4-6f49-824e-91ff-81a24dc15761" class="" dir="auto">실제 작업이 어디서 실행될지 지정할 수 있어야 함.</p><p id="9c8720e4-6f49-824c-adaf-01da17855a91" class="" dir="auto">예를 들어:</p><ul id="2a8720e4-6f49-839f-abca-81bb59fafb76" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Linux 환경에서만 빌드 가능</li></ul><ul id="047720e4-6f49-82a4-acf0-01a5ca858870" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 명령이 설치된 노드에서만 실행 가능</li></ul><ul id="818720e4-6f49-8200-a224-81571ceb1d6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 Label이 붙은 Agent에서만 실행 가능</li></ul><p id="b01720e4-6f49-8320-86aa-01d56f514b62" class="" dir="auto">이런 경우 <code>agent</code> 설정이 중요해짐.</p><hr id="cf8720e4-6f49-82f7-99a4-01002e77d793" dir="auto"/><h3 id="e99720e4-6f49-83e6-9062-01b1f52bf81e" class="" dir="auto">대표 방식</h3><h3 id="232720e4-6f49-82fd-a106-813e60531b82" class="" dir="auto">1) <code>any</code></h3><p id="70d720e4-6f49-8328-bb82-812cc4209849" class="" dir="auto">사용 가능한 아무 Agent에서나 실행함.</p><h3 id="c49720e4-6f49-825a-8fbf-815fcd48fd0f" class="" dir="auto">2) <code>label</code></h3><p id="ae3720e4-6f49-838e-b191-01cf26ef519c" class="" dir="auto">특정 Label이 있는 Agent에서 실행함.</p><p id="406720e4-6f49-8293-862a-81df684869fd" class="" dir="auto">예:</p><pre id="8c1720e4-6f49-82d2-8736-018b1daa6f3e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">agent {
+    label &#x27;docker&#x27;
+}</code></pre><p id="23a720e4-6f49-831a-8f74-011453383d26" class="" dir="auto">이 경우 <code>docker</code>라는 Label을 가진 Agent에서 실행됨.</p><h3 id="0d1720e4-6f49-83c9-a5ae-0167c08b6603" class="" dir="auto">3) <code>none</code></h3><p id="15e720e4-6f49-8389-b3e8-0114a938fd3f" class="" dir="auto">파이프라인 전체에는 Agent를 지정하지 않고, 각 Stage별로 따로 지정할 때 사용함.</p><hr id="102720e4-6f49-820a-b8c2-015c558ebf20" dir="auto"/><h2 id="9a4720e4-6f49-83a9-b9bf-81392e7cec27" class="" dir="auto">6.3 <code>stages</code></h2><p id="b37720e4-6f49-8355-b6e0-019c68b03f55" class="" dir="auto"><code>stages</code> 블록은 파이프라인의 주요 절차들을 담는 영역이다.</p><p id="5a7720e4-6f49-83ac-ac78-81a7b2c87bbc" class="" dir="auto">즉, 실제 CI/CD 흐름의 큰 단계들을 여기에 정의함.</p><p id="a22720e4-6f49-825e-95b5-81d70ef71638" class="" dir="auto">예:</p><ul id="0e3720e4-6f49-820a-887a-010dd591c2a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Checkout</li></ul><ul id="2a4720e4-6f49-82e1-a825-01ff05b20552" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build</li></ul><ul id="bfd720e4-6f49-8331-9a8a-014fdc6c3bd5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Test</li></ul><ul id="15e720e4-6f49-825c-ada3-81f6162be4e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Package</li></ul><ul id="491720e4-6f49-821d-93be-0171c093a004" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deploy</li></ul><p id="a60720e4-6f49-8307-8096-0137a603518b" class="" dir="auto">파이프라인이 하나의 &quot;프로세스&quot;라면, Stage는 그 안의 <strong>구간</strong>이라고 보면 됨.</p><hr id="ed7720e4-6f49-839d-a722-81ecf62946f2" dir="auto"/><h2 id="78d720e4-6f49-8292-a6ef-8101dea1d995" class="" dir="auto">6.4 <code>stage</code></h2><p id="ee7720e4-6f49-8383-91ca-813e58b14827" class="" dir="auto"><code>stage</code>는 개별 단계 하나를 의미한다.</p><p id="750720e4-6f49-8310-9baf-01e71997ec8b" class="" dir="auto">예:</p><pre id="434720e4-6f49-82a4-9012-0126611ff782" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">stage(&#x27;Build&#x27;) {
+    steps {
+        echo &#x27;build&#x27;
+    }
+}</code></pre><p id="24a720e4-6f49-8253-a95d-0106abd954f2" class="" dir="auto">이 코드에서 <code>Build</code>는 Stage 이름이다.</p><p id="f23720e4-6f49-8319-b372-01b272d513cf" class="" dir="auto">Stage를 나누는 이유는 단순 보기 좋게 하기 위해서만이 아님.</p><p id="96b720e4-6f49-8246-9acb-81c8f401ae6f" class="" dir="auto">다음 목적이 있음.</p><ul id="f61720e4-6f49-83e2-ae48-81b1f00bee31" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파이프라인 진행 상황을 명확히 보여줌</li></ul><ul id="e5b720e4-6f49-8292-a37a-01090f4c50b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실패 지점을 빠르게 파악하게 해줌</li></ul><ul id="cdc720e4-6f49-8296-a435-01035e71f095" class="bulleted-list" dir="auto"><li style="list-style-type:disc">논리적 단위로 절차를 나눔</li></ul><ul id="217720e4-6f49-8379-b850-011301b6fcea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조건부 실행이나 병렬 실행을 구성하기 쉬워짐</li></ul><p id="f8d720e4-6f49-821f-9ff3-8143465e4154" class="" dir="auto">즉, Stage는 가독성과 운영성 दोनों에 모두 중요함.</p><hr id="815720e4-6f49-8350-9634-81badb28469e" dir="auto"/><h2 id="36f720e4-6f49-8221-a238-81a6f434c09f" class="" dir="auto">6.5 <code>steps</code></h2><p id="994720e4-6f49-8337-96fa-813d4867c3ba" class="" dir="auto"><code>steps</code>는 각 Stage 안에서 실제로 수행할 작업을 정의하는 영역이다.</p><p id="2c2720e4-6f49-8255-976d-819d09fc1e6f" class="" dir="auto">즉, Stage가 &quot;무슨 구간인가&quot;를 나타낸다면, Steps는 &quot;그 구간에서 실제로 무엇을 할 것인가&quot;를 적는 부분이다.</p><p id="83b720e4-6f49-82a5-999f-01a4ae28c09a" class="" dir="auto">예:</p><pre id="cf3720e4-6f49-8254-8272-014d2c3c780d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">steps {
+    sh &#x27;npm install&#x27;
+    sh &#x27;npm test&#x27;
+}</code></pre><p id="3a2720e4-6f49-82e3-a9b8-01d7a98ec6b0" class="" dir="auto">이 경우 쉘 명령 두 개가 순서대로 실행됨.</p><hr id="0f6720e4-6f49-82d8-be18-8154af659bd9" dir="auto"/><h3 id="ef6720e4-6f49-825f-b4b5-81ecbea217c0" class="" dir="auto">자주 사용하는 step 예시</h3><h3 id="81d720e4-6f49-82e0-a277-818c8c7dba46" class="" dir="auto"><code>echo</code></h3><p id="55f720e4-6f49-8231-931a-8158a0bf32a9" class="" dir="auto">간단한 메시지를 로그에 출력함.</p><pre id="720720e4-6f49-8210-9fe0-0146ba2a23c9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">echo &#x27;빌드 시작&#x27;</code></pre><h3 id="5b3720e4-6f49-821b-8f0a-0145c4df6e9d" class="" dir="auto"><code>sh</code></h3><p id="a7e720e4-6f49-8378-9059-015287e92f1f" class="" dir="auto">리눅스/유닉스 계열 쉘 명령을 실행함.</p><pre id="fc7720e4-6f49-8262-b744-81ca6886d180" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sh &#x27;mvn clean package&#x27;</code></pre><h3 id="af5720e4-6f49-82ff-a424-01fc2324f844" class="" dir="auto"><code>bat</code></h3><p id="d7f720e4-6f49-8241-9935-8143c7b2a088" class="" dir="auto">Windows 배치 명령을 실행함.</p><pre id="5ab720e4-6f49-8280-bedb-815f027d3d29" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">bat &#x27;dir&#x27;</code></pre><h3 id="bf9720e4-6f49-835f-9e23-81d5a384ec72" class="" dir="auto"><code>git</code></h3><p id="d0f720e4-6f49-8392-b2d5-81cd32d2f1de" class="" dir="auto">Git 저장소에서 코드를 가져옴.</p><h3 id="5fd720e4-6f49-827b-91f5-8186edabfa84" class="" dir="auto"><code>checkout</code></h3><p id="ccd720e4-6f49-824e-9312-0183b257485c" class="" dir="auto">소스코드 체크아웃을 보다 세밀하게 제어할 때 사용함.</p><p id="bce720e4-6f49-83ed-8755-01de075c07d6" class="" dir="auto">즉, Steps는 Jenkins 파이프라인에서 실제 명령 실행의 핵심이다.</p><hr id="957720e4-6f49-83e3-980a-81cd6d94dbb9" dir="auto"/><h2 id="992720e4-6f49-82bd-a0b8-81b6ef5d75d8" class="" dir="auto">6.6 <code>post</code></h2><p id="840720e4-6f49-8268-948e-01925425f4b2" class="" dir="auto"><code>post</code>는 파이프라인 또는 Stage가 끝난 뒤 수행할 후처리 작업을 정의하는 블록이다.</p><p id="070720e4-6f49-82e0-a30c-01750e28aaf9" class="" dir="auto">예:</p><pre id="083720e4-6f49-8371-a8c8-019d1dd6b51a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">post {
+    success {
+        echo &#x27;성공&#x27;
+    }
+    failure {
+        echo &#x27;실패&#x27;
+    }
+}</code></pre><hr id="229720e4-6f49-8233-a693-013b881701ed" dir="auto"/><h3 id="23f720e4-6f49-833d-9268-013184e12a0c" class="" dir="auto">왜 필요한가</h3><p id="df2720e4-6f49-837c-ad78-01cdb70ca6b0" class="" dir="auto">파이프라인은 성공했을 때와 실패했을 때 후속 처리가 다를 수 있음.</p><p id="2dc720e4-6f49-8307-bb7d-017a85237e49" class="" dir="auto">예:</p><ul id="74f720e4-6f49-827f-b4e1-81bcbde38b79" class="bulleted-list" dir="auto"><li style="list-style-type:disc">성공 시 배포 완료 알림 발송</li></ul><ul id="a67720e4-6f49-83b5-9f83-01a330170b27" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실패 시 담당자에게 에러 알림 발송</li></ul><ul id="ebe720e4-6f49-8375-8fee-0139fff54adf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">항상 로그 파일 정리</li></ul><ul id="5e3720e4-6f49-8205-ad0c-8186dc016b53" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 리포트 업로드</li></ul><p id="7f7720e4-6f49-82eb-ac53-01a70d614bf2" class="" dir="auto">이런 작업을 <code>post</code>에서 처리함.</p><hr id="bb1720e4-6f49-82e5-9bfd-8147a5bb7a6b" dir="auto"/><h3 id="7e4720e4-6f49-82c1-847b-810e25623842" class="" dir="auto">자주 사용하는 조건</h3><h3 id="f70720e4-6f49-82b5-9068-8166c695a6be" class="" dir="auto"><code>always</code></h3><p id="0b5720e4-6f49-8216-9e9d-01b104a221bc" class="" dir="auto">성공/실패와 관계없이 항상 실행됨.</p><h3 id="9ef720e4-6f49-83eb-a045-013bbc1fa6c6" class="" dir="auto"><code>success</code></h3><p id="b47720e4-6f49-820e-9261-010667b70106" class="" dir="auto">성공했을 때만 실행됨.</p><h3 id="bef720e4-6f49-830d-b8bf-81526302f07d" class="" dir="auto"><code>failure</code></h3><p id="a65720e4-6f49-82b6-9dc0-81c21b15b06c" class="" dir="auto">실패했을 때만 실행됨.</p><h3 id="569720e4-6f49-8265-9584-8156b6a7d273" class="" dir="auto"><code>unstable</code></h3><p id="e0f720e4-6f49-83e5-9094-01fb76fd3c28" class="" dir="auto">테스트 불안정 등으로 상태가 unstable일 때 실행됨.</p><h3 id="a53720e4-6f49-824a-890f-011a59510b6c" class="" dir="auto"><code>changed</code></h3><p id="e0d720e4-6f49-821b-9a96-819f5db2aa5a" class="" dir="auto">이전 실행과 결과가 달라졌을 때 실행됨.</p><p id="c41720e4-6f49-82cc-95f3-0140bd262581" class="" dir="auto">즉, <code>post</code>는 운영 관점에서 매우 중요함.</p><p id="7f3720e4-6f49-8338-8fff-013099d00c0f" class="" dir="auto">결과 정리, 알림, 리포트 수집이 여기서 많이 이루어짐.</p><hr id="e5d720e4-6f49-83c9-809e-01d7e2a0dfdb" dir="auto"/><h2 id="586720e4-6f49-8249-b0c2-01af9ef8ac14" class="" dir="auto">7. 자주 사용하는 보조 구성 요소</h2><p id="e29720e4-6f49-8355-a3bb-81ca21d16065" class="" dir="auto">Pipeline은 기본 구조만으로도 동작하지만, 실제로는 여러 보조 요소를 함께 사용하게 됨.</p><hr id="f03720e4-6f49-82e5-a016-010512f16e72" dir="auto"/><h2 id="950720e4-6f49-835a-bfb5-81d4792b9d3a" class="" dir="auto">7.1 <code>environment</code></h2><p id="a49720e4-6f49-82f2-b414-01e621040d3b" class="" dir="auto"><code>environment</code>는 환경 변수를 정의하는 블록이다.</p><p id="fd5720e4-6f49-837a-9856-8140d731d126" class="" dir="auto">예:</p><pre id="984720e4-6f49-8259-97ea-0129054dd3e4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">environment {
+    APP_NAME = &#x27;sample-app&#x27;
+    ENV = &#x27;dev&#x27;
+}</code></pre><p id="811720e4-6f49-8276-b1ea-81d428a5d5e0" class="" dir="auto">이렇게 정의하면 이후 Stage나 Step 안에서 공통으로 사용할 수 있음.</p><hr id="61b720e4-6f49-83f1-a832-81ae5399c24f" dir="auto"/><h3 id="6ae720e4-6f49-82b7-8db2-01b88579c4b5" class="" dir="auto">왜 필요한가</h3><p id="1e4720e4-6f49-8323-9889-01f1808e91f2" class="" dir="auto">파이프라인에는 반복해서 사용하는 값이 많음.</p><p id="0fe720e4-6f49-8278-bd3c-01093d37bdd1" class="" dir="auto">예:</p><ul id="e9f720e4-6f49-83a3-b017-018143915ba0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 이름</li></ul><ul id="f8a720e4-6f49-822c-8825-01aefe0f3889" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 태그</li></ul><ul id="23e720e4-6f49-838e-855b-81570be1aab1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 환경 이름</li></ul><ul id="c22720e4-6f49-8269-804b-81c368ed4c5c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레지스트리 주소</li></ul><ul id="c38720e4-6f49-824d-9d4a-014a80c73f5e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">경로 정보</li></ul><p id="ec4720e4-6f49-8256-80ce-014d2a1cffed" class="" dir="auto">이런 값을 하드코딩하지 않고 변수화하면 유지보수가 쉬워짐.</p><hr id="e63720e4-6f49-8247-a5c3-01661bd33188" dir="auto"/><h2 id="32a720e4-6f49-82a5-bea1-01640fc928a6" class="" dir="auto">7.2 <code>parameters</code></h2><p id="8e6720e4-6f49-8343-80f8-0189dfd754c9" class="" dir="auto"><code>parameters</code>는 파이프라인 실행 시 사용자가 값을 입력하거나 선택하도록 만드는 기능이다.</p><p id="62b720e4-6f49-8365-8415-81c6b4599c95" class="" dir="auto">예:</p><ul id="851720e4-6f49-82bb-b6a0-015b580e1e9b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 대상 환경 선택</li></ul><ul id="cac720e4-6f49-82b5-824a-81cca2a9e298" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 브랜치 선택</li></ul><ul id="61f720e4-6f49-8288-9917-01a0cd66ef6c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 배포 여부 확인</li></ul><p id="10f720e4-6f49-837c-9862-01b6f37cd502" class="" dir="auto">즉, 완전 자동 실행만이 아니라, <strong>제어된 수동 실행</strong>도 구성할 수 있음.</p><hr id="294720e4-6f49-8384-ab62-01f2d6b5433c" dir="auto"/><h2 id="078720e4-6f49-8248-a1b8-01c6b2c299bd" class="" dir="auto">7.3 <code>tools</code></h2><p id="68b720e4-6f49-825e-80d4-81aea08d8ef7" class="" dir="auto"><code>tools</code>는 Jenkins에 사전 등록된 도구를 파이프라인에서 사용하도록 선언하는 기능이다.</p><p id="cdb720e4-6f49-82ca-bec8-818d4b924ead" class="" dir="auto">예:</p><ul id="afe720e4-6f49-832e-9f3a-81a2be07372a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JDK</li></ul><ul id="7de720e4-6f49-839f-8245-0122efe9e186" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maven</li></ul><ul id="1f7720e4-6f49-8221-b18c-01225eb7c869" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gradle</li></ul><ul id="191720e4-6f49-82b9-a61b-81a81c025b7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Node.js</li></ul><p id="f53720e4-6f49-829d-ba89-813fbc8d34eb" class="" dir="auto">이 블록을 사용하면 파이프라인 실행 시 필요한 툴체인을 통일성 있게 적용할 수 있음.</p><hr id="67e720e4-6f49-827d-b272-01ceec6e0875" dir="auto"/><h2 id="22c720e4-6f49-83f2-9ec2-01f14b959e1d" class="" dir="auto">7.4 <code>when</code></h2><p id="ab5720e4-6f49-8284-be85-81f16d9289aa" class="" dir="auto"><code>when</code>은 특정 조건에서만 Stage를 실행하도록 제어하는 기능이다.</p><p id="132720e4-6f49-8287-8b45-81d8c7de5fe3" class="" dir="auto">예를 들면 다음 조건이 가능함.</p><ul id="8ff720e4-6f49-8271-8e73-016f77ad2462" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 브랜치일 때만 실행</li></ul><ul id="f7c720e4-6f49-83a8-b351-815de520d7c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 빌드일 때만 실행</li></ul><ul id="a27720e4-6f49-8280-b7c1-01c2f1c6ead4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 환경 파라미터일 때만 실행</li></ul><p id="716720e4-6f49-82da-be6a-010e570838e3" class="" dir="auto">즉, 파이프라인을 모든 상황에 동일하게 실행하지 않고, 맥락에 맞게 분기할 수 있게 해줌.</p><p id="f2a720e4-6f49-8322-973d-81d970e66174" class="" dir="auto">이 기능은 실무에서 매우 자주 쓰임.</p><p id="452720e4-6f49-8258-a360-01fb86818d96" class="" dir="auto">예:</p><ul id="c26720e4-6f49-833c-8471-814c4771330c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>main</code> 브랜치에서만 Deploy Stage 실행</li></ul><ul id="67d720e4-6f49-831c-ab56-81ac6092a7eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">feature 브랜치에서는 Docker Push 생략</li></ul><ul id="791720e4-6f49-8368-9077-01e714bed16c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경 선택 시 승인 단계 추가</li></ul><hr id="898720e4-6f49-8240-b2f6-01e29d7b7523" dir="auto"/><h2 id="a05720e4-6f49-834b-a551-81a50bd30d4e" class="" dir="auto">7.5 <code>input</code></h2><p id="f3e720e4-6f49-83f7-8319-816f9367e97f" class="" dir="auto"><code>input</code>은 파이프라인 중간에 사람의 승인을 받기 위해 사용됨.</p><p id="134720e4-6f49-8361-8ced-8189471d3ad7" class="" dir="auto">예:</p><ul id="69c720e4-6f49-83c3-b40f-8133f66b5dff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 배포 전에 승인</li></ul><ul id="f63720e4-6f49-8342-b2ce-0123af08b153" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 단계 진입 전 확인</li></ul><ul id="2a0720e4-6f49-8365-85a5-811352fbb6b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">긴급 배포 여부 선택</li></ul><p id="aca720e4-6f49-821a-8550-818aafc41b6c" class="" dir="auto">즉, Jenkins Pipeline은 완전 자동만 지원하는 것이 아니라,</p><p id="ec9720e4-6f49-8316-8f86-01561ac592c7" class="" dir="auto"><strong>자동화와 통제를 섞은 구조</strong>도 지원함.</p><hr id="cbd720e4-6f49-83c5-ba5d-8130d0862797" dir="auto"/><h2 id="ec8720e4-6f49-8394-9609-81cda57ccdf7" class="" dir="auto">7.6 <code>options</code></h2><p id="016720e4-6f49-834f-8c15-81bda172c039" class="" dir="auto"><code>options</code>는 파이프라인 동작 전반의 실행 정책을 정하는 데 사용함.</p><p id="535720e4-6f49-82af-b89f-81636e32fa7e" class="" dir="auto">예:</p><ul id="91e720e4-6f49-831a-94bf-817d91628497" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중복 실행 방지</li></ul><ul id="a48720e4-6f49-8247-ab8b-81fef8f749b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">타임아웃 설정</li></ul><ul id="747720e4-6f49-82e1-bc84-0148ec8cf9cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 보존 정책</li></ul><ul id="242720e4-6f49-8233-bbf3-013c4218595d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">timestamps 출력</li></ul><p id="f99720e4-6f49-8285-86c1-816fa5ca8951" class="" dir="auto">이 요소는 실무 운영성에 직접 영향을 줌.</p><p id="f9b720e4-6f49-8226-bae9-81a13748c5b5" class="" dir="auto">예를 들어 타임아웃이 없으면 무한 대기 상태가 생길 수 있고,</p><p id="a6b720e4-6f49-82ff-9d7f-01343a841ece" class="" dir="auto">중복 실행 방지가 없으면 같은 파이프라인이 동시에 실행돼 충돌할 수 있음.</p><hr id="5e2720e4-6f49-82c7-880e-810a7270f512" dir="auto"/><h2 id="b2b720e4-6f49-82df-ac48-8136ee1088a8" class="" dir="auto">8. Stage 설계 관점</h2><p id="f29720e4-6f49-83f1-a156-81cb7e5307fa" class="" dir="auto">Pipeline을 구성할 때는 Stage를 어떻게 나눌지 고민해야 함.</p><p id="4c5720e4-6f49-82cd-9c4f-01e3c5cd9d11" class="" dir="auto">이건 단순 문법 문제가 아니라 설계 문제다.</p><hr id="119720e4-6f49-8257-8673-01b9ff14dbd3" dir="auto"/><h3 id="fdf720e4-6f49-826a-8e7c-015ca5a8cf6a" class="" dir="auto">8.1 좋은 Stage 분리의 기준</h3><h3 id="a6f720e4-6f49-83b7-97d8-817ed2d7ce45" class="" dir="auto">1) 논리적으로 구분될 것</h3><p id="1b3720e4-6f49-82e4-8ef6-81d05cbd2999" class="" dir="auto">예:</p><ul id="67d720e4-6f49-8269-8cda-81b181db41ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Checkout</li></ul><ul id="36d720e4-6f49-83c6-93ff-81feaf8d727b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build</li></ul><ul id="9f9720e4-6f49-82f2-8c46-81c9dd6f0c08" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Test</li></ul><ul id="0b5720e4-6f49-82b0-8d08-816f92064c64" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Package</li></ul><ul id="fbf720e4-6f49-8359-a0df-81f2648125ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deploy</li></ul><h3 id="cb6720e4-6f49-82e0-8a28-013b3ece3853" class="" dir="auto">2) 실패 원인을 빠르게 찾을 수 있을 것</h3><p id="a21720e4-6f49-82c2-83e8-016e0c2ede96" class="" dir="auto">Build 실패인지 Test 실패인지 Deploy 실패인지 즉시 보여야 함.</p><h3 id="1b2720e4-6f49-831f-a8fe-01aa3b790d8d" class="" dir="auto">3) 너무 잘게 쪼개지지 않을 것</h3><p id="ed9720e4-6f49-82ef-898a-81215f1a0df2" class="" dir="auto">Stage가 지나치게 많으면 오히려 흐름 파악이 어려워질 수 있음.</p><h3 id="2e9720e4-6f49-8242-b64a-8134dce03250" class="" dir="auto">4) 운영 관점에서 의미가 있을 것</h3><p id="9f5720e4-6f49-8338-9d12-81610dc647fc" class="" dir="auto">예를 들어 &quot;Install Dependencies&quot;를 Stage로 뺄지 Build 안에 넣을지는 프로젝트 규모에 따라 결정할 수 있음.</p><hr id="6e8720e4-6f49-83ac-a3a3-81a355a42fa9" dir="auto"/><h3 id="6d9720e4-6f49-82c4-8df0-017e3f424c03" class="" dir="auto">8.2 Stage 이름의 중요성</h3><p id="d4c720e4-6f49-8209-b95e-8136d204e4e9" class="" dir="auto">Stage 이름은 로그와 UI에서 그대로 보이기 때문에 명확해야 함.</p><p id="34d720e4-6f49-82e3-a3fa-81cbf27d9b52" class="" dir="auto">좋은 예:</p><ul id="5e7720e4-6f49-8356-96fb-01d7d2a94308" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Checkout</li></ul><ul id="e38720e4-6f49-822e-b750-81f1b1249b5f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build</li></ul><ul id="870720e4-6f49-83d1-8063-0177b3f64fe0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Unit Test</li></ul><ul id="b76720e4-6f49-8262-9342-011a176d55b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Build</li></ul><ul id="9da720e4-6f49-8316-98f6-019024df951e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Push Image</li></ul><ul id="bee720e4-6f49-8315-9494-0132d0d95423" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deploy to Dev</li></ul><p id="e41720e4-6f49-8284-b76a-0151f0fdcd30" class="" dir="auto">애매한 예:</p><ul id="bed720e4-6f49-83a4-92dc-01dace16b402" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Step1</li></ul><ul id="ee4720e4-6f49-83fe-b78d-01f167131ea6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Process</li></ul><ul id="73e720e4-6f49-82aa-966f-81a1a78c8501" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Run</li></ul><ul id="833720e4-6f49-83ed-bd44-01f3bd4b6ac2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Execute</li></ul><p id="d46720e4-6f49-8266-bfd2-0162235b8743" class="" dir="auto">즉, Stage 이름만 봐도 현재 파이프라인이 무엇을 하고 있는지 알 수 있어야 함.</p><hr id="6af720e4-6f49-832c-918e-01830d274364" dir="auto"/><h2 id="08c720e4-6f49-8355-a630-0166b3e63ab5" class="" dir="auto">9. 병렬 실행과 조건 분기 개요</h2><p id="402720e4-6f49-8250-90b1-0167d36ca6ce" class="" dir="auto">Jenkins Pipeline은 단순 순차 실행만 되는 것이 아님.</p><p id="dca720e4-6f49-83fd-8ccc-014ae8a1ed57" class="" dir="auto">필요하면 병렬 실행과 조건 분기를 구성할 수 있음.</p><hr id="91f720e4-6f49-83a6-8b22-8148a9ef56e4" dir="auto"/><h3 id="ef4720e4-6f49-830d-ada3-010e15f417ac" class="" dir="auto">9.1 병렬 실행</h3><p id="a37720e4-6f49-8396-b9a4-81aba4a3d6b4" class="" dir="auto">예:</p><ul id="165720e4-6f49-8244-9d76-8108a7a3c8e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 테스트 세트를 동시에 실행</li></ul><ul id="e1f720e4-6f49-8302-8985-018600ed58c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Linux와 Windows 빌드를 동시에 수행</li></ul><ul id="893720e4-6f49-835a-90fb-01021068f385" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스별 독립 빌드를 동시에 수행</li></ul><p id="1d3720e4-6f49-835a-b192-81440f2d160b" class="" dir="auto">이렇게 하면 전체 파이프라인 시간을 줄일 수 있음.</p><p id="24b720e4-6f49-83d3-8578-013a36467548" class="" dir="auto">다만 병렬 실행은 자원 사용량과 로그 해석 난이도를 높일 수 있으므로, 무조건 많이 쓰는 것이 좋은 것은 아님.</p><hr id="258720e4-6f49-8394-b103-81478b45b7ef" dir="auto"/><h3 id="bad720e4-6f49-82ff-8ecd-817c5f424c02" class="" dir="auto">9.2 조건 분기</h3><p id="0b0720e4-6f49-8255-a86e-0185d8be84cd" class="" dir="auto">예:</p><ul id="714720e4-6f49-828c-ad2d-018cda46717e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브랜치가 <code>main</code>일 때만 배포</li></ul><ul id="d54720e4-6f49-83b7-9e8a-811a938fec34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그가 있을 때만 릴리스 아티팩트 생성</li></ul><ul id="56f720e4-6f49-8319-8881-010689d301b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파라미터가 <code>prod</code>일 때만 승인 단계 실행</li></ul><p id="b17720e4-6f49-82e7-8fee-81c1ffbf7238" class="" dir="auto">이 구조는 실무 파이프라인의 핵심이다.</p><p id="a68720e4-6f49-82bb-b309-0104da13fd46" class="" dir="auto">모든 변경이 같은 수준의 절차를 거쳐야 하는 것은 아니기 때문임.</p><hr id="761720e4-6f49-82fd-a044-01958dedab06" dir="auto"/><h2 id="ee8720e4-6f49-83d1-812e-01271d8b2ed7" class="" dir="auto">10. Freestyle Job과 Pipeline 비교</h2><table id="872720e4-6f49-83b1-aab6-81dd54ae8de3" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="264720e4-6f49-82ae-b8de-818a78239654" dir="ltr"><th id="jzXo" class="simple-table-header-color simple-table-header">항목</th><th id="p_P`" class="simple-table-header-color simple-table-header">Freestyle Job</th><th id="&lt;RM]" class="simple-table-header-color simple-table-header">Pipeline</th></tr></thead><tbody><tr id="523720e4-6f49-822f-bd16-81cf88074083" dir="ltr"><td id="jzXo" class="">설정 방식</td><td id="p_P`" class="">UI 중심</td><td id="&lt;RM]" class="">코드 중심</td></tr><tr id="114720e4-6f49-8396-9959-81bff85a7fba" dir="ltr"><td id="jzXo" class="">버전 관리</td><td id="p_P`" class="">어려움</td><td id="&lt;RM]" class="">쉬움</td></tr><tr id="f0a720e4-6f49-823d-b684-01babd4588ee" dir="ltr"><td id="jzXo" class="">복잡한 흐름 표현</td><td id="p_P`" class="">제한적</td><td id="&lt;RM]" class="">강력함</td></tr><tr id="826720e4-6f49-83d1-99c2-81558b3f0126" dir="ltr"><td id="jzXo" class="">조건 분기/병렬 처리</td><td id="p_P`" class="">불편함</td><td id="&lt;RM]" class="">유연함</td></tr><tr id="eb2720e4-6f49-8292-a0a8-816b6e5eb4b5" dir="ltr"><td id="jzXo" class="">코드 리뷰</td><td id="p_P`" class="">어려움</td><td id="&lt;RM]" class="">가능</td></tr><tr id="010720e4-6f49-8234-9508-0185001723aa" dir="ltr"><td id="jzXo" class="">재현성</td><td id="p_P`" class="">낮음</td><td id="&lt;RM]" class="">높음</td></tr></tbody></table><p id="0ca720e4-6f49-8294-8dda-011214a55d3c" class="" dir="auto">Jenkins를 현대적으로 사용한다는 것은 대부분 <strong>Pipeline 중심 운영</strong>을 의미.</p><hr id="2a2720e4-6f49-8254-a15e-01ef569ef3a6" dir="auto"/><h2 id="7a7720e4-6f49-8205-bd5b-8186a3c344b1" class="" dir="auto">11. 아키텍처 관점 정리</h2><p id="783720e4-6f49-83a4-86f3-81be68eba69d" class="" dir="auto">Jenkins Pipeline을 아키텍처 관점에서 보면 다음처럼 정리할 수 있음.</p><pre id="a79720e4-6f49-822e-9906-01389209bbe3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Jenkinsfile
+   ↓
+Jenkins Controller가 파이프라인 해석
+   ↓
+지정된 Agent에서 Stage별 실행
+   ↓
+각 Stage에서 Steps 수행
+   ↓
+성공/실패 상태 기록
+   ↓
+post 처리 및 결과 알림</code></pre><p id="463720e4-6f49-821c-9e28-01f078027126" class="" dir="auto">즉, Jenkins Pipeline은 단순 스크립트 파일이 아니라</p><p id="41c720e4-6f49-8258-b492-01f11b8795f0" class="" dir="auto"><strong>Jenkins Controller가 해석하고 Agent에서 실행하는 절차 정의서</strong>다.</p><hr id="921720e4-6f49-83e6-8cbf-81a42ac3ed9a" dir="auto"/><h2 id="843720e4-6f49-83f4-a11f-0112bd47bbd7" class="" dir="auto">요약</h2><ul id="dbf720e4-6f49-8338-a2df-81d9b0edfcbe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins Pipeline은 CI/CD 절차를 단계별로 정의하고 실행하는 구조임</li></ul><ul id="165720e4-6f49-82d2-9903-015a86af025d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">핵심 철학은 Pipeline as Code이며, 이를 구현하는 파일이 Jenkinsfile임</li></ul><ul id="a6d720e4-6f49-825c-9131-01c3650965dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Declarative Pipeline은 구조가 명확해 입문과 표준화에 유리함</li></ul><ul id="216720e4-6f49-83d2-a3e8-81081f6774d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주요 구성 요소는 <code>pipeline</code>, <code>agent</code>, <code>stages</code>, <code>stage</code>, <code>steps</code>, <code>post</code>임</li></ul><ul id="f2a720e4-6f49-83fc-aec8-01ca8b5cb366" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>environment</code>, <code>parameters</code>, <code>when</code>, <code>input</code>, <code>options</code> 같은 요소를 통해 실무형 제어가 가능함</li></ul><ul id="5f4720e4-6f49-833c-b64f-01b693ecdfc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">좋은 Pipeline은 단순히 동작하는 것이 아니라, 읽기 쉽고 추적 가능하며 운영하기 쉬워야 함</li></ul><ul id="4bf720e4-6f49-825d-9159-817a42a1586f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins를 현대적으로 사용하려면 Freestyle보다 Pipeline 중심 관점이 중요함</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

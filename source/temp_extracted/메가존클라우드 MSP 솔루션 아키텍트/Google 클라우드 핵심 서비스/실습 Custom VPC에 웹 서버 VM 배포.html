@@ -1,0 +1,804 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. Custom VPC에 웹 서버 VM 배포</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="b3f720e4-6f49-8296-ab09-81db42b20aa6" class="page sans"><header><h1 class="page-title" dir="auto">실습. Custom VPC에 웹 서버 VM 배포</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="05e720e4-6f49-8397-ba28-816399f78a4d" dir="auto"/><h2 id="6ac720e4-6f49-8280-89fb-0128c1721026" class="" dir="auto">1. 실습 개요</h2><p id="17b720e4-6f49-8251-92ca-8149adb39d3a" class="" dir="auto">먼저 Custom VPC와 서브넷을 만들고, 외부에서 접속할 수 있도록 SSH와 HTTP 방화벽 규칙을 생성한다.</p><p id="7c3720e4-6f49-837b-a811-81203ab28db3" class="" dir="auto">그 다음 Compute Engine VM을 생성하고, Startup Script를 이용해 nginx를 자동 설치한 뒤, 브라우저를 통해 웹 서버 접속을 확인한다.</p><p id="7eb720e4-6f49-83ff-9db8-81e75a1fb31c" class="" dir="auto">이 실습은 AWS 경험자 기준으로 보면 다음 흐름과 거의 대응된다.</p><h3 id="be1720e4-6f49-8218-9858-811200e6b647" class="" dir="auto">AWS 기준 대응 흐름</h3><ul id="0d7720e4-6f49-8328-a4d1-816cfbc6c365" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 생성</li></ul><ul id="c8e720e4-6f49-8252-8851-8115f3d28f2a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet 생성</li></ul><ul id="94a720e4-6f49-83ef-a0f2-01c7608ef866" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group 생성</li></ul><ul id="f66720e4-6f49-8244-bf13-0104802b0d29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 생성</li></ul><ul id="b38720e4-6f49-826a-a239-0196e5f9d73a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">User Data로 nginx 설치</li></ul><ul id="2b3720e4-6f49-8215-86b0-01a1e4cf6c7b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public IP로 접속 확인</li></ul><h3 id="a9a720e4-6f49-8395-86de-01a321ecabec" class="" dir="auto">GCP 기준 실습 흐름</h3><ul id="3e2720e4-6f49-83cd-9a52-01442942eea2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 생성</li></ul><ul id="a52720e4-6f49-8319-8f10-019bc6fbae4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet 생성</li></ul><ul id="c77720e4-6f49-832d-9af8-0129ebb99885" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule 생성</li></ul><ul id="de9720e4-6f49-838f-ae8b-01971949f414" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Compute Engine 생성</li></ul><ul id="889720e4-6f49-82d9-b215-810b6a4d7606" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Startup Script로 nginx 설치</li></ul><ul id="822720e4-6f49-832d-ad64-81977208aa8c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External IP로 접속 확인</li></ul><hr id="307720e4-6f49-8374-b2e2-812cdd0e1048" dir="auto"/><h2 id="29f720e4-6f49-8251-aeab-018e531dd5df" class="" dir="auto">2. 실습 목표</h2><ul id="3b0720e4-6f49-8233-8bb2-014b04329783" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP 프로젝트를 기준으로 작업하는 흐름을 이해할 수 있음</li></ul><ul id="09c720e4-6f49-8226-9c4e-01d100e825c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Custom VPC와 Regional Subnet을 직접 생성할 수 있음</li></ul><ul id="54c720e4-6f49-8349-957a-81a602c9b19f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule을 이용해 SSH/HTTP 트래픽을 허용할 수 있음</li></ul><ul id="243720e4-6f49-82c6-a400-81481b732d34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Compute Engine VM을 생성할 수 있음</li></ul><ul id="28d720e4-6f49-835d-9a48-019e959f1167" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Startup Script를 이용해 초기 설정을 자동화할 수 있음</li></ul><ul id="90b720e4-6f49-83a5-990a-013bf0bc1668" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External IP를 통해 웹 서버 접속을 확인할 수 있음</li></ul><ul id="d65720e4-6f49-83e6-a332-81a1fe5981e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 태그와 방화벽 규칙의 관계를 설명할 수 있음</li></ul><hr id="c37720e4-6f49-82a0-bd7e-01118ad015a3" dir="auto"/><h2 id="713720e4-6f49-837e-8404-8159df4035c0" class="" dir="auto">3. 실습 시나리오</h2><blockquote id="0ee720e4-6f49-821f-b52a-81f7e1227ff8" class="" dir="auto">신규 웹 서버를 GCP에 배포하려고 한다.<p id="ccb720e4-6f49-834e-9e8f-811d8390edf4" class="" dir="auto">아직 네트워크가 준비되어 있지 않으므로 Custom VPC를 직접 만들고, 웹 서버가 들어갈 서브넷을 생성해야 한다.</p><p id="a9f720e4-6f49-83ac-99fc-0199cf49d747" class="" dir="auto">외부 관리자는 SSH로 접속해야 하고, 사용자는 HTTP로 웹 서버에 접근해야 한다.</p><p id="5b8720e4-6f49-835b-bf9a-010d1629af94" class="" dir="auto">VM 생성 후 수동 설정을 줄이기 위해 Startup Script를 사용해 nginx를 자동 설치한다.</p></blockquote><hr id="054720e4-6f49-8263-80bc-8131800d1596" dir="auto"/><h2 id="114720e4-6f49-8226-a833-01d6d6a6b321" class="" dir="auto">4. 전체 아키텍처</h2><h3 id="1f4720e4-6f49-82b8-a522-812c0b0be653" class="" dir="auto">아키텍처 구성 요소</h3><ul id="718720e4-6f49-8258-a305-017acc3d11b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Project: 현재 선택된 GCP 프로젝트</li></ul><ul id="bea720e4-6f49-8230-b803-81bffdb3e50d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC: <code>initial-vpc</code></li></ul><ul id="c4d720e4-6f49-83d4-8bf6-011db0d590d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet: <code>initial-subnet-web</code></li></ul><ul id="a2c720e4-6f49-8319-9534-01a8a2854e45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CIDR: <code>10.10.1.0/24</code></li></ul><ul id="1c4720e4-6f49-826e-ae73-81c0c013f7f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule<ul id="f78720e4-6f49-83db-b465-81a85e6cba1b" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>allow-ssh-web</code></li></ul><ul id="78c720e4-6f49-8233-b294-012fbb0aab34" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>allow-http-web</code></li></ul></li></ul><ul id="ff8720e4-6f49-8362-9abf-817501a75cfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM<ul id="9ee720e4-6f49-82e9-84a9-81bb59b85160" class="bulleted-list" dir="auto"><li style="list-style-type:circle">이름: <code>web-vm-01</code></li></ul><ul id="7f3720e4-6f49-8292-bffd-0105aa9d2d0e" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Zone: <code>asia-northeast3-a</code></li></ul><ul id="947720e4-6f49-8361-87f5-01830cd48f1a" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Machine Type: <code>e2-micro</code></li></ul><ul id="017720e4-6f49-8272-af66-01e1e50241b2" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Tag: <code>web</code></li></ul><ul id="dba720e4-6f49-8279-afe9-819f43111e68" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Startup Script: nginx 설치</li></ul></li></ul><ul id="8ca720e4-6f49-82d6-a76c-81ab168f0a33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">접속 경로<ul id="22c720e4-6f49-82b0-8a58-8189c62cb80d" class="bulleted-list" dir="auto"><li style="list-style-type:circle">관리자: SSH</li></ul><ul id="1b4720e4-6f49-8200-8bb4-8185d67cdc8a" class="bulleted-list" dir="auto"><li style="list-style-type:circle">사용자: HTTP</li></ul></li></ul><hr id="efe720e4-6f49-8344-8886-01206624364c" dir="auto"/><h2 id="965720e4-6f49-82c6-9ae3-81a534f8706f" class="" dir="auto">5. 사전 준비</h2><p id="d8f720e4-6f49-83f7-9222-01f866a31420" class="" dir="auto">실습 전에 아래 항목을 확인한다.</p><ul id="7ba720e4-6f49-839a-84ef-81abf4f6ca22" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP 로그인 완료</li></ul><ul id="757720e4-6f49-833c-824b-81a02782ce9f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습용 Project 선택 완료</li></ul><ul id="37e720e4-6f49-8295-bab2-01c95eb2c06f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Compute Engine API 사용 가능 상태</li></ul><ul id="24f720e4-6f49-83c5-8697-01a8e97bd917" class="bulleted-list" dir="auto"><li style="list-style-type:disc">권한: VPC, Firewall, VM 생성 가능 권한 보유</li></ul><ul id="7f2720e4-6f49-83a7-966c-01c9e0077b98" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Shell 사용 가능</li></ul><h3 id="199720e4-6f49-82ec-8700-01562fd1b8fb" class="" dir="auto">권장 리전/존</h3><ul id="7b6720e4-6f49-821f-ba07-01a320136a3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Region: <code>asia-northeast3</code></li></ul><ul id="4ec720e4-6f49-829a-b808-01e73b2208cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Zone: <code>asia-northeast3-a</code></li></ul><hr id="420720e4-6f49-8280-95bf-01657c319543" dir="auto"/><h2 id="f93720e4-6f49-83dc-9ec9-014b00871b30" class="" dir="auto">6. 실습 흐름</h2><p id="898720e4-6f49-824a-b37b-01dd8a50099a" class="" dir="auto">이번 실습은 아래 순서로 진행한다.</p><ol type="1" id="316720e4-6f49-830d-93ad-8119b20b9e47" class="numbered-list" start="1" dir="auto"><li>현재 프로젝트 확인</li></ol><ol type="1" id="51b720e4-6f49-826c-b7ed-0195a87cdce4" class="numbered-list" start="2" dir="auto"><li>VPC 생성</li></ol><ol type="1" id="508720e4-6f49-83b8-9893-013c1860b239" class="numbered-list" start="3" dir="auto"><li>서브넷 생성</li></ol><ol type="1" id="d08720e4-6f49-8236-8d5d-81def624dcff" class="numbered-list" start="4" dir="auto"><li>SSH 허용 방화벽 규칙 생성</li></ol><ol type="1" id="4c3720e4-6f49-83ec-8c88-81635be6f940" class="numbered-list" start="5" dir="auto"><li>HTTP 허용 방화벽 규칙 생성</li></ol><ol type="1" id="537720e4-6f49-82f0-b0f9-81d4d06b24cd" class="numbered-list" start="6" dir="auto"><li>Startup Script 작성</li></ol><ol type="1" id="d15720e4-6f49-8210-ac7e-01782f01c5e6" class="numbered-list" start="7" dir="auto"><li>Compute Engine VM 생성</li></ol><ol type="1" id="761720e4-6f49-83b0-9eef-81020e43955e" class="numbered-list" start="8" dir="auto"><li>VM 상태 확인</li></ol><ol type="1" id="a68720e4-6f49-8203-a2d6-01cdaf6a132b" class="numbered-list" start="9" dir="auto"><li>SSH 접속 확인</li></ol><ol type="1" id="f96720e4-6f49-828d-b55b-01e9da87b801" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>HTTP 웹 접속 확인</li></ol><ol type="1" id="856720e4-6f49-8314-9866-01e49c4c5633" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li>결과 점검 및 정리</li></ol><hr id="24c720e4-6f49-836e-b122-8188fd58c282" dir="auto"/><h1 id="c0e720e4-6f49-82c4-be3d-81bda2576ea1" class="" dir="auto">7. 단계별 실습</h1><hr id="1f7720e4-6f49-82a4-a30e-01cc1932facd" dir="auto"/><h2 id="8d9720e4-6f49-8209-9a96-811a0880bba6" class="" dir="auto">단계 1. 현재 프로젝트 확인</h2><p id="4c7720e4-6f49-821e-aad0-819b7af766ff" class="" dir="auto">GCP에서는 현재 어떤 Project를 기준으로 작업하는지가 매우 중요하다.</p><p id="c2c720e4-6f49-82fe-8ba1-81d1210c2f29" class="" dir="auto">같은 계정으로 여러 프로젝트를 운영할 수 있기 때문에, 지금 어떤 프로젝트에 리소스를 생성하는지 먼저 확인해야 한다.</p><h3 id="e4a720e4-6f49-839b-913b-011dd6943796" class="" dir="auto">명령어</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="1f6720e4-6f49-825a-a389-818bc85dfc08" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config get-value project</code></pre><h3 id="e3b720e4-6f49-8399-8b99-819f79e5343b" class="" dir="auto">설명</h3><ul id="be3720e4-6f49-838f-8e20-0166c5cbd561" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud config get-value project</code> 는 현재 gcloud CLI가 기본으로 참조하는 프로젝트를 출력한다.</li></ul><ul id="ecc720e4-6f49-836c-a7b3-81637cec232b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 값이 예상한 프로젝트가 아니라면 이후 생성되는 VPC, 서브넷, VM이 전부 다른 프로젝트에 만들어질 수 있다.</li></ul><ul id="f4c720e4-6f49-83dc-991b-0130edeaeb6c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습에서는 이 확인 과정을 습관처럼 반복하는 것이 좋다.</li></ul><h3 id="856720e4-6f49-83a4-ae0d-81fbe8932858" class="" dir="auto">프로젝트 변경이 필요한 경우</h3><pre id="a4a720e4-6f49-8290-aff7-014813468bda" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config set project [PROJECT_ID]</code></pre><h3 id="f44720e4-6f49-8217-af6a-019d26acf379" class="" dir="auto">설명</h3><ul id="dc8720e4-6f49-835e-b11f-815fc4ca0e12" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>[PROJECT_ID]</code> 부분에 실제 프로젝트 ID를 입력한다.</li></ul><ul id="f4f720e4-6f49-83b4-9fd3-0152c4117de8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로젝트 이름이 아니라 프로젝트 ID를 사용하는 것이 일반적이다.</li></ul><ul id="4b6720e4-6f49-82d1-87b4-013987f55fff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변경 후 다시 <code>gcloud config get-value project</code> 로 확인한다.</li></ul><hr id="1b4720e4-6f49-8244-8672-012e6ce5ee33" dir="auto"/><h2 id="a1d720e4-6f49-827c-8ba0-01ef43e10073" class="" dir="auto">단계 2. 기존 네트워크 확인</h2><p id="0aa720e4-6f49-83c6-b7a9-8162112f6778" class="" dir="auto">실습 전에 현재 프로젝트에 어떤 네트워크가 이미 있는지 확인한다.</p><h3 id="e06720e4-6f49-82a7-a790-81d69062085d" class="" dir="auto">명령어</h3><pre id="820720e4-6f49-83f6-8b3a-01fe3018fdd7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks list</code></pre><h3 id="f07720e4-6f49-82af-b640-8159e21e928e" class="" dir="auto">설명</h3><ul id="9bf720e4-6f49-83cf-9208-01740fe47298" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 프로젝트에 존재하는 VPC 네트워크 목록을 보여준다.</li></ul><ul id="2f6720e4-6f49-823a-89a1-01e168e8edf8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 네트워크(default)가 있을 수도 있고, 아무 것도 없을 수도 있다.</li></ul><ul id="104720e4-6f49-830b-b94f-018ee8476970" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이번 실습에서는 직접 설계한 Custom VPC를 새로 만드는 것이 목적이므로, 기존 네트워크와 별도로 새 VPC를 생성한다.</li></ul><hr id="11c720e4-6f49-8239-8886-017d03402892" dir="auto"/><h2 id="ec0720e4-6f49-82d5-b76d-815e1ade3c47" class="" dir="auto">단계 3. Custom VPC 생성</h2><p id="b03720e4-6f49-832b-a3fd-01f9661826bf" class="" dir="auto">이번 실습에서는 자동 생성 방식이 아닌 Custom VPC를 직접 만든다.</p><p id="8d7720e4-6f49-836d-85fa-01dd739dfe4e" class="" dir="auto">이 방식이 실무 구조와 더 가깝고, 서브넷을 명시적으로 설계할 수 있다.</p><h3 id="7cf720e4-6f49-8300-a707-01bc7e3e974b" class="" dir="auto">명령어</h3><pre id="4c8720e4-6f49-831d-86ef-8148d52676a8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks create initial-vpc \
+  --subnet-mode=custom</code></pre><h3 id="418720e4-6f49-83ae-9ac9-01b02ffe8d88" class="" dir="auto">설명</h3><ul id="bd0720e4-6f49-8312-bc6c-0176b214dd87" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud compute networks create</code> 는 새 VPC 네트워크를 생성하는 명령이다.</li></ul><ul id="63f720e4-6f49-83b1-8c4f-0165ab5b7469" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>initial-vpc</code> 는 생성할 VPC 이름이다.</li></ul><ul id="3cf720e4-6f49-8356-b0a6-0197949f8922" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-subnet-mode=custom</code> 은 자동 서브넷 생성이 아니라, 서브넷을 사용자가 직접 만들겠다는 의미다.</li></ul><h3 id="d92720e4-6f49-837a-b451-81a204378208" class="" dir="auto">생성 확인</h3><pre id="2b9720e4-6f49-8209-827b-813a96e7e884" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks list</code></pre><h3 id="f47720e4-6f49-82b8-be2c-016f5df9b955" class="" dir="auto">기대 결과</h3><ul id="33a720e4-6f49-8388-b662-81c2b630afe0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>initial-vpc</code> 가 목록에 보여야 한다.</li></ul><h3 id="fb9720e4-6f49-82b7-9fef-01be8b9510f5" class="" dir="auto">실습 포인트</h3><ul id="d41720e4-6f49-8382-9dc6-01857bc33940" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP의 VPC는 글로벌 리소스다.</li></ul><ul id="6bf720e4-6f49-832e-b1ab-814a1d181190" class="bulleted-list" dir="auto"><li style="list-style-type:disc">지금은 단일 리전만 사용할 것이지만, 같은 VPC 안에 이후 다른 리전 서브넷도 추가할 수 있다.</li></ul><hr id="825720e4-6f49-82f4-9f4f-81033988652b" dir="auto"/><h2 id="9ff720e4-6f49-82da-b495-01c71eaaae78" class="" dir="auto">단계 4. 웹 서버용 서브넷 생성</h2><p id="2c1720e4-6f49-82ea-8809-01abf0de641a" class="" dir="auto">이제 서울 리전에 웹 서버가 배치될 서브넷을 생성한다.</p><h3 id="8a7720e4-6f49-8381-b03b-81b5f412f7f4" class="" dir="auto">명령어</h3><pre id="01c720e4-6f49-826f-a7f9-015a97716c8c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks subnets create initial-subnet-web \
+  --network=initial-vpc \
+  --region=asia-northeast3 \
+  --range=10.10.1.0/24</code></pre><h3 id="387720e4-6f49-82db-98f8-81057197dabf" class="" dir="auto">설명</h3><ul id="1d5720e4-6f49-82ec-8f68-01264c28268f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud compute networks subnets create</code> 는 새 서브넷을 생성하는 명령이다.</li></ul><ul id="1dd720e4-6f49-8275-8eb5-81035dafcd50" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>initial-subnet-web</code> 은 서브넷 이름이다.</li></ul><ul id="8b3720e4-6f49-824a-a31a-0174e1878709" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-network=initial-vpc</code> 는 이 서브넷이 어느 VPC에 속하는지 지정한다.</li></ul><ul id="03b720e4-6f49-83ef-88e5-8128e8a1b888" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-region=asia-northeast3</code> 는 서브넷이 서울 리전에 속함을 의미한다.</li></ul><ul id="fd1720e4-6f49-8310-b1b8-013cd041488a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-range=10.10.1.0/24</code> 는 서브넷에서 사용할 사설 IP 대역이다.</li></ul><h3 id="ddc720e4-6f49-82e8-b05b-017cc770dd88" class="" dir="auto">확인 명령어</h3><pre id="8d7720e4-6f49-83b9-a6b7-814df75a6fc6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks subnets list</code></pre><h3 id="ecc720e4-6f49-8277-a32a-81b9489863fe" class="" dir="auto">기대 결과</h3><ul id="17b720e4-6f49-82e7-99b7-81d573d1ff5e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>initial-subnet-web</code></li></ul><ul id="9ea720e4-6f49-825f-ad09-01169279900d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Region: <code>asia-northeast3</code></li></ul><ul id="596720e4-6f49-8322-85c6-0178a681f717" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Range: <code>10.10.1.0/24</code></li></ul><h3 id="302720e4-6f49-8380-9b75-0148177d59da" class="" dir="auto">실습 포인트</h3><ul id="b1a720e4-6f49-83f7-b551-0127a3587fc7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC는 글로벌이지만 서브넷은 리전 단위라는 점을 다시 확인한다.</li></ul><ul id="f22720e4-6f49-83bf-b039-81bc7c1ff5d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM은 이후 존(Zone) 단위로 생성되지만, 네트워크는 리전 서브넷을 기준으로 연결된다.</li></ul><hr id="8be720e4-6f49-8217-8fc4-0134c4a1ba70" dir="auto"/><h2 id="b0f720e4-6f49-823c-90ae-812c4f306406" class="" dir="auto">단계 5. SSH 허용 방화벽 규칙 생성</h2><p id="aea720e4-6f49-83ee-9fc7-81a7bde2d568" class="" dir="auto">웹 서버를 관리하기 위해 관리자 SSH 접속을 허용한다.</p><p id="fe1720e4-6f49-8369-bf6a-81756e653e1a" class="" dir="auto">실습에서는 모든 IP에서 접근 가능하게 열지만, 운영에서는 반드시 관리망 대역으로 제한하는 것이 좋다.</p><h3 id="da2720e4-6f49-83d1-a8ad-011ee23a9bad" class="" dir="auto">명령어</h3><pre id="7c6720e4-6f49-824d-853e-81b424bd8f19" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules create allow-ssh-web \
+  --network=initial-vpc \
+  --direction=INGRESS \
+  --priority=1000 \
+  --action=ALLOW \
+  --rules=tcp:22 \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=web</code></pre><h3 id="c8b720e4-6f49-82df-aeaa-01e5278d2d0e" class="" dir="auto">설명</h3><ul id="d05720e4-6f49-82af-8280-813da9f40e2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow-ssh-web</code> 이라는 이름의 인바운드 규칙을 생성한다.</li></ul><ul id="864720e4-6f49-82a6-9d22-01baafc3c294" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-network=initial-vpc</code> 는 이 규칙이 적용될 VPC를 지정한다.</li></ul><ul id="4c4720e4-6f49-8297-8f9e-01d658c41961" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-direction=INGRESS</code> 는 외부에서 VM으로 들어오는 트래픽에 대한 규칙임을 의미한다.</li></ul><ul id="cd6720e4-6f49-83f8-b58b-0147823e8151" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-priority=1000</code> 은 우선순위다. 숫자가 작을수록 우선순위가 높다.</li></ul><ul id="e88720e4-6f49-820f-b5b1-819af9730284" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-action=ALLOW</code> 는 조건에 맞는 트래픽을 허용한다.</li></ul><ul id="b5a720e4-6f49-8385-94cd-81914e520c71" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-rules=tcp:22</code> 는 SSH 포트인 22번 포트를 허용한다.</li></ul><ul id="602720e4-6f49-83f7-bf06-81452a3c9697" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-source-ranges=0.0.0.0/0</code> 는 모든 출발지 IP를 의미한다.</li></ul><ul id="392720e4-6f49-82ab-bb0a-01ba2bb5e55e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-target-tags=web</code> 은 <code>web</code> 태그가 붙은 VM에만 이 규칙이 적용된다는 뜻이다.</li></ul><h3 id="662720e4-6f49-827a-82a5-81985a9c7523" class="" dir="auto">확인 명령어</h3><pre id="cfa720e4-6f49-8324-8085-01c58e587b1d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules describe allow-ssh-web</code></pre><h3 id="0ca720e4-6f49-8218-9944-81cc9ec5d566" class="" dir="auto">실습 포인트</h3><ul id="bb5720e4-6f49-83d2-8448-81d0cc41db9f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">규칙은 만들어졌지만, 아직 <code>web</code> 태그를 가진 VM이 없으므로 실제 적용 대상은 없다.</li></ul><ul id="6d3720e4-6f49-8292-be38-81a743d0502d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">나중에 VM 생성 시 반드시 <code>web</code> 태그를 넣어야 한다.</li></ul><hr id="1d3720e4-6f49-826f-9b3e-018127b01857" dir="auto"/><h2 id="e53720e4-6f49-83ab-926c-01012cf785af" class="" dir="auto">단계 6. HTTP 허용 방화벽 규칙 생성</h2><p id="394720e4-6f49-8332-8b9f-016e9422ea71" class="" dir="auto">이제 웹 사용자가 브라우저로 접근할 수 있도록 80번 포트를 허용한다.</p><h3 id="966720e4-6f49-8217-ae3b-01a07822ebae" class="" dir="auto">명령어</h3><pre id="883720e4-6f49-83f0-95b1-0169efaa72c5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules create allow-http-web \
+  --network=initial-vpc \
+  --direction=INGRESS \
+  --priority=1000 \
+  --action=ALLOW \
+  --rules=tcp:80 \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=web</code></pre><h3 id="d59720e4-6f49-824a-a629-0162df6969c5" class="" dir="auto">설명</h3><ul id="929720e4-6f49-83f6-8c65-01ba4d42d383" class="bulleted-list" dir="auto"><li style="list-style-type:disc">구조는 SSH 규칙과 동일하다.</li></ul><ul id="64f720e4-6f49-83f5-8d86-810f9997b374" class="bulleted-list" dir="auto"><li style="list-style-type:disc">차이는 허용 포트가 <code>tcp:80</code> 이라는 점이다.</li></ul><ul id="906720e4-6f49-836b-88ca-0190eaad7195" class="bulleted-list" dir="auto"><li style="list-style-type:disc">역시 <code>web</code> 태그가 붙은 VM에만 적용된다.</li></ul><h3 id="b38720e4-6f49-82a4-91e8-81a1ae516848" class="" dir="auto">확인 명령어</h3><pre id="782720e4-6f49-83f2-a157-81b19a21a033" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules list --filter=&quot;network:initial-vpc&quot;</code></pre><h3 id="60e720e4-6f49-8371-9a84-0100ff8e74fd" class="" dir="auto">기대 결과</h3><p id="1f2720e4-6f49-825d-99ad-810b43518e00" class="" dir="auto">다음 규칙이 보여야 한다.</p><ul id="f63720e4-6f49-82c1-b322-0129f8873923" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow-ssh-web</code></li></ul><ul id="596720e4-6f49-83be-b096-01113a6ce8f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow-http-web</code></li></ul><hr id="cef720e4-6f49-83e2-bc83-016a61f9f4b6" dir="auto"/><h2 id="c0f720e4-6f49-8265-982b-81c257b2b885" class="" dir="auto">단계 7. Startup Script 작성</h2><p id="c5f720e4-6f49-82d9-bb18-81e01a210621" class="" dir="auto">이제 VM이 부팅될 때 자동으로 nginx를 설치하도록 Startup Script를 만든다.</p><p id="685720e4-6f49-83c6-a0c6-01b83bca2ca0" class="" dir="auto">이 스크립트는 AWS의 User Data와 매우 비슷한 역할을 한다.</p><h3 id="5b4720e4-6f49-8368-aa0b-016753213047" class="" dir="auto">명령어</h3><pre id="cd3720e4-6f49-820e-82d2-81cb149fa330" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cat &gt; startup-web.sh &lt;&lt;&#x27;EOF&#x27;
+#!/bin/bash
+apt-get update -y
+apt-get install -y nginx
+systemctl enable nginx
+systemctl start nginx
+echo &quot;&lt;h1&gt;GCP Compute Engine Web Server&lt;/h1&gt;&quot; &gt; /var/www/html/index.html
+EOF</code></pre><h3 id="07f720e4-6f49-82be-8a89-0199c8776db8" class="" dir="auto">스크립트 설명</h3><ul id="b60720e4-6f49-8394-b8cb-01201307675b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>#!/bin/bash</code><p id="540720e4-6f49-826d-9298-8110ca09720a" class="" dir="auto">bash 셸로 실행하겠다는 의미다.</p></li></ul><ul id="fea720e4-6f49-825a-a896-01b231854714" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>apt-get update -y</code><p id="061720e4-6f49-828e-bea4-81d479d044c9" class="" dir="auto">패키지 목록을 최신 상태로 갱신한다.</p></li></ul><ul id="b0c720e4-6f49-8325-bc7f-81864eb261dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>apt-get install -y nginx</code><p id="627720e4-6f49-83ea-9ef9-81bd03728270" class="" dir="auto">nginx 패키지를 자동 설치한다.</p></li></ul><ul id="419720e4-6f49-8381-a67c-01b56125f087" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>systemctl enable nginx</code><p id="52d720e4-6f49-82a0-ad30-8143549f6d94" class="" dir="auto">VM 재부팅 후에도 nginx가 자동 시작되도록 설정한다.</p></li></ul><ul id="9a4720e4-6f49-8262-94b0-010ed7ce0461" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>systemctl start nginx</code><p id="75b720e4-6f49-8258-a9a6-018f6ff0aea8" class="" dir="auto">현재 부팅 세션에서 nginx를 바로 실행한다.</p></li></ul><ul id="0f7720e4-6f49-8223-88de-817a0daa858a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>echo &quot;&lt;h1&gt;GCP Compute Engine Web Server&lt;/h1&gt;&quot; &gt; /var/www/html/index.html</code><p id="44a720e4-6f49-82ce-8498-014f73f86605" class="" dir="auto">웹 브라우저로 접속했을 때 확인할 수 있는 인덱스 페이지를 생성한다.</p></li></ul><h3 id="662720e4-6f49-83b6-aa11-8151d74bcefe" class="" dir="auto">파일 확인</h3><pre id="28b720e4-6f49-8200-804a-016fb009d9e0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cat startup-web.sh</code></pre><h3 id="43c720e4-6f49-82f6-93e8-015627bb7ced" class="" dir="auto">실습 포인트</h3><ul id="ae5720e4-6f49-82dc-9fc2-81c325a3db9f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Startup Script는 인스턴스 생성 후 수동 작업을 줄이는 가장 기본적인 자동화 기법이다.</li></ul><ul id="5b1720e4-6f49-8289-88ae-8126af3dc112" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무에서는 여기서 웹 애플리케이션 설치, 환경 변수 설정, 에이전트 설치 등으로 확장할 수 있다.</li></ul><hr id="f75720e4-6f49-83c7-b18f-811226a71d91" dir="auto"/><h2 id="729720e4-6f49-8374-8ca2-01d9cb88af98" class="" dir="auto">단계 8. Compute Engine VM 생성</h2><p id="f5c720e4-6f49-82c8-bd10-817739c0bfbf" class="" dir="auto">이제 앞에서 만든 네트워크 위에 실제 VM을 생성한다.</p><h3 id="576720e4-6f49-8369-845d-015431cb6dc6" class="" dir="auto">명령어</h3><pre id="a96720e4-6f49-826e-b47e-0132571505df" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instances create web-vm-01 \
+  --zone=asia-northeast3-a \
+  --machine-type=e2-micro \
+  --subnet=initial-subnet-web \
+  --tags=web \
+  --image-family=debian-12 \
+  --image-project=debian-cloud \
+  --metadata-from-file=startup-script=startup-web.sh</code></pre><h3 id="635720e4-6f49-834a-a212-81a109b189ed" class="" dir="auto">명령 상세 설명</h3><ul id="668720e4-6f49-835a-b893-0106464ad12c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud compute instances create web-vm-01</code><p id="360720e4-6f49-83e7-b8d0-8109a86a6ef8" class="" dir="auto"><code>web-vm-01</code> 이라는 이름의 VM을 생성한다.</p></li></ul><ul id="7df720e4-6f49-82be-abbe-01232c8bbbcf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--zone=asia-northeast3-a</code><p id="9c4720e4-6f49-8360-a440-01135fdd1aff" class="" dir="auto">서울 리전의 a 존에 VM을 배치한다.</p></li></ul><ul id="1d8720e4-6f49-8399-b79d-016685c1a4d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--machine-type=e2-micro</code><p id="c35720e4-6f49-832d-b1fe-01b917a419e6" class="" dir="auto">실습용으로 가벼운 머신 타입을 사용한다.</p></li></ul><ul id="376720e4-6f49-830b-a6e0-011f42a22853" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--subnet=initial-subnet-web</code><p id="f09720e4-6f49-831d-9ec2-81e33d633ae8" class="" dir="auto">앞에서 생성한 웹 서버용 서브넷에 VM을 연결한다.</p></li></ul><ul id="5ef720e4-6f49-83cf-98ec-0113924127e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--tags=web</code><p id="95b720e4-6f49-8294-a499-81210c9e75ae" class="" dir="auto">이 VM에 <code>web</code> 태그를 부여한다.</p><p id="8fa720e4-6f49-8330-9436-81cdeec32dd7" class="" dir="auto">이 태그가 있어야 <code>allow-ssh-web</code>, <code>allow-http-web</code> 방화벽 규칙이 적용된다.</p></li></ul><ul id="eb6720e4-6f49-839f-b726-0167a84b0a3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--image-family=debian-12</code><p id="971720e4-6f49-832b-8c6c-01ce9fb757ca" class="" dir="auto">Debian 12 계열 최신 공개 이미지를 사용한다.</p></li></ul><ul id="d7b720e4-6f49-8293-aca6-81d8b46006c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--image-project=debian-cloud</code><p id="d43720e4-6f49-83e8-bf15-01a1983cde74" class="" dir="auto">Debian 이미지를 제공하는 공개 프로젝트를 지정한다.</p></li></ul><ul id="413720e4-6f49-8227-baea-8129a6af00e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--metadata-from-file=startup-script=startup-web.sh</code><p id="98d720e4-6f49-826f-abe4-01a4565a88de" class="" dir="auto">로컬에 만든 스크립트 파일을 VM 메타데이터의 startup-script 항목으로 전달한다.</p></li></ul><h3 id="dcf720e4-6f49-8282-a608-016c9c6ab241" class="" dir="auto">실습 포인트</h3><p id="f9e720e4-6f49-8330-89fc-011a5ac92518" class="" dir="auto">이 명령 하나 안에 사실상 VM 운영의 핵심 요소가 다 들어 있다.</p><ul id="b35720e4-6f49-83e4-9035-8187309ade02" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어디에 배치할 것인가</li></ul><ul id="c0f720e4-6f49-8265-b3e6-811af01ed539" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 크기로 만들 것인가</li></ul><ul id="f39720e4-6f49-83a9-8bee-813244290f3d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 네트워크에 연결할 것인가</li></ul><ul id="223720e4-6f49-83c4-b7c6-014e4beddc5b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 태그를 부여할 것인가</li></ul><ul id="eb5720e4-6f49-82ce-b9d9-81213306cbcb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 운영체제를 쓸 것인가</li></ul><ul id="e49720e4-6f49-82b1-847a-018759de65f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">처음 부팅 시 무엇을 자동 실행할 것인가</li></ul><hr id="0a7720e4-6f49-8267-ab1e-816c875ff5e2" dir="auto"/><h2 id="bc1720e4-6f49-82c0-9d88-01e08c959622" class="" dir="auto">단계 9. VM 생성 결과 확인</h2><h3 id="8ff720e4-6f49-825d-a423-817baa305a4f" class="" dir="auto">인스턴스 목록 조회</h3><pre id="4de720e4-6f49-82fc-96b4-8119f108da9b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instances list</code></pre><h3 id="6cb720e4-6f49-83c5-b56d-0135323b8ef9" class="" dir="auto">확인 포인트</h3><ul id="d2f720e4-6f49-8264-abfe-01c6c7c0bc72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAME: <code>web-vm-01</code></li></ul><ul id="16b720e4-6f49-82c1-ae6f-81dd830b892e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ZONE: <code>asia-northeast3-a</code></li></ul><ul id="4b3720e4-6f49-836a-b5b0-812ba4f21b3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">INTERNAL_IP: <code>10.10.1.x</code> 대역인지 확인</li></ul><ul id="7a9720e4-6f49-8348-862c-81248696d1d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EXTERNAL_IP: 공인 IP가 할당되었는지 확인</li></ul><ul id="a3e720e4-6f49-8242-b08a-0189a47eafed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">STATUS: <code>RUNNING</code></li></ul><h3 id="268720e4-6f49-83cd-8120-015107f775a5" class="" dir="auto">특정 인스턴스 상세 조회</h3><pre id="e46720e4-6f49-82b7-847a-81a1588e62d4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instances describe web-vm-01 \
+  --zone=asia-northeast3-a</code></pre><h3 id="2cc720e4-6f49-82e9-b702-016447aa669d" class="" dir="auto">상세 조회에서 확인할 항목</h3><ul id="497720e4-6f49-8248-8409-81bb0e508f49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그에 <code>web</code> 이 들어갔는지</li></ul><ul id="1cb720e4-6f49-82da-902c-815bdd7ea52a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 인터페이스가 <code>initial-subnet-web</code> 인지</li></ul><ul id="dba720e4-6f49-826b-ad47-0125fc19284c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 IP가 있는지</li></ul><ul id="a0b720e4-6f49-83ea-bb6b-01cedabcd6a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">메타데이터에 startup-script가 있는지</li></ul><hr id="938720e4-6f49-8235-9061-012535b4b924" dir="auto"/><h2 id="dd2720e4-6f49-8235-9774-010520f675ce" class="" dir="auto">단계 10. SSH 접속 확인</h2><p id="381720e4-6f49-822c-8d88-01300f954782" class="" dir="auto">이제 VM이 SSH로 접속 가능한지 확인한다.</p><h3 id="8da720e4-6f49-82fa-b49f-01f4259cb56e" class="" dir="auto">명령어</h3><pre id="1a1720e4-6f49-82d6-8127-81cccd3944f3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute ssh web-vm-01 --zone=asia-northeast3-a</code></pre><h3 id="d65720e4-6f49-82b6-9a97-010200aa8711" class="" dir="auto">설명</h3><ul id="7a2720e4-6f49-83c7-9634-81584d7e7755" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud compute ssh</code> 는 Compute Engine VM에 SSH 접속하는 명령이다.</li></ul><ul id="49c720e4-6f49-82de-994b-813f7307c992" class="bulleted-list" dir="auto"><li style="list-style-type:disc">gcloud가 키 관리와 접속 설정을 도와준다.</li></ul><ul id="351720e4-6f49-8246-8066-81fbb149fa95" class="bulleted-list" dir="auto"><li style="list-style-type:disc">접속이 되지 않으면 방화벽, 태그, 외부 IP, 권한을 차례대로 점검한다.</li></ul><h3 id="053720e4-6f49-8233-baa1-011325a230a3" class="" dir="auto">접속 후 확인 명령어</h3><pre id="377720e4-6f49-83ad-9b85-01930255d6f2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">hostname
+ip addr
+systemctl status nginx
+curl localhost</code></pre><h3 id="3a0720e4-6f49-8378-a6f9-014a2d64cf40" class="" dir="auto">각 명령 설명</h3><ul id="170720e4-6f49-83ae-9c4e-017dc6629b48" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>hostname</code><p id="16a720e4-6f49-8256-8629-81c25b65064a" class="" dir="auto">현재 접속한 서버 이름을 확인한다.</p></li></ul><ul id="037720e4-6f49-828b-93fb-81e94cf87ad2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ip addr</code><p id="d3a720e4-6f49-833f-97d0-8189a7ddd090" class="" dir="auto">네트워크 인터페이스와 내부 IP 주소를 확인한다.</p></li></ul><ul id="644720e4-6f49-8244-9bc1-81b5cd2d8f4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>systemctl status nginx</code><p id="c99720e4-6f49-8209-9c8c-01e861db2e2b" class="" dir="auto">nginx 서비스가 정상 실행 중인지 확인한다.</p></li></ul><ul id="87d720e4-6f49-83e0-88df-01adcf6ac034" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>curl localhost</code><p id="c33720e4-6f49-83c0-84f5-019076d32138" class="" dir="auto">로컬에서 웹 서버 응답을 확인한다.</p><p id="dc8720e4-6f49-83ca-b164-0131914c0338" class="" dir="auto"><code>&lt;h1&gt;GCP Compute Engine Web Server&lt;/h1&gt;</code> 가 보이면 성공이다.</p></li></ul><hr id="729720e4-6f49-8249-b669-01f3a3d40aff" dir="auto"/><h2 id="c94720e4-6f49-83c5-a1ee-01a4e179a7e3" class="" dir="auto">단계 11. 브라우저 HTTP 접속 확인</h2><p id="2ed720e4-6f49-8279-9917-81bbd4266afe" class="" dir="auto">이제 외부에서 웹 브라우저로 접속해본다.</p><h3 id="581720e4-6f49-82d7-ae79-01e0e14bc281" class="" dir="auto">외부 IP 확인</h3><pre id="6b3720e4-6f49-82b1-888f-818f2a72022c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instances list</code></pre><h3 id="bbc720e4-6f49-8398-9c90-012de58acc7d" class="" dir="auto">브라우저 접속</h3><pre id="7fd720e4-6f49-835f-9e79-81dd4c0882e8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://[EXTERNAL_IP]</code></pre><h3 id="ed6720e4-6f49-8389-b880-019a3e68e271" class="" dir="auto">기대 결과</h3><p id="15a720e4-6f49-82e2-af8c-81b89071c173" class="" dir="auto">브라우저에 아래 메시지가 보이면 성공이다.</p><pre id="be2720e4-6f49-831e-bcd2-01226f67bfc6" class="code code-wrap" data-notion-code-syntax="html"><code class="language-html" style="white-space:pre-wrap;word-break:break-all">&lt;h1&gt;GCP Compute Engine Web Server&lt;/h1&gt;</code></pre><h3 id="f00720e4-6f49-837a-bb17-01f345863d7d" class="" dir="auto">실습 포인트</h3><p id="6d6720e4-6f49-8357-9fbf-819539fb4521" class="" dir="auto">이 단계는 단순히 웹이 뜨는 것을 보는 것이 아니라, 아래 요소가 모두 제대로 연결되었음을 의미한다.</p><ul id="e78720e4-6f49-82cc-8799-0174ec223ace" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 생성 완료</li></ul><ul id="76b720e4-6f49-82cb-bcf4-81eb89bdac24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet 생성 완료</li></ul><ul id="3bc720e4-6f49-82fa-88aa-816df238c95a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule 생성 완료</li></ul><ul id="671720e4-6f49-8376-a446-012bbe49067e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM 태그 적용 완료</li></ul><ul id="5fa720e4-6f49-8294-a110-81163feef0bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External IP 할당 완료</li></ul><ul id="fa4720e4-6f49-83d9-adb4-817b24200e7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Startup Script 정상 실행 완료</li></ul><ul id="314720e4-6f49-82da-b5b4-01d4839d8296" class="bulleted-list" dir="auto"><li style="list-style-type:disc">nginx 정상 실행 완료</li></ul><hr id="518720e4-6f49-8396-b8a4-012cfc8f9e8f" dir="auto"/><h1 id="b95720e4-6f49-8264-8a92-8163b32df1a4" class="" dir="auto">8. 실습 결과 정리</h1><p id="f11720e4-6f49-82cd-b36d-811dbfe8df43" class="" dir="auto">실습이 성공적으로 끝났다면 현재 환경은 아래와 같아야 한다.</p><h2 id="cc6720e4-6f49-82af-afe1-813a140927d8" class="" dir="auto">생성된 리소스</h2><ul id="687720e4-6f49-831d-b1df-8160fb13ac38" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC: <code>initial-vpc</code></li></ul><ul id="23b720e4-6f49-829a-9e0d-01bead990132" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet: <code>initial-subnet-web</code></li></ul><ul id="0d5720e4-6f49-8228-818b-0155c4617a6f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule:<ul id="83a720e4-6f49-82f8-835c-8174ddf756f2" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>allow-ssh-web</code></li></ul><ul id="6bd720e4-6f49-8300-b54d-01c6534884d5" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>allow-http-web</code></li></ul></li></ul><ul id="56a720e4-6f49-82de-8313-81c0272f1f1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM: <code>web-vm-01</code></li></ul><h2 id="3bc720e4-6f49-834e-8757-018126d3161b" class="" dir="auto">동작 상태</h2><ul id="997720e4-6f49-8273-bcfc-818add75158f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH 접속 가능</li></ul><ul id="2a7720e4-6f49-83a0-a253-8181494e4fd3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP 접속 가능</li></ul><ul id="a4a720e4-6f49-823d-9f35-81d46c165504" class="bulleted-list" dir="auto"><li style="list-style-type:disc">nginx 자동 설치 완료</li></ul><ul id="f35720e4-6f49-8350-a371-01dfd58e82e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 페이지 확인 가능</li></ul><hr id="4a6720e4-6f49-8306-b957-01fb86b71a42" dir="auto"/><h1 id="80c720e4-6f49-82ea-ae4a-81bd53cae58c" class="" dir="auto">10. AWS와 비교 정리</h1><p id="85b720e4-6f49-8327-80b2-81a5e510ded0" class="" dir="auto">이번 종합실습은 AWS 경험자 기준으로 아래처럼 대응해서 설명하면 좋다.</p><table id="297720e4-6f49-837d-bb6b-010b693d6764" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="61a720e4-6f49-82a3-b53b-01f8645ed84c" dir="ltr"><th id="gBfL" class="simple-table-header-color simple-table-header">AWS</th><th id="=RB]" class="simple-table-header-color simple-table-header">GCP</th></tr></thead><tbody><tr id="611720e4-6f49-83eb-8dfa-014eac023e3a" dir="ltr"><td id="gBfL" class="">VPC</td><td id="=RB]" class="">VPC</td></tr><tr id="d37720e4-6f49-82c6-8674-01443eb5e437" dir="ltr"><td id="gBfL" class="">Subnet</td><td id="=RB]" class="">Subnet</td></tr><tr id="cc3720e4-6f49-83ad-83ae-811acb830af7" dir="ltr"><td id="gBfL" class="">Security Group</td><td id="=RB]" class="">Firewall Rule</td></tr><tr id="c6c720e4-6f49-822d-948e-818191b490f7" dir="ltr"><td id="gBfL" class="">EC2</td><td id="=RB]" class="">Compute Engine</td></tr><tr id="032720e4-6f49-82c1-8dd4-810070654971" dir="ltr"><td id="gBfL" class="">User Data</td><td id="=RB]" class="">Startup Script</td></tr><tr id="ca2720e4-6f49-82e6-b5e4-8121d3bbfc6d" dir="ltr"><td id="gBfL" class="">Public IP / Elastic IP</td><td id="=RB]" class="">External IP / Static External IP</td></tr></tbody></table><h3 id="067720e4-6f49-83e9-804c-81ebce985ad6" class="" dir="auto">핵심 차이</h3><ul id="8bc720e4-6f49-825e-aa47-01c160fbb9d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS는 Security Group을 인스턴스에 붙이는 감각이 강함</li></ul><ul id="1ac720e4-6f49-829b-b9d5-01b64a296adf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP는 VPC 차원 방화벽 규칙을 만들고, 태그로 대상 VM을 연결하는 감각이 강함</li></ul><ul id="775720e4-6f49-83c4-82e6-8132a87584e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS는 VPC가 리전 단위</li></ul><ul id="c5a720e4-6f49-83b3-9eef-8102b79aa9c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP는 VPC가 글로벌, 서브넷이 리전 단위</li></ul><hr id="4cd720e4-6f49-829b-90aa-01e144f15f9f" dir="auto"/><h1 id="4be720e4-6f49-821e-8cce-815f0afa98f9" class="" dir="auto">12. 장 요약</h1><p id="fec720e4-6f49-82c5-8cdf-01e36a2ca323" class="" dir="auto">이번 종합실습에서는 GCP의 핵심 인프라 요소를 하나의 흐름으로 연결했다.</p><p id="1ff720e4-6f49-823e-a8b9-01c1177e2102" class="" dir="auto">핵심은 다음과 같다.</p><ul id="ff4720e4-6f49-82bb-88f7-815ff7027f3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP 작업은 항상 Project 확인부터 시작해야 한다.</li></ul><ul id="1d8720e4-6f49-828f-a79f-8104ca4ca626" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC는 글로벌 리소스이며, 서브넷은 리전 단위로 생성한다.</li></ul><ul id="b30720e4-6f49-8248-bae6-01926db5e4a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule은 VPC 차원에서 만들고, 태그를 통해 대상 VM에 적용한다.</li></ul><ul id="e98720e4-6f49-8202-bbab-01e27123fa57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Compute Engine은 GCP의 대표적인 VM 서비스다.</li></ul><ul id="d66720e4-6f49-8292-8caa-8143b1018a51" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Startup Script를 통해 초기 설정을 자동화할 수 있다.</li></ul><ul id="59f720e4-6f49-834c-b3c9-8137d4924c04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 IP, 방화벽 규칙, 태그, 서비스 상태가 모두 맞아야 웹 접속이 가능하다.</li></ul><hr id="829720e4-6f49-82c2-a144-0187528e58c5" dir="auto"/><p id="44c720e4-6f49-8384-8008-81ac5ba5e120" class="" dir="auto">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

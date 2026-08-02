@@ -1,0 +1,907 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습 4. EFS CSI 기반 공유 스토리지 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="f3f720e4-6f49-831f-b481-01dbfd16b18f" class="page sans"><header><h1 class="page-title" dir="auto">실습 4. EFS CSI 기반 공유 스토리지 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="913720e4-6f49-82e6-a22d-0131796bdec6" class="" dir="auto">정적 PV 방식 + StorageClass 동적 프로비저닝 방식</h2><h2 id="0de720e4-6f49-830a-8304-81847fb42f61" class="" dir="auto">1. 실습 목표</h2><p id="a5e720e4-6f49-83b4-af1f-013b2a368367" class="" dir="auto">이번 실습에서는 Amazon EFS를 EKS에 연결하고, <strong>여러 Pod가 동시에 같은 저장소를 마운트해서 파일을 공유하는 구조</strong>를 확인함.</p><p id="300720e4-6f49-82d9-8089-81b77880f29b" class="" dir="auto">또한 같은 EFS 실습을 <strong>정적 PV 방식</strong>과 <strong>StorageClass 기반 동적 프로비저닝 방식</strong> 두 가지로 나누어 비교함.</p><p id="10f720e4-6f49-8253-9596-01e91ad6ae1c" class="" dir="auto">이 실습을 통해 다음을 이해할 수 있음.</p><ul id="305720e4-6f49-83b3-afbd-818539c6caee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS와 EBS의 차이</li></ul><ul id="b48720e4-6f49-82ad-b9af-019fa8d41103" class="bulleted-list" dir="auto"><li style="list-style-type:disc">블록 스토리지와 파일 스토리지의 차이</li></ul><ul id="a13720e4-6f49-83d5-bc06-819ddd4ecd6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ReadWriteMany</code> 접근 방식의 의미</li></ul><ul id="205720e4-6f49-8205-bf8f-8132cde7152a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 PV 방식과 동적 프로비저닝 방식의 차이</li></ul><ul id="5b3720e4-6f49-8327-a2a2-8191e5793c5a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS Access Point가 어떤 역할을 하는가</li></ul><hr id="c3c720e4-6f49-835c-8be6-01d8b8104687" dir="auto"/><h2 id="438720e4-6f49-82b5-ad6f-014647ccccde" class="" dir="auto">2. 실습 개요</h2><p id="f3d720e4-6f49-82aa-907b-01055784497b" class="" dir="auto">이 실습은 두 단계로 진행함.</p><h3 id="f52720e4-6f49-8216-a11f-812720ebcf28" class="" dir="auto">1단계: 정적 PV 방식</h3><ul id="fe7720e4-6f49-839a-a1fa-0131058f520c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리자가 PV를 직접 생성함</li></ul><ul id="7a0720e4-6f49-8326-a198-0199d6fc1693" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC가 그 PV에 바인딩됨</li></ul><ul id="0fe720e4-6f49-8361-98d4-012740ab4a30" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 Pod가 같은 PVC를 마운트함</li></ul><h3 id="e72720e4-6f49-83f7-8fbf-81d42c548715" class="" dir="auto">2단계: StorageClass 기반 동적 프로비저닝 방식</h3><ul id="2f6720e4-6f49-830b-b744-01ffe7de3b19" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리자가 StorageClass만 준비함</li></ul><ul id="971720e4-6f49-83b9-b0a8-01206ee5c527" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 PVC만 생성함</li></ul><ul id="63b720e4-6f49-82a5-8c30-0152bdfa873e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS CSI 드라이버가 EFS Access Point를 자동 생성함</li></ul><ul id="b6c720e4-6f49-836a-9af5-0138ed1de801" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC는 자동 생성된 PV에 바인딩됨</li></ul><p id="40e720e4-6f49-8235-b84f-81d2f5963a03" class="" dir="auto"><strong>“EFS는 공유 파일 스토리지이고, EKS에서는 이를 정적/동적 두 방식으로 연결할 수 있다”</strong></p><hr id="525720e4-6f49-8390-ac16-8169fe07244c" dir="auto"/><h2 id="817720e4-6f49-8389-a832-015172c545a2" class="" dir="auto">3. 실습 전 확인 사항</h2><p id="ab7720e4-6f49-834b-a19e-812f3a63f945" class="" dir="auto">다음 조건이 준비되어 있어야 함.</p><ol type="1" id="c0d720e4-6f49-82d5-aadf-0121e81814d3" class="numbered-list" start="1" dir="auto"><li>EKS 클러스터가 생성되어 있어야 함</li></ol><ol type="1" id="f4e720e4-6f49-8284-9841-0166d1c5b867" class="numbered-list" start="2" dir="auto"><li><code>kubectl</code>과 <code>aws</code> CLI가 사용 가능해야 함</li></ol><ol type="1" id="fcf720e4-6f49-8337-a32a-01eaee1e58ca" class="numbered-list" start="3" dir="auto"><li>EFS 파일 시스템이 이미 하나 존재해야 함</li></ol><ol type="1" id="5aa720e4-6f49-83ec-9e84-015e6a1c7040" class="numbered-list" start="4" dir="auto"><li>EFS CSI driver가 설치되어 있어야 함</li></ol><ol type="1" id="dfd720e4-6f49-8244-871f-017305dadafa" class="numbered-list" start="5" dir="auto"><li>EKS 노드가 EFS mount target에 접근 가능해야 함</li></ol><ol type="1" id="b09720e4-6f49-83c2-b0be-01fb3ae8c403" class="numbered-list" start="6" dir="auto"><li>동적 프로비저닝 방식은 <strong>EC2 기반 노드 환경</strong>이어야 함</li></ol><hr id="1d7720e4-6f49-82fc-8f04-81b6a167699f" dir="auto"/><h2 id="00e720e4-6f49-83d9-8f2c-0149eb38fec3" class="" dir="auto">4. EFS CSI Driver 설치 여부 확인</h2><p id="2d9720e4-6f49-8288-9571-81839aa63ec3" class="" dir="auto">먼저 add-on 상태를 확인함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="766720e4-6f49-83ad-817e-01ccebb540ab" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws eks list-addons --cluster-name my-eks-cluster --region ap-northeast-2</code></pre><p id="5f0720e4-6f49-8269-b082-810e14fcd9a6" class="" dir="auto">여기서 <code>aws-efs-csi-driver</code>가 보여야 함.</p><p id="d23720e4-6f49-8313-8aeb-81a7ab92c942" class="" dir="auto">또는 Kubernetes 쪽에서도 확인 가능함.</p><pre id="435720e4-6f49-82a6-9f1b-019f6b285098" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -n kube-system</code></pre><h3 id="f9c720e4-6f49-831e-ba54-81260c6f5f85" class="" dir="auto">설치가 안 되어 있으면</h3><pre id="87e720e4-6f49-8254-94f8-812cf4785595" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">eksctl create addon --cluster my-eks-cluster --name aws-efs-csi-driver --region ap-northeast-2</code></pre><hr id="84b720e4-6f49-82f6-9f30-01c6a3a2e08f" dir="auto"/><h2 id="d68720e4-6f49-828c-b3b2-010731d943b1" class="" dir="auto">5. EFS 파일 시스템 ID 확인</h2><p id="bc9720e4-6f49-83b5-9139-0157605e095c" class="" dir="auto">현재 리전의 EFS 파일 시스템을 조회함.</p><pre id="e15720e4-6f49-8365-80cf-811e4b31d5e8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws efs describe-file-systems --region ap-northeast-2</code></pre><p id="2e0720e4-6f49-835b-a30a-01d639ee6ed4" class="" dir="auto">출력에서 <code>FileSystemId</code> 값을 확인함.</p><p id="3db720e4-6f49-8366-a118-01a3e938e140" class="" dir="auto">예시:</p><pre id="9bf720e4-6f49-83e5-921e-010703f63372" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">fs-0abc1234def567890</code></pre><p id="3ca720e4-6f49-8348-b583-017c070cf5c8" class="" dir="auto">이 값을 이후 YAML의 <code>fileSystemId</code> 또는 <code>volumeHandle</code>에 사용함. </p><p id="1d2720e4-6f49-83fa-916a-81e59df79087" class="" dir="auto">EFS 에 연결된 보안그룹에 TCP 2049를 Inbound 규칙에 추가</p><hr id="3a9720e4-6f49-8334-a531-81e162bf4f13" dir="auto"/><h1 id="980720e4-6f49-82f5-9101-81870dc1514e" class="" dir="auto">Part A. 정적 PV 방식</h1><h2 id="03e720e4-6f49-833b-a771-011628d6cb70" class="" dir="auto">6. 정적 PV 방식 설명</h2><p id="455720e4-6f49-82c4-8cc0-819b20875b63" class="" dir="auto">정적 방식은 관리자가 먼저 PV를 만들고, PVC가 그 PV에 연결되는 방식임.</p><p id="0e2720e4-6f49-830e-827d-8131877b613c" class="" dir="auto">개념 이해에는 가장 쉬움.</p><p id="c03720e4-6f49-83aa-bf04-813fe0c62b7b" class="" dir="auto">즉, 이 방식은 다음 흐름임.</p><ul id="b61720e4-6f49-823b-8764-01195af3736f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS 파일 시스템 준비됨</li></ul><ul id="a6d720e4-6f49-8242-bc02-0186f600a81b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PV를 직접 생성함</li></ul><ul id="d2f720e4-6f49-83ea-b56b-016275413b8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC가 PV에 바인딩됨</li></ul><ul id="f57720e4-6f49-83b7-8797-013f69562ec7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 Pod가 같은 PVC를 사용함</li></ul><hr id="ff0720e4-6f49-8203-8a35-81963776d600" dir="auto"/><h2 id="001720e4-6f49-824f-bac6-018493c54064" class="" dir="auto">7. 정적 PV 생성</h2><p id="2d0720e4-6f49-82a1-8bc1-01926dd9a6e4" class="" dir="auto">아래 내용을 <code>efs-pv.yaml</code> 파일로 저장함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="130720e4-6f49-8285-b015-01767e911b64" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: efs-pv
+spec:
+  capacity:
+    storage: 5Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: fs-0abc1234def567890</code></pre><p id="d8f720e4-6f49-827c-9e5d-811d6cef3628" class="" dir="auto">여기서 <code>volumeHandle</code>은 실제 EFS 파일 시스템 ID로 바꿔야 함.</p><p id="651720e4-6f49-833a-a74a-81a44f703ff5" class="" dir="auto">CMD에서 작성:</p><pre id="100720e4-6f49-82fb-a0eb-81006133564e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">notepad efs-pv.yaml</code></pre><p id="f6c720e4-6f49-82e2-87b9-016dc0338ce8" class="" dir="auto">적용:</p><pre id="c5a720e4-6f49-835d-a4f3-814750912387" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f efs-pv.yaml</code></pre><h3 id="439720e4-6f49-8219-9158-01a7c7dc3c3c" class="" dir="auto">항목 설명</h3><ul id="38b720e4-6f49-8380-9834-01c2aeb9e1a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>accessModes: ReadWriteMany</code><p id="f76720e4-6f49-82b6-abc1-01ff24d66928" class="" dir="auto">여러 Pod가 동시에 읽기/쓰기 가능함</p></li></ul><ul id="ef5720e4-6f49-8279-b982-817e496535ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>persistentVolumeReclaimPolicy: Retain</code><p id="b80720e4-6f49-839b-8d5a-81f168fd2440" class="" dir="auto">PVC를 삭제해도 실제 스토리지를 바로 지우지 않음</p></li></ul><ul id="27a720e4-6f49-8372-a121-81cf7ffd2bb0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>driver: efs.csi.aws.com</code><p id="832720e4-6f49-837a-926a-81ab484c296c" class="" dir="auto">EFS CSI 드라이버 사용</p></li></ul><ul id="0e1720e4-6f49-82f3-8cef-81b02abdf3e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>volumeHandle</code><p id="546720e4-6f49-83e2-9204-8187aa851ee0" class="" dir="auto">실제 EFS 파일 시스템 ID</p></li></ul><hr id="9d2720e4-6f49-828b-9d02-01379c51732f" dir="auto"/><h2 id="1c1720e4-6f49-82c5-8799-81079126e8d0" class="" dir="auto">8. 정적 PVC 생성</h2><p id="0c8720e4-6f49-82cd-9426-01bd7608e060" class="" dir="auto">아래 내용을 <code>efs-pvc.yaml</code> 파일로 저장함.</p><pre id="6c3720e4-6f49-8206-985c-814f8e221eed" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: efs-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+  volumeName: efs-pv</code></pre><p id="3c3720e4-6f49-821c-aaf0-81106ef88485" class="" dir="auto">적용:</p><pre id="d7e720e4-6f49-83b1-a688-81a9e28e1685" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f efs-pvc.yaml</code></pre><p id="0c8720e4-6f49-8346-bd3d-01853bd8a858" class="" dir="auto">확인:</p><pre id="c0a720e4-6f49-828e-a08a-81e672fe645f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pv
+kubectl get pvc</code></pre><p id="b2a720e4-6f49-8237-ab47-0171c2697666" class="" dir="auto">정상이라면 <code>efs-pvc</code>가 <code>Bound</code> 상태가 됨. </p><hr id="c56720e4-6f49-8255-8f53-0165f60ac88e" dir="auto"/><h2 id="370720e4-6f49-8390-b10d-011a8bc6abe4" class="" dir="auto">9. 같은 PVC를 두 Pod에 연결</h2><h3 id="018720e4-6f49-8279-b2ee-81b4546b358a" class="" dir="auto">Pod 1</h3><p id="346720e4-6f49-8393-b364-01344f99863c" class="" dir="auto"><code>efs-pod1.yaml</code></p><pre id="4a6720e4-6f49-82e3-8fa3-81ea791fe07c" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: efs-pod1
+spec:
+  containers:
+    - name: app
+      image: nginx
+      volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+  volumes:
+    - name: shared-data
+      persistentVolumeClaim:
+        claimName: efs-pvc</code></pre><h3 id="00f720e4-6f49-827a-805e-0147bc596b7d" class="" dir="auto">Pod 2</h3><p id="361720e4-6f49-8237-9f70-01183a15305c" class="" dir="auto"><code>efs-pod2.yaml</code></p><pre id="f0b720e4-6f49-831d-a88f-0190e7cb198c" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: efs-pod2
+spec:
+  containers:
+    - name: app
+      image: nginx
+      volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+  volumes:
+    - name: shared-data
+      persistentVolumeClaim:
+        claimName: efs-pvc</code></pre><p id="827720e4-6f49-82d3-a267-81699c88825f" class="" dir="auto">적용:</p><pre id="eae720e4-6f49-8336-8c6e-81a0ae63aae0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f efs-pod1.yaml
+kubectl apply -f efs-pod2.yaml</code></pre><p id="f73720e4-6f49-8359-a126-817a0cc79aed" class="" dir="auto">확인:</p><pre id="b02720e4-6f49-83b3-a507-0176a97cac47" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods</code></pre><hr id="b61720e4-6f49-833a-ba37-813514fbcbbc" dir="auto"/><h2 id="51a720e4-6f49-83b1-b9fa-016bb05c9bcd" class="" dir="auto">10. 공유 저장소 동작 확인</h2><h2 id="68e720e4-6f49-826f-8813-81d09360711f" class="" dir="auto">정적 방식</h2><p id="5bd720e4-6f49-826f-bb55-81a5e3e70693" class="" dir="auto">첫 번째 Pod에서 파일을 생성함.</p><pre id="f6c720e4-6f49-8242-8840-014b412fffea" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it efs-pod1 -- sh</code></pre><p id="a9c720e4-6f49-823e-8d56-810d9edb1396" class="" dir="auto">컨테이너 내부에서 실행:</p><pre id="35f720e4-6f49-830a-b506-011e45bb18f2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">echo EFS Shared Storage Test &gt; /usr/share/nginx/html/index.html
+cat /usr/share/nginx/html/index.html</code></pre><p id="ef9720e4-6f49-82cb-b4ec-8153069e3526" class="" dir="auto">두 번째 Pod에서 같은 파일을 확인함.</p><pre id="c62720e4-6f49-8311-a1c0-81d86292b028" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it efs-pod2 -- sh</code></pre><p id="c52720e4-6f49-82e0-a57c-01fe06d289c7" class="" dir="auto">컨테이너 내부에서 실행:</p><pre id="439720e4-6f49-833c-bccf-01fe7b9758e8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cat /usr/share/nginx/html/index.html</code></pre><p id="8b6720e4-6f49-82f1-bb47-81f0a0733113" class="" dir="auto">같은 내용이 보이면 공유 스토리지가 정상 동작한 것임.</p><hr id="03e720e4-6f49-830d-9fb0-81eb66dc37d8" dir="auto"/><h1 id="a7b720e4-6f49-82eb-bdeb-81ecd3dca2c0" class="" dir="auto">Part B. StorageClass 기반 동적 프로비저닝 방식</h1><h2 id="40e720e4-6f49-82fd-91cb-01fffe561ad5" class="" dir="auto">11. 동적 프로비저닝 방식 설명</h2><p id="c5c720e4-6f49-8366-bd2e-81b1f4a4e863" class="" dir="auto">동적 방식은 관리자가 일일이 PV를 만들지 않고, StorageClass만 준비해 두면 사용자가 PVC만 만들어도 자동으로 PV가 생성되는 방식임.</p><p id="19d720e4-6f49-8312-8326-011782706576" class="" dir="auto">EFS에서는 이 동적 프로비저닝이 <strong>EFS Access Point 자동 생성</strong>과 연결됨. </p><p id="927720e4-6f49-8315-8c5c-01821b63fad0" class="" dir="auto">즉, 이 방식은 다음 흐름임.</p><ul id="3fd720e4-6f49-8217-a8fa-01dd171701c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">StorageClass 생성</li></ul><ul id="ee3720e4-6f49-8312-95f4-81bca299b31e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC 생성</li></ul><ul id="c3a720e4-6f49-8321-859f-8139576a3f8d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS CSI 드라이버가 Access Point 생성</li></ul><ul id="12b720e4-6f49-83e0-9094-017a2ec77b32" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PV 자동 생성</li></ul><ul id="c25720e4-6f49-825e-aa2d-01141df05dac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod가 PVC 사용</li></ul><hr id="4dd720e4-6f49-8272-94d9-81da5e4bb6b5" dir="auto"/><h2 id="181720e4-6f49-8386-ad11-81673daf238e" class="" dir="auto">12. StorageClass 생성</h2><p id="a4f720e4-6f49-8257-88c9-0148364af7b4" class="" dir="auto">아래 내용을 <code>efs-sc.yaml</code> 파일로 저장함.</p><pre id="0f6720e4-6f49-839f-b0d8-01c0535b9f4e" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: efs-sc
+provisioner: efs.csi.aws.com
+parameters:
+  provisioningMode: efs-ap
+  fileSystemId: fs-0abc1234def567890
+  directoryPerms: &quot;700&quot;
+  gidRangeStart: &quot;1000&quot;
+  gidRangeEnd: &quot;2000&quot;
+  basePath: &quot;/dynamic_provisioning&quot;
+reclaimPolicy: Delete
+volumeBindingMode: Immediate</code></pre><p id="b76720e4-6f49-8323-8d57-8158d952367f" class="" dir="auto"><code>fileSystemId</code>는 실제 EFS 파일 시스템 ID로 변경해야 함.</p><p id="468720e4-6f49-8283-8502-817d61c3d574" class="" dir="auto">작성:</p><pre id="1ca720e4-6f49-8315-9373-81c959ebc3ed" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">notepad efs-sc.yaml</code></pre><p id="b1d720e4-6f49-83ad-af47-8175bb5d8798" class="" dir="auto">적용:</p><pre id="fc7720e4-6f49-824f-9e73-0165a182c819" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f efs-sc.yaml</code></pre><h3 id="f65720e4-6f49-8306-b459-01af1c6a5176" class="" dir="auto">핵심 항목 설명</h3><ul id="1f9720e4-6f49-82bd-b915-811b6c0d0dd4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provisioner: efs.csi.aws.com</code><p id="6d1720e4-6f49-8229-b80b-010f2c37c972" class="" dir="auto">EFS CSI 드라이버 사용</p></li></ul><ul id="8d1720e4-6f49-8219-b705-8163e30c97f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provisioningMode: efs-ap</code><p id="87d720e4-6f49-8339-9d5f-81be3be6f388" class="" dir="auto">Access Point 기반 동적 프로비저닝</p></li></ul><ul id="6f0720e4-6f49-82f7-b87a-01c4ed503b9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>fileSystemId</code><p id="046720e4-6f49-83db-a1bd-01a19402e2ed" class="" dir="auto">어느 EFS 파일 시스템 안에서 Access Point를 만들지 지정</p></li></ul><ul id="a0a720e4-6f49-83b4-bdc3-8159afe52872" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>basePath</code><p id="20a720e4-6f49-8221-9856-814beb6b9007" class="" dir="auto">Access Point가 생성될 기본 경로</p></li></ul><ul id="499720e4-6f49-83b1-9f71-01bcf268669d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reclaimPolicy: Delete</code><p id="7dc720e4-6f49-82fa-bf4d-01889a58677b" class="" dir="auto">실습 편의를 위한 설정</p></li></ul><hr id="8c2720e4-6f49-8258-bf3c-8100bf673640" dir="auto"/><h2 id="4f7720e4-6f49-82f6-93df-01a02f095e0a" class="" dir="auto">PVC에서 PV를 연결하기 위한 권한 설정</h2><h2 id="b36720e4-6f49-826e-a8ab-01dca6fa91f6" class="" dir="auto">1) 현재 클러스터 이름과 리전 변수 지정</h2><pre id="63e720e4-6f49-826d-9525-01aef26bbc54" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">exportCLUSTER_NAME=&lt;클러스터이름&gt;
+exportAWS_REGION=&lt;리전&gt;
+exportACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)</code></pre><p id="e00720e4-6f49-82d7-b8aa-0197565c761c" class="" dir="auto">예시:</p><pre id="82b720e4-6f49-8216-bbc8-01eaaf943cc1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">exportCLUSTER_NAME=이니셜-eks-cluster
+exportAWS_REGION=ap-northeast-2
+exportACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)</code></pre><p id="ab8720e4-6f49-820a-b44d-81b04d88ea66" class="" dir="auto">명령 설명:</p><ul id="f8e720e4-6f49-83e3-a67a-814abe0a3323" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>export</code> 는 현재 셸 세션에 변수를 저장함</li></ul><ul id="8cc720e4-6f49-82da-b5f9-01091f9c495c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>CLUSTER_NAME</code> 은 EKS 클러스터 이름</li></ul><ul id="abc720e4-6f49-826b-8c6c-01a8876f14ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>AWS_REGION</code> 은 클러스터가 있는 리전</li></ul><ul id="5a6720e4-6f49-8226-bbf0-01da793d6721" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ACCOUNT_ID</code> 는 현재 로그인한 AWS 계정 번호를 자동으로 가져옴</li></ul><hr id="a03720e4-6f49-83bf-a651-01e0606c185d" dir="auto"/><h2 id="254720e4-6f49-83d0-b5ee-81f3f1516313" class="" dir="auto">2) OIDC provider가 있는지 확인</h2><p id="1b6720e4-6f49-8319-af1c-01cf7576c760" class="" dir="auto">IRSA(IAM Role for Service Accounts)를 쓰려면 EKS OIDC(OpenID Connect) provider가 먼저 있어야 함.</p><pre id="f7a720e4-6f49-823c-83a6-0198c5950ccc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">oidc_id=$(aws eks describe-cluster --name $CLUSTER_NAME --region$AWS_REGION --query &quot;cluster.identity.oidc.issuer&quot; --output text | cut -d&#x27;/&#x27; -f 5)
+echo $oidc_id
+aws iam list-open-id-connect-providers | grep $oidc_id</code></pre><p id="0ad720e4-6f49-832f-835d-011b5ec11988" class="" dir="auto">결과가 안 나오면 OIDC provider를 생성해야 함.</p><p id="627720e4-6f49-83ea-8877-814fc97d60db" class="" dir="auto"><code>eksctl</code> 이 있으면 가장 간단함.</p><pre id="843720e4-6f49-828b-a87a-019a86899f4a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">eksctl utils associate-iam-oidc-provider--cluster$CLUSTER_NAME--region$AWS_REGION--approve</code></pre><p id="19e720e4-6f49-826e-84ae-81f72eb4ab5b" class="" dir="auto">이 명령은 EKS 클러스터의 OIDC issuer를 IAM OIDC provider로 등록함.</p><p id="b05720e4-6f49-8240-a4da-01815988cb13" class="" dir="auto">IRSA가 동작하려면 이 단계가 반드시 맞아야 함.</p><hr id="328720e4-6f49-8366-81d1-010f2cec4836" dir="auto"/><h2 id="5d3720e4-6f49-826c-8a64-01f2c4f50b28" class="" dir="auto">3) EFS CSI용 IAM Role 생성</h2><p id="146720e4-6f49-83a7-a8d2-013402270f7d" class="" dir="auto">가장 쉬운 방법은 <code>eksctl create iamserviceaccount</code> 사용임.</p><pre id="447720e4-6f49-8379-8e9a-011f99e7f20e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">eksctl create iamserviceaccount \
+--name efs-csi-controller-sa \
+--namespace kube-system \
+--cluster $CLUSTER_NAME \
+--region $AWS_REGION \
+--role-name AmazonEKS_EFS_CSI_DriverRole \
+--attach-policy-arn arn:aws:iam::aws:policy/service-role/AmazonEFSCSIDriverPolicy \
+--approve \
+--override-existing-serviceaccounts</code></pre><p id="a38720e4-6f49-823a-aea9-814f237f49d7" class="" dir="auto">이 명령이 하는 일:</p><ul id="cf5720e4-6f49-82bd-a715-81b6927052ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>efs-csi-controller-sa</code> 서비스어카운트에 IAM Role 연결</li></ul><ul id="2ba720e4-6f49-8284-b5f9-01f83ea34edd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>AmazonEFSCSIDriverPolicy</code> 를 role에 attach</li></ul><ul id="f15720e4-6f49-8209-86b7-81bca96a165d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스어카운트에 <code>eks.amazonaws.com/role-arn</code> annotation 자동 추가</li></ul><ul id="cc0720e4-6f49-82a1-8dd3-01b04f11068f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 같은 이름의 service account가 있어도 덮어써서 반영</li></ul><hr id="f3e720e4-6f49-82d2-97a0-817fdd1ce3ff" dir="auto"/><h2 id="ee3720e4-6f49-82ef-b314-817c08451bb9" class="" dir="auto">4) annotation이 실제로 붙었는지 확인</h2><pre id="358720e4-6f49-82a9-b1a4-01ba2955dff1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kubectl-n kube-systemget sa efs-csi-controller-sa-o yaml</code></pre><p id="f76720e4-6f49-83fd-9635-816989739d98" class="" dir="auto">이제 아래 같은 항목이 보여야 함.</p><pre id="9d3720e4-6f49-8285-8746-016fc70eb722" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">metadata:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::&lt;계정ID&gt;:role/AmazonEKS_EFS_CSI_DriverRole</code></pre><p id="013720e4-6f49-82e8-a12e-01b6518538fb" class="" dir="auto">이게 없으면 여전히 IRSA가 안 붙은 상태임.</p><p id="6c4720e4-6f49-82d7-8aa9-81f0808702c6" class="" dir="auto">IRSA에서는 서비스어카운트 annotation이 핵심 연결점임.</p><hr id="38e720e4-6f49-8371-86d0-01872d0712ef" dir="auto"/><h2 id="79a720e4-6f49-8288-abcc-01c73dbc46ba" class="" dir="auto">5) controller가 그 서비스어카운트를 쓰는지 확인</h2><pre id="ce2720e4-6f49-837b-9b7a-01c2c14928a4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kubectl-n kube-systemget deploy efs-csi-controller-ojsonpath=&#x27;{.spec.template.spec.serviceAccountName}&#x27;
+echo</code></pre><p id="d92720e4-6f49-82f3-b5a7-01af9979a7ac" class="" dir="auto">결과가 반드시 아래여야 함.</p><pre id="413720e4-6f49-83d6-8688-019b9e94f228" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">efs-csi-controller-sa</code></pre><p id="737720e4-6f49-82fa-9100-01c5e70a6462" class="" dir="auto">다른 이름이면, role을 잘 만들어도 controller가 못 씀.</p><hr id="608720e4-6f49-83e0-a06e-01eb3c6e3195" dir="auto"/><h2 id="a48720e4-6f49-8291-bbd4-8104eaf42500" class="" dir="auto">6) controller 재시작</h2><p id="f4c720e4-6f49-8327-b4d1-0108244dcb55" class="" dir="auto">기존 파드가 이전 상태를 잡고 있을 수 있으니 재시작함.</p><pre id="26d720e4-6f49-82f3-84bd-8159ad5b2d5c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kubectl-n kube-system rolloutrestart deployment efs-csi-controller
+kubectl-n kube-system rollout status deployment efs-csi-controller</code></pre><p id="3d2720e4-6f49-82d5-8f13-01d069f1f5de" class="" dir="auto">명령 설명:</p><ul id="a21720e4-6f49-83a2-9815-01867085e7aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>rollout restart</code> 는 Deployment의 Pod를 새로 띄움</li></ul><ul id="098720e4-6f49-834d-83a8-010218b3e2ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새 Pod는 수정된 ServiceAccount annotation 기준으로 AWS 자격 증명을 다시 가져옴</li></ul><ul id="7fd720e4-6f49-8215-bb26-8126bae0a1e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>rollout status</code> 는 재시작이 정상 완료됐는지 확인함</li></ul><hr id="f8e720e4-6f49-838e-816a-01c5b1f432ca" dir="auto"/><h2 id="edc720e4-6f49-8304-b71f-81ccb7134226" class="" dir="auto">13. 동적 PVC 생성</h2><p id="bc5720e4-6f49-83f8-841d-01c6051b49ee" class="" dir="auto">아래 내용을 <code>efs-dynamic-pvc.yaml</code> 파일로 저장함.</p><pre id="921720e4-6f49-82a2-9aae-81a0f7fe9344" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: efs-dynamic-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: efs-sc
+  resources:
+    requests:
+      storage: 5Gi</code></pre><p id="c95720e4-6f49-83e9-9d40-01ffc7022700" class="" dir="auto">적용:</p><pre id="3d1720e4-6f49-8307-bdaa-012896dc7233" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f efs-dynamic-pvc.yaml</code></pre><p id="d70720e4-6f49-8327-bc35-81d6d745eb32" class="" dir="auto">확인:</p><pre id="546720e4-6f49-825c-866d-0154ca0ec8a7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pvc
+kubectl get pv
+kubectl get storageclass</code></pre><p id="22f720e4-6f49-8337-ada3-01725c59715a" class="" dir="auto">정상이라면 PVC가 <code>Bound</code> 상태가 되고, PV가 자동 생성됨.</p><hr id="4cb720e4-6f49-82a4-b61a-8171fa9f0394" dir="auto"/><h2 id="a3b720e4-6f49-82f3-8b29-01fd8d729b23" class="" dir="auto">14. 동적 PVC를 두 Pod에 연결</h2><h3 id="026720e4-6f49-829f-80e9-0111567b712d" class="" dir="auto">Pod 1</h3><p id="5df720e4-6f49-82bc-a499-01885d4d0742" class="" dir="auto"><code>efs-dynamic-pod1.yaml</code></p><pre id="9aa720e4-6f49-82d0-ac9d-0117487f6cdc" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: efs-dynamic-pod1
+spec:
+  containers:
+    - name: app
+      image: nginx
+      volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+  volumes:
+    - name: shared-data
+      persistentVolumeClaim:
+        claimName: efs-dynamic-pvc</code></pre><h3 id="73f720e4-6f49-83d4-82b3-01000a3a9b2d" class="" dir="auto">Pod 2</h3><p id="0de720e4-6f49-8341-a17c-81d4221f7eb2" class="" dir="auto"><code>efs-dynamic-pod2.yaml</code></p><pre id="2b9720e4-6f49-826e-b274-01448e341e2a" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: efs-dynamic-pod2
+spec:
+  containers:
+    - name: app
+      image: nginx
+      volumeMounts:
+        - name: shared-data
+          mountPath: /usr/share/nginx/html
+  volumes:
+    - name: shared-data
+      persistentVolumeClaim:
+        claimName: efs-dynamic-pvc</code></pre><p id="d73720e4-6f49-8217-9d55-8190fa7a37bc" class="" dir="auto">적용:</p><pre id="61d720e4-6f49-83d1-a85e-8183635f87ef" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f efs-dynamic-pod1.yaml
+kubectl apply -f efs-dynamic-pod2.yaml</code></pre><p id="9cd720e4-6f49-83b0-a330-815e73232551" class="" dir="auto">확인:</p><pre id="404720e4-6f49-82c6-a182-81d19a8a4e25" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods</code></pre><hr id="e00720e4-6f49-822b-a462-8125597e93d5" dir="auto"/><h2 id="64e720e4-6f49-83dd-a425-81c9366c125a" class="" dir="auto">15. 공유 저장소 동작 확인</h2><h2 id="63c720e4-6f49-83cd-92af-8110017147b9" class="" dir="auto">동적 방식</h2><p id="549720e4-6f49-8317-b5c3-8174e75c682a" class="" dir="auto">첫 번째 Pod에서 파일 생성:</p><pre id="96f720e4-6f49-8241-a636-01ed1209f129" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it efs-dynamic-pod1 -- sh</code></pre><p id="9c5720e4-6f49-838c-a621-816682d5a3ab" class="" dir="auto">컨테이너 내부에서 실행:</p><pre id="23d720e4-6f49-8263-9291-014e45e21191" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">echo EFS Dynamic Provisioning Test &gt; /usr/share/nginx/html/index.html
+cat /usr/share/nginx/html/index.html</code></pre><p id="7cb720e4-6f49-8373-803d-81f8ffc852b7" class="" dir="auto">두 번째 Pod에서 확인:</p><pre id="c70720e4-6f49-82f4-8dd3-01c8ea5fc3c9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it efs-dynamic-pod2 -- sh</code></pre><p id="bd4720e4-6f49-82c5-a421-01d889d79777" class="" dir="auto">컨테이너 내부에서 실행:</p><pre id="69a720e4-6f49-821c-a914-81023e20996e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cat /usr/share/nginx/html/index.html</code></pre><p id="330720e4-6f49-8278-a1fb-01f24f9b04e4" class="" dir="auto">같은 내용이 보이면 동적 방식도 공유 스토리지로 정상 동작한 것임.</p><hr id="21c720e4-6f49-83bd-962b-8176fa4e4096" dir="auto"/><h2 id="2eb720e4-6f49-83d5-92bf-814766e6f1f0" class="" dir="auto">16. Access Point 확인 방법</h2><p id="890720e4-6f49-831b-9c90-01829ebeea84" class="" dir="auto">StorageClass 기반 동적 프로비저닝의 핵심은 <strong>EFS Access Point가 자동 생성되는지 확인하는 것</strong>임.</p><h3 id="2e4720e4-6f49-82eb-adc6-01ed04990e3c" class="" dir="auto">AWS 콘솔에서 확인</h3><h3 id="d0e720e4-6f49-8390-b80a-01222b39bbd7" class="" dir="auto">방법 1</h3><p id="8a1720e4-6f49-83fa-84fd-013d13d02dfb" class="" dir="auto"><strong>AWS Console → Amazon EFS → 왼쪽 메뉴 </strong><code><strong>Access points</strong></code></p><h3 id="6a5720e4-6f49-830b-b599-8136f05d5e36" class="" dir="auto">방법 2</h3><p id="137720e4-6f49-83e0-9da8-811221965f5b" class="" dir="auto"><strong>AWS Console → Amazon EFS → File systems → 해당 File System 선택 → </strong><code><strong>Access points</strong></code><strong> 탭</strong></p><h3 id="0c4720e4-6f49-8393-aab4-81f1cc6b383e" class="" dir="auto">AWS CLI에서 확인</h3><p id="76c720e4-6f49-82e7-ae8f-81469e82dcad" class="" dir="auto">전체 Access Point 목록:</p><pre id="6e0720e4-6f49-8360-9016-81db3e216092" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws efs describe-access-points --region ap-northeast-2</code></pre><p id="5a8720e4-6f49-83db-a99e-81b556e81297" class="" dir="auto">특정 파일 시스템 기준 조회:</p><pre id="bbc720e4-6f49-82e4-aebe-81acfdd4f093" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws efs describe-access-points --file-system-id fs-0abc1234def567890 --region ap-northeast-2</code></pre><p id="082720e4-6f49-82dc-9693-810b3a80ffe6" class="" dir="auto">특정 Access Point 상세 조회:</p><pre id="e73720e4-6f49-8318-8c1a-819f4ea55eb1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws efs describe-access-points --access-point-id fsap-0123456789abcdef0 --region ap-northeast-2</code></pre><h3 id="28d720e4-6f49-8372-b7b6-0197a12f4e0b" class="" dir="auto">실습에서 확인할 포인트</h3><ul id="a66720e4-6f49-833d-8096-81e1ec247460" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC 생성 전보다 Access Point가 하나 더 생겼는지</li></ul><ul id="675720e4-6f49-829f-812f-015408b77117" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 Access Point가 같은 <code>fileSystemId</code> 아래에 생성되었는지</li></ul><ul id="ce2720e4-6f49-83a1-b406-01bf3990809e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>basePath</code> 아래 경로가 반영되는지</li></ul><p id="818720e4-6f49-83ec-9f71-01692eacbda6" class="" dir="auto">즉,</p><p id="d84720e4-6f49-82b9-bc77-014d7d4c7139" class="" dir="auto"><strong>PVC 생성 → PV 자동 생성 → Access Point 자동 생성</strong></p><p id="568720e4-6f49-8229-b928-01b4af06e75a" class="" dir="auto">이 흐름을 확인하면 됨.</p><hr id="9f9720e4-6f49-8319-a02d-010103fcfa03" dir="auto"/><h2 id="c9b720e4-6f49-8326-8663-81a0f0725b6f" class="" dir="auto">17. 정적 방식과 동적 방식 비교</h2><table id="466720e4-6f49-8242-b8b8-81f249ee770b" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="1b2720e4-6f49-8327-bba5-016e0c228f93" dir="ltr"><th id="WqEh" class="simple-table-header-color simple-table-header">항목</th><th id="CkzH" class="simple-table-header-color simple-table-header">정적 PV 방식</th><th id="~_Ew" class="simple-table-header-color simple-table-header">StorageClass 동적 방식</th></tr></thead><tbody><tr id="868720e4-6f49-8241-9a1e-01e2eccb7163" dir="ltr"><td id="WqEh" class="">준비 방식</td><td id="CkzH" class="">PV를 먼저 직접 생성</td><td id="~_Ew" class="">StorageClass만 준비</td></tr><tr id="e73720e4-6f49-8203-b302-01bb42d00ddd" dir="ltr"><td id="WqEh" class="">사용자 요청</td><td id="CkzH" class="">PVC가 기존 PV에 바인딩</td><td id="~_Ew" class="">PVC만 만들면 자동 처리</td></tr><tr id="472720e4-6f49-8307-a306-01fce473f521" dir="ltr"><td id="WqEh" class="">AWS 측 동작</td><td id="CkzH" class="">기존 EFS 파일 시스템 직접 사용</td><td id="~_Ew" class="">Access Point 자동 생성</td></tr><tr id="6b1720e4-6f49-82a5-8061-0134928efe14" dir="ltr"><td id="WqEh" class="">운영 편의성</td><td id="CkzH" class="">개념 이해 쉬움</td><td id="~_Ew" class="">자동화에 유리</td></tr><tr id="107720e4-6f49-83a0-8f34-819de6d01122" dir="ltr"><td id="WqEh" class="">운영 감각</td><td id="CkzH" class="">실습용으로 단순함</td><td id="~_Ew" class="">실제 운영 구조에 더 가까움</td></tr></tbody></table><hr id="275720e4-6f49-8311-b883-0169329c0f93" dir="auto"/><h2 id="db2720e4-6f49-8219-a8f2-8157a6b40122" class="" dir="auto">18. 자주 발생하는 문제</h2><h3 id="992720e4-6f49-82a8-84f7-81cfd664532e" class="" dir="auto">18-1. PVC가 Pending 상태인 경우</h3><p id="3d2720e4-6f49-823a-ada0-81d11bcfd621" class="" dir="auto">확인:</p><pre id="18e720e4-6f49-8285-b5bf-01bc72c010ab" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get storageclass
+kubectl get pvc
+kubectl describe pvc efs-dynamic-pvc</code></pre><p id="95c720e4-6f49-839f-87fb-81f9335193f8" class="" dir="auto">가능한 원인:</p><ul id="3d7720e4-6f49-8344-9170-8118f20f4ab8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS CSI 드라이버 미설치</li></ul><ul id="dd3720e4-6f49-8303-95c0-01938fceaa70" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>fileSystemId</code> 오타</li></ul><ul id="9fc720e4-6f49-82dd-b4f4-81e1d20ca9f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">StorageClass 이름 오타</li></ul><ul id="bee720e4-6f49-839d-81cf-01bac59dadac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 권한 부족</li></ul><ul id="e5a720e4-6f49-830c-9250-01134751230b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Fargate 환경에서 동적 프로비저닝 시도</li></ul><h3 id="945720e4-6f49-83d8-8f82-81e4c0121485" class="" dir="auto">18-2. Pod가 Running이 안 되는 경우</h3><p id="e18720e4-6f49-8363-ac70-01ea5a78e003" class="" dir="auto">확인:</p><pre id="50b720e4-6f49-83ad-b844-81daf2fc4272" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe pod efs-pod1
+kubectl describe pod efs-pod2
+kubectl describe pod efs-dynamic-pod1
+kubectl describe pod efs-dynamic-pod2</code></pre><p id="54f720e4-6f49-82fe-81d2-014193d36477" class="" dir="auto">가능한 원인:</p><ul id="887720e4-6f49-82be-902c-017df6de7acd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS mount target 접근 불가</li></ul><ul id="e55720e4-6f49-826f-8c8c-01ee1930e2ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹 문제</li></ul><ul id="e70720e4-6f49-82eb-be04-01b91be32e67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PV/PVC 바인딩 문제</li></ul><h3 id="e65720e4-6f49-820f-9afb-01b1cda6552d" class="" dir="auto">18-3. Access Point가 안 보이는 경우</h3><p id="129720e4-6f49-83df-ba53-014c45078343" class="" dir="auto">확인:</p><pre id="62d720e4-6f49-8236-85c7-017c597e34ce" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws efs describe-access-points --file-system-id fs-0abc1234def567890 --region ap-northeast-2
+kubectl get pvc
+kubectl get pv</code></pre><p id="b97720e4-6f49-8301-80bd-81bebbc00e4a" class="" dir="auto">가능한 원인:</p><ul id="4e8720e4-6f49-83e3-8a03-814822f1c70a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC가 실제로 Bound 되지 않음</li></ul><ul id="f76720e4-6f49-8228-8bfb-81b1b0fe3bc5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS CSI 드라이버가 동적 프로비저닝에 실패함</li></ul><ul id="159720e4-6f49-8321-97ff-8175b32ba5b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provisioningMode: efs-ap</code> 설정 오류</li></ul><hr id="f23720e4-6f49-833d-8c8c-01a01ccb7709" dir="auto"/><h2 id="9a0720e4-6f49-83af-a66c-01543649e2af" class="" dir="auto">19. 실습 후 정리 명령</h2><h3 id="2e8720e4-6f49-820e-b3a2-81a0c4419169" class="" dir="auto">정적 방식 정리</h3><pre id="774720e4-6f49-82f5-b62e-81403313d645" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete pod efs-pod1
+kubectl delete pod efs-pod2
+kubectl delete pvc efs-pvc
+kubectl delete pv efs-pv</code></pre><h3 id="36a720e4-6f49-822e-bf04-0157755e3bc2" class="" dir="auto">동적 방식 정리</h3><pre id="3a8720e4-6f49-8328-8749-81966f46a841" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete pod efs-dynamic-pod1
+kubectl delete pod efs-dynamic-pod2
+kubectl delete pvc efs-dynamic-pvc
+kubectl delete storageclass efs-sc</code></pre><p id="d2f720e4-6f49-83f7-9d0d-017a229e4431" class="" dir="auto">동적 방식은 <code>reclaimPolicy: Delete</code>로 설정했으므로 실습 후 Access Point가 정리되는지도 확인.</p><hr id="39a720e4-6f49-836d-8e55-81c33fc5eb34" dir="auto"/><h2 id="5fc720e4-6f49-8331-aa92-017e87392e2f" class="" dir="auto">20. 실습 정리</h2><ul id="d14720e4-6f49-83e7-8ead-8173d8d175e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS는 여러 Pod가 동시에 사용할 수 있는 공유 파일 스토리지임</li></ul><ul id="914720e4-6f49-8228-8aab-01e26cebf1fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 방식은 PV를 직접 만들기 때문에 이해가 쉬움</li></ul><ul id="49b720e4-6f49-83e3-acf1-01638bd0cb34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동적 방식은 StorageClass와 Access Point 자동 생성 때문에 운영 자동화에 더 가까움.</li></ul><ul id="806720e4-6f49-82d9-85c2-814ffbd28a79" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EKS에서는 Kubernetes의 PVC 요청이 실제 AWS EFS 구조와 연결됨</li></ul><ul id="145720e4-6f49-83ba-806f-8139e518bcba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">온프레미스에서 NFS/공유 파일 시스템으로 하던 개념을 EKS에서는 관리형 EFS로 실습할 수 있음</li></ul><hr id="5d6720e4-6f49-8368-9553-81c2dd408145" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

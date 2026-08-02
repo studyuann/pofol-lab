@@ -1,0 +1,775 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. OpenVPN Gateway를 이용한 Private DB 통신망 구축</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="49e720e4-6f49-82e7-9a47-015ba8967591" class="page sans"><header><h1 class="page-title" dir="auto">실습. OpenVPN Gateway를 이용한 Private DB 통신망 구축</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="728720e4-6f49-82c4-8178-8117cb74248b" class="" dir="auto">1. 실습 배경 및 목적</h2><p id="081720e4-6f49-83b5-8ec4-81043c03cf38" class="" dir="auto">클라우드 보안의 핵심은 &#x27;최소 노출&#x27;이다. 기업의 핵심 데이터가 담긴 DB는 공인 IP 없이 사설망(Private Subnet)에만 존재해야 한다. 본 실습은 외부망(집/사무실)에서 클라우드 내부의 폐쇄된 DB에 접속하기 위한 안전한 통로(VPN)를 구축하고, 네트워크 패킷의 흐름을 제어하는 능력을 배양한다.</p><hr id="0d3720e4-6f49-83e8-8c03-01f87979dcc1" dir="auto"/><h2 id="940720e4-6f49-83a1-90f3-011722a69740" class="" dir="auto">2. 전체 구성도 (Logical Architecture)</h2><table id="e26720e4-6f49-83a1-b7c5-81af07cd256c" class="simple-table" dir="ltr"><tbody><tr id="517720e4-6f49-835c-881e-018c6a91ae6d" dir="ltr"><td id="v;xn" class=""><strong>구성 요소</strong></td><td id="hdP&gt;" class=""><strong>상세 사양</strong></td><td id="xG&lt;L" class=""><strong>역할</strong></td></tr><tr id="aa8720e4-6f49-822e-8068-81256fb86db4" dir="ltr"><td id="v;xn" class=""><strong>Local Client</strong></td><td id="hdP&gt;" class="">Windows 10/11, OpenVPN Connect</td><td id="xG&lt;L" class="">VPN 터널의 시작점 및 DB 관리 도구 실행</td></tr><tr id="e51720e4-6f49-8352-a942-01f75f55d845" dir="ltr"><td id="v;xn" class=""><strong>VPN Gateway</strong></td><td id="hdP&gt;" class="">Ubuntu 22.04 LTS (e2-medium 권장)</td><td id="xG&lt;L" class="">외부 패킷을 수신하여 VPC 내부로 중계 (Router 역할)</td></tr><tr id="224720e4-6f49-8374-b450-81be06ac83b4" dir="ltr"><td id="v;xn" class=""><strong>Cloud SQL</strong></td><td id="hdP&gt;" class="">MySQL 8.0 (Private IP 전용)</td><td id="xG&lt;L" class="">외부 노출이 차단된 핵심 데이터 저장소</td></tr><tr id="96b720e4-6f49-82b8-9fa4-0195cf989918" dir="ltr"><td id="v;xn" class=""><strong>Network</strong></td><td id="hdP&gt;" class="">GCP Custom VPC</td><td id="xG&lt;L" class="">프로젝트 전용 격리된 네트워크 환경</td></tr></tbody></table><hr id="1f2720e4-6f49-8382-b728-01938d8b720b" dir="auto"/><h2 id="434720e4-6f49-83a7-b2f0-01411211f07e" class="" dir="auto">3. 상세 구축 절차</h2><h3 id="9c6720e4-6f49-825a-b626-81cdeb1b2a2c" class="" dir="auto">단계 1: Custom VPC 및 Cloud SQL 준비</h3><ol type="1" id="6f5720e4-6f49-8397-8107-8113220d6654" class="numbered-list" start="1" dir="auto"><li><strong>VPC 생성:</strong> <code>10.0.0.0/20</code> 대역의 Custom VPC를 생성한다.</li></ol><ol type="1" id="144720e4-6f49-8340-a05c-01171109110b" class="numbered-list" start="2" dir="auto"><li><strong>Cloud SQL 생성:</strong>  [연결] 설정에서 비공개 IP(Private IP)를 활성화한다.<ul id="75a720e4-6f49-835b-98f4-0112efe9b5ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결할 네트워크를 위에서 생성한 Custom VPC로 지정한다.</li></ul><ul id="21f720e4-6f49-82b2-9201-81ad62443506" class="bulleted-list" dir="auto"><li style="list-style-type:disc">※ 이때 할당되는 사설 IP(예: <code>10.160.1.3</code>)를 반드시 기록한다.</li></ul></li></ol><h3 id="88d720e4-6f49-83d4-a4c1-017106b8bfe9" class="" dir="auto">단계 2: VPN Gateway VM 인스턴스 생성</h3><ol type="1" id="c40720e4-6f49-8227-a0b5-01426d68c4c7" class="numbered-list" start="1" dir="auto"><li><strong>VPC 위치:</strong> 반드시 DB가 속한 <strong>Custom VPC</strong> 내부에 생성한다. (Default VPC 사용 시 통신 단절의 원인이 됨)</li></ol><ol type="1" id="dae720e4-6f49-83a2-93db-019a496494b7" class="numbered-list" start="2" dir="auto"><li><strong>방화벽(핵심):</strong> VM 인스턴스 설정 화면에서 **&#x27;Allow HTTP/HTTPS traffic&#x27;**을 체크한다.<ul id="bde720e4-6f49-8357-8a12-8116e8036bcb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이는 GCP가 제공하는 시스템 태그(<code>http-server</code>)를 활용하여 인바운드 정책을 가장 확실하게 적용하는 방법이다.</li></ul></li></ol><ol type="1" id="e37720e4-6f49-8290-8900-814a56040195" class="numbered-list" start="3" dir="auto"><li><strong>외부 IP:</strong> 클라이언트가 접속할 수 있도록 고정(Static) 외부 IP를 할당한다.</li></ol><h3 id="e6f720e4-6f49-8294-b78f-0145b628a584" class="" dir="auto">단계 3: OpenVPN 서버 구축 및 최적화</h3><ol type="1" id="8f0720e4-6f49-827b-8bf9-812428547257" class="numbered-list" start="1" dir="auto"><li><strong>설치 스크립트 활용:</strong>Bash<h1 id="d30720e4-6f49-83e8-9210-01611ad3564c" class="" dir="auto"></h1><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="775720e4-6f49-8359-b00d-819d37dbfd81" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">wget https://git.io/vpn -O openvpn-install.sh
+chmod +x openvpn-install.sh
+sudo ./openvpn-install.sh</code></pre></li></ol><ol type="1" id="e16720e4-6f49-82a7-8af4-01f4544e861b" class="numbered-list" start="2" dir="auto"><li><strong>환경 설정 (가정용 공유기 트러블슈팅):</strong><ul id="bfa720e4-6f49-820d-9fcb-01b57e5303cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Protocol:</strong> <strong>TCP</strong> 선택 (UDP는 공유기 방화벽에서 드랍될 확률이 높음)</li></ul><ul id="c84720e4-6f49-82ea-8cfe-8198b7d7d1d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Port:</strong> <strong>443</strong> (표준 HTTPS 포트를 사용하여 필터링 우회)</li></ul></li></ol><ol type="1" id="e1c720e4-6f49-830d-9067-81b769daa5a9" class="numbered-list" start="3" dir="auto"><li><strong>OS 레벨 패킷 포워딩:</strong> * <code>/etc/sysctl.conf</code>에서 <code>net.ipv4.ip_forward = 1</code> 주석을 해제하거나 추가한다.<ul id="00b720e4-6f49-833b-b4a9-010b86fc046f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>sudo sysctl -p</code>로 즉시 적용한다.</li></ul></li></ol><h3 id="d8c720e4-6f49-8233-9ffc-014a7b9f9129" class="" dir="auto">단계 4: IPTables를 이용한 네트워크 주소 변환(NAT)</h3><p id="fde720e4-6f49-825d-b588-8124f6c46263" class="" dir="auto">VPN을 통해 들어온 패킷은 <code>10.8.0.x</code> 주소를 가진다. DB는 이 대역을 모르기 때문에 VM의 내부 IP로 변장시켜야 응답을 받을 수 있다.</p><pre id="1e1720e4-6f49-83ab-a867-010163610d56" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 내부 인터페이스 명칭(예: ens4)을 확인 후 실행
+sudo iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o ens4 -j MASQUERADE
+
+# 설정 영구 저장
+sudo apt-get install iptables-persistent
+sudo netfilter-persistent save</code></pre><h3 id="101720e4-6f49-83f7-9b94-8109a5627ccc" class="" dir="auto">단계 5: 클라이언트(Windows) 연동 및 라우팅 추가</h3><ol type="1" id="60b720e4-6f49-8386-8b79-01a5b1b4ffcd" class="numbered-list" start="1" dir="auto"><li><strong>파일 다운로드:</strong> 생성된 <code>.ovpn</code> 파일을 로컬 PC로 가져와 OpenVPN Connect에 등록한다.</li></ol><ol type="1" id="7a9720e4-6f49-83fb-923c-81164ac6986a" class="numbered-list" start="2" dir="auto"><li><strong>라우팅 테이블 수정 (가장 중요):</strong> VPN 연결 후, 사설 대역(<code>10.160.x.x</code>)을 향하는 패킷만 터널로 보내도록 이정표를 세운다.PowerShell<pre id="9e7720e4-6f49-828e-b9c6-81cf38d43809" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 관리자 권한 CMD에서 실행
+route add 10.160.0.0 mask 255.255.0.0 10.8.0.1</code></pre></li></ol><hr id="bcb720e4-6f49-839b-8fae-01a5c4db9878" dir="auto"/><h2 id="94f720e4-6f49-83db-be83-015abbe76291" class="" dir="auto">4. 검증 및 디버깅 (Verification)</h2><h3 id="b5b720e4-6f49-821b-92eb-817864e75a8d" class="" dir="auto">1단계: 통로 확인 (Ping)</h3><ul id="dbe720e4-6f49-82b2-ba0e-0198cae2c476" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로컬 CMD에서 <code>ping 10.160.1.3</code>을 실행한다.</li></ul><ul id="00a720e4-6f49-826b-b665-01cc4ca6bf66" class="bulleted-list" dir="auto"><li style="list-style-type:disc">응답이 없다면 VM에서 <code>tcpdump -ni any icmp</code>를 실행하여 패킷이 VM까지 도달하는지 확인한다.</li></ul><h3 id="750720e4-6f49-82be-9fc1-012d45db58fa" class="" dir="auto">2단계: 서비스 확인 (Telnet/TNC)</h3><ul id="498720e4-6f49-8301-9e63-0134bd2bfe18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파워쉘에서 <code>tnc 10.160.1.3 -port 3306</code>을 실행한다.</li></ul><ul id="75a720e4-6f49-831f-8d17-01664dbb95e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>TcpTestSucceeded : True</code>가 떠야 최종 성공이다.</li></ul><hr id="f15720e4-6f49-82e6-90f8-01cec6109738" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

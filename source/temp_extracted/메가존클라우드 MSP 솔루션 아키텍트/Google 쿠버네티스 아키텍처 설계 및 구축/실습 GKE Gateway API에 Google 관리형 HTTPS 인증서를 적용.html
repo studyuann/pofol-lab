@@ -1,0 +1,939 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. GKE Gateway API에 Google 관리형 HTTPS 인증서를 적용</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="4d2720e4-6f49-824f-84fa-01c7a6d57004" class="page sans"><header><h1 class="page-title" dir="auto"><strong>실습. GKE Gateway API에 Google 관리형 HTTPS 인증서를 적용</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="691720e4-6f49-832b-887a-018ed3800cd7" dir="auto"/><h1 id="c10720e4-6f49-82ad-8e82-013d865c657f" class="" dir="auto">1. 실습 목표</h1><p id="a43720e4-6f49-82d3-8eaf-81045bcb823e" class="" dir="auto">이 실습에서는 다음을 수행한다.</p><ul id="97c720e4-6f49-8249-b1f7-81ba36189a03" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53에서 관리 중인 <code>이니셜.cloudai.store</code> 도메인을 사용한다.</li></ul><ul id="90f720e4-6f49-821b-90da-01561c40ada5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>www.이니셜.cloudai.store</code> 이름으로 Google 관리형 인증서를 발급한다.</li></ul><ul id="609720e4-6f49-8308-97ed-0141318db29b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE Gateway API에 Certificate Manager 인증서를 연결한다.</li></ul><ul id="66e720e4-6f49-833b-8f3d-81ab943854f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53에서 <code>www</code> A 레코드를 Gateway 외부 IP로 연결한다.</li></ul><ul id="ced720e4-6f49-83b7-89f8-01db1a955fe4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최종적으로 <code>https://www.이니셜.cloudai.store</code> 로 접속해 HTTPS가 정상 동작하는지 확인한다.</li></ul><hr id="f44720e4-6f49-82b9-8928-01d2b4d7d611" dir="auto"/><h1 id="9fd720e4-6f49-8208-b5c8-01962549fd15" class="" dir="auto">2. 실습에 사용할 기준 값</h1><p id="40f720e4-6f49-82fa-ab2a-8142f2c72cb4" class="" dir="auto">실습 중 아래 값을 예시로 사용한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="7f7720e4-6f49-822f-a3d1-81b40227fe5e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">GCP 프로젝트 ID: my-gcp-project
+GKE 클러스터 이름: 이니셜-std-cluster-1
+GKE 리전: asia-northeast3-c
+호스팅 영역 도메인: abc.cloudai.store
+실제 접속 도메인: www.abc.cloudai.store
+DNS Authorization 이름: my-dns-auth
+인증서 이름: my-gke-cert
+Certificate Map 이름: my-gke-cert-map
+Map Entry 이름: my-cert-map-entry
+Gateway 이름: my-gateway
+HTTPRoute 이름: hello-route
+Service 이름: hello-service</code></pre><p id="d62720e4-6f49-8241-bdad-8140c26c27c0" class="" dir="auto">여기서 <code>abc</code> 부분은 본인 이니셜로 바꾸면 된다.</p><p id="a12720e4-6f49-83ad-93d6-810841eed5ef" class="" dir="auto">예를 들어 이니셜이 <code>kyt</code> 라면:</p><pre id="694720e4-6f49-835d-9dec-0182f195751c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">호스팅 영역 도메인: kyt.cloudai.store
+실제 접속 도메인: www.kyt.cloudai.store</code></pre><hr id="5ce720e4-6f49-8294-9233-81ce291fe575" dir="auto"/><h1 id="604720e4-6f49-8206-a3d1-0179b59e3467" class="" dir="auto">3. 실습 전 확인 사항</h1><p id="85e720e4-6f49-8399-8d37-81cfbb54f8bb" class="" dir="auto">GKE Gateway를 사용하려면 Gateway API가 활성화되어 있어야 하고, GatewayClass가 생성되어 있어야 한다. GKE 문서 기준으로 Gateway API를 사용하는 클러스터는 VPC-native여야 하며, Gateway 배포 후 <code>gke-l7-global-external-managed</code> 같은 GatewayClass를 사용할 수 있다. 또한 Gateway 상태 확인 시 <code>Programmed=True</code> 조건이 중요하다. </p><p id="b62720e4-6f49-8205-901e-816c191160cb" class="" dir="auto">GatewayClass 확인:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="4dc720e4-6f49-8227-8c22-817616c2a930" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get gatewayclass</code></pre><p id="020720e4-6f49-8256-a301-81be28fa0b44" class="" dir="auto">예상 예시:</p><pre id="fdd720e4-6f49-83d9-b80e-81470f4cf810" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME                               CONTROLLER
+gke-l7-global-external-managed     networking.gke.io/gateway
+gke-l7-regional-external-managed   networking.gke.io/gateway</code></pre><hr id="22e720e4-6f49-823c-a617-013458820617" dir="auto"/><h1 id="534720e4-6f49-83e4-abca-81e94528355a" class="" dir="auto">4. 전체 실습 흐름</h1><ol type="1" id="02f720e4-6f49-828b-9bee-81e8599b8d22" class="numbered-list" start="1" dir="auto"><li><code>www.이니셜.cloudai.store</code> 에 대한 DNS Authorization 생성</li></ol><ol type="1" id="ec5720e4-6f49-83b4-bdeb-01e429c1886b" class="numbered-list" start="2" dir="auto"><li>Route 53에 검증용 CNAME 등록</li></ol><ol type="1" id="61e720e4-6f49-82d8-b512-81f9b3ec3a41" class="numbered-list" start="3" dir="auto"><li><code>www.이니셜.cloudai.store</code> 이름으로 Google 관리형 인증서 생성</li></ol><ol type="1" id="609720e4-6f49-8301-8899-81af49d3bcf1" class="numbered-list" start="4" dir="auto"><li>Certificate Map / Map Entry 생성</li></ol><ol type="1" id="265720e4-6f49-8217-b1ac-818c332ff26c" class="numbered-list" start="5" dir="auto"><li>샘플 애플리케이션 배포</li></ol><ol type="1" id="24e720e4-6f49-8337-8ccf-01bc5da824a9" class="numbered-list" start="6" dir="auto"><li>Gateway / HTTPRoute 배포</li></ol><ol type="1" id="e7f720e4-6f49-82e9-a4e9-8151a546d654" class="numbered-list" start="7" dir="auto"><li>Gateway 외부 IP 확인</li></ol><ol type="1" id="2c7720e4-6f49-8353-bdc2-810795f07bdd" class="numbered-list" start="8" dir="auto"><li>Route 53에 <code>www</code> A 레코드 등록</li></ol><ol type="1" id="1bf720e4-6f49-822a-a287-0182fb702f65" class="numbered-list" start="9" dir="auto"><li>HTTPS 접속 확인</li></ol><ol type="1" id="b73720e4-6f49-832b-854f-01a5d51ad684" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>리소스 삭제</li></ol><p id="e38720e4-6f49-83d8-91c2-8162ee9e4c10" class="" dir="auto">Certificate Manager의 DNS Authorization은 도메인별로 생성되며, 그 결과로 나온 <code>dnsResourceRecord.name</code> 과 <code>dnsResourceRecord.data</code> 값을 DNS에 등록해야 인증서 발급이 진행된다. GKE Gateway에서 Certificate Manager를 사용할 때는 Gateway annotation에 certmap을 연결한다. (<a href="https://docs.cloud.google.com/kubernetes-engine/docs/how-to/secure-gateway?utm_source=chatgpt.com">Google Cloud Documentation</a>)</p><hr id="351720e4-6f49-82a7-b5dd-8158c6dbeb27" dir="auto"/><h1 id="fa2720e4-6f49-8271-9347-81f2b1f5aee5" class="" dir="auto">5. 1단계 - DNS Authorization 생성</h1><p id="632720e4-6f49-83f2-821e-818bb583794c" class="" dir="auto">이번 실습에서는 인증서를 <code>www.이니셜.cloudai.store</code> 로 발급할 것이므로 DNS Authorization도 그 이름 기준으로 생성한다.</p><p id="cf4720e4-6f49-83f3-8fa6-817720eca9d1" class="" dir="auto">예를 들어 이니셜이 <code>kyt</code> 라면:</p><pre id="c11720e4-6f49-8313-a4a8-0138a485f9ae" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud certificate-manager dns-authorizations create my-dns-auth \
+  --domain=&quot;www.kyt.cloudai.store&quot;</code></pre><p id="ce8720e4-6f49-8229-b2fc-018048ec338d" class="" dir="auto">이 명령은 Google이 DNS를 통해 도메인 소유권을 검증할 수 있도록 Authorization 리소스를 만든다. DNS Authorization은 Google-managed certificate의 발급과 갱신에 사용된다. </p><p id="b6b720e4-6f49-82e0-8366-81b7804d3f7a" class="" dir="auto">생성 후 상세 정보를 확인한다.</p><pre id="fcb720e4-6f49-82b7-a642-8138dde9a9bc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud certificate-manager dns-authorizations describe my-dns-auth</code></pre><p id="327720e4-6f49-8287-a5a7-819ca3964af7" class="" dir="auto">예상 출력 예시:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="e9a720e4-6f49-837b-b3be-0129ee07ece8" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">dnsResourceRecord:
+  name: _acme-challenge.www.kyt.cloudai.store.
+  type: CNAME
+  data: 12345678-aaaa-bbbb-cccc-1234567890ab.4.authorize.certificatemanager.goog.
+domain: www.kyt.cloudai.store</code></pre><p id="ce6720e4-6f49-8341-949e-81d0a637ef30" class="" dir="auto">여기서 반드시 메모할 값은 아래 3개다.</p><pre id="538720e4-6f49-8366-8b4b-012653d8dc87" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">name
+type
+data</code></pre><p id="6a9720e4-6f49-82cb-a3b8-818b98973081" class="" dir="auto">즉 예시 기준으로는 다음과 같다.</p><pre id="d2d720e4-6f49-83c7-9b65-816aa40810de" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">name: _acme-challenge.www.kyt.cloudai.store.
+type: CNAME
+data: 12345678-aaaa-bbbb-cccc-1234567890ab.4.authorize.certificatemanager.goog.</code></pre><hr id="aa2720e4-6f49-82f5-9a62-01c97d93fe7e" dir="auto"/><h1 id="ffe720e4-6f49-82c0-bbe8-019b9b5cb549" class="" dir="auto">6. 2단계 - Route 53에 검증용 CNAME 등록</h1><p id="fbc720e4-6f49-82eb-a965-01dac650cda4" class="" dir="auto">현재 Route 53 호스팅 영역은 <code>kyt.cloudai.store</code> 라고 가정한다.</p><p id="702720e4-6f49-82d9-a160-013085fb8eac" class="" dir="auto">즉, Route 53의 레코드 이름 입력칸 오른쪽에 <code>kyt.cloudai.store</code> 가 보이는 상태라면, 왼쪽 입력칸에는 <strong>앞부분만</strong> 넣으면 된다.</p><p id="e39720e4-6f49-82e0-a5c5-015a37480dca" class="" dir="auto">지금 검증 대상은:</p><pre id="ddd720e4-6f49-8288-a4d5-01272ab97aaa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.kyt.cloudai.store</code></pre><p id="aa0720e4-6f49-825c-bf0f-81201d6ba451" class="" dir="auto">이고, Authorization 결과의 <code>name</code> 이:</p><pre id="fcc720e4-6f49-8353-928d-01f7f6a9d5ec" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">_acme-challenge.www.kyt.cloudai.store.</code></pre><p id="bc8720e4-6f49-83ad-8dae-8151e6122a4a" class="" dir="auto">이므로 Route 53에서는 아래처럼 넣는다.</p><h2 id="aa5720e4-6f49-83bd-8aeb-81808e059a13" class="" dir="auto">Route 53 입력값</h2><ul id="425720e4-6f49-8289-89af-01dee1a23bba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 이름: <code>_acme-challenge.www</code></li></ul><ul id="3a0720e4-6f49-8291-a2f1-01c6fd7479ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 유형: <code>CNAME</code></li></ul><ul id="139720e4-6f49-8226-86f1-8167d7d667df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">값: <code>12345678-aaaa-bbbb-cccc-1234567890ab.4.authorize.certificatemanager.goog</code></li></ul><p id="4be720e4-6f49-829e-9de3-8182a9457e6c" class="" dir="auto">이렇게 입력하면 Route 53은 최종적으로 다음 FQDN으로 해석한다.</p><pre id="c2f720e4-6f49-83a2-9d2b-01abc0c4b1a3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">_acme-challenge.www.kyt.cloudai.store</code></pre><p id="05d720e4-6f49-837d-9257-81ad87195358" class="" dir="auto">이 값이 바로 Google이 도메인 검증에 사용하는 레코드다. </p><p id="a8a720e4-6f49-839e-932c-8100f74a0807" class="" dir="auto">DNS 반영 여부를 확인한다.</p><pre id="3de720e4-6f49-8310-a02b-01a7e3c0ab9f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">dig CNAME _acme-challenge.www.kyt.cloudai.store</code></pre><p id="298720e4-6f49-820e-95eb-819d8da3fb7d" class="" dir="auto">정상이라면 <code>ANSWER SECTION</code> 에 <code>authorize.certificatemanager.goog</code> 값이 보여야 한다.</p><hr id="cdc720e4-6f49-8329-a938-819c714d9bde" dir="auto"/><h1 id="ef6720e4-6f49-8359-b869-011c38afd2f6" class="" dir="auto">7. 3단계 - Google 관리형 인증서 생성</h1><p id="311720e4-6f49-823e-a3e0-810e62289cf2" class="" dir="auto">DNS Authorization이 준비되었으면 <code>www.kyt.cloudai.store</code> 이름으로 인증서를 생성한다.</p><pre id="55b720e4-6f49-839e-85d0-013d234c8acd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud certificate-manager certificates create my-gke-cert \
+  --domains=&quot;www.kyt.cloudai.store&quot; \
+  --dns-authorizations=&quot;my-dns-auth&quot;</code></pre><p id="721720e4-6f49-8388-baf4-01d9de74c5e5" class="" dir="auto">이 명령은 <code>www.kyt.cloudai.store</code> 이름을 SAN으로 포함하는 Google-managed certificate를 생성한다. 인증서는 DNS Authorization이 정상 검증되면 발급되고, 이후에도 자동 갱신에 같은 Authorization이 사용된다.</p><p id="a56720e4-6f49-834a-9845-81d0a5e3c079" class="" dir="auto">인증서 상태를 확인한다.</p><pre id="603720e4-6f49-828a-b2ee-01ab2dbcbfef" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud certificate-manager certificates describe my-gke-cert</code></pre><p id="730720e4-6f49-827e-ae69-81ca17cfb477" class="" dir="auto">주요 확인 포인트:</p><ul id="ead720e4-6f49-82d9-810b-01558029c082" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>managed.status</code></li></ul><ul id="655720e4-6f49-833d-a9a6-8171980ed498" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>sanDnsnames</code></li></ul><ul id="2c6720e4-6f49-83f5-9a58-01bce5384d35" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>authorizationAttemptInfo</code></li></ul><p id="a95720e4-6f49-8274-a5a1-811cf4706fca" class="" dir="auto">발급 직후에는 <code>PROVISIONING</code> 상태가 나올 수 있다.</p><p id="04d720e4-6f49-828f-aa0c-011861bb9140" class="" dir="auto">DNS 전파와 검증이 끝나면 활성 상태로 바뀐다.</p><p id="64d720e4-6f49-8306-9e9b-8196cdc5a1d2" class="" dir="auto">반복 확인하려면:</p><pre id="785720e4-6f49-8335-8e4f-0182636b56ca" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">watch -n 10 &#x27;gcloud certificate-manager certificates describe my-gke-cert --format=&quot;yaml(name,managed.status,sanDnsnames)&quot;&#x27;</code></pre><hr id="e05720e4-6f49-82e1-b9e6-811edf830db1" dir="auto"/><h1 id="b7c720e4-6f49-83cf-a2d9-81242438fa45" class="" dir="auto">8. 4단계 - Certificate Map 및 Map Entry 생성</h1><p id="bc4720e4-6f49-83bd-bf8f-01718c2ffd76" class="" dir="auto">GKE Gateway에서 Certificate Manager 인증서를 사용할 때는 일반적으로 Certificate Map을 만들고, Gateway metadata annotation <code>networking.gke.io/certmap</code> 으로 연결한다. </p><p id="ee1720e4-6f49-82a1-ac9e-01bee466a073" class="" dir="auto">먼저 Certificate Map을 생성한다.</p><pre id="cbc720e4-6f49-839a-9438-81e305a0e2ae" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud certificate-manager maps create my-gke-cert-map</code></pre><p id="2ea720e4-6f49-83ed-8d7b-0189c282070d" class="" dir="auto">다음으로 Map Entry를 만든다.</p><pre id="97c720e4-6f49-8357-9f71-0115e467f1fa" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud certificate-manager maps entries create my-cert-map-entry \
+  --map=&quot;my-gke-cert-map&quot; \
+  --certificates=&quot;my-gke-cert&quot; \
+  --hostname=&quot;www.kyt.cloudai.store&quot;</code></pre><p id="307720e4-6f49-8333-b558-017f67186602" class="" dir="auto">여기서 <code>--hostname</code> 값은 매우 중요하다.</p><p id="f51720e4-6f49-8389-b377-019cf28cc1a7" class="" dir="auto">실제 접속할 도메인과 동일해야 한다.</p><pre id="1c3720e4-6f49-82b8-bd40-812c982ac1a0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.kyt.cloudai.store</code></pre><p id="77f720e4-6f49-82d8-94b3-81137ce76c26" class="" dir="auto">로 맞춰야 한다.</p><p id="52a720e4-6f49-82e1-9eab-81aecec7fa73" class="" dir="auto">확인:</p><pre id="ae1720e4-6f49-83f8-9ffb-018cb32e1b69" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud certificate-manager maps describe my-gke-cert-map
+
+gcloud certificate-manager maps entries describe my-cert-map-entry \
+  --map=&quot;my-gke-cert-map&quot;</code></pre><hr id="db4720e4-6f49-82a2-9f2f-810434147f8c" dir="auto"/><h1 id="066720e4-6f49-838a-9bb4-81fba307afc9" class="" dir="auto">9. 5단계 - 샘플 애플리케이션 배포</h1><p id="f8a720e4-6f49-8221-99c8-015c08e8cea4" class="" dir="auto">실습용 애플리케이션을 먼저 배포한다.</p><h2 id="d24720e4-6f49-8368-9e49-013627cfd6af" class="" dir="auto">app.yaml</h2><pre id="832720e4-6f49-8265-a034-0179688769a2" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hello
+  template:
+    metadata:
+      labels:
+        app: hello
+    spec:
+      containers:
+      - name: hello-app
+        image: us-docker.pkg.dev/google-samples/containers/gke/hello-app:1.0
+        ports:
+        - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: hello-service
+spec:
+  type: ClusterIP
+  selector:
+    app: hello
+  ports:
+  - port: 80
+    targetPort: 8080</code></pre><p id="417720e4-6f49-830b-a1cf-816a73c5a911" class="" dir="auto">적용:</p><pre id="4d3720e4-6f49-83a9-83af-012f04a9f750" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f app.yaml</code></pre><p id="1b2720e4-6f49-8235-a526-01e7fb2c0fea" class="" dir="auto">확인:</p><pre id="c6a720e4-6f49-8310-859b-0159accdb5c5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get deploy
+kubectl get pods
+kubectl get svc</code></pre><p id="b40720e4-6f49-83d0-9337-01d118c8fb13" class="" dir="auto">이 Service는 Gateway가 backend로 참조할 대상이다. GKE Gateway 배포 흐름에서도 Gateway/Route는 Service를 backendRef로 연결한다.</p><hr id="94e720e4-6f49-8312-bda6-8115a11786c3" dir="auto"/><h1 id="3bb720e4-6f49-8330-8e37-810ccb72d38d" class="" dir="auto">10. 6단계 - Gateway 및 HTTPRoute 배포</h1><p id="6b9720e4-6f49-83e4-a715-017da9e2b8be" class="" dir="auto">이번 실습에서 Gateway는 <code>www.kyt.cloudai.store</code> 에 대한 HTTPS 리스너를 가진다.</p><p id="106720e4-6f49-83ca-97bd-81db40d48f8a" class="" dir="auto">그리고 Certificate Map을 annotation으로 연결한다.</p><p id="b35720e4-6f49-83b8-a427-81da7f93c6bf" class="" dir="auto">GKE Gateway에서 Certificate Manager를 사용할 때는 <code>networking.gke.io/certmap</code> annotation을 사용한다. GKE Gateway는 <code>gke-l7-global-external-managed</code> GatewayClass로 글로벌 외부 Application Load Balancer를 만든다.</p><h2 id="3ca720e4-6f49-8280-a33f-01c3fa96ecc7" class="" dir="auto">gateway.yaml</h2><pre id="9fa720e4-6f49-83e6-b6b7-01c3f96f71d5" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: my-gateway
+  annotations:
+    networking.gke.io/certmap: my-gke-cert-map
+spec:
+  gatewayClassName: gke-l7-global-external-managed
+  listeners:
+  - name: https
+    protocol: HTTPS
+    port: 443
+    hostname: www.kyt.cloudai.store
+    allowedRoutes:
+      namespaces:
+        from: Same
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: hello-route
+spec:
+  parentRefs:
+  - name: my-gateway
+  hostnames:
+  - www.kyt.cloudai.store
+  rules:
+  - backendRefs:
+    - name: hello-service
+      port: 80</code></pre><h3 id="044720e4-6f49-8247-bf38-8157d1ee6f89" class="" dir="auto">핵심 설명</h3><p id="5d4720e4-6f49-83e5-9f9d-810fd2ddf3dd" class="" dir="auto">이번 파일에서 반드시 동일해야 하는 값은 아래 3개다.</p><pre id="577720e4-6f49-8255-b606-014388eca5c5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Gateway listener hostname
+HTTPRoute hostnames
+Certificate Map Entry hostname</code></pre><p id="c5d720e4-6f49-8263-96fe-8137cd2695b6" class="" dir="auto">즉 전부 아래처럼 맞아야 한다.</p><pre id="3b9720e4-6f49-8373-bbee-81b1efdfc680" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.kyt.cloudai.store</code></pre><p id="7ce720e4-6f49-822f-a080-81ff766d4d60" class="" dir="auto">적용:</p><pre id="0a3720e4-6f49-83b2-8e89-015bf27cac79" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f gateway.yaml</code></pre><p id="7d2720e4-6f49-820d-bcd8-019a93e568ec" class="" dir="auto">확인:</p><pre id="ba4720e4-6f49-820d-b80c-818dfa1bde84" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get gateway
+kubectl describe gateway my-gateway
+kubectl get httproute
+kubectl describe httproute hello-route</code></pre><p id="dac720e4-6f49-8392-a6a4-014f4901798e" class="" dir="auto">Gateway는 <code>Programmed=True</code> 상태가 되면 외부 부하분산기가 준비된 것으로 본다.</p><hr id="6d1720e4-6f49-825b-970b-81be9d5ee633" dir="auto"/><h1 id="563720e4-6f49-8304-b2ce-01774529765d" class="" dir="auto">11. 7단계 - Gateway 외부 IP 확인</h1><p id="272720e4-6f49-8281-853e-01da96c33c1d" class="" dir="auto">아래 명령으로 Gateway 외부 IP를 확인한다.</p><pre id="5d4720e4-6f49-8276-b360-815e132e9d31" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get gateway my-gateway</code></pre><p id="c4a720e4-6f49-82e7-961e-814bc08b0eef" class="" dir="auto">예상 예시:</p><pre id="285720e4-6f49-83d6-a7ad-81c58d9dad14" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME         CLASS                              ADDRESS         PROGRAMMED   AGE
+my-gateway   gke-l7-global-external-managed    34.111.22.33    True         6m</code></pre><p id="027720e4-6f49-83a5-9c30-8145551409c2" class="" dir="auto">여기서 <code>ADDRESS</code> 값이 Route 53에 넣을 최종 A 레코드 대상이다. </p><hr id="4f7720e4-6f49-83ec-9a21-0181c698958b" dir="auto"/><h1 id="878720e4-6f49-8320-bb09-01f466bd1ebb" class="" dir="auto">12. 8단계 - Route 53에 최종 A 레코드 등록</h1><p id="15e720e4-6f49-82ba-a00d-815c1a22f1ae" class="" dir="auto">이번 실습의 실제 접속 도메인은:</p><pre id="0cc720e4-6f49-823b-a5f6-010dddbd0c6f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.kyt.cloudai.store</code></pre><p id="581720e4-6f49-821d-9ae4-8137e72c1841" class="" dir="auto">호스팅 영역은:</p><pre id="11c720e4-6f49-8357-9937-81d47263b30f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kyt.cloudai.store</code></pre><p id="0ed720e4-6f49-8398-acb4-01772e521fec" class="" dir="auto">이므로 Route 53에서는 아래처럼 입력한다.</p><h2 id="2d4720e4-6f49-8383-8cfc-81f3dcfc7a3b" class="" dir="auto">Route 53 입력값</h2><ul id="d99720e4-6f49-8269-a687-810cc58a101d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 이름: <code>www</code></li></ul><ul id="c5c720e4-6f49-8291-824b-81a82bb8abae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 유형: <code>A</code></li></ul><ul id="4fd720e4-6f49-8314-ab78-815e2abeea72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">값: Gateway 외부 IP</li></ul><p id="51c720e4-6f49-8304-9e46-81427cae7ece" class="" dir="auto">예를 들어 Gateway IP가 <code>34.111.22.33</code> 이라면:</p><ul id="03e720e4-6f49-8355-8333-0138981a38e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 이름: <code>www</code></li></ul><ul id="5f7720e4-6f49-829d-bbfd-01fe35240ba2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 유형: <code>A</code></li></ul><ul id="21b720e4-6f49-82fa-98ca-0141ba99a341" class="bulleted-list" dir="auto"><li style="list-style-type:disc">값: <code>34.111.22.33</code></li></ul><p id="69d720e4-6f49-8278-b2bd-014213a56826" class="" dir="auto">이렇게 넣으면 최종 레코드 이름은:</p><pre id="1fd720e4-6f49-83a2-b318-01498eb91861" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.kyt.cloudai.store</code></pre><p id="699720e4-6f49-824f-bb1e-81a33664c3a8" class="" dir="auto">가 된다.</p><p id="531720e4-6f49-8289-abf5-017982b42190" class="" dir="auto">확인:</p><pre id="255720e4-6f49-823d-827c-0105b8e9fea7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">dig www.kyt.cloudai.store</code></pre><p id="b21720e4-6f49-831a-bb8a-8101a0e6591c" class="" dir="auto">정상이라면 Gateway 외부 IP가 조회된다.</p><hr id="ae5720e4-6f49-835c-a5f7-815a4af245f7" dir="auto"/><h1 id="63f720e4-6f49-82c6-ad85-014ad07bad76" class="" dir="auto">13. 9단계 - HTTPS 접속 확인</h1><p id="1e7720e4-6f49-8368-81c5-012ecccbe21a" class="" dir="auto">브라우저에서 아래 주소로 접속한다.</p><pre id="371720e4-6f49-83b8-a2d8-013c6dba2f1b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">https://www.kyt.cloudai.store</code></pre><p id="ac7720e4-6f49-83e9-bfe1-013f2f6858ee" class="" dir="auto">정상이라면:</p><ul id="5fe720e4-6f49-82f6-b741-01f14035dbdf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주소창에 자물쇠가 표시됨</li></ul><ul id="448720e4-6f49-837e-bb9c-0179d4d72753" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증서 이름이 <code>www.kyt.cloudai.store</code> 로 보임</li></ul><ul id="ef7720e4-6f49-83f7-813e-014f57f8b034" class="bulleted-list" dir="auto"><li style="list-style-type:disc">hello-app 응답이 표시됨</li></ul><p id="acb720e4-6f49-828a-8781-01f7cec6072d" class="" dir="auto">CLI 확인:</p><pre id="1f8720e4-6f49-8241-bce3-813d1de8ada0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -I https://www.kyt.cloudai.store</code></pre><p id="2e9720e4-6f49-8225-84cd-814397d94ed1" class="" dir="auto">좀 더 자세히 보려면:</p><pre id="11a720e4-6f49-83e4-a50a-81693a2a9235" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -v https://www.kyt.cloudai.store</code></pre><hr id="87c720e4-6f49-83a3-a701-81e98a1c3f99" dir="auto"/><h1 id="424720e4-6f49-833c-b657-01338d7840b2" class="" dir="auto">14. 실습용 전체 명령어 모음</h1><p id="b00720e4-6f49-82aa-8c20-81d57ab990d3" class="" dir="auto">아래 순서대로 실행하면 된다.</p><pre id="216720e4-6f49-8214-b512-81f28f450c39" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 프로젝트 설정
+gcloud config set project my-gcp-project
+
+# API 활성화
+gcloud services enable \
+  container.googleapis.com \
+  certificatemanager.googleapis.com \
+  compute.googleapis.com \
+  networkservices.googleapis.com
+
+# 클러스터 연결
+gcloud container clusters get-credentials my-gke-cluster \
+  --location=asia-northeast3
+
+# 기존 클러스터라면 Gateway API 활성화
+gcloud container clusters update my-gke-cluster \
+  --location=asia-northeast3 \
+  --gateway-api=standard
+
+# GatewayClass 확인
+kubectl get gatewayclass
+
+# DNS Authorization 생성
+gcloud certificate-manager dns-authorizations create my-dns-auth \
+  --domain=&quot;www.kyt.cloudai.store&quot;
+
+# DNS Authorization 확인
+gcloud certificate-manager dns-authorizations describe my-dns-auth
+
+# 인증서 생성
+gcloud certificate-manager certificates create my-gke-cert \
+  --domains=&quot;www.kyt.cloudai.store&quot; \
+  --dns-authorizations=&quot;my-dns-auth&quot;
+
+# 인증서 상태 확인
+gcloud certificate-manager certificates describe my-gke-cert
+
+# Certificate Map 생성
+gcloud certificate-manager maps create my-gke-cert-map
+
+# Map Entry 생성
+gcloud certificate-manager maps entries create my-cert-map-entry \
+  --map=&quot;my-gke-cert-map&quot; \
+  --certificates=&quot;my-gke-cert&quot; \
+  --hostname=&quot;www.kyt.cloudai.store&quot;
+
+# 앱 배포
+kubectl apply -f app.yaml
+
+# Gateway 배포
+kubectl apply -f gateway.yaml
+
+# Gateway 상태 확인
+kubectl get gateway
+kubectl describe gateway my-gateway
+
+# HTTPRoute 확인
+kubectl get httproute
+kubectl describe httproute hello-route</code></pre><hr id="1ec720e4-6f49-8393-926a-01e30766ec0e" dir="auto"/><h1 id="1d1720e4-6f49-827d-b9a0-812e4f91efa5" class="" dir="auto">15. Route 53에 실제로 넣는 값 정리</h1><p id="bef720e4-6f49-82d3-8ef5-81dd0058db1e" class="" dir="auto">이번 실습 기준에서 Route 53에 넣는 값은 딱 두 종류다.</p><h2 id="710720e4-6f49-8279-8b02-81bf296ee027" class="" dir="auto">1) 인증서 검증용 CNAME</h2><p id="dee720e4-6f49-828a-86ee-81e60fbf85a4" class="" dir="auto">GCP 출력값이 예를 들어 이렇게 나왔다고 가정한다.</p><pre id="f22720e4-6f49-8359-8fef-81bc0219c190" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">name: _acme-challenge.www.kyt.cloudai.store.
+data: 12345678-aaaa-bbbb-cccc-1234567890ab.4.authorize.certificatemanager.goog.</code></pre><p id="684720e4-6f49-820f-9865-01d07d2da9d9" class="" dir="auto">Route 53 입력:</p><ul id="e98720e4-6f49-83f1-941f-8136e90e071d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 이름: <code>_acme-challenge.www</code></li></ul><ul id="436720e4-6f49-828b-bb57-01fb77a6ba7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 유형: <code>CNAME</code></li></ul><ul id="0f9720e4-6f49-8375-a28b-812ed3f9033e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">값: <code>12345678-aaaa-bbbb-cccc-1234567890ab.4.authorize.certificatemanager.goog</code></li></ul><h2 id="729720e4-6f49-8229-8703-811ffefb6818" class="" dir="auto">2) 실제 서비스용 A 레코드</h2><p id="ff5720e4-6f49-828b-a94e-0175c814b8ce" class="" dir="auto">Gateway IP가 예를 들어 <code>34.111.22.33</code> 이라면 Route 53 입력:</p><ul id="233720e4-6f49-8362-8ab9-814e90547088" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 이름: <code>www</code></li></ul><ul id="c43720e4-6f49-838f-99d8-01da61a4c501" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 유형: <code>A</code></li></ul><ul id="d01720e4-6f49-82b5-898c-8132bd34ca74" class="bulleted-list" dir="auto"><li style="list-style-type:disc">값: <code>34.111.22.33</code></li></ul><hr id="ab5720e4-6f49-8231-a0b5-016439db32bd" dir="auto"/><h1 id="675720e4-6f49-8262-943c-818bf16b225d" class="" dir="auto">16. 자주 헷갈리는 부분</h1><h2 id="50f720e4-6f49-8343-b1ca-01f701672517" class="" dir="auto"><code>kyt.cloudai.store</code> 와 <code>www.kyt.cloudai.store</code> 는 다르다</h2><p id="7ed720e4-6f49-823c-bbb1-01c23d864484" class="" dir="auto">이 둘은 서로 다른 이름이다.</p><p id="2b1720e4-6f49-831c-bceb-01f8cbd5ee7b" class="" dir="auto">이번 실습에서는 인증서를 루트 도메인이 아니라 <code><strong>www.kyt.cloudai.store</strong></code> 로 발급받는다.</p><p id="d0d720e4-6f49-83b1-a7d3-015550924b70" class="" dir="auto">즉 아래 값들은 모두 같은 이름으로 통일해야 한다.</p><pre id="820720e4-6f49-83a4-83fa-814d91550ea6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">DNS Authorization domain
+Certificate domain
+Certificate Map Entry hostname
+Gateway listener hostname
+HTTPRoute hostname
+Route 53 A record 이름</code></pre><p id="5c4720e4-6f49-83d1-9293-81b56504261f" class="" dir="auto">이번 실습에서는 전부 최종적으로 아래를 가리키게 된다.</p><pre id="9a8720e4-6f49-82ca-b526-01a02820c08e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.kyt.cloudai.store</code></pre><hr id="b15720e4-6f49-8321-b4f8-81315646d9eb" dir="auto"/><h1 id="a76720e4-6f49-8251-924d-8135d439fad1" class="" dir="auto">17. 삭제 순서</h1><p id="469720e4-6f49-82ed-b665-811ceaa92707" class="" dir="auto">비용 방지를 위해 실습 종료 후 아래 순서대로 삭제한다.</p><pre id="ed3720e4-6f49-8394-901d-81659024608a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete -f gateway.yaml
+kubectl delete -f app.yaml
+
+gcloud certificate-manager maps entries delete my-cert-map-entry \
+  --map=&quot;my-gke-cert-map&quot;
+
+gcloud certificate-manager maps delete my-gke-cert-map
+
+gcloud certificate-manager certificates delete my-gke-cert
+
+gcloud certificate-manager dns-authorizations delete my-dns-auth</code></pre><p id="6ce720e4-6f49-824c-b7b3-01727fbb59f5" class="" dir="auto">Route 53에서도 아래 레코드를 삭제한다.</p><ul id="e0e720e4-6f49-824a-b076-01fa6aa07031" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>_acme-challenge.www</code> CNAME</li></ul><ul id="a50720e4-6f49-83e1-8c64-01f6bda23b4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>www</code> A 레코드</li></ul><hr id="c09720e4-6f49-8310-bbce-018c1a37f925" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

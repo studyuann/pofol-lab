@@ -1,0 +1,802 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습 3. ALB Ingress 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="378720e4-6f49-8332-85fc-81497e9c6ce6" class="page sans"><header><h1 class="page-title" dir="auto">실습 3. ALB Ingress 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="6e4720e4-6f49-83a3-a1d0-01614c0e694e" class="" dir="auto">1. 실습 목표</h2><p id="070720e4-6f49-821c-95db-018c2496f175" class="" dir="auto">이 실습을 통해 다음을 이해할 수 있음.</p><ul id="340720e4-6f49-824a-81c7-015a26a0a7ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes Ingress의 역할</li></ul><ul id="01c720e4-6f49-8251-9df3-81899427b192" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service와 Ingress의 차이</li></ul><ul id="9bc720e4-6f49-8242-b6cf-017ecaa3ca1f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB와 Kubernetes Ingress의 연결 방식</li></ul><ul id="2ed720e4-6f49-8301-a40a-81b4a5fc6cbb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">경로 기반 라우팅(Path-based routing)</li></ul><ul id="8cb720e4-6f49-82c5-963a-81b63d5ceae1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">온프레미스 Ingress와 EKS Ingress의 차이</li></ul><hr id="6e3720e4-6f49-8239-9373-01a0f193ec8c" dir="auto"/><h2 id="80f720e4-6f49-83ed-a571-01d025490e33" class="" dir="auto">2. 실습 개요</h2><p id="bac720e4-6f49-832d-a9f4-81975988af19" class="" dir="auto">앞선 실습 1에서는 <code>Service type=LoadBalancer</code>를 사용했음.</p><p id="3a8720e4-6f49-839f-9c26-81cb79794c97" class="" dir="auto">이 방식은 단순하고 빠르지만, 서비스마다 로드밸런서가 따로 생기거나, HTTP 경로 기반 제어가 제한적일 수 있음.</p><p id="f7d720e4-6f49-82cf-8ee4-0154f4e1d18a" class="" dir="auto">Ingress는 이보다 한 단계 상위 개념임.</p><p id="c57720e4-6f49-82d6-9070-01b9a3405356" class="" dir="auto">즉, 여러 서비스를 하나의 외부 진입점 뒤에 두고, 경로나 호스트 이름에 따라 분기할 수 있음. Kubernetes 문서도 Ingress는 외부에서 서비스로 가는 HTTP/HTTPS 경로를 제어하는 객체라고 설명함. (<a href="https://kubernetes.io/docs/concepts/services-networking/ingress/?utm_source=chatgpt.com">kubernetes.io</a>)</p><p id="707720e4-6f49-8385-b1e7-819b307dbe69" class="" dir="auto">EKS에서는 AWS Load Balancer Controller가 이 Ingress를 해석해서 <strong>AWS ALB</strong>를 생성함.</p><p id="42e720e4-6f49-82e0-bde7-0187a0f7006d" class="" dir="auto">즉, 다음 흐름이 성립함.</p><blockquote id="119720e4-6f49-8309-8336-01a80ca29e10" class="" dir="auto">Kubernetes Ingress → AWS Load Balancer Controller → AWS ALB 생성 및 설정</blockquote><p id="073720e4-6f49-8277-9db6-019fc5bc8c76" class="" dir="auto">이것이 EKS에서 매우 중요한 이유는, 온프레미스에서는 보통 NGINX Ingress Controller 같은 별도 Ingress Controller만 설치되고, 외부 L7 장비 연동은 별도로 해야 하는 경우가 많기 때문임.</p><hr id="0c2720e4-6f49-82ef-94ca-01b9e523d185" dir="auto"/><h2 id="e44720e4-6f49-83e2-bc1a-01aa6457c5ab" class="" dir="auto">3. 실습 전 확인 사항</h2><p id="8b5720e4-6f49-8344-9553-013b51eb8179" class="" dir="auto">다음 조건이 준비되어 있어야 함.</p><ol type="1" id="bb2720e4-6f49-8259-890c-017b54d3cb49" class="numbered-list" start="1" dir="auto"><li>EKS 클러스터가 생성되어 있어야 함</li></ol><ol type="1" id="9e5720e4-6f49-82c7-b9cc-01a3b100573a" class="numbered-list" start="2" dir="auto"><li><code>kubectl</code>이 현재 클러스터에 연결되어 있어야 함</li></ol><ol type="1" id="da4720e4-6f49-8394-a5bb-81ce56d2de6f" class="numbered-list" start="3" dir="auto"><li>AWS Load Balancer Controller가 설치되어 있어야 함 </li></ol><ol type="1" id="328720e4-6f49-83d1-a7d8-01606327a00c" class="numbered-list" start="4" dir="auto"><li>Ingress를 생성할 수 있는 권한과 서브넷 태그 설정이 준비되어 있어야 함</li></ol><p id="a5b720e4-6f49-831f-831d-8191bf45c2f1" class="" dir="auto">
+</p><figure id="6cc720e4-6f49-8388-9bd6-01a5f56e5d48" class="link-to-page"><a href="%EC%8B%A4%EC%8A%B5%203%20ALB%20Ingress%20%EC%8B%A4%EC%8A%B5/AWS%20Load%20Balancer%20Controller%20%EC%84%A4%EC%B9%98%206cc720e46f4983889bd601a5f56e5d48.html" data-notion-page-id="6cc720e4-6f49-8388-9bd6-01a5f56e5d48" data-notion-space-id="56e9dfa9-059a-473f-a2ad-357c52ceb825">AWS Load Balancer Controller 설치</a></figure><p id="71e720e4-6f49-82d7-96ca-817f11ed41c6" class="" dir="auto">먼저 현재 컨텍스트와 노드를 확인함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="31e720e4-6f49-83bd-b1c5-81e5ab9befd9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl config current-context
+kubectl get nodes</code></pre><p id="9b9720e4-6f49-8331-b21d-81183f18fced" class="" dir="auto">그 다음 AWS Load Balancer Controller 관련 Pod가 존재하는지 확인함.</p><pre id="e7f720e4-6f49-8335-b795-013ee18a5878" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -n kube-system</code></pre><p id="c80720e4-6f49-8297-b148-819bb0f16ee3" class="" dir="auto">또는 더 직접적으로 Deployment를 확인할 수도 있음.</p><pre id="965720e4-6f49-8285-90ed-01307a4e441e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get deployment -n kube-system</code></pre><p id="087720e4-6f49-8310-a8b9-0127301ea4fa" class="" dir="auto">일반적으로 <code>aws-load-balancer-controller</code>라는 이름의 Deployment가 보여야 함. AWS는 Helm을 사용한 설치 절차와 함께 <code>aws-load-balancer-controller</code> 리소스를 기준으로 안내함. (<a href="https://docs.aws.amazon.com/eks/latest/userguide/lbc-helm.html?utm_source=chatgpt.com">docs.aws.amazon.com</a>)</p><hr id="f98720e4-6f49-82ad-a89f-81cfa79f1d29" dir="auto"/><h2 id="b4e720e4-6f49-8260-8f39-01528916d0e6" class="" dir="auto">4. AWS Load Balancer Controller가 왜 필요한가</h2><p id="f3e720e4-6f49-83c8-9a1a-81fcbc35bec8" class="" dir="auto">Kubernetes Ingress 객체는 <strong>라우팅 규칙을 정의하는 API 객체</strong>일 뿐임.</p><p id="581720e4-6f49-8249-ba74-0174dc8d48d3" class="" dir="auto">Ingress 자체가 로드밸런서를 만드는 것은 아님.</p><p id="e8e720e4-6f49-827d-b7a0-018bd3de482f" class="" dir="auto">실제로 Ingress를 해석하고, 외부 로드밸런서를 만들고, 리스너 규칙과 대상 그룹을 구성하는 것은 <strong>Ingress Controller</strong>의 역할임. </p><p id="b2d720e4-6f49-8308-9f93-81dc255f5cd3" class="" dir="auto">EKS에서는 그 역할을 <strong>AWS Load Balancer Controller</strong>가 담당함.</p><p id="a76720e4-6f49-833f-b32a-81c281124d32" class="" dir="auto">AWS는 이 컨트롤러가 Kubernetes Service와 Ingress를 만족시키기 위해 AWS ELB 리소스를 프로비저닝한다고 설명함.</p><hr id="c05720e4-6f49-82b6-88e3-810ba5684e22" dir="auto"/><h2 id="42e720e4-6f49-82ef-bc9f-016ef7d8979a" class="" dir="auto">5. 실습 흐름</h2><p id="273720e4-6f49-8378-82c9-0148d02fc03d" class="" dir="auto">이번 실습은 다음 순서로 진행함.</p><ol type="1" id="02c720e4-6f49-8374-ad5b-8145d6577dfb" class="numbered-list" start="1" dir="auto"><li>백엔드용 Deployment 2개 생성</li></ol><ol type="1" id="776720e4-6f49-83f6-8534-812af9b0235a" class="numbered-list" start="2" dir="auto"><li>각 Deployment를 ClusterIP Service로 노출</li></ol><ol type="1" id="d41720e4-6f49-83e4-a622-014aec674479" class="numbered-list" start="3" dir="auto"><li>Ingress 리소스 생성</li></ol><ol type="1" id="109720e4-6f49-8208-b069-816af0e21a5d" class="numbered-list" start="4" dir="auto"><li>ALB 생성 여부 확인</li></ol><ol type="1" id="5ae720e4-6f49-8273-bb25-012d538c8d3a" class="numbered-list" start="5" dir="auto"><li>경로 기반 라우팅 테스트</li></ol><ol type="1" id="95e720e4-6f49-82d7-a355-01ba387e9f27" class="numbered-list" start="6" dir="auto"><li>결과 해석</li></ol><ol type="1" id="c5d720e4-6f49-8274-bc26-813594bfc742" class="numbered-list" start="7" dir="auto"><li>실습 정리</li></ol><hr id="ff1720e4-6f49-83dd-9701-81063e69a1fd" dir="auto"/><h2 id="004720e4-6f49-8376-b20a-01bf0f603ef2" class="" dir="auto">6. 1단계 - 테스트용 Deployment 2개 생성</h2><p id="0e7720e4-6f49-82d3-9589-01b059750e6f" class="" dir="auto">서로 다른 경로로 분기할 수 있도록 nginx 기반 애플리케이션 2개를 생성함.</p><h3 id="dfb720e4-6f49-8293-8de3-81ca0bde9f3b" class="" dir="auto">app1 생성</h3><pre id="6d3720e4-6f49-82e5-aefa-014ca5ff33ba" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create deployment app1 --image=nginx</code></pre><h3 id="f6e720e4-6f49-836c-ba1d-8144f581c732" class="" dir="auto">app2 생성</h3><pre id="253720e4-6f49-8226-8684-0146190c058f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create deployment app2 --image=httpd</code></pre><p id="83d720e4-6f49-83f7-800e-81a77e763258" class="" dir="auto">Pod 생성 여부를 확인함.</p><pre id="2ea720e4-6f49-82e0-9976-8113fc3f14a4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods</code></pre><hr id="74a720e4-6f49-83e0-814b-015c4f50fe13" dir="auto"/><h2 id="dae720e4-6f49-834b-91b2-016535ab5a7c" class="" dir="auto">7. 2단계 - 각 Deployment를 ClusterIP Service로 노출</h2><p id="c17720e4-6f49-83e5-bc6c-017cbfd49a64" class="" dir="auto">Ingress는 일반적으로 Service를 대상으로 라우팅함.</p><p id="1cf720e4-6f49-827c-81ee-01a4423d759a" class="" dir="auto">따라서 먼저 내부 서비스 두 개를 생성함.</p><h3 id="3f9720e4-6f49-8397-ad68-81ca21b192bd" class="" dir="auto">app1 서비스 생성</h3><pre id="b19720e4-6f49-8225-bd30-81844be35099" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl expose deployment app1 --port=80 --target-port=80 --type=ClusterIP</code></pre><h3 id="b41720e4-6f49-82fb-8bef-813ed5967421" class="" dir="auto">app2 서비스 생성</h3><pre id="770720e4-6f49-82d5-8ce5-011c0eaa875e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl expose deployment app2 --port=80 --target-port=80 --type=ClusterIP</code></pre><p id="04e720e4-6f49-82c0-8b9e-0182b8388731" class="" dir="auto">서비스 확인:</p><pre id="d57720e4-6f49-838f-be94-018ddc39191b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc</code></pre><p id="ad5720e4-6f49-823e-b833-01fa290bdb7b" class="" dir="auto">예상 예시는 다음과 같음.</p><pre id="070720e4-6f49-8268-ba2f-819e51c3394f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">NAME         TYPE        CLUSTER-IP      EXTERNAL-IP   PORT(S)   AGE
+app1         ClusterIP   10.100.10.11    &lt;none&gt;        80/TCP    1m
+app2         ClusterIP   10.100.20.22    &lt;none&gt;        80/TCP    1m
+kubernetes   ClusterIP   10.100.0.1      &lt;none&gt;        443/TCP   1d</code></pre><h3 id="e6d720e4-6f49-83f3-a5b5-81f6731bed9b" class="" dir="auto">왜 ClusterIP를 쓰는가</h3><p id="482720e4-6f49-822a-b4fc-013a05e86fc6" class="" dir="auto">Ingress는 보통 <strong>클러스터 내부 Service 앞단의 L7 라우터</strong> 역할을 함.</p><p id="4ee720e4-6f49-835b-b95f-817c5c82e522" class="" dir="auto">즉, 외부 공개는 Ingress(ALB)가 담당하고, 실제 백엔드는 내부 <code>ClusterIP</code> 서비스가 담당함. </p><hr id="a9f720e4-6f49-83da-9fe4-814a4efa5121" dir="auto"/><h2 id="ac5720e4-6f49-8294-ae55-819c1c4d6b37" class="" dir="auto">8. 3단계 - Ingress 리소스 생성</h2><p id="e2e720e4-6f49-83c6-a8b7-816e565edbb3" class="" dir="auto">이제 Ingress를 생성함.</p><p id="6ab720e4-6f49-82ea-be30-81a00dff38d6" class="" dir="auto">아래 내용을 <code>alb-ingress.yaml</code> 파일로 저장함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="a0a720e4-6f49-8260-b833-010fbcb6e86d" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-ingress
+  annotations:
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /app1
+            pathType: Prefix
+            backend:
+              service:
+                name: app1
+                port:
+                  number: 80
+          - path: /app2
+            pathType: Prefix
+            backend:
+              service:
+                name: app2
+                port:
+                  number: 80</code></pre><p id="c3d720e4-6f49-83c7-8aa6-81386df2b36c" class="" dir="auto">CMD 기준으로 파일을 만들 때는 메모장을 사용하면 편함.</p><pre id="862720e4-6f49-833d-9258-81a96e9dac3d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">notepad alb-ingress.yaml</code></pre><p id="68a720e4-6f49-839c-94a8-01c1791eee22" class="" dir="auto">저장 후 적용함.</p><pre id="e46720e4-6f49-82e5-9e0a-819b439c5311" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f alb-ingress.yaml</code></pre><hr id="cc7720e4-6f49-82a1-a872-8130c35da984" dir="auto"/><h2 id="561720e4-6f49-83ad-96bd-81f731b1fa63" class="" dir="auto">9. Ingress YAML 상세 설명</h2><h3 id="d08720e4-6f49-82b0-9270-812d3aabed06" class="" dir="auto"><code>kind: Ingress</code></h3><p id="081720e4-6f49-833f-a019-81d9be14fd29" class="" dir="auto">Ingress 리소스를 생성함.</p><h3 id="9e9720e4-6f49-8233-951b-8154393523d1" class="" dir="auto"><code>alb.ingress.kubernetes.io/scheme: internet-facing</code></h3><p id="8ec720e4-6f49-8386-8d1c-01caf37c9f75" class="" dir="auto">외부 인터넷에서 접근 가능한 ALB를 생성하라는 의미임.</p><p id="c9f720e4-6f49-82b8-b481-01f93cec17d7" class="" dir="auto">내부 전용으로 만들고 싶으면 <code>internal</code>을 사용함. AWS는 ALB scheme 설정으로 외부형과 내부형을 구분할 수 있다고 설명함. </p><h3 id="eb4720e4-6f49-8314-9309-8172ba8f9ae2" class="" dir="auto"><code>alb.ingress.kubernetes.io/target-type: ip</code></h3><p id="4f2720e4-6f49-83fc-9790-01b66b1bf38d" class="" dir="auto">ALB 대상 그룹이 인스턴스가 아니라 <strong>Pod IP</strong>를 대상으로 라우팅하도록 지정함.</p><p id="5e1720e4-6f49-83a5-88e8-8163db76970a" class="" dir="auto">EKS에서는 <code>ip</code> 모드가 많이 사용됨. AWS Load Balancer Controller 문서도 <code>target-type</code>으로 <code>instance</code>와 <code>ip</code>를 지원하며, <code>ip</code> 모드는 Pod를 직접 대상으로 등록한다고 설명함.</p><h3 id="96e720e4-6f49-8238-97d9-0118f3f08cf2" class="" dir="auto"><code>ingressClassName: alb</code></h3><p id="1f8720e4-6f49-82a4-b9de-01ecaaae5515" class="" dir="auto">이 Ingress를 어떤 Ingress Controller가 처리할지 지정함.</p><p id="4e5720e4-6f49-83d8-954f-81af1b861696" class="" dir="auto">즉, AWS Load Balancer Controller가 이 Ingress를 처리하게 됨.</p><h3 id="001720e4-6f49-820a-9dc0-01097f166dde" class="" dir="auto"><code>rules</code></h3><p id="ca9720e4-6f49-8321-b3f3-01df236ba8de" class="" dir="auto">라우팅 규칙을 정의함.</p><h3 id="e1a720e4-6f49-83c6-9bfd-01935925cacd" class="" dir="auto"><code>/app1</code>, <code>/app2</code></h3><p id="b80720e4-6f49-8326-bc19-81b414667369" class="" dir="auto">경로 기반 라우팅 예시임.</p><p id="fc9720e4-6f49-823b-bc2b-81e4e34a54bf" class="" dir="auto"><code>/app1</code> 요청은 app1 서비스로, <code>/app2</code> 요청은 app2 서비스로 전달됨.</p><p id="89d720e4-6f49-82d3-84a2-816f962cfae0" class="" dir="auto">Kubernetes 공식 문서도 Ingress에서 path 기반 라우팅을 정의할 수 있다고 설명함. (<a href="https://kubernetes.io/docs/concepts/services-networking/ingress/?utm_source=chatgpt.com">kubernetes.io</a>)</p><hr id="d44720e4-6f49-8259-ba0d-81a163212bfe" dir="auto"/><h2 id="a6a720e4-6f49-826b-833d-813c36a4f3e9" class="" dir="auto">10. 4단계 - Ingress 상태 확인</h2><p id="625720e4-6f49-8347-a827-0130fc36bcf1" class="" dir="auto">Ingress가 생성되었는지 확인함.</p><pre id="2e5720e4-6f49-82c4-8891-816eae252674" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ingress</code></pre><p id="8ef720e4-6f49-8210-b333-81b4fcf76691" class="" dir="auto">예상 예시는 다음과 같음.</p><pre id="313720e4-6f49-83e4-9868-81e1ce8fe79d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">NAME          CLASS   HOSTS   ADDRESS                                                                    PORTS   AGE
+app-ingress   alb     *       k8s-default-appingre-1234567890.ap-northeast-2.elb.amazonaws.com         80      2m</code></pre><h3 id="604720e4-6f49-8231-9972-01e823e63771" class="" dir="auto">확인 포인트</h3><ul id="e22720e4-6f49-826c-be84-8191bd47ee4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>CLASS</code>가 <code>alb</code>인지 확인</li></ul><ul id="a5e720e4-6f49-824d-a7e3-01c82891d85c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ADDRESS</code>가 생성되었는지 확인</li></ul><ul id="d89720e4-6f49-8351-ae30-01a9ba032ea8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ADDRESS</code>가 AWS ELB 도메인 형식인지 확인</li></ul><p id="73f720e4-6f49-829f-b35c-0193f9905548" class="" dir="auto">처음에는 <code>ADDRESS</code>가 비어 있을 수 있음.</p><p id="79c720e4-6f49-8399-9001-812eb1d3e43f" class="" dir="auto">이 경우 잠시 기다렸다가 다시 확인함.</p><pre id="ea6720e4-6f49-8326-b542-01a0d25e9163" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ingress</code></pre><p id="e21720e4-6f49-82e9-b63f-8148c45545ee" class="" dir="auto">AWS Load Balancer Controller는 Ingress 리소스를 기반으로 ALB를 프로비저닝하므로, AWS 쪽 리소스 생성 시간이 조금 걸릴 수 있음.</p><hr id="a74720e4-6f49-83c1-8a90-81ecf0618d5b" dir="auto"/><h2 id="621720e4-6f49-8308-b7c0-81994695112e" class="" dir="auto">11. 5단계 - ALB 주소로 접속 테스트</h2><p id="70f720e4-6f49-83bf-9000-014e7ccf179b" class="" dir="auto"><code>kubectl get ingress</code>에서 나온 ALB 주소를 확인한 후, CMD에서 <code>curl</code>로 접속 테스트를 수행함.</p><h3 id="39c720e4-6f49-83a5-bcd3-81b999918baa" class="" dir="auto">app1 경로 테스트</h3><pre id="96a720e4-6f49-8302-a563-8124e6ac4ae2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://ALB주소/app1</code></pre><h3 id="959720e4-6f49-8290-8f8a-816c01387ccc" class="" dir="auto">app2 경로 테스트</h3><pre id="e66720e4-6f49-82f5-bb75-01d2cb8d7c4c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://ALB주소/app2</code></pre><p id="819720e4-6f49-82a4-b356-816e326f40cb" class="" dir="auto">기본 nginx 페이지가 나오면 정상임.</p><p id="d4e720e4-6f49-831e-b528-812fa71db3d4" class="" dir="auto">다만 현재 app1, app2 둘 다 같은 nginx 이미지를 쓰므로, 응답 내용이 거의 같을 수 있음.</p><hr id="559720e4-6f49-827d-a708-01475436326e" dir="auto"/><h2 id="bfc720e4-6f49-8208-bea9-019601214c3f" class="" dir="auto">12. 6단계 - Ingress 상세 정보 확인</h2><p id="7d2720e4-6f49-83bb-9896-016cb11c88a5" class="" dir="auto">문제 해결과 학습을 위해 상세 정보도 확인함.</p><pre id="2c3720e4-6f49-8372-9827-015900cd2d99" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe ingress app-ingress</code></pre><p id="30a720e4-6f49-8365-86c9-013162f5f976" class="" dir="auto">이 명령을 통해 다음을 확인할 수 있음.</p><ul id="cd3720e4-6f49-8321-9dab-01a0a98310ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress rules</li></ul><ul id="45f720e4-6f49-8315-a9bc-010dd433098f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backend service 연결 정보</li></ul><ul id="7ba720e4-6f49-8375-91a7-01e5badf6ee6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트(Event)</li></ul><ul id="047720e4-6f49-8318-9dbb-817a6b1447c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB 생성 관련 상태</li></ul><h3 id="b3d720e4-6f49-8209-8a7c-01f43eebfa2b" class="" dir="auto">특히 볼 항목</h3><h3 id="7fb720e4-6f49-83fc-822f-8147ca955112" class="" dir="auto">Rules</h3><p id="86b720e4-6f49-83b2-82d7-0178457b7d53" class="" dir="auto">어떤 경로가 어떤 서비스로 라우팅되는지 확인 가능함.</p><h3 id="9b1720e4-6f49-83c5-8afa-8108b1251619" class="" dir="auto">Address</h3><p id="24c720e4-6f49-831a-9c74-81f506f5538f" class="" dir="auto">생성된 ALB 주소를 볼 수 있음.</p><h3 id="d03720e4-6f49-8260-8340-81fdc5167c5e" class="" dir="auto">Events</h3><p id="9ca720e4-6f49-833a-917c-019db21ffdbf" class="" dir="auto">ALB 생성 실패, 권한 오류, 서브넷 태그 오류 등이 있으면 여기서 단서를 찾을 수 있음.</p><hr id="276720e4-6f49-83b0-8de5-01333b935bdb" dir="auto"/><h2 id="5cf720e4-6f49-8293-b025-01eaba875ad6" class="" dir="auto">13. AWS 콘솔에서 확인</h2><ul id="59d720e4-6f49-8327-b606-81d033378b5f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 → Load Balancers</li></ul><ul id="c52720e4-6f49-8274-8577-818d4032d7b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 → Target Groups</li></ul><ul id="4b8720e4-6f49-8242-84d0-81153efba474" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB의 리스너 규칙</li></ul><ul id="396720e4-6f49-8256-beca-81280ca34123" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Target Group에 등록된 대상</li></ul><p id="f7e720e4-6f49-83bb-8660-812fec4db17c" class="" dir="auto"> Ingress 리소스 하나가 AWS 쪽에서 어떤 리소스로 바뀌는지 확인할 수 있음.</p><p id="dbd720e4-6f49-83c3-a6b3-01d631306f2e" class="" dir="auto">즉,</p><ul id="ae2720e4-6f49-82ec-aaed-013f9a0f34ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress → ALB</li></ul><ul id="182720e4-6f49-8299-9b7d-01dc1ea238c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Path rule → Listener rule</li></ul><ul id="a5b720e4-6f49-82b7-982a-01e13be5b32a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service/Pod → Target Group 대상</li></ul><p id="891720e4-6f49-8249-9f5d-81a82c7325a1" class="" dir="auto">AWS Load Balancer Controller는 Ingress와 Service에 대응하는 ALB 및 대상 그룹을 생성하고 관리함. </p><hr id="2b9720e4-6f49-8357-bf10-815cb99e97f6" dir="auto"/><h2 id="c01720e4-6f49-8301-bc76-81975bf2a08f" class="" dir="auto">14. 실습 결과</h2><h3 id="e95720e4-6f49-82c8-b56a-81ea114da251" class="" dir="auto">14-1. Service와 Ingress는 역할이 다름</h3><ul id="b37720e4-6f49-82a8-bcca-01204b475cef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service는 내부 또는 단순 외부 공개용 네트워크 추상화임</li></ul><ul id="bd2720e4-6f49-823e-9d6d-8173c0cae3bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress는 HTTP/HTTPS 기반 라우팅 정책을 정의함</li></ul><h3 id="c0d720e4-6f49-823e-b3ec-01dd0848d635" class="" dir="auto">14-2. Ingress 자체는 로드밸런서를 만들지 않음</h3><p id="f4e720e4-6f49-82bb-a5fd-01ea5c5588aa" class="" dir="auto">Ingress는 규칙만 정의함.</p><p id="b7f720e4-6f49-830c-8e8e-014fb478e255" class="" dir="auto">실제로 ALB를 만들고 규칙을 적용하는 것은 AWS Load Balancer Controller임.</p><h3 id="d13720e4-6f49-823a-9c4c-812b1d5dcc54" class="" dir="auto">14-3. EKS에서는 Ingress가 AWS ALB와 직접 연결됨</h3><p id="1cd720e4-6f49-82f5-9899-8137c50fdad7" class="" dir="auto">이 점이 온프레미스와 매우 다름.</p><p id="063720e4-6f49-8286-a372-01d1a01dd601" class="" dir="auto">온프레미스에서는 Ingress Controller까지만 설치되는 경우가 많고, 외부 L7 장비는 별도 구성해야 하는 경우가 많음.</p><h3 id="36b720e4-6f49-8234-a337-0128015a025e" class="" dir="auto">14-4. EKS는 Kubernetes L7 라우팅과 AWS 네트워크 서비스를 통합함</h3><p id="129720e4-6f49-8263-aab5-012019b41880" class="" dir="auto">즉, EKS에서는 쿠버네티스 객체 하나가 실제 AWS 인프라 객체로 변환되는 경험을 할 수 있음.</p><hr id="9c5720e4-6f49-823f-9f23-01af3014015e" dir="auto"/><h2 id="303720e4-6f49-8303-8188-810dbc4e2dcb" class="" dir="auto">15. 자주 발생하는 문제</h2><h3 id="973720e4-6f49-826f-8cad-01218bf553c6" class="" dir="auto">15-1. <code>ADDRESS</code>가 계속 비어 있는 경우</h3><p id="39a720e4-6f49-82b8-973f-81a007dc20ab" class="" dir="auto">가능한 원인은 다음과 같음.</p><ul id="90c720e4-6f49-82e0-b5b2-01c0505d5ff1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Load Balancer Controller 미설치</li></ul><ul id="a1f720e4-6f49-8383-9d5d-019e98b0eff2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 권한 부족</li></ul><ul id="f7e720e4-6f49-8381-9264-81fed4d2491a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷 태그 누락</li></ul><ul id="100720e4-6f49-8283-ba25-819fede254c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress class 설정 오류</li></ul><p id="d93720e4-6f49-83cb-8c08-81eeb39fa4c0" class="" dir="auto">AWS는 컨트롤러 설치 전 IAM 정책, 서비스어카운트, 서브넷 태그가 필요하다고 안내함. </p><h3 id="bfa720e4-6f49-8234-a2e1-8196a53f9606" class="" dir="auto">15-2. <code>kubectl describe ingress</code>에 에러 이벤트가 보이는 경우</h3><p id="a50720e4-6f49-82f5-9f7b-81c0e4b6debb" class="" dir="auto">이벤트를 보고 다음을 확인함.</p><ul id="0e3720e4-6f49-82bc-b5ab-818dc1d0a9a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">권한 오류</li></ul><ul id="a35720e4-6f49-8363-adb4-0123f513f531" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상 그룹 생성 실패</li></ul><ul id="e0d720e4-6f49-82f8-aae3-81b3b3c924c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷 자동 검색 실패</li></ul><ul id="d53720e4-6f49-8267-95da-01c8aae266ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹 문제</li></ul><h3 id="a58720e4-6f49-835e-9fab-0161be61fbfd" class="" dir="auto">15-3. <code>/app1</code>, <code>/app2</code>가 기대대로 안 나뉘는 경우</h3><p id="606720e4-6f49-82a2-93dc-8167fab647f9" class="" dir="auto">다음 항목을 확인함.</p><ul id="656720e4-6f49-82a9-9d1e-81f01d4fc0d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service 이름 오타</li></ul><ul id="980720e4-6f49-8352-9e08-017e45dab252" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service 포트 번호 오류</li></ul><ul id="1cd720e4-6f49-8383-97a5-0116d3bc43cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">path 설정 오류</li></ul><ul id="e52720e4-6f49-83e7-9b96-0170159ebf7d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>pathType</code> 오류</li></ul><hr id="df6720e4-6f49-822e-ad23-816670e12582" dir="auto"/><h2 id="563720e4-6f49-8342-95b3-013b4e423896" class="" dir="auto">16. 실습 후 정리 명령</h2><p id="fa4720e4-6f49-83d4-bdd1-8191eafa4434" class="" dir="auto">실습이 끝나면 리소스를 삭제함.</p><pre id="5ff720e4-6f49-82f6-a1e3-01ae4886b0d1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete ingress app-ingress
+kubectl delete svc app1
+kubectl delete svc app2
+kubectl delete deployment app1
+kubectl delete deployment app2</code></pre><p id="113720e4-6f49-8202-8331-81ce388b1218" class="" dir="auto">Ingress를 먼저 삭제하면 ALB 정리가 시작됨.</p><p id="824720e4-6f49-8387-a0be-0178d18c2290" class="" dir="auto">AWS 리소스 정리에는 약간의 시간이 걸릴 수 있음.</p><hr id="c96720e4-6f49-82ca-99ed-818e365af4be" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

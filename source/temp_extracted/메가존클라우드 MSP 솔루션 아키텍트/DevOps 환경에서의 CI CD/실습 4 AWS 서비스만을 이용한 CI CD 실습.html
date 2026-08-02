@@ -1,0 +1,911 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습 4. AWS 서비스만을 이용한 CI/CD 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="819720e4-6f49-8390-92f2-01bb4907774d" class="page sans"><header><h1 class="page-title" dir="auto">실습 4. AWS 서비스만을 이용한 CI/CD 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="dba720e4-6f49-829d-a8cc-01b7a5688d87" class="" dir="auto">CodeCommit + CodeBuild + CodeDeploy + CodePipeline + EC2</h2><hr id="717720e4-6f49-825f-ae51-017a6804abb0" dir="auto"/><h1 id="6c2720e4-6f49-836b-b84b-8198fbd4912e" class="" dir="auto">1. 실습 개요</h1><p id="41d720e4-6f49-83b2-9211-8145d4b72dab" class="" dir="auto">이번 실습에서는 AWS 서비스만 사용해서 애플리케이션 소스 변경부터 EC2 배포까지 자동화하는 CI/CD 파이프라인을 구성함.</p><p id="115720e4-6f49-8289-89ae-01f1b6277fec" class="" dir="auto">구성 흐름은 다음과 같음.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="459720e4-6f49-82a4-87b0-01db2b3beb94" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">개발자
+  ↓
+CodeCommit 에 소스 push
+  ↓
+CodePipeline 이 변경 감지
+  ↓
+CodeBuild 가 빌드 수행
+  ↓
+CodeDeploy 가 EC2 에 배포
+  ↓
+EC2 웹서버 반영</code></pre><p id="5e5720e4-6f49-834d-8571-010a36b3fe8f" class="" dir="auto">즉, 개발자가 소스를 직접 서버에 복사하는 방식이 아니라</p><p id="52c720e4-6f49-8260-b083-01f2e0502399" class="" dir="auto"><strong>Git 저장소에 push만 하면 자동으로 빌드와 배포가 수행되는 구조</strong>를 만드는 실습임.</p><hr id="9a4720e4-6f49-83f3-b4de-81f6da46b82a" dir="auto"/><h1 id="7e0720e4-6f49-8326-a6ea-8148c9f07624" class="" dir="auto">2. 실습 목표</h1><p id="114720e4-6f49-83a7-8589-8136e1a3891a" class="" dir="auto">이 실습을 통해 다음 내용을 확인함.</p><ul id="3e2720e4-6f49-82f1-8afa-8168e289e268" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeCommit 저장소 생성 방법</li></ul><ul id="5c8720e4-6f49-8210-80af-8131103b2de3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git을 이용한 소스 업로드 방법</li></ul><ul id="a25720e4-6f49-8343-bf52-016925d0d948" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeBuild로 빌드 자동화하는 방법</li></ul><ul id="93d720e4-6f49-8238-87a5-01b1cce9adb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeDeploy로 EC2 배포 자동화하는 방법</li></ul><ul id="9d7720e4-6f49-835b-9bc5-012a65548bfa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodePipeline으로 전체 단계를 연결하는 방법</li></ul><ul id="94f720e4-6f49-82c9-be1f-0147d7080d0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소스 수정 후 자동 재배포 확인 방법</li></ul><hr id="cbc720e4-6f49-8222-b281-01f8c4772679" dir="auto"/><h1 id="6fd720e4-6f49-8310-a743-817fdbfadbde" class="" dir="auto">3. 실습 구성</h1><h2 id="b35720e4-6f49-83e7-a5c7-815e1ba71a13" class="" dir="auto">3.1 사용 서비스</h2><ul id="225720e4-6f49-8290-b486-01adada5f8f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon EC2</li></ul><ul id="5f1720e4-6f49-82cc-8320-812cb95c4cd3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM</li></ul><ul id="100720e4-6f49-8237-86c0-814e24f78c57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS CodeCommit</li></ul><ul id="995720e4-6f49-8261-b7ac-0164611aea0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS CodeBuild</li></ul><ul id="ce4720e4-6f49-83e6-b286-81ce52935b24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS CodeDeploy</li></ul><ul id="026720e4-6f49-83a7-a105-81d1b348de54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS CodePipeline</li></ul><ul id="e7f720e4-6f49-82de-a1ef-81e756ca3c7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon S3</li></ul><ul id="abd720e4-6f49-8368-9c93-816bd066c8b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch Logs</li></ul><hr id="9c7720e4-6f49-83ea-9620-81b6fe64e39f" dir="auto"/><h2 id="3f9720e4-6f49-821a-a082-81d77590fd93" class="" dir="auto">3.2 실습 대상 애플리케이션</h2><p id="ace720e4-6f49-8366-a8b3-81d63f7081ce" class="" dir="auto">이번 실습에서는 복잡한 프로그램 대신 <strong>정적 HTML 웹페이지</strong>를 사용함.</p><ul id="8bc720e4-6f49-82ac-9afb-01f11dd97df2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CI/CD 흐름 자체를 이해하기 쉬움</li></ul><ul id="e2e720e4-6f49-835c-af5d-8101f92abb58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 결과와 배포 결과를 바로 눈으로 확인 가능함</li></ul><ul id="e10720e4-6f49-82c7-8426-019bafda9a0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">불필요한 프레임워크 설정 없이 핵심 서비스에 집중 가능함</li></ul><hr id="bef720e4-6f49-82e8-a14a-813e51dbe175" dir="auto"/><h2 id="4cd720e4-6f49-830c-a9a6-01331eae27cd" class="" dir="auto">3.3 전체 아키텍처</h2><pre id="eb0720e4-6f49-8250-a1c2-01a5510d7e84" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 브라우저
+   ↓
+EC2 (Nginx)
+   ↑
+CodeDeploy
+   ↑
+CodePipeline
+   ├─ Source  : CodeCommit
+   ├─ Build   : CodeBuild
+   └─ Deploy  : CodeDeploy</code></pre><hr id="f16720e4-6f49-8288-8715-019db89b3b76" dir="auto"/><h1 id="a4c720e4-6f49-83bd-9c08-81e14d4cc84e" class="" dir="auto">4. 사전 준비</h1><h2 id="bf0720e4-6f49-8305-8009-012887561de0" class="" dir="auto">4.1 리전</h2><p id="2df720e4-6f49-82b3-a120-81b4abda0313" class="" dir="auto">실습 리전 예시</p><pre id="575720e4-6f49-83c2-b5e5-816921ba3623" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-2 (서울)</code></pre><hr id="5f9720e4-6f49-8360-9d84-816bafd34ddf" dir="auto"/><h2 id="cd7720e4-6f49-8355-8101-01ce937a3255" class="" dir="auto">4.2 로컬 환경 준비</h2><ul id="697720e4-6f49-83d7-af43-0147ff2fb9e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git</li></ul><ul id="25f720e4-6f49-837e-aa79-8119de69b49b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS CLI</li></ul><ul id="c1c720e4-6f49-835c-b707-01c35e14258b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">텍스트 편집기(VS Code 등)</li></ul><hr id="896720e4-6f49-8391-9888-01397fe49216" dir="auto"/><h2 id="7ed720e4-6f49-82e5-b5f1-81fbb0a2dc71" class="" dir="auto">4.3 실습 리소스 목록</h2><ul id="cec720e4-6f49-823a-8c33-8164ec5c4e3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 인스턴스 1대</li></ul><ul id="d58720e4-6f49-8250-9c82-81231bec0212" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeCommit Repository 1개</li></ul><ul id="431720e4-6f49-8373-83c8-81c5573e00a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeBuild Project 1개</li></ul><ul id="71f720e4-6f49-8330-95cc-010234a04671" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeDeploy Application 1개</li></ul><ul id="b8a720e4-6f49-8232-b7bd-01e8a77d29f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeDeploy Deployment Group 1개</li></ul><ul id="d36720e4-6f49-8266-b8e2-81c5a074bd9f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodePipeline Pipeline 1개</li></ul><ul id="baa720e4-6f49-83a1-a02a-01c4a5af5f33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 Artifact Bucket 1개</li></ul><ul id="ef8720e4-6f49-8322-bf8c-012d5436296e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Role 여러 개</li></ul><hr id="08d720e4-6f49-82c2-8158-010370d92e4f" dir="auto"/><h1 id="2e2720e4-6f49-83d9-8dea-013cbe015c0b" class="" dir="auto">5. 실습 순서</h1><p id="f0f720e4-6f49-82ea-a80e-81dac7b8a01d" class="" dir="auto">전체 순서는 아래와 같음.</p><pre id="3e1720e4-6f49-8211-9b9e-816970566055" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. EC2 생성
+2. EC2에 nginx 설치
+3. EC2에 CodeDeploy Agent 설치
+4. CodeCommit 저장소 생성
+5. 로컬에 프로젝트 파일 작성
+6. Git으로 CodeCommit에 push
+7. CodeDeploy Application / Deployment Group 생성
+8. CodeBuild Project 생성
+9. CodePipeline 생성
+10. 변경 사항 push
+11. 자동 빌드 / 자동 배포 확인</code></pre><hr id="a19720e4-6f49-824b-a9b0-8136f97902b4" dir="auto"/><h1 id="c84720e4-6f49-83e2-89b7-81352befcf74" class="" dir="auto">6. EC2 생성</h1><h2 id="925720e4-6f49-8337-b386-01793f717ea1" class="" dir="auto">6.1 EC2 인스턴스 생성</h2><p id="159720e4-6f49-824e-92d9-81e3b43b53ba" class="" dir="auto">이름 예시</p><pre id="9cd720e4-6f49-824a-8d94-816992c8dc7c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-cicd-web-ec2</code></pre><p id="914720e4-6f49-82b0-b1e1-01278fe7a371" class="" dir="auto">운영체제</p><pre id="a96720e4-6f49-8385-b4f2-0199a92278ef" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon Linux 2023</code></pre><p id="228720e4-6f49-8390-9c8d-0156d593fef4" class="" dir="auto">인스턴스 타입</p><pre id="7c9720e4-6f49-8248-a872-810ce209a405" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">t3.micro</code></pre><p id="e55720e4-6f49-824b-bdea-8104cb352232" class="" dir="auto">보안 그룹 인바운드 규칙</p><pre id="53c720e4-6f49-8395-becb-011af3583fbd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SSH   TCP 22   내 IP
+HTTP  TCP 80   0.0.0.0/0</code></pre><p id="473720e4-6f49-8390-b470-811dd832563f" class="" dir="auto">설명</p><ul id="dd3720e4-6f49-834c-b24c-8135f009fe44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">22번 포트는 SSH 접속용임</li></ul><ul id="7c3720e4-6f49-825c-b667-01eba7dd3e63" class="bulleted-list" dir="auto"><li style="list-style-type:disc">80번 포트는 웹페이지 확인용임</li></ul><ul id="4b1720e4-6f49-825a-9132-81c279cf6679" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습에서는 HTTP로 충분함</li></ul><hr id="9d0720e4-6f49-838c-84e9-0139cd3762e7" dir="auto"/><h2 id="1b4720e4-6f49-8204-83c0-014ce4f3b99e" class="" dir="auto">6.2 EC2 IAM Role 연결</h2><p id="110720e4-6f49-820a-b34d-81c8e2660308" class="" dir="auto">EC2에 연결할 IAM Role 예시</p><pre id="2be720e4-6f49-82a6-a39d-81932bc7bf7b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2CodeDeployRole</code></pre><p id="6d6720e4-6f49-828f-9cf3-81b54077e98d" class="" dir="auto">다음 정책을 포함.</p><ul id="5a6720e4-6f49-8260-bfc9-81d991a03adb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AmazonSSMManagedInstanceCore</li></ul><ul id="a50720e4-6f49-832c-a8a8-011a4e9a664f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AmazonS3ReadOnlyAccess</li></ul><p id="2e9720e4-6f49-82a6-870a-81c686a3f10b" class="" dir="auto">실제로는 CodeDeploy Agent 동작에 필요한 최소 권한만 부여하는 것이 더 좋음.</p><hr id="d78720e4-6f49-820c-9091-812f3fc9f103" dir="auto"/><h2 id="5d1720e4-6f49-8229-82fa-81e0ea395f2c" class="" dir="auto">6.3 태그 추가</h2><p id="457720e4-6f49-82df-a0c3-019d87c5756f" class="" dir="auto">EC2에 다음 태그를 추가함.</p><pre id="74f720e4-6f49-82ed-80b8-01f29b63ccbd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Key   : Deploy
+Value : 이니셜-Web</code></pre><p id="368720e4-6f49-82cb-b0d6-01f7c7b6f0e6" class="" dir="auto">이 태그는 나중에 CodeDeploy Deployment Group에서 배포 대상을 식별할 때 사용함.</p><hr id="e56720e4-6f49-83ac-a4ac-01c9782c9471" dir="auto"/><h1 id="d92720e4-6f49-8220-a595-010e419a8a73" class="" dir="auto">7. EC2 초기 설정</h1><h2 id="010720e4-6f49-8285-920b-813bef7c8b51" class="" dir="auto">7.1 SSH 접속</h2><pre id="1d4720e4-6f49-82e3-a7af-01960914ad63" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh-i mykey.pem ec2-user@EC2_PUBLIC_IP</code></pre><hr id="6be720e4-6f49-83dc-8c3f-01826a730880" dir="auto"/><h2 id="3a8720e4-6f49-83c7-8ed6-0130786576cb" class="" dir="auto">7.2 시스템 업데이트</h2><pre id="53e720e4-6f49-8372-b58c-015a6c1c1789" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo dnf update -y</code></pre><hr id="3b8720e4-6f49-8366-ac88-81832e6bed19" dir="auto"/><h1 id="c27720e4-6f49-83ae-817a-01bec6069fcb" class="" dir="auto">8. Nginx 설치 및 실행</h1><h2 id="350720e4-6f49-83a2-8908-8193612e2caa" class="" dir="auto">8.1 nginx 설치</h2><pre id="162720e4-6f49-8399-8605-810a783c2708" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo dnf install nginx -y</code></pre><hr id="080720e4-6f49-839b-bb6a-818424bf5138" dir="auto"/><h2 id="a7e720e4-6f49-828e-b16c-81249e0afba8" class="" dir="auto">8.2 nginx 서비스 시작</h2><pre id="c57720e4-6f49-8357-ab15-01219751d3a4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl enable nginx
+sudo systemctlstart nginx</code></pre><hr id="4ec720e4-6f49-82a5-b7a2-811a949352ec" dir="auto"/><h2 id="17f720e4-6f49-834e-a0a5-01c192399299" class="" dir="auto">8.3 웹서버 확인</h2><p id="a0c720e4-6f49-82ae-bd22-81d1d65ae3be" class="" dir="auto">브라우저에서 접속</p><pre id="c94720e4-6f49-8230-bbda-0157796dc4fa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://EC2_PUBLIC_IP</code></pre><p id="044720e4-6f49-82d0-ae8e-81b4927941a4" class="" dir="auto">nginx 기본 페이지가 보이면 정상임.</p><hr id="15a720e4-6f49-82ad-8b34-0102fc44cc92" dir="auto"/><h1 id="386720e4-6f49-8261-a5c6-81052619bb2b" class="" dir="auto">9. CodeDeploy Agent 설치</h1><p id="585720e4-6f49-83ad-b3d3-8184d73c55b6" class="" dir="auto">CodeDeploy는 EC2에 파일을 복사하고 스크립트를 실행하기 위해</p><p id="12e720e4-6f49-82c5-9e46-01e7ce537ef7" class="" dir="auto">대상 서버에 <strong>CodeDeploy Agent</strong>가 필요함.</p><h2 id="9ed720e4-6f49-8367-be8a-813d6e60b6dc" class="" dir="auto">9.1 Ruby 설치</h2><pre id="2dc720e4-6f49-8322-9dce-816d20e512af" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo dnf install ruby -y</code></pre><ul id="b1d720e4-6f49-83fa-ad38-814c932c03e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeDeploy 설치 스크립트 실행에 Ruby가 사용됨</li></ul><hr id="3a6720e4-6f49-82d3-a485-018560edf28f" dir="auto"/><h2 id="9ad720e4-6f49-82af-a9dc-018bf4208e66" class="" dir="auto">9.2 설치 파일 다운로드</h2><pre id="e1f720e4-6f49-8252-b6dc-817bc31d5a27" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">wget https://aws-codedeploy-ap-northeast-2.s3.ap-northeast-2.amazonaws.com/latest/install
+chmod +x install</code></pre><hr id="21f720e4-6f49-83bc-a45a-0172cd5ea6f0" dir="auto"/><h2 id="142720e4-6f49-830d-96c5-013e69c67dd4" class="" dir="auto">9.3 Agent 설치</h2><pre id="9de720e4-6f49-832a-aa2e-814f6ba3cec3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo ./install auto</code></pre><ul id="83a720e4-6f49-83b4-9625-816770fa7f4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>auto</code> 옵션은 자동 설치 방식임</li></ul><ul id="4ac720e4-6f49-8375-8b3d-01f4b77d4dce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설치가 완료되면 서비스가 등록됨</li></ul><hr id="9ef720e4-6f49-82f9-bd16-816b102f7e88" dir="auto"/><h2 id="421720e4-6f49-8370-98b2-01c3bee32078" class="" dir="auto">9.4 상태 확인</h2><pre id="d8c720e4-6f49-83ab-9688-01d681d7d7d8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl status codedeploy-agent</code></pre><p id="102720e4-6f49-82ab-ab81-81c957a628d2" class="" dir="auto">정상이라면 <code>active (running)</code> 상태가 보여야 함.</p><p id="707720e4-6f49-83a1-9161-81220a237534" class="" dir="auto">추가로 부팅 후 자동 시작도 확인함.</p><pre id="e44720e4-6f49-8346-9278-0121d26b2d93" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl enable codedeploy-agent</code></pre><hr id="d9e720e4-6f49-833d-bed7-018fe991dd77" dir="auto"/><h1 id="94f720e4-6f49-83c7-b76d-01224dcaa3f7" class="" dir="auto">10. Artifact 저장용 S3 버킷 생성</h1><p id="528720e4-6f49-839f-bc1c-81189902a935" class="" dir="auto">CodePipeline과 CodeBuild는 중간 산출물을 저장할 위치가 필요함.</p><p id="e29720e4-6f49-82ea-91f3-015d1f4c4df4" class="" dir="auto">버킷 이름 예시</p><pre id="a8e720e4-6f49-83a9-b002-017aa45332cc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-cicd-artifact-계정식별자
+aws s3 mb s3://버킷-이름</code></pre><ul id="779720e4-6f49-83f7-a47b-019b7ffffdf7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeCommit이 소스 저장소 역할을 하기 때문에 S3는 <strong>소스 저장용이 아니라 아티팩트 저장용</strong>으로 사용함</li></ul><ul id="acb720e4-6f49-820e-a9a7-018339aef2d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">아티팩트는 빌드 결과물, 배포 패키지 등을 의미함</li></ul><hr id="507720e4-6f49-825b-818f-81e273ea97a7" dir="auto"/><h1 id="459720e4-6f49-830c-b30b-81639086dd63" class="" dir="auto">11. CodeCommit 저장소 생성</h1><h2 id="27b720e4-6f49-8336-a84a-81255db95ca2" class="" dir="auto">11.1 Repository 생성</h2><p id="e66720e4-6f49-82f7-803f-814e352cf16f" class="" dir="auto">CodeCommit 콘솔에서 생성</p><p id="7db720e4-6f49-8207-b6e5-01e2d370c1bb" class="" dir="auto">이름 예시</p><pre id="a69720e4-6f49-82ba-981d-810ae88e1006" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-cicd-repo
+
+aws codecommit create-repository --repository-name 저장소-이름</code></pre><ul id="134720e4-6f49-825d-a883-0169e4ee31e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 저장소가 Git 원격 저장소 역할을 함</li></ul><ul id="40a720e4-6f49-8377-895c-81ce6376fe64" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로컬에서 작업한 파일을 여기에 push함</li></ul><hr id="912720e4-6f49-8332-ba4d-81a844ff22d6" dir="auto"/><h2 id="71c720e4-6f49-82bf-8bc3-817130514734" class="" dir="auto">11.2 접근 방식</h2><p id="ad3720e4-6f49-828c-9869-01cf27ff242b" class="" dir="auto">HTTPS + Git credentials 또는 HTTPS + credential helper 방식 사용 가능함.</p><p id="8bb720e4-6f49-82ed-bd2e-81687df69ffc" class="" dir="auto"><strong>AWS 자격증명</strong>을 사용하는 것이 편함.</p><hr id="dcf720e4-6f49-8390-9dee-815a6171e06b" dir="auto"/><h1 id="16f720e4-6f49-830d-93f6-81eca2acff67" class="" dir="auto">12. 로컬 프로젝트 생성</h1><p id="ffe720e4-6f49-8275-83e7-818a0b568391" class="" dir="auto">이번 실습에서는 아래 구조로 프로젝트를 만듦.</p><pre id="0e0720e4-6f49-832e-bfc1-01ef6b2ec36e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cicd-demo/
+├─ index.html
+├─ buildspec.yml
+├─ appspec.yml
+└─ scripts/
+   ├─ install_dependencies.sh
+   ├─ start_server.sh
+   └─ validate_service.sh</code></pre><hr id="a42720e4-6f49-823e-b13a-81e4e1148ead" dir="auto"/><h1 id="3fa720e4-6f49-822b-b0a0-81538eda1083" class="" dir="auto">13. 파일 작성</h1><h2 id="f8b720e4-6f49-830f-b39b-01483724826b" class="" dir="auto">13.1 index.html</h2><pre id="dc0720e4-6f49-8281-bd6e-81a6571d9da5" class="code code-wrap" data-notion-code-syntax="html"><code class="language-html" style="white-space:pre-wrap;word-break:break-all">&lt;!DOCTYPE html&gt;
+&lt;htmllang=&quot;ko&quot;&gt;
+&lt;head&gt;
+&lt;metacharset=&quot;UTF-8&quot;&gt;
+&lt;title&gt;AWS Native CI/CD Demo&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;AWS Native CI/CD Demo - Version 1&lt;/h1&gt;
+&lt;p&gt;This page was deployed from CodeCommit through CodePipeline.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre><ul id="832720e4-6f49-823f-b632-81210a5e1dc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 브라우저에서 바로 결과를 확인할 수 있는 테스트 파일임</li></ul><ul id="390720e4-6f49-8263-a639-812c965bf2d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">나중에 <code>Version 2</code>로 수정해서 재배포를 확인할 예정임</li></ul><hr id="b90720e4-6f49-83a2-b3a3-01fe4484f62c" dir="auto"/><h2 id="bfc720e4-6f49-835e-8d7a-8141a7d9d417" class="" dir="auto">13.2 buildspec.yml</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="d37720e4-6f49-8232-bb85-814230f5ae7d" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">version: 0.2
+
+phases:
+  install:
+    commands:
+      - echo &quot;Install phase started&quot;
+  build:
+    commands:
+      - echo &quot;Build phase started&quot;
+      - mkdir -p output
+      - cp -r index.html appspec.yml scripts output/
+  post_build:
+    commands:
+      - echo &quot;Build phase completed&quot;
+
+artifacts:
+  files:
+    - &#x27;**/*&#x27;
+  base-directory: output</code></pre><p id="544720e4-6f49-8275-b596-018295bfba3a" class="" dir="auto">설명</p><h3 id="bd7720e4-6f49-82b3-b7ed-8112cdf5eed2" class="" dir="auto"><code>version: 0.2</code></h3><p id="5f3720e4-6f49-835b-887a-0189af69c342" class="" dir="auto">CodeBuild가 해석하는 빌드 스펙 버전임.</p><h3 id="c8e720e4-6f49-824b-8bc4-810dc7a0b0f7" class="" dir="auto"><code>phases</code></h3><p id="bbf720e4-6f49-8255-aceb-011e9cae6941" class="" dir="auto">빌드 과정을 단계별로 정의함.</p><ul id="b4e720e4-6f49-83fc-af70-81d0ee84aa0e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>install</code> : 패키지 설치, 환경 준비</li></ul><ul id="020720e4-6f49-8387-9005-01f3ec8a8a06" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>build</code> : 실제 빌드, 파일 복사, 압축 등 수행</li></ul><ul id="8c0720e4-6f49-83a7-8264-81e88bc168e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>post_build</code> : 빌드 후 후처리 수행</li></ul><h3 id="682720e4-6f49-83cb-b1ea-01f131bd3414" class="" dir="auto"><code>mkdir -p output</code></h3><ul id="de0720e4-6f49-837b-9b21-0145e6b09916" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>output</code> 디렉터리를 생성함</li></ul><ul id="5e1720e4-6f49-8242-92c9-013be5ecc6b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>p</code>는 디렉터리가 이미 있어도 오류 없이 넘어감</li></ul><h3 id="574720e4-6f49-8323-a697-014ef6834f55" class="" dir="auto"><code>cp -r index.html appspec.yml scripts output/</code></h3><ul id="5e4720e4-6f49-831a-b79e-81b673d989f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포에 필요한 파일을 <code>output</code> 폴더로 복사함</li></ul><ul id="c80720e4-6f49-8222-9477-01abe9b23008" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>r</code> 옵션은 디렉터리 복사 시 필요함</li></ul><ul id="2f8720e4-6f49-835a-92a4-0179ca49ade1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여기서는 <code>scripts</code> 폴더를 함께 복사해야 하므로 <code>r</code> 사용함</li></ul><h3 id="4b3720e4-6f49-82ed-a40b-01308b3a4d87" class="" dir="auto"><code>artifacts</code></h3><p id="76d720e4-6f49-8327-b0f0-810fd2e7434f" class="" dir="auto">다음 단계로 넘길 결과물을 정의함.</p><h3 id="df4720e4-6f49-8368-aad9-81384175cb57" class="" dir="auto"><code>files: &#x27;**/*&#x27;</code></h3><ul id="a26720e4-6f49-82e3-bd90-81966d51af98" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>output</code> 디렉터리 안의 모든 파일을 아티팩트에 포함함</li></ul><h3 id="72e720e4-6f49-824f-aba3-813d7fbea3a2" class="" dir="auto"><code>base-directory: output</code></h3><ul id="fb0720e4-6f49-8305-a37b-81ed69b4c8a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과물의 기준 디렉터리를 <code>output</code>으로 설정함</li></ul><p id="cca720e4-6f49-8276-b305-81fe64bc32d1" class="" dir="auto">즉, 최종적으로 CodeDeploy는 <code>output</code> 내부 파일을 받아서 배포하게 됨.</p><hr id="1ba720e4-6f49-82cf-adb2-815d9c8138f9" dir="auto"/><h2 id="3d6720e4-6f49-83a7-a037-018c7e82f5c7" class="" dir="auto">13.3 appspec.yml</h2><pre id="5c1720e4-6f49-83c5-b5f3-81ae9590a432" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /usr/share/nginx/html # Nginx 기본 경로
+permissions:
+  - object: /usr/share/nginx/html
+    pattern: &quot;**&quot; 
+    owner: nginx
+    group: nginx
+    mode: 755
+hooks:
+  BeforeInstall:
+    - location: scripts/install_dependencies.sh
+      timeout: 300
+      runas: root
+  ApplicationStart:
+    - location: scripts/start_server.sh
+      timeout: 300
+      runas: root
+  ValidateService:
+    - location: scripts/validate_service.sh
+      timeout: 300
+      runas: root</code></pre><p id="f70720e4-6f49-8219-b3e3-013074f91446" class="" dir="auto">설명</p><h3 id="dce720e4-6f49-8390-8572-81c2cc0ac77f" class="" dir="auto"><code>version: 0.0</code></h3><p id="503720e4-6f49-83cf-86a9-8141faf53333" class="" dir="auto">EC2/온프레미스 배포용 AppSpec 버전임.</p><h3 id="318720e4-6f49-82d6-99a2-01e18bd7a836" class="" dir="auto"><code>os: linux</code></h3><p id="2ca720e4-6f49-8229-bcc7-810a7433507f" class="" dir="auto">대상 서버 운영체제가 Linux임을 지정함.</p><h3 id="74a720e4-6f49-827c-9173-8194f4b9cd19" class="" dir="auto"><code>files</code></h3><p id="1b8720e4-6f49-8390-a507-01eb40ebbc34" class="" dir="auto">배포 파일 복사 규칙임.</p><ul id="a35720e4-6f49-829b-bc74-81035b64be40" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>source: /</code><ul id="001720e4-6f49-83ab-a582-814aac03c8b2" class="bulleted-list" dir="auto"><li style="list-style-type:circle">배포 패키지 전체를 의미함</li></ul></li></ul><ul id="269720e4-6f49-833a-bff9-01597c6175e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>destination: /var/www/html</code><ul id="565720e4-6f49-830f-bd10-0130ff18f5da" class="bulleted-list" dir="auto"><li style="list-style-type:circle">nginx 기본 웹 문서 루트 경로임</li></ul></li></ul><p id="bf0720e4-6f49-83c6-a283-0166e09a8613" class="" dir="auto">즉, 배포 패키지의 파일들을 <code>/var/www/html</code> 아래로 복사함.</p><h3 id="92b720e4-6f49-82e9-98b5-812897ebc914" class="" dir="auto"><code>permissions</code></h3><p id="0e8720e4-6f49-826a-b44e-8139ba29f51e" class="" dir="auto">배포된 파일의 권한과 소유자를 지정함.</p><ul id="86d720e4-6f49-82bf-97ab-810b7b5facbf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>owner: nginx</code></li></ul><ul id="fa4720e4-6f49-82e4-9f98-815298fb51e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>group: nginx</code></li></ul><ul id="7e0720e4-6f49-82a4-95fe-8188de337f48" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>mode: 755</code></li></ul><p id="ea3720e4-6f49-82e4-9da5-81f872500cd5" class="" dir="auto">웹서버가 파일을 읽을 수 있도록 맞춰줌.</p><h3 id="b25720e4-6f49-831f-a757-813ca357b6ee" class="" dir="auto"><code>hooks</code></h3><p id="5e7720e4-6f49-832e-bd01-8174d810ca0d" class="" dir="auto">배포 라이프사이클별 실행 스크립트 정의함.</p><ul id="5f9720e4-6f49-82f9-9bb4-81d54707d911" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>BeforeInstall</code><ul id="49e720e4-6f49-82d9-b34c-810b7980f6ab" class="bulleted-list" dir="auto"><li style="list-style-type:circle">설치 전 처리</li></ul></li></ul><ul id="fd2720e4-6f49-832c-9dcc-01673f488878" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ApplicationStart</code><ul id="44e720e4-6f49-83e4-9f47-01b74ad0c965" class="bulleted-list" dir="auto"><li style="list-style-type:circle">애플리케이션 시작 또는 재시작</li></ul></li></ul><ul id="1d0720e4-6f49-8309-9692-01e6d9de5ab4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ValidateService</code><ul id="a23720e4-6f49-82a2-8985-01bb0e90492b" class="bulleted-list" dir="auto"><li style="list-style-type:circle">정상 동작 검증</li></ul></li></ul><hr id="dec720e4-6f49-8280-94f2-01cd77c4c74b" dir="auto"/><h2 id="067720e4-6f49-82f6-bfd9-012f1b11a79d" class="" dir="auto">13.4 scripts/install_dependencies.sh</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="908720e4-6f49-82bd-a1a6-01244ca527b9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+set -e
+echo &quot;=== BeforeInstall 시작 ===&quot;
+dnf install nginx -y || true
+mkdir -p /usr/share/nginx/html
+# 중요: 기존에 있던 기본 Welcome 페이지를 지워야 우리 파일이 보입니다.
+rm -f /usr/share/nginx/html/index.html
+chown -R nginx:nginx /usr/share/nginx/html</code></pre><ul id="8a1720e4-6f49-8389-9449-81e91fd444cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">set -e :  스크립트 실행 중 오류 발생시 즉시 중단.</li></ul><hr id="348720e4-6f49-8342-8af9-01b36bed035d" dir="auto"/><h2 id="3db720e4-6f49-8312-8c54-817fdc63e7b2" class="" dir="auto">13.5 scripts/start_server.sh</h2><pre id="865720e4-6f49-8277-803d-8176e6f1bbb7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+set -e
+
+echo &quot;=== ApplicationStart started ===&quot;
+
+systemctl enable nginx
+systemctl restart nginx
+
+echo &quot;=== ApplicationStart completed ===&quot;</code></pre><p id="fd3720e4-6f49-83cf-b4a2-818e4c92910c" class="" dir="auto">설명</p><h3 id="7af720e4-6f49-83f2-bfa9-81435bc3682f" class="" dir="auto"><code>systemctl enable nginx</code></h3><p id="762720e4-6f49-83bc-92d0-8176a8bcdf5e" class="" dir="auto">부팅 후 자동 시작되게 등록함.</p><h3 id="0ef720e4-6f49-823b-abae-813faa8f82a9" class="" dir="auto"><code>systemctl restart nginx</code></h3><p id="b2e720e4-6f49-8295-ac9b-81ac93015b61" class="" dir="auto">nginx 재시작함.</p><p id="bba720e4-6f49-827f-b866-812fc7137b94" class="" dir="auto">여기서 <code>restart</code>를 사용한 이유는 다음과 같음.</p><ul id="090720e4-6f49-82f6-8e7d-8117a44636a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최초 배포 시 시작 가능</li></ul><ul id="5a3720e4-6f49-8324-9d4d-816ea07120c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 재배포 시 최신 파일 기준으로 다시 반영 가능</li></ul><p id="8cc720e4-6f49-8286-82d5-8126c5134024" class="" dir="auto">즉, <code>start</code>보다 재배포 환경에서 더 유연하게 사용 가능함.</p><hr id="30c720e4-6f49-824a-afbc-012028ef72d0" dir="auto"/><h2 id="241720e4-6f49-82fe-bfc4-810701948e0a" class="" dir="auto">13.6 scripts/validate_service.sh</h2><pre id="c34720e4-6f49-8346-be3b-01fb08540cbf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+set-e
+
+echo &quot;=== ValidateService started ===&quot;
+
+curl -f http://localhost/index.html
+
+echo &quot;=== ValidateService completed ===&quot;</code></pre><p id="4b4720e4-6f49-8345-9a1e-01e883387d5c" class="" dir="auto">설명</p><h3 id="6c4720e4-6f49-828a-afc8-01c5ee0fbb85" class="" dir="auto"><code>curl -f</code></h3><ul id="46d720e4-6f49-837f-8f12-012754d80752" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>curl</code>은 HTTP 요청 테스트 명령어임</li></ul><ul id="333720e4-6f49-838e-b6ad-01de8e9431b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>f</code> 옵션은 HTTP 오류 발생 시 실패 코드 반환함</li></ul><p id="8bd720e4-6f49-836c-9170-8172c82a2b62" class="" dir="auto">즉, 웹서버가 정상 동작하지 않으면 이 스크립트가 실패하고 CodeDeploy도 배포 실패로 판단함.</p><p id="80d720e4-6f49-82c2-a2d9-81c2e4b86133" class="" dir="auto">단순 파일 복사만 끝났다고 배포 성공으로 보면 안 되고, 실제 서비스 가능 상태까지 확인해야 하기 때문임.</p><hr id="07b720e4-6f49-83f5-bda6-8128a8f33e4c" dir="auto"/><h2 id="fe0720e4-6f49-839b-a928-816c3e64e0c7" class="" dir="auto">13.7 실행 권한 부여</h2><pre id="f64720e4-6f49-83db-a848-01d7d6d50b48" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">chmod +x scripts/*.sh</code></pre><hr id="df1720e4-6f49-82d1-87e5-01cc03471fd4" dir="auto"/><h1 id="6dc720e4-6f49-82b4-ad1a-81e35cf7c0a9" class="" dir="auto">14. Git 초기화 및 CodeCommit에 업로드</h1><h2 id="df3720e4-6f49-82b8-a4dd-01cb92ef1489" class="" dir="auto">14.1 로컬 저장소 초기화</h2><pre id="0f5720e4-6f49-839e-ab77-01c69ad04292" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cd cicd-demo
+git init</code></pre><ul id="669720e4-6f49-838a-9756-8133369211ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>git init</code>은 현재 디렉터리를 Git 로컬 저장소로 초기화함</li></ul><hr id="2c8720e4-6f49-8338-bcfb-01074aa7229e" dir="auto"/><h2 id="839720e4-6f49-82c0-9993-014c724533f6" class="" dir="auto">14.2 사용자 정보 설정</h2><pre id="c50720e4-6f49-83df-b62f-01b9917d563f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">git config user.name&quot;your-name&quot;
+git config user.email&quot;your-email@example.com&quot;</code></pre><ul id="e33720e4-6f49-8230-9b14-81229d02d596" class="bulleted-list" dir="auto"><li style="list-style-type:disc">커밋 작성자 정보를 설정함</li></ul><ul id="14a720e4-6f49-8238-aa1d-0132e741a5a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">저장소별 또는 전역으로 설정 가능함. 생략해도 됨.</li></ul><hr id="fa8720e4-6f49-8260-92a6-81f84be2a0a5" dir="auto"/><h2 id="154720e4-6f49-8212-9650-81be7c740568" class="" dir="auto">14.3 파일 추가</h2><pre id="3cc720e4-6f49-8201-bb1b-813e3769f20d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">git add .</code></pre><ul id="05b720e4-6f49-8323-957f-818f299c68fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 폴더의 모든 파일을 staging area에 추가함</li></ul><ul id="2c3720e4-6f49-8307-b20d-013eb9087bf6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">커밋 대상 파일로 등록하는 과정임</li></ul><hr id="360720e4-6f49-826c-8c88-014c9f5e7677" dir="auto"/><h2 id="10a720e4-6f49-8275-884d-81327f72040a" class="" dir="auto">14.4 첫 커밋 생성</h2><pre id="f23720e4-6f49-8316-b0b7-01338b0ef731" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">git commit -m &quot;Initial commit&quot;</code></pre><hr id="a92720e4-6f49-836a-8608-81e53a8d3f7c" dir="auto"/><h2 id="bcd720e4-6f49-8304-af92-0111264d58b6" class="" dir="auto">14.5 원격 저장소 등록</h2><pre id="2b6720e4-6f49-8324-ae40-811949238613" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">git remote add origin codecommit::ap-northeast-2://kyt-cicd-repo</code></pre><p id="3e8720e4-6f49-8349-bc6b-817de07d2c1c" class="" dir="auto">설명</p><ul id="e10720e4-6f49-83e8-a91e-01e02fec9e65" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>origin</code>은 원격 저장소의 별칭임</li></ul><ul id="29c720e4-6f49-8257-a1a8-819752ef1202" class="bulleted-list" dir="auto"><li style="list-style-type:disc">뒤 URL은 CodeCommit 저장소 주소임. aws 자격증명을 이용해서 인증하기 위한 방식의 주소. 별도의 인증이 필요하지 않음.</li></ul><hr id="c29720e4-6f49-82b4-bce7-812878373f98" dir="auto"/><h2 id="22e720e4-6f49-8330-a49c-81fe89fd4e0e" class="" dir="auto">14.6 기본 브랜치 지정</h2><pre id="d41720e4-6f49-825d-b276-015f4e4b9911" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">git branch -M main</code></pre><p id="6b8720e4-6f49-8386-8e6b-010e335fe200" class="" dir="auto">설명</p><ul id="7f6720e4-6f49-82f9-9f5d-016767143abc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 브랜치 이름을 <code>main</code>으로 변경함</li></ul><ul id="808720e4-6f49-8235-b8a2-01a25a2016a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>M</code>은 강제 이름 변경 옵션임</li></ul><hr id="c07720e4-6f49-830a-ad75-016ea68b5b08" dir="auto"/><h2 id="893720e4-6f49-820d-abee-81462a79a0bb" class="" dir="auto">14.7 CodeCommit으로 push</h2><pre id="dad720e4-6f49-825e-be5d-81139f29118f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">git push -u origin main</code></pre><p id="cd8720e4-6f49-83af-b097-015ed780d9ed" class="" dir="auto">설명</p><h3 id="bde720e4-6f49-834f-b909-81cb2894b649" class="" dir="auto"><code>push</code></h3><p id="57c720e4-6f49-833e-a954-81911bb01ee6" class="" dir="auto">로컬 커밋을 원격 저장소에 업로드함.</p><h3 id="afd720e4-6f49-82b0-88cd-8119a1b66c64" class="" dir="auto"><code>-u</code></h3><p id="520720e4-6f49-8376-bd1c-012f9a7e9263" class="" dir="auto">현재 브랜치와 원격 브랜치를 추적 관계로 설정함.</p><p id="4a5720e4-6f49-83c4-b18a-818d4b238a99" class="" dir="auto">즉, 이후부터는 <code>git push</code>만 입력해도 자동으로 <code>origin main</code>에 반영됨.</p><hr id="230720e4-6f49-82d2-8c54-01497666ce30" dir="auto"/><h1 id="fd6720e4-6f49-83dd-97ba-81021a16f1ff" class="" dir="auto">15. CodeDeploy 구성</h1><h2 id="089720e4-6f49-8314-8ab7-0104034d003f" class="" dir="auto">15.1 CodeDeploy Application 생성</h2><p id="e5e720e4-6f49-82d3-b4c9-81613b398c5b" class="" dir="auto">이름 예시</p><pre id="af5720e4-6f49-8372-b337-01bfd800e69e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-cicd-app</code></pre><p id="549720e4-6f49-830a-baf3-815435fe3438" class="" dir="auto">컴퓨팅 플랫폼</p><pre id="798720e4-6f49-83e7-94c2-81072f5cb659" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2</code></pre><hr id="b16720e4-6f49-83e3-8e80-81e0d0e150fd" dir="auto"/><h2 id="7ab720e4-6f49-8201-95ba-81dd759a57b4" class="" dir="auto">15.2 CodeDeploy 서비스 역할 생성</h2><p id="116720e4-6f49-8352-bf52-0159d2ed5fe0" class="" dir="auto">이름 예시</p><pre id="191720e4-6f49-831a-ade4-016130135038" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CodeDeployServiceRole</code></pre><p id="565720e4-6f49-82ce-8432-819910086472" class="" dir="auto">이 역할은 CodeDeploy가 EC2 대상을 찾아 배포 작업을 수행할 때 사용함.</p><hr id="696720e4-6f49-8268-ad6c-01fa629cad5c" dir="auto"/><h2 id="983720e4-6f49-82d3-81b9-011e2b5e214e" class="" dir="auto">15.3 Deployment Group 생성</h2><p id="d15720e4-6f49-8259-9eeb-81b7cd0f8593" class="" dir="auto">이름 예시</p><pre id="8ef720e4-6f49-83cd-a2bb-81aa63af1d7a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-cicd-dg</code></pre><p id="ce3720e4-6f49-834d-8c47-01e069f4eb04" class="" dir="auto">환경 구성</p><pre id="e9a720e4-6f49-8290-8e21-8158a8b25bcd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon EC2 instances</code></pre><p id="484720e4-6f49-83a9-82b2-811c6ee4a710" class="" dir="auto">대상 선택 방식</p><pre id="467720e4-6f49-8267-b1d9-01db00d80978" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">태그 기반 선택</code></pre><p id="a03720e4-6f49-82eb-ac41-01a096a10ec2" class="" dir="auto">태그 조건</p><pre id="e44720e4-6f49-83f0-b5d2-81ce6f6f5280" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Deploy = 이니셜-Web</code></pre><ul id="eba720e4-6f49-832d-bfb3-013e157ccabf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2에 미리 붙여둔 태그와 일치하는 인스턴스에만 배포함</li></ul><ul id="291720e4-6f49-829a-a5b5-01b5bf301a29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">수동으로 인스턴스를 지정하는 것보다 운영 관점에서 더 유연함</li></ul><ul id="ae2720e4-6f49-8251-a641-81ed8cb50eac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">나중에 같은 태그를 가진 EC2가 늘어나면 동일한 배포 그룹으로 확장 가능함</li></ul><hr id="ff1720e4-6f49-8329-885d-01ff87a27bae" dir="auto"/><h1 id="cec720e4-6f49-82e3-a4e4-816ac23ded38" class="" dir="auto">16. CodeBuild 구성</h1><h2 id="cf6720e4-6f49-8351-a44b-0165210691c9" class="" dir="auto">16.1 CodeBuild Project 생성</h2><p id="734720e4-6f49-82e0-a212-01b93f0999ef" class="" dir="auto">이름 예시</p><pre id="80a720e4-6f49-8346-a772-8123fe1a9361" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-cicd-build</code></pre><p id="2fe720e4-6f49-829d-9a53-01356ea85cd7" class="" dir="auto">소스 공급자</p><pre id="98e720e4-6f49-824a-a247-8194b6a53e42" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CodeCommit</code></pre><p id="a7d720e4-6f49-8260-8f0e-81ce75ef6609" class="" dir="auto">설명</p><ul id="17d720e4-6f49-8339-9c9e-014587ca7136" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeBuild가 직접 저장소에서 받는 것이 아니라<br/>CodeCommit이 소스를 전달해주는 구조임</li></ul><p id="7fa720e4-6f49-82c1-add9-01b12c6a3d0f" class="" dir="auto">환경</p><pre id="4fe720e4-6f49-8347-bbab-01bd3106fe76" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Managed image
+Amazon Linux</code></pre><p id="ad5720e4-6f49-8256-91dd-0178ebaced84" class="" dir="auto">Buildspec</p><pre id="360720e4-6f49-835b-aaf6-01db3e183595" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Use a buildspec file</code></pre><p id="893720e4-6f49-826c-9e07-0132145eed6e" class="" dir="auto">서비스 역할</p><pre id="43e720e4-6f49-823c-8a8e-8100041cb000" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CodeBuildServiceRole
+
+&quot;s3:GetObject&quot;  =&gt; artifact에 추</code></pre><p id="92f720e4-6f49-820f-8293-0112835a1861" class="" dir="auto">아티팩트</p><pre id="fc9720e4-6f49-82a1-aa66-811daa2835e8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3</code></pre><p id="ca9720e4-6f49-83dd-800e-010a049ec56d" class="" dir="auto">설명</p><ul id="640720e4-6f49-838c-91c7-012a862f4d50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 결과물은 CodePipeline을 통해 다음 단계로 전달됨</li></ul><ul id="53c720e4-6f49-835f-b7ce-01a3c5f135d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">별도 zip 업로드 위치를 직접 지정하지 않아도 됨</li></ul><hr id="b67720e4-6f49-837b-bffe-8149578c043c" dir="auto"/><h1 id="878720e4-6f49-8240-9f91-017c7f439c32" class="" dir="auto">17. CodePipeline 구성</h1><h2 id="ac6720e4-6f49-8227-a692-8126fc40be81" class="" dir="auto">17.1 파이프라인 생성</h2><p id="787720e4-6f49-83c3-ac7c-818a80e97b9e" class="" dir="auto">이름 예시</p><pre id="81c720e4-6f49-8273-9e5e-0192df1ef53d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-cicd-pipeline</code></pre><p id="007720e4-6f49-82c8-ba6a-812f0bc5e2ed" class="" dir="auto">서비스 역할</p><pre id="de8720e4-6f49-8351-888d-019b23c0be45" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CodePipelineServiceRole
+
+기본 권한 외에 codedeploy:GetApplicationRevision, codedeploy:GetDeploymentConfig 권한 추가</code></pre><p id="a9b720e4-6f49-83bd-b8cf-01b655daca8a" class="" dir="auto">아티팩트 저장소</p><pre id="af0720e4-6f49-8311-ac82-016aeba2de8b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">기존 S3 버킷 선택
+이니셜-cicd-artifact-계정식별자</code></pre><hr id="73c720e4-6f49-8215-8308-01f15a46f277" dir="auto"/><h2 id="95d720e4-6f49-8238-86a4-81af08a67776" class="" dir="auto">17.2 Source 단계</h2><p id="1f6720e4-6f49-82b7-aefd-0153465f5e1e" class="" dir="auto">소스 공급자</p><pre id="bcf720e4-6f49-8235-a7d7-0178fadbaf30" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS CodeCommit</code></pre><p id="537720e4-6f49-8326-9f28-81c69e1430ab" class="" dir="auto">Repository name</p><pre id="be0720e4-6f49-838f-b4fb-01fd1208b8ff" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">my-cicd-repo</code></pre><p id="e9a720e4-6f49-83e0-9679-018c2d8bec47" class="" dir="auto">Branch name</p><pre id="0c6720e4-6f49-8234-89f5-01be2d551049" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">main</code></pre><p id="5d2720e4-6f49-82c1-a778-01d229cd3ccc" class="" dir="auto">변경 감지 방식</p><pre id="976720e4-6f49-82ab-a2b1-0193add43303" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CloudWatch Events / EventBridge 기반 변경 감지</code></pre><p id="d9e720e4-6f49-82e9-adf6-817f37da5819" class="" dir="auto">설명</p><ul id="e79720e4-6f49-83b2-8857-81b3eec789b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>main</code> 브랜치에 push가 발생하면 파이프라인이 자동 실행됨</li></ul><hr id="352720e4-6f49-8301-8e41-8122da449fe2" dir="auto"/><h2 id="f38720e4-6f49-83c8-97a1-0133fd30e7d3" class="" dir="auto">17.3 Build 단계</h2><p id="cd2720e4-6f49-8386-9c17-81c784b30c0a" class="" dir="auto">빌드 공급자</p><pre id="198720e4-6f49-82d6-93b4-81894cd1e571" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS CodeBuild</code></pre><p id="aaa720e4-6f49-83d3-aa68-015632ab9d5f" class="" dir="auto">Project name</p><pre id="7fc720e4-6f49-8395-a6cb-01f4a6b6cdb7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">my-cicd-build</code></pre><p id="a50720e4-6f49-82f4-aace-81fd5ef93db7" class="" dir="auto">입력 아티팩트 이름은 기본값으로 두어도 무방함.</p><hr id="3ae720e4-6f49-825c-9343-010ef7d70fb7" dir="auto"/><h2 id="4b4720e4-6f49-8362-9a30-817b60e2d5dc" class="" dir="auto">17.4 Deploy 단계</h2><p id="e13720e4-6f49-8339-ad5b-0117f48bb87e" class="" dir="auto">배포 공급자</p><pre id="9bc720e4-6f49-8349-880e-8133394922ae" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS CodeDeploy</code></pre><p id="0cb720e4-6f49-8350-a9bb-8125a0f406dc" class="" dir="auto">Application name</p><pre id="c24720e4-6f49-8300-b56a-815b620df6e2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">my-cicd-app</code></pre><p id="7c2720e4-6f49-82a5-b5c0-811ddacc063d" class="" dir="auto">Deployment group</p><pre id="235720e4-6f49-83ef-acda-016a807201a5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">my-cicd-dg</code></pre><p id="c29720e4-6f49-8257-9da9-81ef12ac54e4" class="" dir="auto">설명</p><ul id="313720e4-6f49-837d-ba1d-81d6d11a13de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build 단계 결과물을 CodeDeploy가 받아 EC2에 배포함</li></ul><p id="117720e4-6f49-831e-bf0a-81c502383e8e" class="" dir="auto">
+</p><hr id="e3c720e4-6f49-82b9-a6c6-81ebb578a34e" dir="auto"/><h1 id="e4f720e4-6f49-834d-8b9e-8105e126e3cf" class="" dir="auto">18. 첫 배포 확인</h1><p id="0a3720e4-6f49-8357-8dfc-81ebd5617a87" class="" dir="auto">CodePipeline 생성 후</p><p id="8af720e4-6f49-8261-9cf5-01c3197231c1" class="" dir="auto">이미 CodeCommit에 소스가 올라가 있다면 첫 실행이 가능함.</p><p id="119720e4-6f49-82cb-aae5-81632fdf314d" class="" dir="auto">확인 순서</p><pre id="1f7720e4-6f49-8399-9672-01b78353f313" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. Source 성공
+2. Build 성공
+3. Deploy 성공</code></pre><p id="88f720e4-6f49-835e-b2e2-0147361674ac" class="" dir="auto">브라우저에서 확인</p><pre id="d5d720e4-6f49-8301-8108-015cb49c26eb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://EC2_PUBLIC_IP</code></pre><p id="9d1720e4-6f49-8305-8b0d-81b9c8a99f06" class="" dir="auto">정상이라면 아래 문구가 보임.</p><pre id="f62720e4-6f49-8284-bee7-81d8319f5951" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS Native CI/CD Demo - Version 1</code></pre><hr id="aff720e4-6f49-82d9-b71d-81a22029f261" dir="auto"/><h1 id="c82720e4-6f49-82b0-8c83-8177712074df" class="" dir="auto">19. 변경 후 자동 배포 실습</h1><h2 id="dc0720e4-6f49-8254-9071-817b8876dbf1" class="" dir="auto">19.1 index.html 수정</h2><p id="032720e4-6f49-82d7-a687-010923f70d60" class="" dir="auto">기존 문구를 아래처럼 수정함.</p><pre id="ab2720e4-6f49-8345-8a45-8173f98421d1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&lt;!DOCTYPE html&gt;
+&lt;htmllang=&quot;ko&quot;&gt;
+&lt;head&gt;
+&lt;metacharset=&quot;UTF-8&quot;&gt;
+&lt;title&gt;AWS Native CI/CD Demo&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;AWS Native CI/CD Demo - Version 2&lt;/h1&gt;
+&lt;p&gt;This page was redeployed automatically after git push.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre><hr id="246720e4-6f49-825c-8e70-01a776de4b1a" dir="auto"/><h2 id="cd5720e4-6f49-8381-8c6b-01f03e484f56" class="" dir="auto">19.2 변경 사항 커밋</h2><pre id="4c4720e4-6f49-82ba-b0e3-0161e8eaaf44" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">git add .
+git commit -m &quot;Update version to 2&quot;</code></pre><ul id="f77720e4-6f49-832a-bafe-812b36bcfcdf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">수정 파일을 staging area에 올리고</li></ul><ul id="9ad720e4-6f49-835e-bdd8-817d50fa8d8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새 커밋을 생성함</li></ul><hr id="9bb720e4-6f49-833f-8d15-815e682bec05" dir="auto"/><h2 id="4c2720e4-6f49-82a7-969b-0129ea156127" class="" dir="auto">19.3 CodeCommit에 다시 push</h2><pre id="72f720e4-6f49-8272-85cc-018349a26034" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">git push</code></pre><hr id="966720e4-6f49-828d-94f0-019a748a629f" dir="auto"/><h2 id="a5e720e4-6f49-83e5-9313-011de9a6a4f2" class="" dir="auto">19.4 자동 실행 확인</h2><p id="4a4720e4-6f49-82a8-8e34-818e47d588d3" class="" dir="auto">확인 항목</p><ul id="606720e4-6f49-8341-8cb4-0140ca82624a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodePipeline이 자동 실행되었는지 확인</li></ul><ul id="af3720e4-6f49-83d5-9ea7-8166e79c99ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeBuild가 다시 수행되었는지 확인</li></ul><ul id="cd5720e4-6f49-82b9-b166-81ea68672361" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeDeploy가 다시 수행되었는지 확인</li></ul><ul id="19e720e4-6f49-834e-b189-814aa4e5d337" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브라우저 새로고침 시 <code>Version 2</code>가 보이는지 확인</li></ul><hr id="9c2720e4-6f49-827f-b810-01fe0e7b9aba" dir="auto"/><h1 id="d92720e4-6f49-82fe-aa77-81bbabc39a29" class="" dir="auto">20. 동작 원리 정리</h1><p id="fd1720e4-6f49-833a-b669-81277dbaede8" class="" dir="auto">이번 실습 전체 동작은 다음과 같음.</p><h2 id="a96720e4-6f49-82c7-aa01-813de88dedd1" class="" dir="auto">20.1 Source 단계</h2><p id="5dd720e4-6f49-83cd-b81d-81c6f295e777" class="" dir="auto">CodeCommit <code>main</code> 브랜치에 코드 변경이 push됨.</p><h2 id="c8b720e4-6f49-82a6-973b-01bc3fb7153f" class="" dir="auto">20.2 Build 단계</h2><p id="8d4720e4-6f49-8244-890b-0194ed980244" class="" dir="auto">CodeBuild가 <code>buildspec.yml</code>을 읽고</p><p id="b2d720e4-6f49-8362-b920-8194ddc6411b" class="" dir="auto">배포에 필요한 파일만 정리해서 아티팩트 생성함.</p><h2 id="672720e4-6f49-838f-a911-0154f7a1dc30" class="" dir="auto">20.3 Deploy 단계</h2><p id="8fc720e4-6f49-83f8-8fb2-812a42d0a236" class="" dir="auto">CodeDeploy가 <code>appspec.yml</code>을 읽고</p><p id="08c720e4-6f49-8250-840f-01294f7f02db" class="" dir="auto">EC2의 <code>/var/www/html</code>로 파일을 복사함.</p><h2 id="3bc720e4-6f49-8336-9831-81be88d0b200" class="" dir="auto">20.4 Hook 단계</h2><p id="631720e4-6f49-832e-9bb8-017ae5387697" class="" dir="auto">CodeDeploy가 훅 스크립트를 순서대로 실행함.</p><ul id="2dd720e4-6f49-8247-a3b2-01d361d615bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BeforeInstall</li></ul><ul id="34d720e4-6f49-838d-91a2-01755704f5ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ApplicationStart</li></ul><ul id="b43720e4-6f49-83ce-9579-814908c08be5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ValidateService</li></ul><h2 id="c5c720e4-6f49-830a-935b-014ec1712ff4" class="" dir="auto">20.5 최종 결과</h2><p id="253720e4-6f49-8222-8aa1-01fc88414f0a" class="" dir="auto">브라우저에서 최신 배포 결과가 확인됨.</p><hr id="9da720e4-6f49-8208-bf00-818a02adc5d4" dir="auto"/><h1 id="868720e4-6f49-82e8-8309-017710c57cb1" class="" dir="auto">21. 자주 발생하는 오류와 점검 방법</h1><h2 id="dc5720e4-6f49-82dc-9eee-01d0c6e4d36a" class="" dir="auto">21.1 CodeDeploy에서 대상 EC2를 찾지 못함</h2><p id="8b7720e4-6f49-831b-b732-811d8842abbb" class="" dir="auto">원인</p><ul id="357720e4-6f49-825a-8f49-015531efc97e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 태그가 Deployment Group 조건과 다름</li></ul><p id="295720e4-6f49-835c-bf07-016b663a689e" class="" dir="auto">확인</p><ul id="0ec720e4-6f49-8399-ae3e-811586c9edc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 태그가 <code>Deploy=Web</code>인지 확인</li></ul><ul id="aa2720e4-6f49-83df-b3b8-01d4725a0074" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deployment Group 태그 조건 확인</li></ul><hr id="598720e4-6f49-8289-bc5d-01fe9c3e5dcf" dir="auto"/><h2 id="c67720e4-6f49-82e7-b671-812dacc15205" class="" dir="auto">21.2 appspec.yml 오류</h2><p id="c18720e4-6f49-8256-a62b-81e18e7deca4" class="" dir="auto">원인</p><ul id="b49720e4-6f49-82ea-aead-8178c4df45fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 이름 오타</li></ul><ul id="23a720e4-6f49-8343-9273-81b9ed7aadce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">YAML 들여쓰기 오류</li></ul><ul id="c57720e4-6f49-8386-af4d-81b999746040" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최상위 경로에 appspec.yml이 없음</li></ul><p id="fb2720e4-6f49-8357-8e23-81a98788a45e" class="" dir="auto">확인 포인트</p><pre id="ea7720e4-6f49-82b5-8fc1-0168c228eb49" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">저장소 루트
+├─ index.html
+├─ buildspec.yml
+├─ appspec.yml
+└─ scripts/</code></pre><p id="16b720e4-6f49-83ea-95aa-81d716df0875" class="" dir="auto"><code>appspec.yml</code>은 루트에 있어야 함.</p><hr id="ed1720e4-6f49-83e8-baa8-8175c4d4c377" dir="auto"/><h2 id="4f2720e4-6f49-830b-bcf2-015f64b9c9f9" class="" dir="auto">21.3 스크립트 실행 실패</h2><p id="6ed720e4-6f49-8328-baa6-0186c66a710e" class="" dir="auto">원인</p><ul id="924720e4-6f49-8227-899e-8148e248e8af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 권한 없음</li></ul><ul id="e28720e4-6f49-827f-9e70-016e02de221d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">bash 문법 오류</li></ul><ul id="fa8720e4-6f49-83de-956f-01c55e251841" class="bulleted-list" dir="auto"><li style="list-style-type:disc">경로 오타</li></ul><p id="f1b720e4-6f49-8275-a199-815b3f7c1062" class="" dir="auto">확인</p><pre id="9fd720e4-6f49-83ab-9b3c-01ab359c5460" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">chmod +x scripts/*.sh</code></pre><p id="f46720e4-6f49-8379-99fc-81be3ad98233" class="" dir="auto">추가로 로컬에서 직접 실행 테스트해보는 것도 좋음.</p><hr id="3f0720e4-6f49-82fc-8c22-01d5102bc816" dir="auto"/><h2 id="6de720e4-6f49-829e-bad3-8136c7e23d68" class="" dir="auto">21.4 Build 단계 실패</h2><p id="f4e720e4-6f49-8305-ab55-015bdc7ded1a" class="" dir="auto">원인</p><ul id="94b720e4-6f49-83e2-8848-81d2f6db1694" class="bulleted-list" dir="auto"><li style="list-style-type:disc">buildspec.yml 오타</li></ul><ul id="aaa720e4-6f49-8236-850b-0183fc3765af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복사 대상 파일 누락</li></ul><ul id="6b0720e4-6f49-8215-8ecd-017070c7782d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">YAML 문법 오류</li></ul><p id="a4f720e4-6f49-82c2-a7ba-8119951f9330" class="" dir="auto">확인</p><ul id="281720e4-6f49-8232-81bd-01ef18008b1f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeBuild 로그 확인</li></ul><ul id="947720e4-6f49-83c6-9407-01467ce3a826" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>cp -r</code> 경로 확인</li></ul><ul id="bef720e4-6f49-8313-bbf1-81ae50e858fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>output</code> 폴더 구조 확인</li></ul><hr id="35d720e4-6f49-8286-ae89-01c256833bdc" dir="auto"/><h2 id="824720e4-6f49-82eb-aac2-81ba79d1e5a4" class="" dir="auto">21.5 ValidateService 실패</h2><p id="fb6720e4-6f49-82ff-a105-01a2da6abbc9" class="" dir="auto">원인</p><ul id="72d720e4-6f49-831f-aa0d-810be759de3c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">nginx 미실행</li></ul><ul id="3df720e4-6f49-8387-901d-01f21f13bca6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/var/www/html/index.html</code> 누락</li></ul><ul id="2f1720e4-6f49-82b4-98ec-015d651462b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">localhost HTTP 응답 실패</li></ul><p id="52b720e4-6f49-822d-95d9-01e5edc082d7" class="" dir="auto">EC2에서 직접 점검</p><pre id="513720e4-6f49-82d4-b647-81f95aea2bd4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl status nginx
+curl -I http://localhost
+ls -al /var/www/html</code></pre><hr id="94d720e4-6f49-83ac-9ae4-01021eb4a1de" dir="auto"/><h2 id="0af720e4-6f49-83d6-a00c-81b840ccaa60" class="" dir="auto">21.6 Git push 인증 실패</h2><p id="c70720e4-6f49-835b-adc0-811c00088985" class="" dir="auto">원인</p><ul id="476720e4-6f49-823d-bda3-8136a7c616ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Git 자격 증명 설정 누락</li></ul><ul id="bd9720e4-6f49-8228-ab9a-014aeaff866a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPS 인증 정보 오류</li></ul><ul id="1fe720e4-6f49-8246-845a-81d6a19944c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">올바른 CodeCommit URL 미사용</li></ul><p id="f2e720e4-6f49-8359-8cfe-8177a171786a" class="" dir="auto">확인</p><ul id="f4f720e4-6f49-83e5-8ce7-01c0dd9139d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeCommit clone URL 재확인</li></ul><ul id="e5e720e4-6f49-839c-a317-01cf74646f47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 사용자 Git credentials 확인</li></ul><ul id="f93720e4-6f49-83d8-8da3-01978673aee9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git credential helper 사용 여부 확인</li></ul><hr id="651720e4-6f49-8270-88fb-014a3c5c341d" dir="auto"/><h1 id="f16720e4-6f49-826f-8638-01b44b92ffef" class="" dir="auto">22. 정리</h1><h2 id="d51720e4-6f49-8224-949c-019b2b57d5a4" class="" dir="auto">22.1 Git 저장소와 배포 서버는 다름</h2><p id="a79720e4-6f49-8318-94bb-019456a3533f" class="" dir="auto">CodeCommit은 소스 저장소임.</p><p id="904720e4-6f49-8362-a11d-81b4463ad051" class="" dir="auto">실제 서비스는 EC2에서 실행됨.</p><p id="3e3720e4-6f49-835e-bde3-81f75fcef6ff" class="" dir="auto">즉,</p><ul id="48b720e4-6f49-8312-a1e7-8182e5770302" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeCommit은 코드 보관</li></ul><ul id="ff1720e4-6f49-836d-8a7b-0130be855f6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeBuild는 빌드 수행</li></ul><ul id="9e2720e4-6f49-8226-a8f7-015112c8ac28" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CodeDeploy는 배포 수행</li></ul><ul id="3f5720e4-6f49-8240-88ec-8134d2b59c42" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2는 서비스 실행</li></ul><p id="430720e4-6f49-8312-8c5d-819613ec4b35" class="" dir="auto">이 역할 분리가 핵심임.</p><hr id="d5c720e4-6f49-8285-bdd6-0145ce93ed37" dir="auto"/><h2 id="d6d720e4-6f49-821e-a2a2-01820f899236" class="" dir="auto">22.2 CodePipeline은 전체 오케스트레이션 도구임</h2><p id="9db720e4-6f49-8229-93ac-81f49757a6e8" class="" dir="auto">CodePipeline은 직접 코드를 빌드하거나 배포하는 서비스가 아님.</p><p id="121720e4-6f49-820e-bf6e-81ecea34b0a0" class="" dir="auto">각 단계를 연결하고 흐름을 제어하는 서비스임.</p><p id="850720e4-6f49-8208-bf56-0172f20bdc6d" class="" dir="auto">즉,</p><ul id="302720e4-6f49-8382-bbcd-818c6f9e8a37" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Source는 어디서 가져올지</li></ul><ul id="93b720e4-6f49-830f-81de-81c140f85ce9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build는 누가 처리할지</li></ul><ul id="49a720e4-6f49-8382-9882-01c543ade228" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deploy는 어디에 배포할지</li></ul><p id="ab7720e4-6f49-8310-9f94-819e9063eeb0" class="" dir="auto">이 과정을 연결해주는 역할을 함.</p><hr id="a72720e4-6f49-83cd-985f-01e19a15e7aa" dir="auto"/><h2 id="b79720e4-6f49-829f-9c87-81be6b757f89" class="" dir="auto">22.3 CodeDeploy는 단순 복사 도구가 아님</h2><p id="7fd720e4-6f49-82e3-b390-01f9321a628e" class="" dir="auto">CodeDeploy는 단순 파일 복사만 하는 것이 아니라</p><p id="aaf720e4-6f49-8237-b4ce-0190b57f2ca1" class="" dir="auto">라이프사이클 이벤트에 따라 스크립트를 실행할 수 있음.</p><p id="1b6720e4-6f49-83fa-8931-015e3a287a82" class="" dir="auto">그래서 다음과 같은 자동화가 가능함.</p><ul id="2eb720e4-6f49-83e7-9405-817b72cecb69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패키지 설치</li></ul><ul id="cd9720e4-6f49-8333-bd38-81cf048da84b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹서버 재시작</li></ul><ul id="2ea720e4-6f49-82fd-abee-01ea2df0a776" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경파일 교체</li></ul><ul id="9c4720e4-6f49-829c-ad67-017a6118a193" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 검증</li></ul><hr id="1c4720e4-6f49-82aa-83f5-01d211ea8df8" dir="auto"/><h2 id="ce1720e4-6f49-8283-a1c4-81d976580d3f" class="" dir="auto">22.4 배포 성공은 파일 복사 완료가 아니라 서비스 정상 동작까지 포함해야 함</h2><p id="fd5720e4-6f49-8388-b7ef-8155509d6745" class="" dir="auto">그래서 <code>ValidateService</code> 훅이 중요함.</p><p id="f04720e4-6f49-82a5-b6e2-0105da57c08e" class="" dir="auto">단순히 <code>/var/www/html</code>에 파일이 들어갔다고 끝이 아니라</p><p id="aff720e4-6f49-83d9-a6a7-01309b88141b" class="" dir="auto">실제로 <code>curl http://localhost</code>가 성공해야 진짜 배포 성공이라고 볼 수 있음.</p><hr id="75d720e4-6f49-8211-bcaf-019903ecb5e1" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

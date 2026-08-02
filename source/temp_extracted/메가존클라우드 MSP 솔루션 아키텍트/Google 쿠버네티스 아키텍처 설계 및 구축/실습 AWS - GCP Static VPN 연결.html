@@ -1,0 +1,819 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. AWS - GCP Static VPN 연결</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="303720e4-6f49-8297-beb9-81871aa4fea0" class="page sans"><header><h1 class="page-title" dir="auto">실습. AWS - GCP Static VPN 연결</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="e7b720e4-6f49-825c-a83e-8193b13bbdec" class="" dir="auto">개요</h2><p id="a10720e4-6f49-827f-bf59-01a2fb6a0deb" class="" dir="auto">AWS와 GCP를 <strong>IPsec VPN</strong>으로 연결하고,  <strong>정적 라우팅(Static Routing)</strong> 으로 양쪽 사설 대역이 통신되도록 구성한다.</p><p id="880720e4-6f49-8226-89f0-01ff523278b7" class="" dir="auto">실습의 핵심은 다음과 같다.</p><ul id="6d1720e4-6f49-825f-a6e7-81bf7eb580a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS와 GCP에 서로 다른 사설 네트워크를 준비함</li></ul><ul id="3b1720e4-6f49-8288-93ad-011493ae5779" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 쪽 VPN Gateway와 GCP 쪽 VPN Gateway를 연결함</li></ul><ul id="c72720e4-6f49-8312-82ce-811120742ab2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">터널을 통해 암호화된 통신 경로를 만듦</li></ul><ul id="993720e4-6f49-8354-a96b-81d52725cea0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BGP 없이 각 클라우드에 <strong>상대편 CIDR에 대한 정적 경로를 직접 등록</strong>함</li></ul><ul id="9be720e4-6f49-824b-b86d-81b4ab61715a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제로 사설 IP 기반 통신이 되는지 확인함</li></ul><hr id="82a720e4-6f49-8276-9956-810a1a1fbedb" dir="auto"/><h2 id="196720e4-6f49-82b7-b20a-81ffb78ed14b" class="" dir="auto">학습 목표</h2><ul id="60d720e4-6f49-8271-8f0f-0101320cc6d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS와 GCP 간 Static VPN 연결 흐름을 설명할 수 있음</li></ul><ul id="f22720e4-6f49-82b4-959c-811cd20bcc05" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP VPN Gateway, External VPN Gateway, VPN Tunnel의 역할을 설명할 수 있음</li></ul><ul id="589720e4-6f49-827a-a583-811dc3fe13e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Static Routing 방식에서 왜 라우트를 직접 등록해야 하는지 설명할 수 있음</li></ul><ul id="cce720e4-6f49-827e-990c-8108348462bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS와 GCP 간 사설 대역 통신 확인 절차를 수행할 수 있음</li></ul><ul id="bd4720e4-6f49-8246-8208-01ec8c996c84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이중 터널 구성의 목적을 설명할 수 있음</li></ul><hr id="912720e4-6f49-82ec-917c-8120a2b32dca" dir="auto"/><h2 id="106720e4-6f49-83e1-b446-0161ae71face" class="" dir="auto">핵심 키워드</h2><ul id="f80720e4-6f49-83f4-9e5b-015594697b1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud VPN</li></ul><ul id="488720e4-6f49-8350-9cf6-01152569e3ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HA VPN Gateway</li></ul><ul id="b5b720e4-6f49-822f-8374-817e452cbc5e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External VPN Gateway</li></ul><ul id="331720e4-6f49-8357-9124-81b477218209" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN Tunnel</li></ul><ul id="680720e4-6f49-82cc-866f-01eae4c6abb0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Static Routing</li></ul><ul id="8b6720e4-6f49-8289-86c2-819611dc4c68" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table</li></ul><ul id="8bb720e4-6f49-826c-8bb4-01f91c386049" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Traffic Selector</li></ul><ul id="f2d720e4-6f49-8232-b4cb-8103ced42856" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Redundancy</li></ul><ul id="c60720e4-6f49-822f-8b70-0163320b5920" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IPsec</li></ul><ul id="ca9720e4-6f49-82f6-93be-81ae4f6f74a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pre-shared Key</li></ul><hr id="e70720e4-6f49-8373-8b22-8123816f339c" dir="auto"/><figure id="6c2720e4-6f49-8359-a705-8171790837d6" class="image" data-notion-image="%EC%8B%A4%EC%8A%B5%20AWS%20-%20GCP%20Static%20VPN%20%EC%97%B0%EA%B2%B0/image.png" dir="ltr"><a href="%EC%8B%A4%EC%8A%B5%20AWS%20-%20GCP%20Static%20VPN%20%EC%97%B0%EA%B2%B0/image.png"><img style="width:703.96875px" src="%EC%8B%A4%EC%8A%B5%20AWS%20-%20GCP%20Static%20VPN%20%EC%97%B0%EA%B2%B0/image.png"/></a></figure><h1 id="980720e4-6f49-82b1-881a-01d90bd7621e" class="" dir="auto">1. 실습에서 구성할 구조</h1><p id="1e0720e4-6f49-83d4-bcf7-810a8d02e722" class="" dir="auto">이번 실습은 다음 구조를 기준으로 진행한다.</p><h2 id="cd3720e4-6f49-830c-8ae8-01ddfc82df16" class="" dir="auto">GCP 측</h2><ul id="613720e4-6f49-82d8-b270-01b0c8c74e5b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC: <code>gcp-vpc-main</code></li></ul><ul id="04e720e4-6f49-826d-97cd-01e89c536e19" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet: <code>10.20.1.0/24</code></li></ul><ul id="bd1720e4-6f49-8394-b86e-816562598b24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM 1대 배치</li></ul><ul id="99b720e4-6f49-8372-96d0-01e269dbdc32" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HA VPN Gateway 생성</li></ul><ul id="63c720e4-6f49-8331-861c-016611d3a827" class="bulleted-list" dir="auto"><li style="list-style-type:disc">External VPN Gateway 생성</li></ul><ul id="f94720e4-6f49-829c-83e1-81936ec86f5a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN Tunnel 2개 또는 4개 구성 가능</li></ul><ul id="5d7720e4-6f49-8242-b0e3-015773b36e10" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Static Route 생성</li></ul><h2 id="7d1720e4-6f49-83f9-a116-81a7db5d1d66" class="" dir="auto">AWS 측</h2><ul id="3ec720e4-6f49-822a-8573-0112f85c07b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC: <code>aws-vpc-main</code></li></ul><ul id="79b720e4-6f49-8299-a9f1-01d835b6b540" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet: <code>10.10.1.0/24</code></li></ul><ul id="4cf720e4-6f49-826e-a567-01cb2dadb376" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 1대 배치</li></ul><ul id="09b720e4-6f49-82fb-a039-8117ab24415c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Virtual Private Gateway 또는 Transit Gateway 기반 Site-to-Site VPN 구성</li></ul><ul id="ba8720e4-6f49-820f-94df-019faf8d4b6c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Customer Gateway 생성</li></ul><ul id="1b1720e4-6f49-8291-bd58-01f791e855b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN Connection 생성</li></ul><ul id="43b720e4-6f49-8397-9be6-81739b7f60e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table에 정적 경로 등록</li></ul><hr id="afd720e4-6f49-8239-9255-81f22ed5bc39" dir="auto"/><h1 id="ac6720e4-6f49-830b-833c-01f8153b7fcb" class="" dir="auto">2. Static Routing 방식에서 고려할 점</h1><p id="4d1720e4-6f49-82a0-90fd-016cca5941c2" class="" dir="auto">상대방 네트워크 경로를 자동으로 학습하지 않음.</p><p id="ffc720e4-6f49-825f-b5f9-81e68daf3bb6" class="" dir="auto">따라서 반드시 아래 작업이 필요하다.</p><ul id="822720e4-6f49-83e3-a4dd-01bf4a23d434" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS는 <code>10.20.1.0/24</code> 대역으로 가는 경로를 VPN 쪽으로 직접 등록해야 함</li></ul><ul id="c06720e4-6f49-827c-984f-81c936a81a89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP는 <code>10.10.1.0/24</code> 대역으로 가는 경로를 VPN 터널 쪽으로 직접 등록해야 함</li></ul><p id="d6b720e4-6f49-8348-a1c6-815a9a16cf97" class="" dir="auto">즉, Static Routing 방식은 다음처럼 이해하면 된다.</p><ul id="edd720e4-6f49-8249-8a64-01c3dc32269e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>장점</strong><ul id="6a7720e4-6f49-82c5-8960-01bfbc0e7c55" class="bulleted-list" dir="auto"><li style="list-style-type:circle">구조가 단순함</li></ul><ul id="591720e4-6f49-82cb-b8da-81830794700b" class="bulleted-list" dir="auto"><li style="list-style-type:circle">학습용 실습에 적합함</li></ul><ul id="359720e4-6f49-8324-a903-81721e40b55f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">BGP ASN, peer IP, session 상태를 덜 신경 써도 됨</li></ul></li></ul><ul id="328720e4-6f49-8380-93dc-81f12ee803fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>단점</strong><ul id="904720e4-6f49-8367-8ebb-81e3d9e04caf" class="bulleted-list" dir="auto"><li style="list-style-type:circle">경로가 자동 전파되지 않음</li></ul><ul id="ce3720e4-6f49-8267-a07d-01adb2b71db1" class="bulleted-list" dir="auto"><li style="list-style-type:circle">광고 대역이 바뀌면 수동 수정해야 함</li></ul><ul id="544720e4-6f49-8217-9d7c-01d5387b77b3" class="bulleted-list" dir="auto"><li style="list-style-type:circle">운영 자동화 측면에서는 BGP보다 불편함</li></ul></li></ul><hr id="623720e4-6f49-83ef-9bab-811d4d691219" dir="auto"/><h1 id="0d4720e4-6f49-83fe-945b-813c5890dd2f" class="" dir="auto">3. 실습 전 준비사항</h1><h2 id="6cf720e4-6f49-82eb-abe3-017e8894f6c2" class="" dir="auto">3.1 CIDR 설계</h2><p id="ac9720e4-6f49-821f-b316-813bdd4fcf39" class="" dir="auto">대역이 겹치면 안 된다.</p><p id="430720e4-6f49-83a1-8330-0160c5c89e12" class="" dir="auto">예시 구성:</p><ul id="cbb720e4-6f49-8322-a826-818cd29abb2d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS VPC CIDR: <code>10.10.0.0/16</code></li></ul><ul id="d8e720e4-6f49-8368-b8d8-81702ec9ca1a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Subnet CIDR: <code>10.10.1.0/24</code></li></ul><ul id="cd4720e4-6f49-82f7-8dae-01ee424a4722" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP VPC CIDR: <code>10.20.0.0/16</code></li></ul><ul id="aa2720e4-6f49-8230-bb1b-01aaeae914df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP Subnet CIDR: <code>10.20.1.0/24</code></li></ul><h2 id="d31720e4-6f49-8376-97f7-812208f476e4" class="" dir="auto">3.2 테스트 대상 인스턴스</h2><p id="bc1720e4-6f49-8348-81dc-016c4e2a7d1f" class="" dir="auto">양쪽에 테스트용 인스턴스를 1대씩 준비한다.</p><ul id="e4d720e4-6f49-83e0-8c07-01eb8dd6a895" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS EC2 Private IP 예시: <code>10.10.1.10</code></li></ul><ul id="d27720e4-6f49-8241-b50d-01d0e26ffa30" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP VM Internal IP 예시: <code>10.20.1.10</code></li></ul><h2 id="38d720e4-6f49-83a7-9c0c-013d4a6786e2" class="" dir="auto">3.3 보안 설정</h2><p id="c3c720e4-6f49-83f7-a6e2-01d09263f311" class="" dir="auto">통신이 안 되는 가장 흔한 이유는 VPN 자체가 아니라 보안 정책이다.</p><p id="52a720e4-6f49-82c5-b5b0-81da9ef9ba15" class="" dir="auto">확인해야 할 것:</p><ul id="d97720e4-6f49-83f0-9d64-015dd4941d9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Security Group</li></ul><ul id="846720e4-6f49-83c9-87e0-81333908ce7f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS NACL</li></ul><ul id="6ae720e4-6f49-83e5-90fd-81c908a2ddb2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Route Table</li></ul><ul id="6f5720e4-6f49-83db-977f-01aa4682484c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP Firewall Rule</li></ul><ul id="faa720e4-6f49-82aa-85c3-0117f52e1f8d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OS 방화벽</li></ul><ul id="4d3720e4-6f49-8231-80b0-01afb7fefbee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ICMP 허용 여부</li></ul><ul id="21f720e4-6f49-8292-ad7b-01df1ad1d44b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TCP 테스트 포트 허용 여부</li></ul><hr id="2b6720e4-6f49-82cd-9536-01954bbe114d" dir="auto"/><h1 id="9a2720e4-6f49-824f-8ff7-81fd35b9ae0e" class="" dir="auto">4. 전체 실습 흐름</h1><p id="1d1720e4-6f49-8229-8291-01c11478641f" class="" dir="auto">이번 실습은 아래 순서로 진행한다.</p><ol type="1" id="5f2720e4-6f49-8204-82c8-81db381af74a" class="numbered-list" start="1" dir="auto"><li>AWS VPC와 EC2 준비</li></ol><ol type="1" id="3d6720e4-6f49-8378-9e07-019d47140696" class="numbered-list" start="2" dir="auto"><li>GCP VPC와 VM 준비</li></ol><ol type="1" id="f32720e4-6f49-8346-9f68-01212da5dec7" class="numbered-list" start="3" dir="auto"><li>AWS Customer Gateway 생성</li></ol><ol type="1" id="ca3720e4-6f49-839b-8b9a-0162d9582b8c" class="numbered-list" start="4" dir="auto"><li>AWS VPN Gateway 연결</li></ol><ol type="1" id="c28720e4-6f49-824f-9cb7-818c454dede2" class="numbered-list" start="5" dir="auto"><li>AWS Site-to-Site VPN 생성</li></ol><ol type="1" id="166720e4-6f49-8207-9659-01668dd16d0a" class="numbered-list" start="6" dir="auto"><li>AWS VPN 구성 파일 다운로드</li></ol><ol type="1" id="526720e4-6f49-83af-9214-01407ab24328" class="numbered-list" start="7" dir="auto"><li>GCP HA VPN Gateway 생성</li></ol><ol type="1" id="06c720e4-6f49-8396-a9bb-81c7e4175710" class="numbered-list" start="8" dir="auto"><li>GCP External VPN Gateway 생성</li></ol><ol type="1" id="7dc720e4-6f49-82f1-9e7b-012392586b4d" class="numbered-list" start="9" dir="auto"><li>GCP VPN Tunnel 생성</li></ol><ol type="1" id="32e720e4-6f49-833e-88e0-8181469c4e3c" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>GCP Static Route 생성</li></ol><ol type="1" id="3b7720e4-6f49-826e-8db7-81fd5c17494b" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li>AWS Route Table에 정적 경로 반영</li></ol><ol type="1" id="604720e4-6f49-83b0-8adb-01dc0f2e1d7e" class="numbered-list numbered-list-digits-2" start="12" dir="auto"><li>터널 상태 확인</li></ol><ol type="1" id="ff0720e4-6f49-829e-a10c-01a668f2b99a" class="numbered-list numbered-list-digits-2" start="13" dir="auto"><li>사설 IP 통신 테스트</li></ol><hr id="9c5720e4-6f49-8395-99bc-81276b86dc2a" dir="auto"/><h1 id="e1b720e4-6f49-8205-92ed-01c2421a4b0f" class="" dir="auto">5. 실습 1. AWS 네트워크 준비</h1><h2 id="9a6720e4-6f49-832b-9c0d-81b071638a91" class="" dir="auto">목적</h2><p id="6ae720e4-6f49-8272-a70d-01b1206b6537" class="" dir="auto">AWS에서 VPN 연결 대상이 될 네트워크와 테스트 인스턴스를 준비한다.</p><h2 id="4f5720e4-6f49-82f3-8193-01c146b609c6" class="" dir="auto">구성 예시</h2><ul id="c15720e4-6f49-8300-b221-01995e7612e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 이름: <code>aws-vpc-main</code></li></ul><ul id="c7f720e4-6f49-83a9-9482-0172bc304e13" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CIDR: <code>10.10.0.0/16</code></li></ul><ul id="e5d720e4-6f49-824b-a5df-81e3c54e6f61" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet: <code>10.10.1.0/24</code></li></ul><ul id="9e4720e4-6f49-82c4-b370-0149088cdb7d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2: Amazon Linux 2023, <code>t3.micro</code></li></ul><h2 id="83d720e4-6f49-83a9-aa14-81979baea2a1" class="" dir="auto">확인 포인트</h2><ul id="a99720e4-6f49-8382-9b7b-8115b830516b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2가 정상 실행 중인지 확인</li></ul><ul id="077720e4-6f49-8365-b52a-816538b71904" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2의 Private IP 확인</li></ul><ul id="cba720e4-6f49-825f-83eb-8137a90fd426" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Route Table이 어떤 서브넷에 연결돼 있는지 확인</li></ul><ul id="e49720e4-6f49-827d-aece-01f1ba43ac7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">추후 GCP 대역으로 가는 라우트를 여기에 추가할 예정임</li></ul><hr id="7d9720e4-6f49-8241-9ff0-819bb73f118a" dir="auto"/><h1 id="aab720e4-6f49-82f0-b8f2-011e3a30f026" class="" dir="auto">6. 실습 2. GCP 네트워크 준비</h1><h2 id="950720e4-6f49-8377-9888-010f74c21cdb" class="" dir="auto">목적</h2><p id="8da720e4-6f49-83c7-8928-814bbbc71ba5" class="" dir="auto">GCP에서 VPN 연결 대상이 될 네트워크와 테스트 VM을 준비한다.</p><h2 id="131720e4-6f49-82cd-b06e-01cd46cf7a5d" class="" dir="auto">구성 예시</h2><ul id="58c720e4-6f49-8364-9645-019ead5fe8c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 이름: <code>gcp-vpc-main</code></li></ul><ul id="d19720e4-6f49-828c-b0f9-816a88dea123" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷 이름: <code>gcp-subnet-seoul</code></li></ul><ul id="b3b720e4-6f49-83ca-8660-0185ae044a07" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷 CIDR: <code>10.20.1.0/24</code></li></ul><ul id="608720e4-6f49-826b-8ed0-0127dd924a4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전: <code>asia-northeast3</code></li></ul><ul id="6e1720e4-6f49-8255-a43d-816dac5d6892" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM: e2-micro</li></ul><h2 id="723720e4-6f49-829a-8b8f-813229f83fe8" class="" dir="auto">예시 CLI</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="4ba720e4-6f49-83cb-9d07-81a379e7ddd4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute networks create gcp-vpc-main \
+--subnet-mode=custom</code></pre><pre id="a01720e4-6f49-8385-8f5b-813e4717fe21" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute networks subnets create gcp-subnet-seoul \
+--network=gcp-vpc-main \
+--region=asia-northeast3 \
+--range=10.20.1.0/24</code></pre><h2 id="88f720e4-6f49-83e5-9a99-01178942bed9" class="" dir="auto">설명</h2><ul id="687720e4-6f49-8264-bfbb-812bc5e45ddd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>networks create</code> 는 VPC를 생성하는 명령이다</li></ul><ul id="1f2720e4-6f49-83af-9a7a-01ff70f3b44e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--subnet-mode=custom</code> 은 자동 서브넷 생성이 아니라 직접 서브넷을 정의하겠다는 의미다</li></ul><ul id="b4d720e4-6f49-83f2-945e-0186d70e9b24" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>subnets create</code> 는 특정 리전에 서브넷을 만드는 명령이다</li></ul><ul id="373720e4-6f49-8220-9c89-01bdc2a34baa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--range</code> 는 해당 서브넷에 사용할 CIDR 대역이다</li></ul><hr id="078720e4-6f49-83ed-a8bd-010f0d88f12e" dir="auto"/><h1 id="ea0720e4-6f49-83ae-8e97-01fd5ec6ba40" class="" dir="auto">7. 실습 3. GCP 테스트 VM 생성</h1><h2 id="a82720e4-6f49-83e3-9015-0146ed374e4a" class="" dir="auto">예시 CLI</h2><pre id="06b720e4-6f49-831f-8697-012d339e07af" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute instances create gcp-test-vm \
+--zone=asia-northeast3-a \
+--machine-type=e2-micro \
+--subnet=gcp-subnet-seoul \
+--private-network-ip=10.20.1.10 \
+--image-family=debian-12 \
+--image-project=debian-cloud</code></pre><h2 id="3c3720e4-6f49-8257-b3a5-81266193fe71" class="" dir="auto">설명</h2><ul id="d7a720e4-6f49-8373-8328-81d8aa304ed5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>instances create</code> 는 VM 생성 명령이다</li></ul><ul id="31e720e4-6f49-82e8-91a6-81464139475c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--subnet</code> 으로 어느 서브넷에 VM을 둘지 지정한다</li></ul><ul id="821720e4-6f49-8270-a310-81073231d43f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--private-network-ip</code> 로 내부 IP를 고정해두면 이후 테스트가 편하다</li></ul><ul id="ee2720e4-6f49-82b0-9fa0-8198559fcaab" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--image-family</code>, <code>--image-project</code> 는 사용할 OS 이미지를 지정한다</li></ul><hr id="95d720e4-6f49-830d-a131-017fa8139ea1" dir="auto"/><h1 id="1e2720e4-6f49-82f7-9d5f-81b8709b2bae" class="" dir="auto">8. 실습 4. GCP 방화벽 규칙 생성</h1><h2 id="173720e4-6f49-8339-b162-01f624916551" class="" dir="auto">목적</h2><p id="b10720e4-6f49-836f-a5cd-81ca48578f5a" class="" dir="auto">AWS에서 GCP VM으로 테스트할 수 있도록 ICMP 또는 TCP를 허용한다.</p><h2 id="3bc720e4-6f49-826c-8119-012c4e633dd4" class="" dir="auto">예시 CLI</h2><pre id="aef720e4-6f49-8367-a1db-811b745fb2b5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules create allow-aws-to-gcp-icmp \
+--network=gcp-vpc-main \
+--allow=icmp \
+--source-ranges=10.10.0.0/16</code></pre><pre id="d42720e4-6f49-8320-8598-81b9cec32038" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules create allow-aws-to-gcp-ssh \
+--network=gcp-vpc-main \
+--allow=tcp:22 \
+--source-ranges=10.10.0.0/16</code></pre><h2 id="260720e4-6f49-8310-a703-015445ec0174" class="" dir="auto">설명</h2><ul id="e74720e4-6f49-83ef-847f-0139bf9213ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>firewall-rules create</code> 는 VPC 방화벽 규칙을 생성한다</li></ul><ul id="720720e4-6f49-83f9-8959-81fd7a4e8c96" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-source-ranges</code> 는 허용할 출발지 대역이다</li></ul><ul id="14a720e4-6f49-83d5-9454-01b0aafe50f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여기서는 AWS VPC 대역인 <code>10.10.0.0/16</code> 에서 오는 트래픽만 허용한다</li></ul><ul id="4d8720e4-6f49-8314-b67f-81f5a0f027e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ICMP가 막혀 있으면 ping 테스트가 실패하므로 실습 편의를 위해 허용해두는 편이 좋다</li></ul><hr id="b38720e4-6f49-820a-875b-8119e1d3d1c7" dir="auto"/><h1 id="5a3720e4-6f49-8265-9121-01e87cfc10fa" class="" dir="auto">9. 실습 5. AWS Customer Gateway 생성</h1><h2 id="644720e4-6f49-83dd-8742-01b10062d5b1" class="" dir="auto">목적</h2><p id="692720e4-6f49-8233-bee9-0122d67e7512" class="" dir="auto">AWS가 GCP 쪽 VPN 장비를 외부 피어로 인식하도록 등록한다.</p><p id="68d720e4-6f49-821c-ad2a-01e84b24e61e" class="" dir="auto">여기서 중요한 점은 <strong>GCP HA VPN Gateway의 외부 IP</strong> 를 알아야 한다는 점이다.</p><p id="84c720e4-6f49-83b4-bfdb-81f80b2ca3d7" class="" dir="auto">따라서 실제 구성 순서는 AWS부터 시작할 수도 있고, GCP VPN Gateway를 먼저 만들고 AWS에 반영할 수도 있다.</p><hr id="675720e4-6f49-831e-b26a-81326605daa7" dir="auto"/><h1 id="125720e4-6f49-828d-b59c-811d9f0aa1a2" class="" dir="auto">10. 실습 6. GCP HA VPN Gateway 생성</h1><h2 id="1e2720e4-6f49-82ee-a775-016449f0742f" class="" dir="auto">목적</h2><p id="0c7720e4-6f49-83d9-bb60-01e0dc5112c4" class="" dir="auto">GCP 측 VPN 종단점을 만든다.</p><h2 id="e41720e4-6f49-831f-9c47-01d5793fa6e0" class="" dir="auto">예시 CLI</h2><pre id="b74720e4-6f49-835c-9232-01e36d2fbe4a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute vpn-gateways create gcp-ha-vpn \
+--network=gcp-vpc-main \
+--region=asia-northeast3</code></pre><h2 id="100720e4-6f49-83d6-a4c3-8165304ae559" class="" dir="auto">설명</h2><ul id="7e9720e4-6f49-8330-a41a-810cf40c9a5b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>vpn-gateways create</code> 는 HA VPN Gateway 생성 명령이다</li></ul><ul id="710720e4-6f49-8337-80c6-8123e0a6ece6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--network</code> 는 어느 VPC에 연결할지 지정한다</li></ul><ul id="e8d720e4-6f49-8200-8854-81b8381f5183" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--region</code> 은 게이트웨이가 생성될 리전이다</li></ul><ul id="1ed720e4-6f49-8369-b930-8140dfe29411" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성 후에는 인터페이스 0, 1 이 존재하는 구조로 이해하면 된다</li></ul><h2 id="9b6720e4-6f49-83ce-9383-81255a6b019e" class="" dir="auto">확인 명령</h2><pre id="5f1720e4-6f49-8364-949f-81d4022c5d41" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute vpn-gateways describe gcp-ha-vpn \
+--region=asia-northeast3</code></pre><h2 id="25b720e4-6f49-82df-b237-011159da66c8" class="" dir="auto">여기서 확인할 것</h2><ul id="744720e4-6f49-8334-be7d-81a27be73007" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인터페이스 정보</li></ul><ul id="391720e4-6f49-8338-b346-815cf87e7ea3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 IP 주소</li></ul><ul id="bb9720e4-6f49-83a7-a82d-81d4d8ea35a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 AWS Customer Gateway 또는 VPN peer 설정에 사용할 값</li></ul><h1 id="85d720e4-6f49-83fb-9c78-01f6802852ef" class="" dir="auto">11. 실습 7. AWS Site-to-Site VPN 생성</h1><h2 id="a63720e4-6f49-838f-8e32-01edf58176f8" class="" dir="auto">목적</h2><p id="0ce720e4-6f49-82c8-baaa-81dcd9dedc6c" class="" dir="auto">AWS에서 GCP를 향하는 VPN 연결을 만든다.</p><h2 id="db6720e4-6f49-8251-979f-01a69356a654" class="" dir="auto">콘솔에서 수행할 작업</h2><ol type="1" id="f17720e4-6f49-8394-a8ff-81f042ff329d" class="numbered-list" start="1" dir="auto"><li><strong>Virtual Private Gateway 생성</strong></li></ol><ol type="1" id="ba2720e4-6f49-8365-a685-81124844249c" class="numbered-list" start="2" dir="auto"><li>해당 VGW를 AWS VPC에 연결</li></ol><ol type="1" id="271720e4-6f49-8255-9928-810c91f83d31" class="numbered-list" start="3" dir="auto"><li><strong>Customer Gateway 생성</strong><ul id="1ab720e4-6f49-837d-9d8d-81dc5231876e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP HA VPN Gateway 외부 IP 사용</li></ul></li></ol><ol type="1" id="977720e4-6f49-82b4-86d1-0167437031bf" class="numbered-list" start="4" dir="auto"><li><strong>Site-to-Site VPN Connection 생성</strong><ul id="6e4720e4-6f49-83b5-b41c-818254cc2e90" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅 옵션은 <strong>Static</strong></li></ul><ul id="aa3720e4-6f49-8343-95f0-8183f1125755" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 라우트 대역에 <code>10.20.0.0/16</code> 또는 <code>10.20.1.0/24</code> 입력</li></ul></li></ol><h2 id="bbf720e4-6f49-8313-a73d-8145d3251bc6" class="" dir="auto">설명 포인트</h2><ul id="802720e4-6f49-8205-8002-01ab27f6a8bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여기서 라우팅 옵션을 Dynamic으로 하지 않고 <strong>Static</strong> 으로 선택해야 한다</li></ul><ul id="fd2720e4-6f49-8318-8997-813304ca42ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS는 이 VPN을 통해 어느 목적지 대역으로 갈 것인지 알아야 하므로<strong>정적 라우트 대역</strong>을 수동 입력해야 한다</li></ul><ul id="e7b720e4-6f49-8218-840b-811a38a54aa8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN 연결이 생성되면 <strong>터널 2개</strong>가 자동으로 만들어진다</li></ul><h2 id="467720e4-6f49-8225-ba9f-0184fca1c6fc" class="" dir="auto">AWS 구성 파일 다운로드</h2><p id="590720e4-6f49-8217-956c-816cd268acf5" class="" dir="auto">VPN Connection 생성 후 구성 파일을 다운로드한다.</p><p id="c1d720e4-6f49-83af-9793-01e4b679eed3" class="" dir="auto">여기서 확인할 정보:</p><ul id="42d720e4-6f49-835f-8e25-01ff8cdfb5d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Tunnel 1 Outside IP</li></ul><ul id="1b4720e4-6f49-8206-a802-810809da3acf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Tunnel 2 Outside IP</li></ul><ul id="c04720e4-6f49-82aa-a667-8138554cfbb6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pre-Shared Key</li></ul><ul id="309720e4-6f49-83d3-90e7-81f273d7fc14" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부 터널 IP</li></ul><ul id="7df720e4-6f49-83f1-b2ee-81ad7a673ba8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅 방식이 Static인지 여부</li></ul><blockquote id="44a720e4-6f49-8281-baeb-01e8c2d9a1b5" class="" dir="auto">Static Routing 방식에서는 BGP Peer IP, ASN 같은 정보는 핵심이 아니다.<p id="e8c720e4-6f49-83a8-93ed-01903999f609" class="" dir="auto"><strong>Outside IP와 PSK</strong> 가 가장 중요하다.</p></blockquote><hr id="087720e4-6f49-83f0-9153-81f16a13ee97" dir="auto"/><h1 id="063720e4-6f49-8222-9c9a-816ec841a0c5" class="" dir="auto">12. 실습 8. GCP External VPN Gateway 생성</h1><h2 id="c00720e4-6f49-82c1-a3cc-01590f3037d1" class="" dir="auto">목적</h2><p id="2ec720e4-6f49-83c0-9084-01320075a64d" class="" dir="auto">AWS 쪽 VPN 피어 정보를 GCP에 등록한다.</p><p id="66d720e4-6f49-8352-8b69-0178f31766ac" class="" dir="auto">즉, GCP가 “내가 어떤 외부 VPN 장비와 연결할 것인가”를 알도록 만드는 단계다.</p><h2 id="0f5720e4-6f49-83b0-aef6-015583803554" class="" dir="auto">예시 CLI</h2><pre id="1d1720e4-6f49-8368-a73e-018e77914d05" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute external-vpn-gateways create aws-vpn-peer \
+--interfaces=0=AWS_TUNNEL1_OUTSIDE_IP,1=AWS_TUNNEL2_OUTSIDE_IP \
+--redundancy-type=TWO_IPS_REDUNDANCY</code></pre><h2 id="a2e720e4-6f49-82bc-ac59-81c0167c8b63" class="" dir="auto">예시</h2><pre id="a0e720e4-6f49-82ae-931b-01242e12e0ed" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute external-vpn-gateways create aws-vpn-peer \
+--interfaces=0=3.38.10.10,1=52.79.20.20 \
+--redundancy-type=TWO_IPS_REDUNDANCY</code></pre><h2 id="ac2720e4-6f49-8304-a420-01af4d936a5e" class="" dir="auto">설명</h2><ul id="546720e4-6f49-82e4-b553-016d9b4ee91f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>external-vpn-gateways create</code> 는 외부 VPN 장비를 GCP에 등록하는 명령이다</li></ul><ul id="e66720e4-6f49-8312-b7d5-019a625e4c7b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-interfaces</code> 는 상대편 터널 외부 IP를 인터페이스 번호와 함께 지정한다</li></ul><ul id="43e720e4-6f49-83cc-8167-0166cf18e87b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>0=IP주소,1=IP주소</code> 형식으로 입력한다</li></ul><ul id="7e9720e4-6f49-83b9-8374-8198072813d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>TWO_IPS_REDUNDANCY</code> 는 외부 피어가 이중 인터페이스를 가진 구성임을 의미한다</li></ul><hr id="ce7720e4-6f49-835f-83ea-81f11633812a" dir="auto"/><h1 id="c43720e4-6f49-835a-aaf7-815d2bfb2427" class="" dir="auto">13. 실습 9. GCP VPN Tunnel 생성</h1><h2 id="cc0720e4-6f49-8338-9eb6-81625a13ddcc" class="" dir="auto">목적</h2><p id="373720e4-6f49-824f-bb3a-01bb82971edd" class="" dir="auto">AWS가 제공한 두 개의 터널에 대해 GCP에서도 대응되는 터널을 생성한다.</p><p id="c8a720e4-6f49-8226-aa55-0102968770eb" class="" dir="auto">Static Routing 방식이므로 <strong>각 터널마다 원격 트래픽 대역(remote traffic selector)</strong> 을 명시하는 것이 중요하다.</p><h2 id="612720e4-6f49-826a-b78b-01990d0f9a84" class="" dir="auto">터널 1 생성 예시</h2><pre id="01b720e4-6f49-82b5-8c0f-81b57d850baf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute vpn-tunnels create gcp-to-aws-tunnel-1 \
+--region=asia-northeast3 \
+--vpn-gateway=gcp-ha-vpn \
+--interface=0 \
+--peer-external-gateway=aws-vpn-peer \
+--peer-external-gateway-interface=0 \
+--shared-secret=&#x27;AWS_TUNNEL1_PSK&#x27; \
+--remote-traffic-selector=10.10.0.0/16</code></pre><h2 id="c8e720e4-6f49-8299-9932-81f115633efe" class="" dir="auto">터널 2 생성 예시</h2><pre id="6b7720e4-6f49-83b2-a83a-81c027315b75" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute vpn-tunnels create gcp-to-aws-tunnel-2 \
+--region=asia-northeast3 \
+--vpn-gateway=gcp-ha-vpn \
+--interface=1 \
+--peer-external-gateway=aws-vpn-peer \
+--peer-external-gateway-interface=1 \
+--shared-secret=&#x27;AWS_TUNNEL2_PSK&#x27; \
+--remote-traffic-selector=10.10.0.0/16</code></pre><h2 id="ae7720e4-6f49-834a-9d9f-01d04df5c761" class="" dir="auto">설명</h2><ul id="802720e4-6f49-8380-8754-01182f95a555" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>vpn-tunnels create</code> 는 실제 IPsec 터널을 만드는 명령이다</li></ul><ul id="c93720e4-6f49-839f-a5be-81a6d23534b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--vpn-gateway</code> 는 GCP 쪽 HA VPN Gateway 이름이다</li></ul><ul id="de8720e4-6f49-8253-9d84-013b92989f9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--interface</code> 는 GCP HA VPN Gateway의 어느 인터페이스를 사용할지 지정한다</li></ul><ul id="bd5720e4-6f49-8323-809f-8196e2862c93" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--peer-external-gateway</code> 는 AWS 피어 정보를 담은 External VPN Gateway 리소스다</li></ul><ul id="267720e4-6f49-82f7-a8f7-81803a6d095d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--peer-external-gateway-interface</code> 는 AWS 측 인터페이스 번호다</li></ul><ul id="f10720e4-6f49-83d3-b15f-01dfec2d9af9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--shared-secret</code> 는 AWS 구성 파일의 pre-shared key 값이다</li></ul><ul id="8a7720e4-6f49-83f5-8a60-817f8cadbee0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--remote-traffic-selector</code> 는 이 터널을 통해 도달할 원격 대역이다</li></ul><h3 id="bec720e4-6f49-828a-918b-819738413929" class="" dir="auto">remote-traffic-selector가 중요한 이유</h3><p id="327720e4-6f49-826a-815a-0149b3316602" class="" dir="auto">BGP를 쓰지 않기 때문에, GCP는 상대편 네트워크 대역을 자동 학습하지 않는다.</p><p id="72f720e4-6f49-8377-aa7d-81ac65c4f01f" class="" dir="auto">따라서 어떤 대역으로 가는 트래픽을 이 VPN 터널로 보낼 것인지 명시해야 한다.</p><hr id="83e720e4-6f49-82f8-b5aa-810d97f69442" dir="auto"/><h1 id="82b720e4-6f49-821c-a4cc-015cb6c2b32c" class="" dir="auto">14. 실습 10. GCP Static Route 생성</h1><h2 id="c97720e4-6f49-83c3-aa32-81475deb817b" class="" dir="auto">목적</h2><p id="23f720e4-6f49-8208-87a4-013da50f7cc8" class="" dir="auto">GCP에서 AWS 대역으로 가는 트래픽이 VPN 터널을 타도록 라우트를 만든다.</p><h2 id="97a720e4-6f49-83a1-8ded-810bac092531" class="" dir="auto">예시 CLI</h2><pre id="df4720e4-6f49-822e-b42b-01a7155cc926" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute routes create route-to-aws-via-vpn1 \
+--network=gcp-vpc-main \
+--destination-range=10.10.0.0/16 \
+--next-hop-vpn-tunnel=gcp-to-aws-tunnel-1 \
+--next-hop-vpn-tunnel-region=asia-northeast3 \
+--priority=1000</code></pre><h2 id="e45720e4-6f49-83d6-91f0-0195d4a7c664" class="" dir="auto">백업 라우트 예시</h2><pre id="351720e4-6f49-83ab-89e8-01ae390edc1c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute routes create route-to-aws-via-vpn2 \
+--network=gcp-vpc-main \
+--destination-range=10.10.0.0/16 \
+--next-hop-vpn-tunnel=gcp-to-aws-tunnel-2 \
+--next-hop-vpn-tunnel-region=asia-northeast3 \
+--priority=1100</code></pre><h2 id="815720e4-6f49-8296-b9fa-81ae966bae3b" class="" dir="auto">설명</h2><ul id="f49720e4-6f49-835d-8a88-01f26538a0ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>routes create</code> 는 정적 라우트를 만드는 명령이다</li></ul><ul id="757720e4-6f49-83e7-8725-01a584df4061" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--destination-range</code> 는 목적지 대역이다</li></ul><ul id="a26720e4-6f49-8243-acd7-813ffa0c20b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--next-hop-vpn-tunnel</code> 은 이 목적지로 갈 때 사용할 VPN 터널이다</li></ul><ul id="9b1720e4-6f49-82b1-b4b6-016873a4a48a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--priority</code> 값이 낮을수록 우선순위가 높다</li></ul><ul id="e74720e4-6f49-8239-a3a9-015d6e24e737" class="bulleted-list" dir="auto"><li style="list-style-type:disc">따라서 <code>vpn1</code> 을 기본 경로로 쓰고, <code>vpn2</code> 를 보조 경로처럼 둘 수 있다</li></ul><hr id="6e0720e4-6f49-83b3-a779-014d72ff0321" dir="auto"/><h1 id="94d720e4-6f49-83c5-ab70-013d4cb7029b" class="" dir="auto">15. 실습 11. AWS Route Table 정적 경로 확인</h1><h2 id="433720e4-6f49-8220-bffd-81dafe182e4e" class="" dir="auto">목적</h2><p id="6a4720e4-6f49-8259-9290-01b907ffb784" class="" dir="auto">AWS에서도 GCP 대역으로 가는 트래픽이 VPN으로 전달되도록 해야 한다.</p><h2 id="70b720e4-6f49-8398-9b5e-813baa36e22f" class="" dir="auto">확인할 내용</h2><p id="a76720e4-6f49-8293-b753-8187c69773b4" class="" dir="auto">AWS Route Table에 아래 경로가 있어야 한다.</p><ul id="831720e4-6f49-836f-b6b5-01dd5db6c421" class="bulleted-list" dir="auto"><li style="list-style-type:disc">목적지: <code>10.20.0.0/16</code> 또는 <code>10.20.1.0/24</code></li></ul><ul id="b44720e4-6f49-82e4-b35c-8159f019c33f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상: Virtual Private Gateway 또는 VPN Connection 경유 경로</li></ul><h2 id="57d720e4-6f49-83f3-ae8a-81f8e3b42a63" class="" dir="auto">설명</h2><p id="919720e4-6f49-83d7-959d-012e326ab488" class="" dir="auto">AWS에서 Static VPN을 생성할 때 정적 라우트를 넣으면,</p><p id="5c3720e4-6f49-82b6-96d6-0128c5ec08e6" class="" dir="auto">라우트 전파 또는 수동 반영 방식으로 VPC 라우트 테이블에 경로가 반영된다.</p><p id="f57720e4-6f49-833e-a356-018f37f08c0f" class="" dir="auto">반드시 확인해야 한다.</p><h3 id="bbf720e4-6f49-825a-ab65-01767622b3eb" class="" dir="auto">확인 포인트</h3><ul id="c6b720e4-6f49-83d4-ac7e-0119f80b0844" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2가 속한 서브넷의 라우트 테이블인지 확인</li></ul><ul id="e8b720e4-6f49-82c1-a77b-81534ab4e989" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP 대역이 VPN 대상으로 잡혀 있는지 확인</li></ul><ul id="caa720e4-6f49-83f4-a210-01b30388eb90" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Local, IGW, NAT 경로와 충돌하지 않는지 확인</li></ul><hr id="0a7720e4-6f49-83c6-9922-01b788bbdcb5" dir="auto"/><h1 id="b56720e4-6f49-83f5-b171-0187edbb8d68" class="" dir="auto">16. 실습 12. 터널 상태 확인</h1><h2 id="3a3720e4-6f49-8302-9a55-01e4a2c6a971" class="" dir="auto">GCP에서 확인</h2><pre id="5c5720e4-6f49-8276-a15e-0105b356d865" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute vpn-tunnels describe gcp-to-aws-tunnel-1 \
+--region=asia-northeast3</code></pre><pre id="3ef720e4-6f49-82ec-af89-81548f43e1a4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud compute vpn-tunnels describe gcp-to-aws-tunnel-2 \
+--region=asia-northeast3</code></pre><h2 id="4b8720e4-6f49-8336-a749-0123a9ea5bed" class="" dir="auto">확인 항목</h2><ul id="2f8720e4-6f49-8254-9b76-81d292e5bd33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태가 <code>ESTABLISHED</code> 인지 확인</li></ul><ul id="314720e4-6f49-823f-a510-01a368e72927" class="bulleted-list" dir="auto"><li style="list-style-type:disc">peer IP가 예상한 AWS tunnel outside IP와 일치하는지 확인</li></ul><ul id="12b720e4-6f49-822e-8917-815e6d1d39f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">shared secret 오입력이 없는지 확인</li></ul><h2 id="2c7720e4-6f49-82b3-8661-81a1583466f5" class="" dir="auto">AWS에서 확인</h2><p id="5ce720e4-6f49-821f-80de-81d34c722af1" class="" dir="auto">AWS 콘솔에서 Site-to-Site VPN Connection 상세 화면으로 이동해서 본다.</p><p id="7e7720e4-6f49-83b8-aa42-81e745c79b6f" class="" dir="auto">확인 항목:</p><ul id="c39720e4-6f49-8250-a377-81157227423d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Tunnel 1 상태</li></ul><ul id="17d720e4-6f49-8349-a7b3-0148f31eb612" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Tunnel 2 상태</li></ul><ul id="819720e4-6f49-8235-ba9f-019f338081db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">UP / DOWN 여부</li></ul><ul id="f2b720e4-6f49-83d6-b582-81351d346963" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Static route 상태</li></ul><hr id="02c720e4-6f49-831c-ad8b-017fe3a8e94b" dir="auto"/><h1 id="9f9720e4-6f49-8219-a6a1-817832cef5e9" class="" dir="auto">17. 실습 13. 통신 테스트 준비</h1><p id="a76720e4-6f49-8365-a847-0101b0aea519" class="" dir="auto">ping외에, TCP 테스트도 같이 하는 것이 좋다.</p><h2 id="471720e4-6f49-8366-835c-01c35732728b" class="" dir="auto">GCP VM에서 웹 서버 실행 예시</h2><pre id="991720e4-6f49-8282-88fe-81cf41b61b4e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo apt update
+sudo apt install -y nginx
+sudo systemctl enable --now nginx</code></pre><h2 id="2ff720e4-6f49-8271-b1bb-81aeff3735aa" class="" dir="auto">AWS EC2에서 웹 서버 실행 예시</h2><pre id="747720e4-6f49-83ce-bc56-816d904c2ef5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo dnf install -y nginx
+sudo systemctl enable--now nginx</code></pre><h2 id="d05720e4-6f49-82e7-a54b-81d32aa63832" class="" dir="auto">설명</h2><ul id="ece720e4-6f49-82d7-9f95-01089359b8f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한쪽에서 웹 서버를 띄워두면</li></ul><ul id="e79720e4-6f49-83e0-9e9c-013a92c135fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반대편에서 <code>curl</code>, <code>telnet</code>, <code>nc</code> 같은 방식으로 실제 애플리케이션 레벨 테스트가 가능하다</li></ul><ul id="2fc720e4-6f49-825b-b1cb-0142559b3293" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ICMP가 막혀도 TCP/HTTP 테스트는 가능하다</li></ul><hr id="d6a720e4-6f49-82c4-8172-81965c23d963" dir="auto"/><h1 id="4ee720e4-6f49-8228-90d6-0144e42a04df" class="" dir="auto">18. 실습 14. 실제 통신 테스트</h1><h2 id="100720e4-6f49-82aa-beb3-8132da5b5eff" class="" dir="auto">GCP VM → AWS EC2 테스트</h2><pre id="dd5720e4-6f49-83b0-b9b8-0130de5d9a53" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ping 10.10.1.10</code></pre><pre id="9be720e4-6f49-825e-8b76-81760c91642e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl http://10.10.1.10</code></pre><h2 id="c87720e4-6f49-839c-85d8-01b1d0478873" class="" dir="auto">AWS EC2 → GCP VM 테스트</h2><pre id="9a7720e4-6f49-822d-a0dc-819f53496e0a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ping 10.20.1.10</code></pre><pre id="f20720e4-6f49-8212-b636-01c725ad4e33" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl http://10.20.1.10</code></pre><h2 id="a4b720e4-6f49-82aa-9b7d-81d3c0aff551" class="" dir="auto">설명</h2><ul id="dcf720e4-6f49-820e-9b3d-816ca9bb8d8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ping</code> 은 ICMP 기반 확인이다</li></ul><ul id="505720e4-6f49-828d-8dfc-8179e09aa78b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>curl</code> 은 실제 TCP 80 포트와 HTTP 응답까지 확인할 수 있다</li></ul><ul id="7fa720e4-6f49-824e-b5ac-81759c1585e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경에서는 ping이 차단된 경우도 많으므로 <code>curl</code> 테스트가 더 실무적이다</li></ul><hr id="194720e4-6f49-8333-8aea-8107f6895024" dir="auto"/><h1 id="506720e4-6f49-827c-8a12-8106e2cdad91" class="" dir="auto">19. 장애가 날 때 우선 확인할 것</h1><p id="2a0720e4-6f49-82bb-888d-01fc98e99fa6" class="" dir="auto">Static VPN 실습에서 자주 막히는 지점은 아래다.</p><h2 id="764720e4-6f49-8335-bb9d-01e49d0f169a" class="" dir="auto">19.1 PSK 불일치</h2><p id="7f9720e4-6f49-839f-9d66-01ffffdde179" class="" dir="auto">AWS 구성 파일의 pre-shared key와 GCP 터널 생성 시 입력한 값이 다르면 터널이 올라오지 않는다.</p><h2 id="b71720e4-6f49-8292-9e62-811102a5c3db" class="" dir="auto">19.2 peer interface 매핑 오류</h2><ul id="013720e4-6f49-82ec-8c87-014942c9b0bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP interface 0 이 AWS tunnel 1 과 연결돼야 하는데</li></ul><ul id="0dd720e4-6f49-8389-99be-01ed404a724d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실수로 tunnel 2 값을 넣는 경우가 있음</li></ul><p id="fc7720e4-6f49-839c-96d0-81bdece75383" class="" dir="auto">이 경우 터널 상태가 이상하거나 통신이 안 될 수 있다.</p><h2 id="fca720e4-6f49-83bd-929a-8153d31f5746" class="" dir="auto">19.3 GCP Static Route 누락</h2><p id="73c720e4-6f49-82a0-a794-01ec80a84d18" class="" dir="auto">터널은 살아 있어도 GCP에 <code>10.10.0.0/16</code> 경로가 없으면 AWS로 패킷이 가지 않는다.</p><h2 id="3cf720e4-6f49-8376-b3f3-814ad58daa8e" class="" dir="auto">19.4 AWS Route Table 누락</h2><p id="452720e4-6f49-83ea-a2dc-0166bdaa5ead" class="" dir="auto">반대로 AWS 라우트 테이블에 <code>10.20.0.0/16</code> 경로가 없으면 응답이 돌아오지 않는다.</p><h2 id="0ab720e4-6f49-8332-8cf2-01546beb8ffc" class="" dir="auto">19.5 방화벽 문제</h2><ul id="e08720e4-6f49-8241-86db-0106a038ddd6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Security Group에서 <code>10.20.0.0/16</code> 허용 안 됨</li></ul><ul id="b5f720e4-6f49-822f-a4e1-012076bf5aff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP Firewall에서 <code>10.10.0.0/16</code> 허용 안 됨</li></ul><ul id="31c720e4-6f49-8380-8061-81ae90d17f08" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OS 방화벽이 열려 있지 않음</li></ul><h2 id="382720e4-6f49-8331-b964-815e60b3c979" class="" dir="auto">19.6 테스트 대역 불일치</h2><p id="ac3720e4-6f49-8210-a722-014c96244461" class="" dir="auto">실제로는 <code>10.20.1.0/24</code> 만 쓰는데</p><p id="137720e4-6f49-82e2-a71f-01a7441d68e4" class="" dir="auto">라우트는 <code>10.20.2.0/24</code> 로 넣어버린 경우 통신이 안 된다.</p><hr id="26c720e4-6f49-82e2-88c7-81ad1d45cf9c" dir="auto"/><h1 id="ffe720e4-6f49-83ee-bd0e-81e0a0fbb912" class="" dir="auto">20. 이중 터널을 두는 이유</h1><p id="9ce720e4-6f49-8255-b746-815a4a51816d" class="" dir="auto">이번 실습은 Static Routing 기반이지만, 그래도 터널을 2개 두는 이유는 중요하다.</p><h2 id="718720e4-6f49-8231-8b5b-819d860858c7" class="" dir="auto">이유</h2><ul id="9e8720e4-6f49-83a8-b295-81376cf6e68f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한 터널 장애 시 다른 터널을 사용할 수 있음</li></ul><ul id="307720e4-6f49-83b9-827a-8114f06c52b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단일 터널보다 가용성이 좋아짐</li></ul><ul id="9e6720e4-6f49-839b-8ed2-8110721fd202" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영형 VPN 구조의 기본 감각을 익힐 수 있음</li></ul><p id="1e4720e4-6f49-833a-bfca-810fedffb0c5" class="" dir="auto">다만 BGP가 없기 때문에, 장애 전환은 BGP 기반 자동 전환보다 단순하지 않다.</p><p id="876720e4-6f49-835e-aa00-819583cb01ed" class="" dir="auto">그래도 GCP 쪽에서는 <strong>우선순위가 다른 정적 라우트</strong> 를 두어 기본/보조 경로 형태를 이해할 수 있다.</p><hr id="af1720e4-6f49-825f-957b-8138a4de22d6" dir="auto"/><h1 id="608720e4-6f49-82a9-a4fc-01169cd4200c" class="" dir="auto">21. 실습 정리</h1><p id="293720e4-6f49-829e-bd66-81c3d7cfc88b" class="" dir="auto">이번 실습에서 한 작업은 다음과 같다.</p><ul id="08c720e4-6f49-830b-af2b-0189a48eb001" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS VPC와 EC2 준비</li></ul><ul id="d02720e4-6f49-8270-a733-0169edc7cbeb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP VPC와 VM 준비</li></ul><ul id="6e4720e4-6f49-83f5-990b-81b5b5206c22" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Site-to-Site VPN을 Static Routing으로 생성</li></ul><ul id="01b720e4-6f49-8207-ac67-81c80cfcdd73" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 구성 파일에서 tunnel outside IP와 PSK 확인</li></ul><ul id="27b720e4-6f49-83df-a2a6-01d019068992" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP HA VPN Gateway 생성</li></ul><ul id="966720e4-6f49-8283-a2fc-018824c7e7da" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP External VPN Gateway 생성</li></ul><ul id="4d9720e4-6f49-83f4-a995-0120f6722704" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP VPN Tunnel 생성</li></ul><ul id="faa720e4-6f49-8384-9f88-81712e23b474" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP Static Route 생성</li></ul><ul id="713720e4-6f49-8383-834d-0141f1988eb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Route Table 정적 경로 확인</li></ul><ul id="3b9720e4-6f49-8263-ab7e-81089591ecf7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">양쪽 VM 간 사설 IP 통신 테스트 수행</li></ul><hr id="6c6720e4-6f49-826c-b8d3-8169b56d4fd5" dir="auto"/><h1 id="d78720e4-6f49-8246-8d7f-81c2f388d824" class="" dir="auto">22. 핵심 정리</h1><h2 id="be9720e4-6f49-8245-ac2d-818464116541" class="" dir="auto">이번 실습의 핵심 포인트</h2><ul id="f3b720e4-6f49-82e7-b087-81ed556cb7a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BGP 없이도 AWS와 GCP는 VPN으로 연결 가능함</li></ul><ul id="60f720e4-6f49-8231-9e25-010da72fe320" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 경우 경로는 자동 교환되지 않음</li></ul><ul id="b55720e4-6f49-8364-9532-81f648cb543d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">따라서 양쪽에서 <strong>상대 대역으로 가는 정적 라우트</strong> 를 직접 넣어야 함</li></ul><ul id="83f720e4-6f49-836b-8918-01a03881360d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">터널이 올라와 있어도 라우트와 방화벽이 맞지 않으면 통신되지 않음</li></ul><ul id="b5d720e4-6f49-8334-9631-01027cf69d31" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습에서는 ping보다 HTTP/TCP 테스트까지 같이 해야 실제 연결 여부를 더 정확히 판단할 수 있음</li></ul><h2 id="ed5720e4-6f49-82ef-81dc-01eeb3f75a5c" class="" dir="auto">최종 결론</h2><p id="5f7720e4-6f49-8211-89c3-01af8672f904" class="" dir="auto"><strong>Static Routing 기반 AWS-GCP VPN 실습은 멀티클라우드 사설 연결의 기본 구조를 가장 단순하게 익히는 방법이다.</strong></p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

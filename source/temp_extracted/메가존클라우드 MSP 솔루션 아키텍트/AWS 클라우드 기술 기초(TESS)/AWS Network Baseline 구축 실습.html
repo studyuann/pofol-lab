@@ -1,0 +1,803 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>AWS Network Baseline 구축 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="ecf720e4-6f49-8348-9c3d-81fe3f75235a" class="page sans"><header><h1 class="page-title" dir="auto">AWS Network Baseline 구축 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><p id="172720e4-6f49-82b5-a286-017ed0223a82" class="" dir="auto">AWS에서 기본 네트워크 환경을 구축한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="261720e4-6f49-82c9-a7cb-812272691705" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC
+ → Subnet
+ → Routing Table
+ → Internet Gateway
+ → NAT Gateway</code></pre><p id="757720e4-6f49-83df-8037-81e8acbd8f1b" class="" dir="auto">이 구조는 AWS에서 가장 기본적인 <strong>3-Tier 아키텍처 네트워크 구조의 기반이 되는 구성</strong>이다.</p><figure id="718720e4-6f49-829d-a178-81c5755fdcb7" class="image" data-notion-image="AWS%20Network%20Baseline%20%EA%B5%AC%EC%B6%95%20%EC%8B%A4%EC%8A%B5/image.png" dir="ltr"><a href="AWS%20Network%20Baseline%20%EA%B5%AC%EC%B6%95%20%EC%8B%A4%EC%8A%B5/image.png"><img style="width:704px" src="AWS%20Network%20Baseline%20%EA%B5%AC%EC%B6%95%20%EC%8B%A4%EC%8A%B5/image.png"/></a></figure><hr id="a1d720e4-6f49-8206-8aa8-81d4261b8ae0" dir="auto"/><h1 id="f95720e4-6f49-83b5-a896-01956e8c0b35" class="" dir="auto">실습 규칙 (이니셜 Prefix 사용)</h1><p id="add720e4-6f49-82eb-808e-0160128737db" class="" dir="auto">이번 실습에서는 <strong>모든 AWS 리소스 이름 앞에 자신의 이름 이니셜 Prefix를 붙여 생성한다.</strong></p><p id="8b4720e4-6f49-83f0-ad21-01aefbc77ca8" class="" dir="auto">이유</p><ul id="49e720e4-6f49-83b2-9fea-01aae730804c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 학생이 동일한 계정을 사용</li></ul><ul id="d73720e4-6f49-83c4-b408-01856abf8b28" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스 이름 충돌 방지</li></ul><ul id="936720e4-6f49-8309-bc2b-01be5b10f519" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리 편의성</li></ul><hr id="6a0720e4-6f49-8278-ae52-01d6d7fdbd82" dir="auto"/><h2 id="6a3720e4-6f49-83ae-84ce-8100934fa688" class="" dir="auto">이니셜 생성 규칙</h2><pre id="831720e4-6f49-8358-941c-817493c975a3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이름 : Hong Gi Dong
+Prefix : hgd</code></pre><p id="e2e720e4-6f49-8237-915b-81e0aa408067" class="" dir="auto">예</p><table id="c11720e4-6f49-8331-a8af-018c7836d5f4" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="549720e4-6f49-822e-97e7-8142a6c80eba" dir="ltr"><th id="e|wy" class="simple-table-header-color simple-table-header">이름</th><th id="jfxX" class="simple-table-header-color simple-table-header">Prefix</th></tr></thead><tbody><tr id="725720e4-6f49-82a6-9486-81d6afbc869b" dir="ltr"><td id="e|wy" class="">Hong Gi Dong</td><td id="jfxX" class="">hgd</td></tr><tr id="0fb720e4-6f49-8325-81fc-8179f18767bf" dir="ltr"><td id="e|wy" class="">Kim Min Su</td><td id="jfxX" class="">kms</td></tr><tr id="95d720e4-6f49-830a-bbde-01ffbe03ea82" dir="ltr"><td id="e|wy" class="">Lee Ji Eun</td><td id="jfxX" class="">lje</td></tr></tbody></table><hr id="0d1720e4-6f49-836b-bfb2-01179b420a3e" dir="auto"/><h2 id="9f9720e4-6f49-8338-ab2d-01d60a553c5c" class="" dir="auto">리소스 네이밍 규칙</h2><pre id="746720e4-6f49-8221-8c32-818d5bbffd78" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[이니셜]-[리소스]-[번호]</code></pre><p id="8bb720e4-6f49-83cf-acb6-8147f241cd96" class="" dir="auto">예</p><pre id="a6a720e4-6f49-82c9-b18f-011de4a64bf7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hgd-vpc-01
+hgd-sub-pub-01
+hgd-sub-pri-01
+hgd-rtb-pub
+hgd-igw
+hgd-natgw</code></pre><hr id="71c720e4-6f49-8344-a412-01aee51a082c" dir="auto"/><h1 id="2c9720e4-6f49-83e1-8efe-010ef5d939b9" class="" dir="auto">Network Baseline 생성 정보</h1><h2 id="f1c720e4-6f49-83fe-a32b-01f2f072932a" class="" dir="auto">네트워크 자원 명세서</h2><p id="331720e4-6f49-8269-b65e-017710e88238" class="" dir="auto">학생 Prefix를 기준으로 리소스를 생성한다.</p><p id="8f2720e4-6f49-8321-9a19-81928bb0146f" class="" dir="auto">예 (Prefix = hgd)</p><table id="60b720e4-6f49-8257-9046-811c24b3d1e2" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="21b720e4-6f49-83a2-bcda-01822442d61d" dir="ltr"><th id="{uzC" class="simple-table-header-color simple-table-header">Region</th><th id="Ifuj" class="simple-table-header-color simple-table-header">VPC Name</th><th id="V@J=" class="simple-table-header-color simple-table-header">CIDR</th><th id="~IHx" class="simple-table-header-color simple-table-header">Subnet Name</th><th id="roA[" class="simple-table-header-color simple-table-header">CIDR</th><th id="Csb}" class="simple-table-header-color simple-table-header">Routing Table</th></tr></thead><tbody><tr id="77a720e4-6f49-8353-b799-81b0458856ac" dir="ltr"><td id="{uzC" class="">ap-northeast-2</td><td id="Ifuj" class="">hgd-vpc-01</td><td id="V@J=" class="">10.X.0.0/16</td><td id="~IHx" class="">hgd-sub-pub-01</td><td id="roA[" class="">10.X.10.0/24</td><td id="Csb}" class="">hgd-rtb-pub</td></tr><tr id="d3c720e4-6f49-833d-8ad8-018e5bb2d639" dir="ltr"><td id="{uzC" class=""></td><td id="Ifuj" class=""></td><td id="V@J=" class=""></td><td id="~IHx" class="">hgd-sub-pub-02</td><td id="roA[" class="">10.X.20.0/24</td><td id="Csb}" class="">hgd-rtb-pub</td></tr><tr id="43b720e4-6f49-830b-bb10-81616b7ee686" dir="ltr"><td id="{uzC" class=""></td><td id="Ifuj" class=""></td><td id="V@J=" class=""></td><td id="~IHx" class="">hgd-sub-pri-01</td><td id="roA[" class="">10.X.30.0/24</td><td id="Csb}" class="">hgd-rtb-pri-01</td></tr><tr id="ea3720e4-6f49-83f6-86da-01636db30c86" dir="ltr"><td id="{uzC" class=""></td><td id="Ifuj" class=""></td><td id="V@J=" class=""></td><td id="~IHx" class="">hgd-sub-pri-02</td><td id="roA[" class="">10.X.40.0/24</td><td id="Csb}" class="">hgd-rtb-pri-02</td></tr></tbody></table><hr id="440720e4-6f49-8337-b180-81345a1f9589" dir="auto"/><h2 id="987720e4-6f49-8318-b074-819024a5c7f2" class="" dir="auto">라우팅 테이블 명세</h2><table id="92f720e4-6f49-8236-8c7e-0163a5c147d0" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="cbe720e4-6f49-82ce-97ed-01a9e1353bd9" dir="ltr"><th id="K&lt;MB" class="simple-table-header-color simple-table-header">Table Name</th><th id="&gt;x^|" class="simple-table-header-color simple-table-header">Associate Subnet</th><th id="wtiu" class="simple-table-header-color simple-table-header">Destination</th><th id="Y@gL" class="simple-table-header-color simple-table-header">Target</th></tr></thead><tbody><tr id="ad5720e4-6f49-8292-8c96-0154d61b9b66" dir="ltr"><td id="K&lt;MB" class="">hgd-rtb-pub</td><td id="&gt;x^|" class="">hgd-sub-pub-01, hgd-sub-pub-02</td><td id="wtiu" class="">10.X.0.0/16</td><td id="Y@gL" class="">Local</td></tr><tr id="136720e4-6f49-831c-a561-81d4b9904a41" dir="ltr"><td id="K&lt;MB" class=""></td><td id="&gt;x^|" class=""></td><td id="wtiu" class="">0.0.0.0/0</td><td id="Y@gL" class="">hgd-igw</td></tr><tr id="9a7720e4-6f49-82d4-b40b-019557ccddcd" dir="ltr"><td id="K&lt;MB" class="">hgd-rtb-pri-01</td><td id="&gt;x^|" class="">hgd-sub-pri-01</td><td id="wtiu" class="">10.X.0.0/16</td><td id="Y@gL" class="">Local</td></tr><tr id="c69720e4-6f49-8346-8e25-011bc45df656" dir="ltr"><td id="K&lt;MB" class=""></td><td id="&gt;x^|" class=""></td><td id="wtiu" class="">0.0.0.0/0</td><td id="Y@gL" class="">hdg-natgw</td></tr><tr id="b80720e4-6f49-82f4-a9df-81add3150a35" dir="ltr"><td id="K&lt;MB" class="">hgd-rtb-pri-02</td><td id="&gt;x^|" class="">hgd-sub-pri-02</td><td id="wtiu" class="">10.X.0.0/16</td><td id="Y@gL" class="">Local</td></tr></tbody></table><hr id="cdd720e4-6f49-83e8-889f-818ae193e2c9" dir="auto"/><h1 id="a28720e4-6f49-8242-b1bc-010970347e45" class="" dir="auto">VPC 생성</h1><h2 id="c42720e4-6f49-83f5-9ae8-815a9341247c" class="" dir="auto">1. VPC 콘솔 이동</h2><p id="28d720e4-6f49-8333-996c-01424802f510" class="" dir="auto">AWS Console 접속</p><pre id="065720e4-6f49-83eb-9262-8179a44f40d9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Services
+ → VPC</code></pre><hr id="05a720e4-6f49-827b-b30d-81950251534f" dir="auto"/><h2 id="e5e720e4-6f49-8397-934e-0103f5cf81d9" class="" dir="auto">2. VPC 생성</h2><p id="4f9720e4-6f49-8270-86f1-012ac34d3306" class="" dir="auto">메뉴</p><pre id="2cb720e4-6f49-8251-af41-01aac9beb185" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC
+ → VPC 생성</code></pre><hr id="be7720e4-6f49-8259-8863-0180f6141eb9" dir="auto"/><h2 id="52a720e4-6f49-83f2-807e-0143806da5a3" class="" dir="auto">3. VPC 생성 정보 입력</h2><table id="a61720e4-6f49-836a-8463-81a4beeebd37" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="0dc720e4-6f49-82f7-9fca-010d99e23b81" dir="ltr"><th id="sutb" class="simple-table-header-color simple-table-header">항목</th><th id="BQGX" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="7c4720e4-6f49-839a-8b82-01913ae181e4" dir="ltr"><td id="sutb" class="">생성 리소스</td><td id="BQGX" class="">VPC만</td></tr><tr id="646720e4-6f49-821b-a0a9-01d358239ce5" dir="ltr"><td id="sutb" class="">이름 태그</td><td id="BQGX" class="">hgd-vpc-01</td></tr><tr id="a6f720e4-6f49-836b-b728-01df4460fe1f" dir="ltr"><td id="sutb" class="">IPv4 CIDR</td><td id="BQGX" class="">10.X.0.0/16</td></tr></tbody></table><p id="96e720e4-6f49-8297-b4ff-015120182da1" class="" dir="auto">설명</p><p id="585720e4-6f49-83df-b152-81c21e0d3191" class="" dir="auto">VPC는 AWS에서 사용하는 <strong>가상 네트워크</strong>이다.</p><p id="fe5720e4-6f49-83c8-aa76-017895c41206" class="" dir="auto">CIDR</p><pre id="ee6720e4-6f49-82a5-a2c5-01ba3357c11c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.X.0.0/16</code></pre><p id="c67720e4-6f49-8219-a879-81f6a6c2388a" class="" dir="auto">은 다음 IP 범위를 의미한다.</p><pre id="557720e4-6f49-8380-8679-81f7a5c26768" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.X.0.0 ~ 10.X.255.255</code></pre><p id="dbd720e4-6f49-8213-88ac-01d91660e1e4" class="" dir="auto">총</p><pre id="ecb720e4-6f49-83d7-b9fd-011a68c9e77a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">65536개 IP</code></pre><p id="863720e4-6f49-83f1-a175-81d106713455" class="" dir="auto">사용 가능.</p><hr id="ff3720e4-6f49-837a-9a14-01039868acfa" dir="auto"/><h1 id="ded720e4-6f49-828a-b3f7-01a2933a8cd2" class="" dir="auto">Subnet 생성</h1><p id="344720e4-6f49-83d9-9d37-814e4c2c5f77" class="" dir="auto">Subnet은 VPC 네트워크를 <strong>작은 네트워크로 분할한 것</strong>이다.</p><hr id="913720e4-6f49-8391-8c6e-0167f3a9aa3e" dir="auto"/><h2 id="8a8720e4-6f49-8281-a278-012b30d28908" class="" dir="auto">1. Subnet 메뉴 이동</h2><pre id="eef720e4-6f49-8319-9449-81c0d7fea0c7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC
+ → Subnets</code></pre><hr id="f80720e4-6f49-820e-9fbe-01d1ab6d0188" dir="auto"/><h2 id="bd1720e4-6f49-82f9-8b8e-0115e40ecc8c" class="" dir="auto">2. Subnet 생성</h2><pre id="b87720e4-6f49-82ff-9516-01f66bbb0002" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Subnet 생성</code></pre><p id="fcc720e4-6f49-83b4-b8bd-810c2aa59551" class="" dir="auto">버튼 클릭</p><hr id="065720e4-6f49-838c-a4d7-017f8f7740f3" dir="auto"/><h2 id="79d720e4-6f49-82ed-9ea3-8180d56144a5" class="" dir="auto">3. Subnet 생성 정보 입력</h2><table id="fa7720e4-6f49-8296-919e-01bfe526e571" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="c75720e4-6f49-83ca-a3d0-81546114eb8b" dir="ltr"><th id="mWIk" class="simple-table-header-color simple-table-header">Subnet</th><th id="=RDm" class="simple-table-header-color simple-table-header">AZ</th><th id="gYIV" class="simple-table-header-color simple-table-header">CIDR</th></tr></thead><tbody><tr id="5c2720e4-6f49-8268-85e9-01133ee8d9ad" dir="ltr"><td id="mWIk" class="">hgd-sub-pub-01</td><td id="=RDm" class="">ap-northeast-2a</td><td id="gYIV" class="">10.X.10.0/24</td></tr><tr id="01c720e4-6f49-8291-abfb-815ea3019fdc" dir="ltr"><td id="mWIk" class="">hgd-sub-pub-02</td><td id="=RDm" class="">ap-northeast-2c</td><td id="gYIV" class="">10.X.20.0/24</td></tr><tr id="da1720e4-6f49-82e2-8c93-819f2e3f33e4" dir="ltr"><td id="mWIk" class="">hgd-sub-pri-01</td><td id="=RDm" class="">ap-northeast-2a</td><td id="gYIV" class="">10.X.30.0/24</td></tr><tr id="9b8720e4-6f49-8355-80cc-0155867ac68f" dir="ltr"><td id="mWIk" class="">hgd-sub-pri-02</td><td id="=RDm" class="">ap-northeast-2c</td><td id="gYIV" class="">10.X.40.0/24</td></tr></tbody></table><p id="aee720e4-6f49-8242-97fb-014dc628174d" class="" dir="auto">설명</p><pre id="836720e4-6f49-831c-b57e-81e1ece5beb1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">/24</code></pre><p id="56d720e4-6f49-82f1-8e1a-014ac226b0a7" class="" dir="auto">Subnet은</p><pre id="fdc720e4-6f49-830c-93fb-81bc405a3388" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">256개 IP</code></pre><p id="342720e4-6f49-8384-9886-81a5c396ee1e" class="" dir="auto">사용 가능.</p><hr id="77b720e4-6f49-825d-a598-010e44ab59c3" dir="auto"/><h1 id="a48720e4-6f49-82cc-b8b0-8106c4665702" class="" dir="auto">Public Subnet 설정</h1><p id="ee0720e4-6f49-829c-83de-816d967be9f2" class="" dir="auto">Public Subnet에서 생성되는 EC2 인스턴스는 <strong>자동으로 Public IP를 할당받도록 설정해야 한다.</strong></p><p id="182720e4-6f49-8226-ab21-01434504d1de" class="" dir="auto">설정 경로</p><pre id="f9c720e4-6f49-83f6-8933-0107bcb7d4c5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Subnets
+ → hgd-sub-pub-01 선택
+ → 작업
+ → 서브넷 설정 편집</code></pre><p id="42e720e4-6f49-8263-b564-8181b7897759" class="" dir="auto">옵션</p><pre id="556720e4-6f49-82c3-8bac-011e56119805" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Auto-assign Public IPv4</code></pre><p id="cbe720e4-6f49-82d8-b6ad-0164ab605b4d" class="" dir="auto">활성화.</p><p id="ab7720e4-6f49-83f6-9c6d-01d05869b8ce" class="" dir="auto">동일하게</p><pre id="53b720e4-6f49-8306-9aaa-813b99b8cee9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hgd-sub-pub-02</code></pre><p id="5ae720e4-6f49-82e6-9679-816799838d93" class="" dir="auto">에도 적용.</p><hr id="920720e4-6f49-830d-aa80-8141885ae1ea" dir="auto"/><h1 id="2a3720e4-6f49-83b3-b19e-81a103f30351" class="" dir="auto">Routing Table 생성</h1><p id="be9720e4-6f49-82c5-a947-018b40e513b3" class="" dir="auto">라우팅 테이블은 <strong>패킷이 어디로 이동할지를 결정하는 네트워크 경로 정보</strong>이다.</p><hr id="3e2720e4-6f49-8207-980d-81bb7bf002a2" dir="auto"/><h2 id="374720e4-6f49-832d-953f-817854ff051a" class="" dir="auto">Routing Table 생성</h2><p id="899720e4-6f49-8246-9cb9-01b9933d2a81" class="" dir="auto">생성할 테이블</p><pre id="978720e4-6f49-8246-b9fc-81e2ce835637" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hgd-rtb-pub
+hgd-rtb-pri-01
+hgd-rtb-pri-02</code></pre><hr id="94d720e4-6f49-8396-ba72-8173f95125d9" dir="auto"/><h2 id="143720e4-6f49-8226-b4cd-812cac99a353" class="" dir="auto">Subnet 연결</h2><table id="685720e4-6f49-838e-b2bb-01bdcc94470a" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="143720e4-6f49-8359-8032-0131020ff82b" dir="ltr"><th id="::}d" class="simple-table-header-color simple-table-header">Routing Table</th><th id="XNhv" class="simple-table-header-color simple-table-header">Subnet</th></tr></thead><tbody><tr id="f52720e4-6f49-8282-b7ad-81f144a4b824" dir="ltr"><td id="::}d" class="">hgd-rtb-pub</td><td id="XNhv" class="">hgd-sub-pub-01</td></tr><tr id="e0d720e4-6f49-8362-923e-81623024ee41" dir="ltr"><td id="::}d" class="">hgd-rtb-pub</td><td id="XNhv" class="">hgd-sub-pub-02</td></tr><tr id="d2c720e4-6f49-83bf-bb4b-016dc9f026b6" dir="ltr"><td id="::}d" class="">hgd-rtb-pri-01</td><td id="XNhv" class="">hgd-sub-pri-01</td></tr><tr id="4e3720e4-6f49-831c-9f39-010aaf9cc2c7" dir="ltr"><td id="::}d" class="">hgd-rtb-pri-02</td><td id="XNhv" class="">hgd-sub-pri-02</td></tr></tbody></table><p id="e6a720e4-6f49-829c-928a-017b6a146508" class="" dir="auto">설정 경로</p><pre id="567720e4-6f49-8367-9398-81768bda75d6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Routing Table
+ → Subnet associations
+ → Edit</code></pre><hr id="fc2720e4-6f49-8314-b638-0109cd8d2e58" dir="auto"/><h1 id="e21720e4-6f49-825b-bef6-017f9ffbd0a5" class="" dir="auto">Internet Gateway 생성</h1><p id="76a720e4-6f49-8222-ac25-818e6b5a9242" class="" dir="auto">Internet Gateway는 <strong>VPC와 Internet을 연결하는 Gateway</strong>이다.</p><hr id="0e9720e4-6f49-82d1-8b2f-01fb97e921a5" dir="auto"/><h2 id="59a720e4-6f49-82e2-8506-8145704292c0" class="" dir="auto">생성</h2><p id="18b720e4-6f49-828c-bf00-015dda406107" class="" dir="auto">메뉴</p><pre id="9b4720e4-6f49-82e3-995a-81c8585d3ed4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC
+ → Internet Gateway
+ → 생성</code></pre><p id="059720e4-6f49-821b-a74f-017f85ab4b97" class="" dir="auto">설정</p><table id="ac0720e4-6f49-832f-b47f-810cceac5df2" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="917720e4-6f49-83d9-8b6c-01cfa3d51d96" dir="ltr"><th id="PJ{&gt;" class="simple-table-header-color simple-table-header">항목</th><th id="_@Tg" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="da2720e4-6f49-834a-80a9-817c8c43b10d" dir="ltr"><td id="PJ{&gt;" class="">이름</td><td id="_@Tg" class="">hgd-igw</td></tr></tbody></table><hr id="455720e4-6f49-839a-a31e-011951a6f466" dir="auto"/><h2 id="567720e4-6f49-8311-96f1-810a11033dfa" class="" dir="auto">VPC 연결</h2><pre id="6cb720e4-6f49-82ed-a3a7-019c70268976" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Actions
+ → Attach to VPC</code></pre><p id="744720e4-6f49-8253-a794-01eaa5a9e9b4" class="" dir="auto">선택</p><pre id="467720e4-6f49-8398-be11-0145006c1c52" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hgd-vpc-01</code></pre><hr id="265720e4-6f49-820a-bc41-8172dd55cded" dir="auto"/><h2 id="fb1720e4-6f49-83e8-9ac9-01ec53e7c144" class="" dir="auto">Public Routing 설정</h2><p id="aa8720e4-6f49-8291-b1ba-012bf15b0527" class="" dir="auto">라우팅 테이블</p><pre id="9b4720e4-6f49-8246-aac9-011ae946fa3d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hgd-rtb-pub</code></pre><p id="aa3720e4-6f49-831f-ade1-81a4042957ca" class="" dir="auto">라우팅 추가</p><table id="013720e4-6f49-83ff-8c51-01178aeaf2d0" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="a91720e4-6f49-8353-b43c-01cbee2ed2e3" dir="ltr"><th id="Yhyc" class="simple-table-header-color simple-table-header">Destination</th><th id="^yv=" class="simple-table-header-color simple-table-header">Target</th></tr></thead><tbody><tr id="ac4720e4-6f49-8353-a08c-017a0e27ad59" dir="ltr"><td id="Yhyc" class="">0.0.0.0/0</td><td id="^yv=" class="">Internet Gateway</td></tr></tbody></table><hr id="6ca720e4-6f49-8230-9ecd-01f2ae00a741" dir="auto"/><h1 id="0c1720e4-6f49-832a-9d95-017f22a18868" class="" dir="auto">NAT Gateway 생성 </h1><p id="417720e4-6f49-834b-82ca-81b5617eff44" class="" dir="auto">NAT Gateway는 <strong>Private Subnet에서 Internet으로 나가는 트래픽을 허용하는 장비</strong>이다.</p><p id="95e720e4-6f49-82d4-b5db-01ecb9ee2714" class="" dir="auto">Private 인스턴스는 Internet에서 직접 접근할 수 없지만</p><p id="716720e4-6f49-83e9-8675-01946bad3d7c" class="" dir="auto">NAT Gateway를 통해 <strong>Outbound 인터넷 연결</strong>이 가능하다.</p><p id="7b0720e4-6f49-83b5-b3f3-813abd924068" class="" dir="auto">생성해서 사용 후 삭제함.  -  비용 발생</p><hr id="eac720e4-6f49-82b7-81ab-8139f6fa9039" dir="auto"/><h2 id="b1d720e4-6f49-82f0-97c4-01699c185d25" class="" dir="auto">NAT Gateway 생성</h2><p id="93a720e4-6f49-8306-ae4e-019e2089b89a" class="" dir="auto">메뉴</p><pre id="54e720e4-6f49-8393-9c0e-817d60c1feb0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC
+ → NAT Gateway
+ → 생성</code></pre><p id="de6720e4-6f49-82bb-bddd-818f030c4d9c" class="" dir="auto">설정</p><table id="25b720e4-6f49-83e5-ba52-01759862b1da" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="8e3720e4-6f49-8213-bd23-8191589a6fb5" dir="ltr"><th id="b?xw" class="simple-table-header-color simple-table-header">항목</th><th id="hvVn" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="c18720e4-6f49-82b2-8d43-015961ccc806" dir="ltr"><td id="b?xw" class="">이름</td><td id="hvVn" class="">hgd-natgw</td></tr><tr id="256720e4-6f49-82ed-8b6d-012aa62dac48" dir="ltr"><td id="b?xw" class="">Subnet</td><td id="hvVn" class="">hgd-sub-pub-01</td></tr><tr id="d6f720e4-6f49-83da-8cec-0171ffb2c78a" dir="ltr"><td id="b?xw" class="">Elastic IP</td><td id="hvVn" class="">Allocate</td></tr></tbody></table><hr id="c23720e4-6f49-8259-9e36-01d85fab7f11" dir="auto"/><h2 id="5b0720e4-6f49-820d-acee-01a04fd5edf6" class="" dir="auto">Private Routing 설정</h2><p id="0a5720e4-6f49-8211-ad9b-0127e4ad5110" class="" dir="auto">라우팅 테이블</p><pre id="733720e4-6f49-839c-b19c-812c440ae39f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hgd-rtb-pri-01</code></pre><p id="f38720e4-6f49-822e-9c62-0139afa8284d" class="" dir="auto">라우팅 추가</p><table id="175720e4-6f49-82c6-8e8a-81e945370860" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="ba3720e4-6f49-8373-b83b-8137d13a5ac0" dir="ltr"><th id="XW?=" class="simple-table-header-color simple-table-header">Destination</th><th id="bH`}" class="simple-table-header-color simple-table-header">Target</th></tr></thead><tbody><tr id="5c6720e4-6f49-8391-b89a-013edceb559d" dir="ltr"><td id="XW?=" class="">0.0.0.0/0</td><td id="bH`}" class="">NAT Gateway</td></tr></tbody></table><hr id="023720e4-6f49-82c9-94bf-0104dd0ba29e" dir="auto"/><h1 id="176720e4-6f49-8297-972c-815b0f4688c1" class="" dir="auto">실습 결과 네트워크 구조</h1><pre id="660720e4-6f49-8222-be33-0144fc720707" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+   │
+   │
+Internet Gateway
+   │
+Public Subnet
+   │
+   │
+NAT Gateway
+   │
+Private Subnet</code></pre><hr id="f0b720e4-6f49-8322-9cf4-01f0adcb2680" dir="auto"/><h1 id="13f720e4-6f49-8287-b842-019b97f95260" class="" dir="auto">정리</h1><p id="52b720e4-6f49-82fc-ad54-81dd9aac538c" class="" dir="auto">이를 통해 다음 네트워크 개념을 이해한다.</p><ul id="7dd720e4-6f49-8386-b1f6-810e50e34232" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public / Private 네트워크 구조</li></ul><ul id="79b720e4-6f49-8305-874c-81188089dc36" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway 역할</li></ul><ul id="f34720e4-6f49-8340-b178-0147801ac71f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAT Gateway 역할</li></ul><ul id="6e8720e4-6f49-82d5-970d-81464d888d35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Routing Table 동작 방식</li></ul><hr id="ba8720e4-6f49-83ed-bdc9-015fead144cd" dir="auto"/><p id="3ae720e4-6f49-83a8-a3a6-01b68fa71141" class="" dir="auto">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

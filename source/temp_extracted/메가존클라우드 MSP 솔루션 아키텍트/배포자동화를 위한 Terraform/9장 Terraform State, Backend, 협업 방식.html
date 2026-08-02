@@ -1,0 +1,828 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>9장. Terraform State, Backend, 협업 방식</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="c7d720e4-6f49-831b-b28d-018e75389cbd" class="page sans"><header><h1 class="page-title" dir="auto">9장. Terraform State, Backend, 협업 방식</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="82f720e4-6f49-8393-a4a9-81ab3f0a9ecd" class="" dir="auto">장 목표</h2><p id="1d9720e4-6f49-835c-9d54-81c130a00b6a" class="" dir="auto">이 장에서는 Terraform 운영에서 매우 중요한 <strong>state</strong>, <strong>backend</strong>, <strong>workspace</strong>, 그리고 <strong>협업 시 주의사항</strong>을 학습한다.</p><p id="130720e4-6f49-8267-9eeb-018ec3fa1277" class="" dir="auto">앞 장까지는 Terraform 코드를 작성하고 리소스를 생성하는 흐름에 집중했다. 하지만 실제 운영 환경에서는 코드 자체만큼이나 <strong>Terraform이 현재 인프라 상태를 어떻게 기억하고 있는가</strong>가 중요하다.</p><p id="bfe720e4-6f49-8369-95e2-015a3b0569d9" class="" dir="auto">Terraform은 단순히 선언만 읽고 리소스를 만드는 도구가 아니다.</p><p id="66a720e4-6f49-8336-8aed-81e9a563c8f1" class="" dir="auto">Terraform은 자신이 관리하는 리소스와 실제 클라우드 자원 사이의 연결 정보를 <strong>state</strong>에 기록하고, 그 정보를 바탕으로 다음 변경 작업을 계산한다.</p><p id="d52720e4-6f49-82be-b62c-010687fefaf6" class="" dir="auto">이 장을 학습한 뒤에는 다음이 가능해야 한다.</p><ul id="073720e4-6f49-823f-97b4-01b7038a9578" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform state의 역할을 설명할 수 있음</li></ul><ul id="edd720e4-6f49-8381-be7f-0167c1677ddc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state 파일이 왜 중요한지 설명할 수 있음</li></ul><ul id="035720e4-6f49-83b8-8d22-813158b3c731" class="bulleted-list" dir="auto"><li style="list-style-type:disc">drift의 의미를 설명할 수 있음</li></ul><ul id="3f5720e4-6f49-8255-9bd3-81b74f6a1b33" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform state</code> 명령의 기초를 이해할 수 있음</li></ul><ul id="628720e4-6f49-82c6-b8a0-813a36f53841" class="bulleted-list" dir="auto"><li style="list-style-type:disc">backend의 의미를 설명할 수 있음</li></ul><ul id="b6d720e4-6f49-82b3-a406-01988db55d21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 backend를 사용하는 이유를 설명할 수 있음</li></ul><ul id="8be720e4-6f49-827d-9b22-818ecf0625cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform init -reconfigure</code>, <code>terraform init -migrate-state</code>의 차이를 설명할 수 있음</li></ul><ul id="1a8720e4-6f49-827b-a3b8-01836bacfe2a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">workspace를 이용한 환경 분리 개념을 설명할 수 있음</li></ul><ul id="654720e4-6f49-83c7-ad11-01054b16f121" class="bulleted-list" dir="auto"><li style="list-style-type:disc">협업 시 state 관리 주의사항을 설명할 수 있음</li></ul><hr id="9b7720e4-6f49-8305-85aa-81b0bebad0de" dir="auto"/><h2 id="f67720e4-6f49-8274-9d27-818f02531150" class="" dir="auto">1. 왜 state가 중요한가</h2><p id="3d7720e4-6f49-833b-8a47-8138cce24bd2" class="" dir="auto">Terraform을 처음 배울 때는 보통 다음처럼 이해한다.</p><ul id="675720e4-6f49-83dc-819a-81885ed99c69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드를 작성한다</li></ul><ul id="35b720e4-6f49-83e2-b2b4-01d50b284c99" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform plan</code>을 실행한다</li></ul><ul id="8de720e4-6f49-8240-8cf5-815ef57deffd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform apply</code>를 실행한다</li></ul><ul id="1ee720e4-6f49-838b-beb8-01b3ce93a1d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스가 생성된다</li></ul><p id="0b3720e4-6f49-82a3-928f-811c73cb373a" class="" dir="auto">예를 들어 다음을 생각해보자.</p><ul id="fad720e4-6f49-8282-8110-81af7994eca8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform은 내가 만든 VPC를 어떻게 다시 찾는가</li></ul><ul id="809720e4-6f49-8378-9431-010dc872bda9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다음 실행 때는 왜 같은 VPC를 또 만들지 않는가</li></ul><ul id="4b9720e4-6f49-82b2-8f03-0132070cfdfa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 이름만 바꿨을 때 무엇을 수정해야 하는지 어떻게 아는가</li></ul><ul id="fe8720e4-6f49-8211-9590-814401794673" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미 존재하는 리소스와 코드가 연결되어 있다는 사실을 Terraform은 어디에 기록하는가</li></ul><p id="1ed720e4-6f49-8265-ac77-014cd9ca34f2" class="" dir="auto">이 질문의 답이 바로 <strong>state</strong>다.</p><p id="2c6720e4-6f49-8218-baa4-8157e7efca69" class="" dir="auto">Terraform은 자신이 관리하는 리소스의 정보를 state에 기록한다.</p><p id="31a720e4-6f49-83d0-a88d-01651747b191" class="" dir="auto">즉, state는 Terraform이 인프라를 기억하는 저장소다.</p><hr id="554720e4-6f49-82cd-8b0c-81f0322468b5" dir="auto"/><h2 id="66f720e4-6f49-8358-87f2-010c03b6adda" class="" dir="auto">2. state란 무엇인가</h2><p id="c8a720e4-6f49-836d-97e0-8114895441bc" class="" dir="auto">Terraform state는 Terraform이 <strong>관리 중인 리소스와 실제 인프라의 연결 상태를 기록한 데이터</strong>다.</p><p id="8f6720e4-6f49-839f-b6aa-0150910af37b" class="" dir="auto">보통 로컬 작업에서는 <code>terraform.tfstate</code> 파일 형태로 존재한다.</p><p id="186720e4-6f49-83ab-91e0-010d98cfe8d5" class="" dir="auto">즉, state에는 다음과 같은 정보가 담긴다.</p><ul id="7a9720e4-6f49-8204-845c-8106fd3104ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform 코드의 리소스 주소</li></ul><ul id="502720e4-6f49-8328-8f27-01d143433103" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 클라우드 리소스 ID</li></ul><ul id="66f720e4-6f49-83a6-a968-8101cd1f28ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 리소스의 현재 속성 정보 일부</li></ul><ul id="e9f720e4-6f49-8307-a816-01003ba94681" class="bulleted-list" dir="auto"><li style="list-style-type:disc">의존 관계 추적에 필요한 정보</li></ul><ul id="930720e4-6f49-836a-b37e-0144be5b9f28" class="bulleted-list" dir="auto"><li style="list-style-type:disc">output 값 정보</li></ul><p id="a48720e4-6f49-83a1-b76b-8128b1a5ec24" class="" dir="auto">쉽게 말하면 다음과 같다.</p><ul id="e92720e4-6f49-8303-988a-01a38e2c68e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드에는 “무엇을 원하는가”가 적혀 있음</li></ul><ul id="2a4720e4-6f49-834c-916e-816ce7c94ac6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state에는 “무엇이 실제로 존재하는가”와 “그것이 코드의 어떤 리소스와 연결되는가”가 기록됨</li></ul><p id="65b720e4-6f49-8216-bad0-019cce1447e2" class="" dir="auto">이 두 가지가 함께 있어야 Terraform이 제대로 동작한다.</p><hr id="64f720e4-6f49-83eb-907c-017937bc8fda" dir="auto"/><h2 id="038720e4-6f49-8289-9708-81cfa28573d7" class="" dir="auto">3. state 파일은 언제 생기는가</h2><p id="3c5720e4-6f49-83a0-9403-01bfa3a56152" class="" dir="auto">처음 <code>terraform init</code>만 했을 때는 state가 아직 없다.</p><p id="9d4720e4-6f49-8363-a12f-81aad01c8aaa" class="" dir="auto">왜냐하면 아직 Terraform이 실제로 관리하는 리소스가 없기 때문이다.</p><p id="682720e4-6f49-8338-9699-01a856631456" class="" dir="auto">보통 state 파일은 다음 시점에 생긴다.</p><ul id="229720e4-6f49-82e9-9fc2-013fa18f33ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform apply</code>로 실제 리소스를 생성한 후</li></ul><ul id="4da720e4-6f49-834b-ba15-81d5e6eba3fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">또는 state를 생성/갱신하는 작업을 수행한 후</li></ul><p id="855720e4-6f49-828a-8feb-015c30f5cec8" class="" dir="auto">즉, Terraform이 실제 인프라와 연결되는 순간부터 state가 중요해진다.</p><hr id="cec720e4-6f49-83dd-bab6-81f2ecf329a7" dir="auto"/><h2 id="801720e4-6f49-827e-845a-81d86321a779" class="" dir="auto">4. state가 하는 역할</h2><p id="f9b720e4-6f49-8206-b094-016dca8d23ea" class="" dir="auto">Terraform state의 역할은 단순 기록이 아니다.</p><p id="7d0720e4-6f49-821d-a88d-81cf3547873b" class="" dir="auto">실제로 다음과 같은 핵심 기능을 담당한다.</p><h3 id="067720e4-6f49-83a2-8d65-01888e14fd04" class="" dir="auto">4.1 리소스 추적</h3><p id="b11720e4-6f49-8376-837c-01689192ede9" class="" dir="auto">예를 들어 코드에 다음이 있다고 하자.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="346720e4-6f49-83c0-bec5-81cd210ebc0a" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.10.0.0/16&quot;
+}</code></pre><p id="95e720e4-6f49-82dc-948b-814a7799bf48" class="" dir="auto">Terraform이 apply를 실행한 뒤에는</p><p id="188720e4-6f49-83a2-95e7-016fc8c35a80" class="" dir="auto">이 <code>aws_vpc.main</code> 이 실제 AWS의 어떤 VPC ID와 연결되는지 state에 기록한다.</p><p id="59f720e4-6f49-8387-b56f-013a991a4def" class="" dir="auto">즉, 다음 실행부터 Terraform은</p><p id="6da720e4-6f49-82aa-a4cf-011640a8af4a" class="" dir="auto">“내가 관리하는 <code>aws_vpc.main</code> 은 이미 존재하고, 그 실제 ID는 무엇이다”라고 판단할 수 있다.</p><hr id="922720e4-6f49-836c-aad7-81e53ba4ba8c" dir="auto"/><h3 id="1ab720e4-6f49-826a-a6e1-8118f9803178" class="" dir="auto">4.2 변경 계산</h3><p id="aae720e4-6f49-8288-9480-8125ccb20d1d" class="" dir="auto">Terraform은 코드와 state를 비교해서 변경 작업을 계산한다.</p><p id="b90720e4-6f49-83c8-925b-81efb9726488" class="" dir="auto">예를 들어 VPC 태그를 바꿨다고 하자.</p><p id="2b0720e4-6f49-8312-b2df-018bcfa35aec" class="" dir="auto">Terraform은 state를 기준으로 현재 관리 중인 리소스와 코드의 차이를 계산하고,</p><p id="28a720e4-6f49-82ba-a1cd-81328bfefc61" class="" dir="auto">“새로 만들 것인지”, “수정할 것인지”, “아무것도 하지 않을 것인지”를 판단한다.</p><p id="baf720e4-6f49-82b2-bd53-819692376311" class="" dir="auto">즉, <code>terraform plan</code>은 단순히 코드만 보고 계산하는 것이 아니라</p><p id="aac720e4-6f49-835c-8894-01a90a018737" class="" dir="auto"><strong>코드 + state</strong>를 함께 보고 계산한다.</p><hr id="5dc720e4-6f49-82e7-b77f-01034ac0fa2d" dir="auto"/><h3 id="993720e4-6f49-83bc-8577-019ae08d615c" class="" dir="auto">4.3 output 관리</h3><p id="5b8720e4-6f49-83c1-99ae-01edd1604fd6" class="" dir="auto">Terraform의 output 값도 state에 반영된다.</p><p id="0f6720e4-6f49-8348-9737-81eea5acd012" class="" dir="auto">예를 들어 다음 output이 있다고 하자.</p><pre id="1af720e4-6f49-83f8-b6fb-81e3386ed057" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;vpc_id&quot; {
+  value = aws_vpc.main.id
+}</code></pre><p id="519720e4-6f49-8313-9dfd-01ed7f8c2e97" class="" dir="auto">이 값도 state를 통해 기록되고 다시 조회될 수 있다.</p><p id="381720e4-6f49-82f4-b8b7-81f30177bf22" class="" dir="auto">그래서 <code>terraform output</code> 명령으로 나중에 다시 확인할 수 있다.</p><hr id="592720e4-6f49-82c8-9358-01985e24091c" dir="auto"/><h2 id="cec720e4-6f49-834b-b4af-010ed51baed1" class="" dir="auto">5. local state</h2><h2 id="6da720e4-6f49-8338-80e7-815e712f2486" class="" dir="auto">5.1 local state란</h2><p id="d10720e4-6f49-834d-bbbe-017022b4d8a9" class="" dir="auto">가장 기본적인 상태는 로컬 파일 기반 state다.</p><p id="d12720e4-6f49-82d0-97d8-81455b278f05" class="" dir="auto">즉, 현재 디렉터리에 <code>terraform.tfstate</code> 파일이 생성되는 방식이다.</p><p id="a36720e4-6f49-83d8-a1a8-813cbfd37281" class="" dir="auto">예를 들어 디렉터리 구조가 다음과 같을 수 있다.</p><pre id="095720e4-6f49-82af-bb58-012da18b123a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform-lab/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── terraform.tfstate
+├── terraform.tfstate.backup
+└── .terraform/</code></pre><p id="243720e4-6f49-8224-b2d9-0126458371d7" class="" dir="auto">여기서 <code>terraform.tfstate</code>가 local state 파일이다.</p><hr id="601720e4-6f49-825d-9af5-01428f43c46b" dir="auto"/><h2 id="374720e4-6f49-82b0-ad53-81a4487af5f6" class="" dir="auto">5.2 local state의 장점</h2><p id="fd0720e4-6f49-820a-bea1-816acebed2fc" class="" dir="auto">local state는 단순하고 이해하기 쉽다.</p><ul id="099720e4-6f49-8392-84d7-01e6fb1863aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">별도 backend 설정이 필요 없음</li></ul><ul id="562720e4-6f49-83c0-b886-81dfc473e6f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">바로 실습 가능</li></ul><ul id="196720e4-6f49-836a-ac86-0151beaa421c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">구조를 이해하기 쉬움</li></ul><hr id="7eb720e4-6f49-8260-b966-0158bb62baf9" dir="auto"/><h2 id="ab4720e4-6f49-838a-8e89-014e2afd5419" class="" dir="auto">5.3 local state의 한계</h2><p id="10c720e4-6f49-8372-91d6-810eadf83b6e" class="" dir="auto">하지만 실제 협업과 운영에서는 local state만 사용하면 문제가 많다.</p><h3 id="cac720e4-6f49-82a3-82e6-01fe0c299115" class="" dir="auto">문제 1. 내 PC에만 있음</h3><p id="0fd720e4-6f49-8254-8d5f-81b3e39f4e35" class="" dir="auto">다른 팀원은 내 state 파일을 볼 수 없다.</p><h3 id="e3e720e4-6f49-8325-b6ab-81d0bcaba627" class="" dir="auto">문제 2. 동기화가 어려움</h3><p id="95e720e4-6f49-8368-a9be-01621b98ec39" class="" dir="auto">같은 코드를 여러 사람이 실행하면 각자 다른 state를 가질 수 있다.</p><h3 id="25c720e4-6f49-8396-8ab9-018c7916d697" class="" dir="auto">문제 3. 충돌 위험</h3><p id="447720e4-6f49-83da-8698-01d2b1ebd519" class="" dir="auto">동시에 apply하면 서로 다른 상태를 기준으로 작업할 수 있다.</p><h3 id="5a2720e4-6f49-8381-be76-8111b8c7ac0b" class="" dir="auto">문제 4. 유실 위험</h3><p id="cd9720e4-6f49-8256-92cd-817d99a1e340" class="" dir="auto">파일 삭제, PC 변경, 경로 이동 등으로 state를 잃을 수 있다.</p><p id="1a3720e4-6f49-8255-92c2-01839b5c79bd" class="" dir="auto">즉, local state는 <strong>개인 실습에는 편하지만 협업에는 취약하다</strong>.</p><hr id="153720e4-6f49-823d-8447-010538e9dadc" dir="auto"/><h2 id="744720e4-6f49-8219-8387-0160db631084" class="" dir="auto">6. drift</h2><h2 id="a34720e4-6f49-838f-8d77-01c185fdf3ad" class="" dir="auto">6.1 drift란 무엇인가</h2><p id="f8e720e4-6f49-8261-8c47-81a435265c67" class="" dir="auto">drift는 Terraform 코드와 state, 그리고 실제 인프라 상태 사이에 차이가 생긴 상태를 말한다.</p><p id="fbc720e4-6f49-832b-b3b4-81e390518ada" class="" dir="auto">보통은 특히 <strong>Terraform 외부에서 실제 인프라가 변경되었을 때</strong> 자주 문제가 된다.</p><p id="ce9720e4-6f49-8281-bb2f-81bb3d56fd96" class="" dir="auto">예를 들어 다음 상황을 생각해보자.</p><ul id="c40720e4-6f49-82fd-8124-813547e15f23" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform으로 Security Group 생성</li></ul><ul id="282720e4-6f49-8358-bb05-8149ba3bc41b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 누군가 AWS 콘솔에서 규칙을 직접 수정</li></ul><ul id="84e720e4-6f49-82c1-8454-015c75a1588f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform 코드는 그대로</li></ul><ul id="ceb720e4-6f49-83d6-b83d-818c0bfa9585" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state는 이전 상태를 기준으로 존재</li></ul><p id="2b0720e4-6f49-83a7-8e31-01448bfd89a8" class="" dir="auto">이 경우 실제 AWS 상태와 Terraform이 기대하는 상태가 달라질 수 있다.</p><p id="d8c720e4-6f49-82e4-bde6-81ddd542bcbf" class="" dir="auto">이것이 drift다.</p><hr id="3d9720e4-6f49-82ca-a566-81a02b94856e" dir="auto"/><h2 id="98b720e4-6f49-823d-92c2-0189c2d214b6" class="" dir="auto">6.2 drift가 왜 문제인가</h2><p id="616720e4-6f49-82a7-953e-01f3055e669b" class="" dir="auto">Terraform은 일관된 상태를 전제로 변경 계획을 계산한다.</p><p id="5de720e4-6f49-831e-a939-017bf2f87428" class="" dir="auto">그런데 실제 상태가 몰래 바뀌어 있으면 다음 문제가 생길 수 있다.</p><ul id="427720e4-6f49-8396-b3f7-017ced73c743" class="bulleted-list" dir="auto"><li style="list-style-type:disc">plan 결과가 예상과 다르게 나옴</li></ul><ul id="7df720e4-6f49-830a-9b58-81b180cbc307" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform이 변경을 되돌리려 함</li></ul><ul id="9e5720e4-6f49-835e-a19e-81ac8dfb6e93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 중인 설정이 의도치 않게 덮어써질 수 있음</li></ul><ul id="bb7720e4-6f49-8291-abaa-810610fcc4d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원인을 파악하기 어려움</li></ul><p id="65b720e4-6f49-839e-9a91-816551f5f51f" class="" dir="auto">즉, drift는 단순한 차이가 아니라</p><p id="907720e4-6f49-82ff-9cba-01c60e2959c4" class="" dir="auto">운영 안정성을 해칠 수 있는 상태 불일치다.</p><hr id="a48720e4-6f49-8201-873a-819ba14c2332" dir="auto"/><h2 id="c93720e4-6f49-8338-adf8-813e182ea4cc" class="" dir="auto">6.3 drift는 어떻게 발견하는가</h2><p id="cc3720e4-6f49-836e-9ae3-012f02a0f7ba" class="" dir="auto">가장 기본적인 방법은 <code>terraform plan</code>이다.</p><p id="cca720e4-6f49-83d4-b570-011437678983" class="" dir="auto">Terraform은 provider를 통해 실제 상태를 조회하고, 코드와 state를 비교해 차이를 계산한다.</p><p id="f11720e4-6f49-8222-9f81-81121255f5ff" class="" dir="auto">즉, 주기적으로 plan을 확인하는 습관은 drift 탐지에도 중요하다.</p><hr id="6e1720e4-6f49-8278-9cab-016c4e373c75" dir="auto"/><h2 id="8ea720e4-6f49-82e6-92b5-814757f996b8" class="" dir="auto">7. terraform state 명령 기초</h2><p id="1c1720e4-6f49-833f-939e-8107b843e33e" class="" dir="auto">Terraform은 state를 다루기 위한 <code>terraform state</code> 명령군을 제공한다.</p><hr id="5f4720e4-6f49-8384-9b4e-01a379e24fe4" dir="auto"/><h2 id="bbf720e4-6f49-82c7-966f-0135683da3b4" class="" dir="auto">7.1 state list</h2><p id="aac720e4-6f49-825c-9322-0176a2a223e3" class="" dir="auto">현재 state에 어떤 리소스가 기록되어 있는지 확인하는 명령이다.</p><pre id="405720e4-6f49-83b0-ae07-81ccdef21cd9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform state list</code></pre><p id="e69720e4-6f49-838d-bd2d-01df3aa0598a" class="" dir="auto">예상 결과 예시:</p><pre id="30f720e4-6f49-833d-8265-819f2ef386ef" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">aws_vpc.main
+aws_subnet.public
+aws_internet_gateway.igw
+aws_instance.web</code></pre><p id="815720e4-6f49-82c2-847c-812f3b740eb9" class="" dir="auto">즉, Terraform이 현재 관리 중인 리소스 주소 목록을 보여준다.</p><hr id="c22720e4-6f49-8270-a6df-8191ca4c6e90" dir="auto"/><h2 id="070720e4-6f49-8235-8896-010cd5390654" class="" dir="auto">7.2 state show</h2><p id="668720e4-6f49-8320-baf4-81b1f28da758" class="" dir="auto">특정 리소스의 state 정보를 확인하는 명령이다.</p><pre id="a69720e4-6f49-83f7-bb5f-81a5913c6780" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform state show aws_vpc.main</code></pre><p id="307720e4-6f49-82e7-a752-0147ceddc179" class="" dir="auto">이 명령은 해당 리소스에 대해 state에 저장된 속성 정보를 보여준다.</p><p id="d8d720e4-6f49-8258-b1c6-81ba1fb737f1" class="" dir="auto">즉, 현재 Terraform이 그 리소스를 어떤 값으로 알고 있는지 확인할 수 있다.</p><hr id="106720e4-6f49-827a-8725-0156c9a69638" dir="auto"/><h2 id="a1c720e4-6f49-8231-8536-011b4d687cf4" class="" dir="auto">7.3 왜 state 명령을 알아야 하는가</h2><ul id="730720e4-6f49-82f2-9a26-81899239a84c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 Terraform이 어떤 리소스를 관리 중인지 확인</li></ul><ul id="3c6720e4-6f49-8300-b9d3-01635beffbf8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스 주소를 확인</li></ul><ul id="02c720e4-6f49-83da-9f4f-01cb7da68ee9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state와 코드 매핑을 추적</li></ul><ul id="9f9720e4-6f49-8350-870c-01ad0241cffd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문제 상황 분석</li></ul><p id="a87720e4-6f49-823b-9860-81dfee3848c7" class="" dir="auto">즉, <code>terraform state</code> 명령은</p><p id="17e720e4-6f49-833c-a735-81dd116042a9" class="" dir="auto">직접 수정을 위한 도구라기보다 <strong>운영 중 상태를 진단하는 도구</strong>다.</p><hr id="0cd720e4-6f49-83da-9828-810dd992347d" dir="auto"/><h2 id="ec7720e4-6f49-826a-8bc5-01b3cd2deac8" class="" dir="auto">8. backend란 무엇인가</h2><h2 id="047720e4-6f49-834b-ace3-01c58627b3c4" class="" dir="auto">8.1 backend의 의미</h2><p id="3c6720e4-6f49-827e-8c3f-015b318548ac" class="" dir="auto">Terraform backend는 <strong>state 파일을 어디에 저장하고 어떻게 관리할 것인지</strong>를 정의하는 구성이다.</p><p id="a64720e4-6f49-83b5-b875-81d5090ec8ef" class="" dir="auto">즉, backend는 Terraform의 state 저장소 설정이다.</p><p id="3b7720e4-6f49-831e-bf3c-818b1994f60b" class="" dir="auto">local state에서는 파일이 현재 디렉터리에 저장되지만,</p><p id="d8c720e4-6f49-8285-b189-81243bc8fac0" class="" dir="auto">backend를 사용하면 state를 외부 저장소로 옮길 수 있다.</p><p id="c84720e4-6f49-821a-a619-8121150aa372" class="" dir="auto">예를 들어 다음과 같은 저장 위치를 생각할 수 있다.</p><ul id="c1e720e4-6f49-8241-8536-818ad9ce486b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로컬 파일</li></ul><ul id="13d720e4-6f49-8346-aa8e-013e33ab48cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="798720e4-6f49-83c6-8381-0115e144c77e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform Cloud</li></ul><ul id="1b0720e4-6f49-8333-95a9-01368a37f775" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기타 원격 저장소</li></ul><hr id="01a720e4-6f49-8392-b1b7-01ebadbfd01c" dir="auto"/><h2 id="dd9720e4-6f49-83d6-a21c-01dacc060f94" class="" dir="auto">8.2 왜 backend가 필요한가</h2><p id="007720e4-6f49-8313-98da-818dbe54fcd1" class="" dir="auto">backend가 필요한 이유는 다음과 같다.</p><ul id="965720e4-6f49-8231-aa76-013703ff7085" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 사람이 같은 state를 공유해야 함</li></ul><ul id="665720e4-6f49-82ad-952e-017abc98683c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state를 중앙에서 관리해야 함</li></ul><ul id="91d720e4-6f49-82fd-adec-8151c61c41b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로컬 파일 유실 위험을 줄여야 함</li></ul><ul id="9ad720e4-6f49-8382-aa2a-01031b0f8b4f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">협업 시 기준 상태를 하나로 맞춰야 함</li></ul><p id="6dd720e4-6f49-82f0-85ed-0155a5ebd4fa" class="" dir="auto">즉, backend는 협업과 운영을 위한 state 중앙화 장치다.</p><hr id="2c9720e4-6f49-8296-9511-818eda3d2989" dir="auto"/><h2 id="e50720e4-6f49-82c1-9bfc-0151f782bfb5" class="" dir="auto">9. terraform 블록에서 backend 설정</h2><p id="7a8720e4-6f49-82cc-9b29-81a97893aa08" class="" dir="auto">backend는 <code>terraform</code> 블록 안에서 설정한다.</p><p id="d3f720e4-6f49-8240-8a3f-817105700337" class="" dir="auto">예시:</p><pre id="7a2720e4-6f49-8348-879a-81b4e8581e51" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  backend &quot;s3&quot; {
+    bucket = &quot;my-terraform-state-bucket&quot;
+    key    = &quot;network/dev/terraform.tfstate&quot;
+    region = &quot;ap-northeast-2&quot;
+  }
+}</code></pre><p id="7f0720e4-6f49-8294-9ccb-81a9613492bc" class="" dir="auto">이 설정의 의미는 다음과 같다.</p><ul id="d4c720e4-6f49-82b8-912b-81f582f2636f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state 파일을 S3 버킷에 저장</li></ul><ul id="569720e4-6f49-833e-96ca-817d12ef0452" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 state 파일의 경로는 <code>network/dev/terraform.tfstate</code></li></ul><ul id="e1d720e4-6f49-835a-a557-0129326436e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷이 있는 리전은 <code>ap-northeast-2</code></li></ul><p id="c46720e4-6f49-82e0-a9cf-8109787ce861" class="" dir="auto">즉, 이제 state는 로컬 파일이 아니라 S3에 저장된다.</p><hr id="4d7720e4-6f49-8278-974a-8106de45ccea" dir="auto"/><h2 id="35d720e4-6f49-839f-a737-01eba16e3801" class="" dir="auto">10. S3 backend</h2><h2 id="af9720e4-6f49-83d4-8c60-01eb3f7471d1" class="" dir="auto">10.1 왜 S3 backend를 많이 사용하는가</h2><p id="f9b720e4-6f49-83eb-a7de-01af3ce2d47b" class="" dir="auto">AWS 기반 Terraform 운영에서 S3 backend는 매우 흔한 선택이다.</p><p id="4f9720e4-6f49-8278-ad14-012954b436e9" class="" dir="auto">그 이유는 다음과 같다.</p><ul id="09f720e4-6f49-82ec-a542-81bbc7cc8faf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 계정 안에서 관리 가능</li></ul><ul id="c4b720e4-6f49-82f6-a461-01de516390dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 저장소 역할 수행 가능</li></ul><ul id="b88720e4-6f49-83ba-91f6-017c48629bf2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷 단위 접근 제어 가능</li></ul><ul id="765720e4-6f49-82dc-8481-81d7f76f5b12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경별 key 분리 가능</li></ul><ul id="e60720e4-6f49-82db-8796-012309bcea34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 AWS 인프라와 잘 통합됨</li></ul><p id="796720e4-6f49-839d-9c68-81631399a022" class="" dir="auto">즉, AWS 환경에서는 S3가 state 저장소 역할을 자연스럽게 수행한다.</p><hr id="91c720e4-6f49-825e-85fd-0159bbb29bc4" dir="auto"/><h2 id="e16720e4-6f49-83e0-8bd5-017599a677e8" class="" dir="auto">10.2 bucket, key, region의 의미</h2><h3 id="b07720e4-6f49-8200-97ec-810183b4fa49" class="" dir="auto"><code>bucket</code></h3><p id="4e8720e4-6f49-83c7-808a-812940998027" class="" dir="auto">state를 저장할 S3 버킷 이름</p><h3 id="62f720e4-6f49-8380-8013-81652dda26f3" class="" dir="auto"><code>key</code></h3><p id="ef2720e4-6f49-8283-9618-011f5ad9f266" class="" dir="auto">버킷 안에서 state 파일이 저장될 경로</p><p id="0b1720e4-6f49-8205-adff-8114cc6aae1c" class="" dir="auto">예:</p><ul id="dc0720e4-6f49-8205-bb86-819c4f9df006" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>network/dev/terraform.tfstate</code></li></ul><ul id="19e720e4-6f49-834b-a06a-01681d168c62" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>app/prod/terraform.tfstate</code></li></ul><h3 id="447720e4-6f49-8365-8227-01a1e4b42cf5" class="" dir="auto"><code>region</code></h3><p id="579720e4-6f49-835a-a71b-81a3c634362d" class="" dir="auto">S3 버킷이 위치한 리전</p><p id="5ef720e4-6f49-83a3-8b80-816dcfe77788" class="" dir="auto">즉, <code>key</code>를 잘 설계하면 환경별 state 파일을 분리할 수 있다.</p><hr id="98a720e4-6f49-837e-8491-81745106a914" dir="auto"/><h2 id="676720e4-6f49-83c4-901d-01ce7b09278e" class="" dir="auto">10.3 local state와 S3 backend 비교</h2><h3 id="aa3720e4-6f49-820d-89ea-01ec18e188d9" class="" dir="auto">local state</h3><ul id="e09720e4-6f49-83f9-8125-81690902ab69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개인 실습에 적합</li></ul><ul id="df6720e4-6f49-82c2-b626-815194c27360" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일이 로컬에 존재</li></ul><ul id="582720e4-6f49-831f-b1c4-8141437e2bbb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">협업에 취약</li></ul><h3 id="5d5720e4-6f49-83fa-b56c-81e7077f366f" class="" dir="auto">S3 backend</h3><ul id="701720e4-6f49-8318-a3c6-81933f3dca18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 저장 가능</li></ul><ul id="760720e4-6f49-823a-ae2e-019f06cb982c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 사람이 같은 state 기준 사용 가능</li></ul><ul id="640720e4-6f49-837a-a093-0121b15f1b36" class="bulleted-list" dir="auto"><li style="list-style-type:disc">협업과 운영에 적합</li></ul><p id="41d720e4-6f49-830b-8d92-81a71c6f2b1b" class="" dir="auto">즉, 실무 운영은 원격 backend가 거의 필수에 가깝다.</p><hr id="cc2720e4-6f49-8367-a5f4-81838a4fa134" dir="auto"/><h2 id="5a3720e4-6f49-8354-9929-014fa87fdf72" class="" dir="auto">11. init -reconfigure 와 -migrate-state</h2><p id="129720e4-6f49-82ff-96f5-01ce04e1c762" class="" dir="auto">backend 설정을 바꾸면 Terraform은 다시 초기화가 필요하다.</p><p id="fdc720e4-6f49-8355-a1e7-81fd95ff4b34" class="" dir="auto">이때 자주 보게 되는 옵션이 <code>-reconfigure</code>, <code>-migrate-state</code>다.</p><hr id="786720e4-6f49-83f3-99dd-81d8dcd547d2" dir="auto"/><h2 id="7a2720e4-6f49-8297-b929-81f0d1502d0c" class="" dir="auto">11.1 <code>terraform init -reconfigure</code></h2><p id="bf9720e4-6f49-82ce-9081-818b9d895ac4" class="" dir="auto">이 옵션은 Terraform에게</p><p id="559720e4-6f49-822c-af78-016090b2ecf0" class="" dir="auto">“기존 backend 설정을 무시하고, 현재 코드 기준으로 backend를 다시 구성하라”는 의미다.</p><p id="ac5720e4-6f49-835b-b74b-8161636ff474" class="" dir="auto">예시:</p><pre id="952720e4-6f49-82ec-a925-0170f896d16e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform init -reconfigure</code></pre><p id="292720e4-6f49-83ca-8835-811e2e0502dc" class="" dir="auto">주로 다음 상황에서 사용한다.</p><ul id="d23720e4-6f49-8311-9513-01fb519d6a16" class="bulleted-list" dir="auto"><li style="list-style-type:disc">backend 설정이 바뀌었음</li></ul><ul id="ab6720e4-6f49-8354-99ef-81096db5c74f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 초기화 정보와 다르게 새 backend를 다시 잡고 싶음</li></ul><ul id="6db720e4-6f49-836a-9242-81de420518fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이전 backend 연결 정보를 새로 해석하고 싶음</li></ul><p id="ad8720e4-6f49-8208-b2ac-81f8f604cfb0" class="" dir="auto">즉, <code>-reconfigure</code>는 backend 연결 정보를 다시 맞추는 데 사용한다.</p><hr id="9cd720e4-6f49-8391-9a07-81c89145def7" dir="auto"/><h2 id="f77720e4-6f49-832a-8404-8194fa0ea99d" class="" dir="auto">11.2 <code>terraform init -migrate-state</code></h2><p id="b56720e4-6f49-8372-9085-8114e6f3ab82" class="" dir="auto">이 옵션은 backend 구성을 바꾸는 과정에서</p><p id="f67720e4-6f49-8254-90ef-817ab4d9a1ca" class="" dir="auto">기존 state를 새 backend로 옮기겠다는 의미다.</p><p id="4a3720e4-6f49-8244-8628-817b6a43d1c9" class="" dir="auto">예시:</p><pre id="70b720e4-6f49-826a-8d66-010f15b7b637" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform init -migrate-state</code></pre><p id="520720e4-6f49-82fc-bc60-0177a414c859" class="" dir="auto">주로 다음 상황에서 사용한다.</p><ul id="785720e4-6f49-82b2-a617-81e8b6b909e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">local state를 S3 backend로 옮길 때</li></ul><ul id="d64720e4-6f49-82db-9d75-01db81368c01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 backend에서 다른 backend로 이전할 때</li></ul><p id="d11720e4-6f49-83c3-a418-01d545959572" class="" dir="auto">즉, <code>-migrate-state</code>는 단순 재설정이 아니라</p><p id="cea720e4-6f49-8303-8dda-81e80ff75f12" class="" dir="auto"><strong>기존 state 이동까지 포함</strong>하는 옵션이다.</p><hr id="308720e4-6f49-83b4-8ca4-0122dac5b0de" dir="auto"/><h2 id="564720e4-6f49-83c4-9b1f-01e7720bcb56" class="" dir="auto">11.3 차이점</h2><h3 id="4f9720e4-6f49-8241-8fa8-019c7041bea0" class="" dir="auto"><code>-reconfigure</code></h3><ul id="faf720e4-6f49-82cf-8246-011ca309319a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">backend 설정 재초기화</li></ul><ul id="34d720e4-6f49-83ec-9c91-01ef59d2e95c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state 이전이 핵심은 아님</li></ul><ul id="b92720e4-6f49-82c1-9e04-0165009cbad6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결 정보를 다시 잡는 목적</li></ul><h3 id="4f6720e4-6f49-8373-a284-81022f6bf52c" class="" dir="auto"><code>-migrate-state</code></h3><ul id="c20720e4-6f49-82d4-b0bf-810dfc6e499a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state를 기존 위치에서 새 backend로 이동</li></ul><ul id="a8d720e4-6f49-821d-b87d-815176a4710a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">backend 이전 시 사용</li></ul><p id="c52720e4-6f49-82df-aded-015fe3cb80bf" class="" dir="auto">즉, 다음처럼 기억하면 좋다.</p><ul id="c59720e4-6f49-826a-ae91-81e8f82cbb12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정 다시 잡기 → <code>-reconfigure</code></li></ul><ul id="444720e4-6f49-825b-b984-811987696569" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state까지 옮기기 → <code>-migrate-state</code></li></ul><hr id="088720e4-6f49-834b-8e5c-81ff4d5dde3d" dir="auto"/><h2 id="16f720e4-6f49-8355-8798-818f07fc8d27" class="" dir="auto">12. workspace와 환경 분리</h2><h2 id="82b720e4-6f49-8387-86b7-012c4e5d5f6e" class="" dir="auto">12.1 workspace란 무엇인가</h2><p id="3a8720e4-6f49-820c-8666-01b272e1e43e" class="" dir="auto">workspace는 같은 Terraform 구성에서 <strong>state를 논리적으로 분리하는 기능</strong>이다.</p><p id="b49720e4-6f49-82c7-8949-01b4185cad87" class="" dir="auto">즉, 같은 코드지만 서로 다른 state를 가지도록 할 수 있다.</p><p id="3a4720e4-6f49-82be-8a4e-815a661db97e" class="" dir="auto">예를 들어 다음 workspace를 생각할 수 있다.</p><ul id="cf4720e4-6f49-82ff-b990-81900e5609a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>default</code></li></ul><ul id="556720e4-6f49-8286-a7f7-8138f288c82f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>dev</code></li></ul><ul id="34a720e4-6f49-830d-b76d-010f54b78903" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>stage</code></li></ul><ul id="440720e4-6f49-82c9-86fd-019445b4df10" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>prod</code></li></ul><p id="dd5720e4-6f49-8324-94b3-81b350afb0c7" class="" dir="auto">이 경우 같은 코드라도 workspace별로 다른 state를 가진다.</p><hr id="379720e4-6f49-8276-9e5c-81757367e447" dir="auto"/><h2 id="e1e720e4-6f49-837d-b6c1-81a92671eede" class="" dir="auto">12.2 왜 필요한가</h2><p id="6b6720e4-6f49-833c-aace-817f0f15f373" class="" dir="auto">같은 코드 구조를 여러 환경에 적용하고 싶을 때가 많다.</p><p id="5e8720e4-6f49-82e6-bdc3-813718600727" class="" dir="auto">예:</p><ul id="831720e4-6f49-83fe-8df7-01a1ce67a69a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발 환경</li></ul><ul id="dc9720e4-6f49-82dd-8b11-81fa4c4554ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 환경</li></ul><ul id="9c2720e4-6f49-8366-abfe-81bad9936d94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경</li></ul><p id="7e1720e4-6f49-826a-a5f1-81bf96e8be31" class="" dir="auto">이때 workspace를 사용하면 state를 구분할 수 있다.</p><p id="295720e4-6f49-8344-8d77-01d3ddc0cf85" class="" dir="auto">즉, 같은 코드라도</p><ul id="acd720e4-6f49-820f-a958-811ac18436d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">dev workspace에서는 dev 리소스 관리</li></ul><ul id="93b720e4-6f49-82e3-a544-01fc337a9c20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">prod workspace에서는 prod 리소스 관리</li></ul><p id="a63720e4-6f49-8235-b130-011d163e61d1" class="" dir="auto">가 가능하다.</p><hr id="548720e4-6f49-8369-b603-01e4f5629072" dir="auto"/><h2 id="5a9720e4-6f49-8352-91dc-0146580f9c36" class="" dir="auto">12.3 기본 명령</h2><p id="448720e4-6f49-8351-93a4-816fbf1ec5f9" class="" dir="auto">현재 workspace 확인:</p><pre id="d27720e4-6f49-835e-89c5-8144eb5ec64e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform workspace show</code></pre><p id="917720e4-6f49-8348-bac3-01ee4881b14f" class="" dir="auto">workspace 목록 확인:</p><pre id="4d6720e4-6f49-83ff-9863-01ddc4133d86" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform workspace list</code></pre><p id="f6c720e4-6f49-820a-9271-814605b0fa84" class="" dir="auto">새 workspace 생성:</p><pre id="586720e4-6f49-839b-970a-8183b938c67c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform workspace new dev</code></pre><p id="647720e4-6f49-82ec-a53e-019ee3c557d5" class="" dir="auto">workspace 전환:</p><pre id="43d720e4-6f49-8227-bb65-017cad0bc931" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform workspace select prod</code></pre><hr id="bfb720e4-6f49-8250-8acf-8154daa8c3eb" dir="auto"/><h2 id="a9c720e4-6f49-82d7-a7ff-81bf25e1cadb" class="" dir="auto">12.4 workspace 사용 시 주의</h2><p id="3c2720e4-6f49-8385-8728-813823e0fdd5" class="" dir="auto">workspace는 편리하지만 무조건 만능은 아니다.</p><p id="960720e4-6f49-833a-810e-81672f1a7198" class="" dir="auto">특히 큰 규모의 운영에서는 다음 점을 주의해야 한다.</p><ul id="236720e4-6f49-8369-b271-01f0c3f6efff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경 차이가 너무 크면 같은 코드만으로 관리하기 어려울 수 있음</li></ul><ul id="072720e4-6f49-83dc-8f9e-01b8c73b0455" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변수값과 naming 규칙 분리가 함께 필요함</li></ul><ul id="c61720e4-6f49-8241-a9e4-819c21842450" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state만 분리된다고 해서 리소스 이름 충돌이 자동 해결되는 것은 아님</li></ul><p id="1c9720e4-6f49-834f-8144-813098217c28" class="" dir="auto">즉, workspace는 환경 분리의 한 방법이지</p><p id="7a0720e4-6f49-8262-93ce-0167c46d5916" class="" dir="auto">모든 환경 전략을 자동으로 해결해주는 기능은 아니다.</p><hr id="bd1720e4-6f49-831c-b052-018e6bb21ee5" dir="auto"/><h2 id="154720e4-6f49-8300-9d1a-817d31569c61" class="" dir="auto">13. 협업 시 주의사항</h2><p id="e00720e4-6f49-8239-a3f4-01b1c145e5f2" class="" dir="auto">Terraform 협업에서는 코드보다 state 관리가 더 위험한 지점이 되는 경우가 많다.</p><p id="d27720e4-6f49-836b-95a3-016d825db29f" class="" dir="auto">즉, 협업 시 핵심은 “누가 어떤 코드를 썼는가”뿐 아니라</p><p id="6de720e4-6f49-8334-a3c4-81f603ea5d10" class="" dir="auto">“누가 어떤 state를 기준으로 작업했는가”다.</p><hr id="87f720e4-6f49-8248-8cb1-81b01b7c8b75" dir="auto"/><h2 id="68a720e4-6f49-8255-b156-81cfdaf61280" class="" dir="auto">13.1 local state로 협업하지 않는 것이 좋다</h2><p id="aad720e4-6f49-834c-a8bf-01cfb7c5b2b3" class="" dir="auto">각자 로컬에 state를 두면 같은 코드라도 서로 다른 기준으로 작업하게 된다.</p><p id="52b720e4-6f49-83b3-b023-016faf00da00" class="" dir="auto">이 경우 plan/apply 결과가 엇갈릴 수 있다.</p><p id="752720e4-6f49-8245-b869-01b8d5582268" class="" dir="auto">즉, 협업에서는 중앙 backend를 사용해야 한다.</p><hr id="999720e4-6f49-83cf-806a-01ad823a764b" dir="auto"/><h2 id="63b720e4-6f49-8381-b619-019dedf4c980" class="" dir="auto">13.2 콘솔 수동 변경을 최소화해야 한다</h2><p id="7a4720e4-6f49-83b0-88a4-81d427df4b67" class="" dir="auto">누군가 AWS 콘솔에서 직접 리소스를 수정하면 drift가 생길 수 있다.</p><p id="7b6720e4-6f49-82d8-af3b-815bb4fd1838" class="" dir="auto">이런 변경이 누적되면 Terraform 코드가 실제 상태를 설명하지 못하게 된다.</p><p id="28b720e4-6f49-8263-af20-81f396b2df10" class="" dir="auto">즉, 가능한 한 인프라 변경은 Terraform을 통해 수행해야 한다.</p><hr id="0dc720e4-6f49-8283-b54d-0179b4f91b3c" dir="auto"/><h2 id="9b1720e4-6f49-8318-afe8-015947283041" class="" dir="auto">13.3 state 파일을 임의 수정하지 않는 것이 좋다</h2><p id="3e8720e4-6f49-82ff-a9a1-81efff5bc51f" class="" dir="auto">state는 매우 중요한 운영 데이터다.</p><p id="035720e4-6f49-822a-85db-81474be09be6" class="" dir="auto">수동 편집은 위험하며, 잘못 수정하면 Terraform이 리소스 매핑을 잃을 수 있다.</p><p id="b36720e4-6f49-839f-8ea7-815c91eaa3bc" class="" dir="auto">입문 단계에서는 state 파일을 열어 구조를 보는 정도는 가능하지만,</p><p id="b2a720e4-6f49-827b-90fa-81792330f21e" class="" dir="auto">직접 수정하는 방식은 권장하지 않는다.</p><hr id="67a720e4-6f49-82ad-be04-816e9a432a3f" dir="auto"/><h2 id="67f720e4-6f49-83f0-8561-81b499dc4d15" class="" dir="auto">13.4 backend 경로 설계를 명확히 해야 한다</h2><p id="664720e4-6f49-8219-9de1-81f0904bf855" class="" dir="auto">S3 backend를 사용할 때 <code>key</code> 설계를 대충 하면</p><p id="8df720e4-6f49-83b2-8619-01f9294451b8" class="" dir="auto">환경 간 state 충돌이 생길 수 있다.</p><p id="2ee720e4-6f49-8244-84c0-819da29c872d" class="" dir="auto">예:</p><ul id="7bf720e4-6f49-8255-86ef-81db375fb354" class="bulleted-list" dir="auto"><li style="list-style-type:disc">dev와 prod가 같은 state 경로 사용</li></ul><ul id="b9c720e4-6f49-8329-bbd0-01c63c456a59" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로젝트별 경로 구분이 없음</li></ul><p id="ef7720e4-6f49-82b4-b2b6-81293c35b09e" class="" dir="auto">즉, <code>key</code>는 환경/프로젝트/구성 단위별로 명확히 나눠야 한다.</p><hr id="fb6720e4-6f49-8318-a549-01ec7696f709" dir="auto"/><h2 id="446720e4-6f49-8238-91a9-81b0772492d9" class="" dir="auto">13.5 workspace를 써도 naming 충돌은 따로 관리해야 한다</h2><p id="95c720e4-6f49-8361-839c-81c59cde4e6f" class="" dir="auto">workspace가 다르다고 해서 AWS 리소스 이름이 자동으로 구분되는 것은 아니다.</p><p id="87b720e4-6f49-822c-9729-013574d49251" class="" dir="auto">예를 들어 S3 버킷 이름, IAM 역할 이름 등은 별도 naming 전략이 필요할 수 있다.</p><p id="b61720e4-6f49-83e1-aa6e-018e0c6ad53d" class="" dir="auto">즉, state 분리와 리소스 naming 전략은 별개로 봐야 한다.</p><hr id="f85720e4-6f49-83fd-a7ba-81fa5950df82" dir="auto"/><h2 id="1ae720e4-6f49-8385-bf92-019f1f68d02c" class="" dir="auto">14. 운영 관점에서 정리</h2><p id="816720e4-6f49-82b2-ac6b-0178ce66159c" class="" dir="auto">실무에서 Terraform을 안정적으로 운영하려면 다음 원칙이 중요하다.</p><ul id="6c8720e4-6f49-8342-b7f3-81e1a7385bed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state는 매우 중요한 운영 자산으로 봐야 함</li></ul><ul id="836720e4-6f49-83a9-b5b7-8193a58dd838" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개인 실습 외에는 local state 의존을 줄이는 것이 좋음</li></ul><ul id="bf7720e4-6f49-82aa-bf57-815360f54a7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 backend를 사용해야 함</li></ul><ul id="99a720e4-6f49-831f-8503-819af23d9652" class="bulleted-list" dir="auto"><li style="list-style-type:disc">drift를 줄이기 위해 콘솔 수동 변경을 최소화해야 함</li></ul><ul id="217720e4-6f49-830f-9fbb-81c272920282" class="bulleted-list" dir="auto"><li style="list-style-type:disc">plan 결과를 자주 확인해야 함</li></ul><ul id="33f720e4-6f49-83fc-91f3-016e379ac04c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">workspace나 backend key로 환경을 분리할 수 있어야 함</li></ul><p id="cc6720e4-6f49-823b-9478-81d60ed1f46f" class="" dir="auto">즉, Terraform 운영의 핵심은 코드 작성뿐 아니라</p><p id="00a720e4-6f49-8243-865b-01131095558e" class="" dir="auto"><strong>state를 안전하게 관리하는 체계</strong>를 갖추는 것이다.</p><hr id="720720e4-6f49-8344-b73e-01c7265c30c2" dir="auto"/><h2 id="97d720e4-6f49-832f-926b-815fab477ae9" class="" dir="auto">15. 정리</h2><ul id="c51720e4-6f49-8372-ac35-813985b6d1d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state는 Terraform이 관리 중인 리소스와 실제 인프라의 연결 정보를 저장하는 데이터다.</li></ul><ul id="394720e4-6f49-83d0-8711-81db3d7d3041" class="bulleted-list" dir="auto"><li style="list-style-type:disc">local state는 개인 실습에는 적합하지만 협업에는 취약하다.</li></ul><ul id="f1d720e4-6f49-8327-92bd-81a40bbaf2a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">drift는 코드/state/실제 인프라 사이에 불일치가 생긴 상태다.</li></ul><ul id="4e4720e4-6f49-82c7-ae8a-81e0034daec5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform state list</code>, <code>terraform state show</code>로 현재 관리 중인 state를 확인할 수 있다.</li></ul><ul id="210720e4-6f49-8316-a2a4-81f7e2865dcf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">backend는 state를 어디에 저장하고 어떻게 관리할지 정하는 설정이다.</li></ul><ul id="fc6720e4-6f49-83ad-80bc-81fe7c816c6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 backend는 AWS 환경에서 대표적인 원격 state 저장 방식이다.</li></ul><ul id="d1f720e4-6f49-83c6-bc08-81d146e5fece" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform init -reconfigure</code>는 backend 설정 재초기화, <code>migrate-state</code>는 state 이전에 사용한다.</li></ul><ul id="9bf720e4-6f49-8276-aaa0-81fef7d76a66" class="bulleted-list" dir="auto"><li style="list-style-type:disc">workspace는 같은 코드에서 서로 다른 state를 분리하는 기능이다.</li></ul><ul id="d28720e4-6f49-8280-9905-018b40708f1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">협업에서는 중앙 backend, drift 최소화, 명확한 경로 설계와 naming 전략이 중요하다.</li></ul><h1 id="a37720e4-6f49-82d2-973d-8139c690c286" class="" dir="auto">실습. Terraform State, Backend, 협업 방식 실습</h1><h2 id="00c720e4-6f49-820c-9399-815557bca7a6" class="" dir="auto">실습 목표</h2><p id="702720e4-6f49-83f2-b6ce-01cb95a30e62" class="" dir="auto">이 실습에서는 다음을 확인한다.</p><ul id="77d720e4-6f49-832e-841c-81e51847d31f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">local state 파일 생성과 확인</li></ul><ul id="aa7720e4-6f49-827c-be0b-81f8d0516b83" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform state list</code>, <code>terraform state show</code> 사용</li></ul><ul id="dbb720e4-6f49-82f4-91c9-81c05996a0eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">drift 개념 체감</li></ul><ul id="9a3720e4-6f49-82b4-a56d-81524fde1efd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 backend 설정 구조 이해</li></ul><ul id="ab2720e4-6f49-828e-a653-017088b9846c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>init -reconfigure</code>, <code>init -migrate-state</code> 사용 흐름 이해</li></ul><ul id="c39720e4-6f49-82d6-975e-01db37b9dd48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">workspace 생성 및 전환 실습</li></ul><hr id="f80720e4-6f49-827a-ad0b-81414bec1aeb" dir="auto"/><h2 id="6ca720e4-6f49-8316-a412-01c6ab73cef8" class="" dir="auto">실습 1. local state 생성 확인</h2><h3 id="4b1720e4-6f49-82b1-b566-81f6c32b0113" class="" dir="auto">실습 목적</h3><p id="9e7720e4-6f49-8220-8eac-817f6a1eca44" class="" dir="auto">Terraform apply 이후 local state 파일이 생성되고, Terraform이 리소스를 추적한다는 점을 확인한다.</p><hr id="fdf720e4-6f49-836a-8d1f-01892d0a156b" dir="auto"/><h3 id="b61720e4-6f49-822e-93b0-8119554222bc" class="" dir="auto">예제 코드</h3><p id="ca7720e4-6f49-82cb-bbdc-8175afb2f185" class="" dir="auto"><code>main.tf</code></p><pre id="952720e4-6f49-8390-ae45-81b4e6c63841" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+	required_providers {
+		aws = {
+			source  = &quot;hashicorp/aws&quot;
+			version = &quot;6.41.0&quot;
+		}
+	}
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}
+
+resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.20.0.0/16&quot;
+
+  tags = {
+    Name = &quot;state-lab-vpc&quot;
+  }
+}</code></pre><hr id="65d720e4-6f49-83d4-8c6f-01200cd02439" dir="auto"/><h3 id="310720e4-6f49-835a-be38-813538d9f160" class="" dir="auto">실행 순서</h3><pre id="d3c720e4-6f49-824a-b825-018801bcfa54" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform init
+terraform apply -auto-approve</code></pre><hr id="a85720e4-6f49-82be-b39c-81c639ede8a4" dir="auto"/><h3 id="4ec720e4-6f49-83c6-84f0-811148c760ea" class="" dir="auto">확인 포인트</h3><p id="4c8720e4-6f49-8206-a8d8-81f641b82d9c" class="" dir="auto">적용이 끝난 뒤 현재 디렉터리에 다음 파일이 생겼는지 확인한다.</p><ul id="1f7720e4-6f49-8366-a277-0198929fe481" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform.tfstate</code></li></ul><ul id="db2720e4-6f49-829b-994c-0115a206148c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform.tfstate.backup</code></li></ul><h3 id="34c720e4-6f49-82ed-b599-01a8bcf1e868" class="" dir="auto">설명</h3><p id="dee720e4-6f49-8355-af6a-8125183f5d50" class="" dir="auto">이 시점부터 Terraform은 <code>aws_vpc.main</code> 이 실제 어떤 VPC와 연결되는지 state에 기록한다.</p><p id="59b720e4-6f49-8315-a690-016cef7945fc" class="" dir="auto">즉, 다음 실행부터는 같은 코드를 다시 적용해도 무조건 새 VPC를 만드는 것이 아니라 state를 기준으로 현재 상태를 판단한다.</p><hr id="e74720e4-6f49-82b7-a1ac-8108420d08b9" dir="auto"/><h2 id="30e720e4-6f49-828d-bcf6-8124e1f8c3ad" class="" dir="auto">실습 2. terraform state list 사용</h2><h3 id="371720e4-6f49-8251-b4ed-01759da89aa3" class="" dir="auto">실습 목적</h3><p id="a68720e4-6f49-8304-9b25-81cafec2d801" class="" dir="auto">Terraform이 현재 어떤 리소스를 관리 중인지 확인한다.</p><hr id="515720e4-6f49-8207-8323-8100799ed39c" dir="auto"/><h3 id="fff720e4-6f49-822a-95e6-011fe166124f" class="" dir="auto">실행 명령</h3><pre id="ba4720e4-6f49-8216-aadf-81cfdd345da6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform state list</code></pre><hr id="959720e4-6f49-82d9-98af-0130ddddd8eb" dir="auto"/><h3 id="a76720e4-6f49-824c-94fc-010591f131fb" class="" dir="auto">기대 결과 예시</h3><pre id="b2c720e4-6f49-83e0-ba19-016624d55c58" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws_vpc.main</code></pre><hr id="a92720e4-6f49-828d-9467-813424fda544" dir="auto"/><h3 id="f3f720e4-6f49-83a7-bd2e-81f16e8655d9" class="" dir="auto">설명</h3><p id="054720e4-6f49-83d7-adc1-01c6b7085cb3" class="" dir="auto">이 결과는 Terraform state 안에 현재 <code>aws_vpc.main</code> 리소스가 기록되어 있다는 뜻이다.</p><p id="3c6720e4-6f49-8224-9938-011fd6555eb5" class="" dir="auto">즉, Terraform은 이 리소스를 자신이 관리하는 대상으로 인식하고 있다.</p><hr id="e51720e4-6f49-822a-b3a7-81a87d8242da" dir="auto"/><h2 id="f45720e4-6f49-823a-acef-81e522f03dcf" class="" dir="auto">실습 3. terraform state show 사용</h2><h3 id="713720e4-6f49-8203-8773-01956dcb815d" class="" dir="auto">실습 목적</h3><p id="df4720e4-6f49-82d3-ad0e-01ca6e10f60b" class="" dir="auto">특정 리소스의 state 정보를 확인한다.</p><hr id="8d8720e4-6f49-8382-b3c2-8199c88811cf" dir="auto"/><h3 id="ac3720e4-6f49-83f8-b74b-0195463eed83" class="" dir="auto">실행 명령</h3><pre id="c6a720e4-6f49-8242-9702-0154ad52ac16" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform state show aws_vpc.main</code></pre><hr id="0ad720e4-6f49-833b-b41c-0162011becc1" dir="auto"/><h3 id="731720e4-6f49-832f-b995-016c367030ca" class="" dir="auto">확인 포인트</h3><p id="38c720e4-6f49-8302-ac86-81355187e6a7" class="" dir="auto">다음 같은 속성을 확인할 수 있다.</p><ul id="985720e4-6f49-8322-9d60-81da23088195" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC ID</li></ul><ul id="3a4720e4-6f49-83eb-a358-812a6f5ca789" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CIDR 블록</li></ul><ul id="2ac720e4-6f49-8200-aa3c-813c2c183c18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 정보</li></ul><ul id="f73720e4-6f49-822f-bed6-0198e4a8af43" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기타 리소스 속성</li></ul><p id="a34720e4-6f49-83be-b2af-012a8d6ee87a" class="" dir="auto">즉, Terraform이 이 리소스를 어떤 값으로 알고 있는지 확인할 수 있다.</p><hr id="e66720e4-6f49-826d-a3f6-015bb6a8bbd7" dir="auto"/><h2 id="865720e4-6f49-8346-aea0-01456f447abf" class="" dir="auto">실습 4. drift 개념 체감하기</h2><h3 id="f71720e4-6f49-8249-9700-819d8647fd3c" class="" dir="auto">실습 목적</h3><p id="4e6720e4-6f49-8216-a712-019ee0415d3a" class="" dir="auto">Terraform 외부에서 실제 리소스를 수정했을 때 drift가 어떤 의미인지 이해한다.</p><hr id="ad8720e4-6f49-823f-8d2f-815bd3a547df" dir="auto"/><h3 id="26e720e4-6f49-8344-b1bc-819c95da421d" class="" dir="auto">실습 방법</h3><ol type="1" id="732720e4-6f49-8296-94e7-8166074cda14" class="numbered-list" start="1" dir="auto"><li>Terraform으로 VPC를 생성한다.</li></ol><ol type="1" id="637720e4-6f49-82d6-a232-81c3d4c14de1" class="numbered-list" start="2" dir="auto"><li>AWS 콘솔에서 해당 VPC의 Name 태그를 직접 변경한다.</li></ol><ol type="1" id="f3b720e4-6f49-8380-8690-8188962a91ab" class="numbered-list" start="3" dir="auto"><li>다시 <code>terraform plan</code>을 실행한다.</li></ol><hr id="446720e4-6f49-83a4-ae12-010851bb7817" dir="auto"/><h3 id="da1720e4-6f49-8295-9700-8122ca01fcf4" class="" dir="auto">실행 명령</h3><pre id="8c6720e4-6f49-8343-a7d1-015ba67f6dcc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform plan</code></pre><hr id="4d5720e4-6f49-8235-8959-81cc16262d67" dir="auto"/><h3 id="bb4720e4-6f49-83ce-ae6c-01e559c031ff" class="" dir="auto">확인 포인트</h3><p id="244720e4-6f49-8209-9587-01c6cca7dd7e" class="" dir="auto">Terraform은 코드 기준 Name 태그와 실제 AWS의 태그가 다르다는 점을 감지하고,</p><p id="5db720e4-6f49-8204-a5d4-01563825515d" class="" dir="auto">이를 다시 맞추려는 변경 계획을 보여줄 수 있다.</p><p id="a81720e4-6f49-8242-b6f3-01eb8613d6ff" class="" dir="auto">즉, drift는 다음 흐름으로 이해하면 된다.</p><ul id="4ce720e4-6f49-820b-8906-8170643d9186" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 기준 상태</li></ul><ul id="8fb720e4-6f49-8349-8a4d-813bd39ca68e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">state 기준 관리 정보</li></ul><ul id="2b3720e4-6f49-82f5-b6e8-01cf6d2d6c6c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 AWS 상태</li></ul><ul id="52b720e4-6f49-8245-b520-81b28971ac72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 셋이 어긋남</li></ul><hr id="8f0720e4-6f49-835c-b881-019786cd83ca" dir="auto"/><h2 id="d42720e4-6f49-83b3-86bd-01a9d7225c98" class="" dir="auto">실습 5. S3 backend 설정 작성</h2><h3 id="a94720e4-6f49-82b8-a26b-014aa1d33596" class="" dir="auto">실습 목적</h3><p id="d73720e4-6f49-8250-9fe7-01712e01d719" class="" dir="auto">local state 대신 S3 backend를 사용하는 구성을 이해한다.</p><hr id="b7c720e4-6f49-82c8-b176-8149a033653e" dir="auto"/><h3 id="eef720e4-6f49-8338-aacb-813337b7f01f" class="" dir="auto">예제 코드</h3><p id="420720e4-6f49-8313-93fe-81028f4ee92a" class="" dir="auto"><code>main.tf</code>의 <code>terraform</code> 블록 예시:</p><pre id="514720e4-6f49-82ea-b7a2-815b4fdcab39" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+
+  backend &quot;s3&quot; {
+    bucket = &quot;my-terraform-state-bucket&quot;
+    key    = &quot;state-lab/dev/terraform.tfstate&quot;
+    region = &quot;ap-northeast-2&quot;
+  }
+  
+	required_providers {
+		aws = {
+			source  = &quot;hashicorp/aws&quot;
+			version = &quot;6.41.0&quot;
+		}
+	}
+}</code></pre><hr id="f69720e4-6f49-832e-a0a4-01a029afe18d" dir="auto"/><h3 id="c6f720e4-6f49-8339-9374-0170ec29b114" class="" dir="auto">설명</h3><p id="b24720e4-6f49-82f3-b181-017c428e22a5" class="" dir="auto">이 설정은 state를 로컬이 아니라 S3에 저장하도록 한다.</p><p id="811720e4-6f49-83d3-b6a8-01e49661e823" class="" dir="auto">단, 실제로는 해당 S3 버킷이 미리 존재해야 한다.</p><p id="79b720e4-6f49-83ca-bdb2-01807c4503b1" class="" dir="auto">즉, backend는 Terraform이 자동으로 만드는 인프라가 아니라</p><p id="961720e4-6f49-8267-ad55-01ef000182a7" class="" dir="auto">Terraform이 state를 저장할 위치를 알려주는 설정이다.</p><hr id="12b720e4-6f49-833d-900e-812931597754" dir="auto"/><h2 id="564720e4-6f49-8306-a9b9-811b9632b641" class="" dir="auto">실습 6. backend 재초기화</h2><h3 id="8f5720e4-6f49-82a0-8435-81e97deb5f53" class="" dir="auto">실습 목적</h3><p id="069720e4-6f49-82b4-bf2a-81234219bb99" class="" dir="auto">backend 설정 변경 후 재초기화하는 방법을 이해한다.</p><hr id="0be720e4-6f49-82ae-be1b-81e23fd7b7ca" dir="auto"/><h3 id="5d8720e4-6f49-8398-8119-81275cd6dce2" class="" dir="auto">실행 명령</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="dbf720e4-6f49-82d2-ac0c-0135de97afcb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">terraform init -reconfigure</code></pre><hr id="264720e4-6f49-8337-b9f1-0136a09b9828" dir="auto"/><h3 id="628720e4-6f49-830c-ba64-0129a6658090" class="" dir="auto">설명</h3><p id="c60720e4-6f49-82c0-aaf3-8102aabd9d31" class="" dir="auto">이 명령은 현재 코드의 backend 설정을 기준으로</p><p id="d37720e4-6f49-83f0-9a54-815f1b015dc8" class="" dir="auto">Terraform의 backend 연결 정보를 다시 초기화한다.</p><p id="0f8720e4-6f49-8304-9ab7-81527e194234" class="" dir="auto">즉, backend를 새로 잡거나 변경한 뒤에는 자주 사용하는 흐름이다.</p><hr id="c8e720e4-6f49-828f-9260-014e93d91c0e" dir="auto"/><h2 id="4b0720e4-6f49-8307-a1f1-01766789028b" class="" dir="auto">실습 7. local state를 S3로 마이그레이션하는 흐름 이해</h2><h3 id="c56720e4-6f49-83bf-bea4-81962b4469ab" class="" dir="auto">실습 목적</h3><p id="81e720e4-6f49-83c2-9268-81fb83088104" class="" dir="auto">기존 local state를 원격 backend로 옮기는 개념을 이해한다.</p><hr id="122720e4-6f49-822a-9425-01c4e2871789" dir="auto"/><h3 id="c28720e4-6f49-8201-8bfd-01e659112801" class="" dir="auto">실행 명령 예시</h3><pre id="e59720e4-6f49-8281-b0e1-013e64d40830" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform init -migrate-state</code></pre><hr id="b9e720e4-6f49-8260-baf5-817ff3b7354c" dir="auto"/><h3 id="9b2720e4-6f49-820f-b3df-0195013259db" class="" dir="auto">설명</h3><p id="4fd720e4-6f49-8252-9694-0182d2c2b1fe" class="" dir="auto">이 명령은 기존 local state를 새 backend로 이동하는 흐름에서 사용한다.</p><p id="f25720e4-6f49-8306-871f-0137a8bfe059" class="" dir="auto">즉, 단순히 backend 설정만 다시 읽는 것이 아니라</p><p id="10f720e4-6f49-823d-bba8-01cd9b83ca52" class="" dir="auto">기존 state를 실제로 옮기는 작업까지 포함한다.</p><hr id="725720e4-6f49-826c-9e1c-014ea4f9efb8" dir="auto"/><h2 id="7e8720e4-6f49-831e-b21e-8115ecbc2e8b" class="" dir="auto">실습 8. workspace 생성과 전환</h2><h3 id="458720e4-6f49-8339-b7b5-81946b6680c2" class="" dir="auto">실습 목적</h3><p id="2be720e4-6f49-8272-b3b9-010c59232b38" class="" dir="auto">같은 코드에서 state를 분리하는 workspace 기능을 이해한다.</p><hr id="8e2720e4-6f49-837a-8303-811a961b79d9" dir="auto"/><h3 id="f6a720e4-6f49-82ee-ba8c-81cb8cc65db7" class="" dir="auto">현재 workspace 확인</h3><pre id="489720e4-6f49-825b-93f1-816603eebbc3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform workspace show</code></pre><hr id="010720e4-6f49-825d-8475-01ea2e7717d6" dir="auto"/><h3 id="7d0720e4-6f49-827a-bae4-81cf46cc35dd" class="" dir="auto">workspace 목록 확인</h3><pre id="ac5720e4-6f49-8366-bfc7-019d1319ea47" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform workspace list</code></pre><hr id="396720e4-6f49-8278-b0b9-812db98f37af" dir="auto"/><h3 id="cd2720e4-6f49-8377-b8d7-016485823f10" class="" dir="auto">새 workspace 생성</h3><pre id="79a720e4-6f49-8296-999a-81330e7aef0e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform workspace new dev
+terraform workspace new prod</code></pre><hr id="043720e4-6f49-8344-84aa-8111100d488e" dir="auto"/><h3 id="dca720e4-6f49-838c-8f2e-01eaf2b63470" class="" dir="auto">workspace 전환</h3><pre id="b55720e4-6f49-82c9-9501-813f080cca34" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform workspace select dev
+terraform workspace select prod</code></pre><hr id="828720e4-6f49-831a-8b05-0169fa5edfb2" dir="auto"/><h3 id="f09720e4-6f49-8379-a152-81331a8aaa2c" class="" dir="auto">확인 포인트</h3><p id="b12720e4-6f49-826e-b3c4-0129e49262cf" class="" dir="auto">workspace가 달라지면 같은 코드라도 서로 다른 state를 가진다.</p><p id="753720e4-6f49-82cd-8c86-0136933d127b" class="" dir="auto">즉, dev workspace와 prod workspace는 서로 독립적인 state 기준으로 동작한다.</p><hr id="e90720e4-6f49-83e1-bfe4-8121be3ccc97" dir="auto"/><h2 id="bef720e4-6f49-82d8-8581-8129a85db187" class="" dir="auto">실습 9. workspace와 naming 전략 함께 보기</h2><h3 id="a53720e4-6f49-82e7-9925-01012dc19e6c" class="" dir="auto">실습 목적</h3><p id="76a720e4-6f49-8259-8638-015370d767f5" class="" dir="auto">workspace가 state를 분리하지만 리소스 이름 충돌은 별도로 고려해야 한다는 점을 이해한다.</p><hr id="7fa720e4-6f49-82a5-bde1-016a133f2c94" dir="auto"/><h3 id="717720e4-6f49-823e-bce0-01bfd8eeb864" class="" dir="auto">예제 코드</h3><pre id="309720e4-6f49-825c-9edb-01d246775a76" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = terraform.workspace == &quot;prod&quot; ? &quot;10.30.0.0/16&quot; : &quot;10.40.0.0/16&quot;
+
+  tags = {
+    Name = &quot;vpc-${terraform.workspace}&quot;
+  }
+}</code></pre><hr id="274720e4-6f49-8383-b54c-81cfaa3e474c" dir="auto"/><h3 id="d7e720e4-6f49-83cc-bad2-814db82612f0" class="" dir="auto">설명</h3><p id="015720e4-6f49-8288-be91-81ca306983dd" class="" dir="auto">이 코드에서는 workspace 이름을 태그에 반영한다.</p><p id="4b6720e4-6f49-83bf-97e3-814b1a1ee57e" class="" dir="auto">즉, dev workspace에서는 <code>vpc-dev</code>, prod workspace에서는 <code>vpc-prod</code> 태그가 붙는다.</p><p id="c29720e4-6f49-8322-a8f0-016465587b47" class="" dir="auto">이런 방식은 workspace 분리와 naming 전략을 함께 사용하는 간단한 예다.</p><hr id="526720e4-6f49-825d-8b37-81a97ce7d867" dir="auto"/><h2 id="569720e4-6f49-83e4-b6d7-01e1f3128924" class="" dir="auto">실습 10. 전체 흐름 정리</h2><ol type="1" id="071720e4-6f49-8275-b0d5-01f3bd29c8da" class="numbered-list" start="1" dir="auto"><li>local state 생성</li></ol><ol type="1" id="c2d720e4-6f49-824b-b023-01d089fb256e" class="numbered-list" start="2" dir="auto"><li>state list/show로 현재 관리 리소스 확인</li></ol><ol type="1" id="a6b720e4-6f49-82f3-afcb-8133386a6a7c" class="numbered-list" start="3" dir="auto"><li>콘솔 수동 변경으로 drift 개념 체감</li></ol><ol type="1" id="4b8720e4-6f49-82bb-ae0e-81ed8727030c" class="numbered-list" start="4" dir="auto"><li>backend 설정으로 원격 state 개념 이해</li></ol><ol type="1" id="6c7720e4-6f49-8279-b71f-01baea385279" class="numbered-list" start="5" dir="auto"><li><code>reconfigure</code>, <code>migrate-state</code> 차이 이해</li></ol><ol type="1" id="7cc720e4-6f49-831e-9cf6-01be7aac94d5" class="numbered-list" start="6" dir="auto"><li>workspace 생성과 전환으로 state 분리 확인</li></ol><p id="4df720e4-6f49-83e6-a4a9-01a379e24771" class="" dir="auto">즉, Terraform 운영에서 중요한 것은 단순 apply가 아니라</p><p id="cda720e4-6f49-82f2-9007-813fc12a6d7d" class="" dir="auto"><strong>state를 어디에 두고, 어떻게 공유하고, 어떻게 분리하며, 어떻게 일관성을 유지할 것인가</strong>라는 점이다.</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

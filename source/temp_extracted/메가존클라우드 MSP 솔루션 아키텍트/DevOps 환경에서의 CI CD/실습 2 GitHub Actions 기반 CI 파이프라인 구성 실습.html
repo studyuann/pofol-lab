@@ -1,0 +1,1037 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습 2. GitHub Actions 기반 CI 파이프라인 구성 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="5ef720e4-6f49-8311-a15e-0122817723ab" class="page sans"><header><h1 class="page-title" dir="auto">실습 2. GitHub Actions 기반 CI 파이프라인 구성 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="fcd720e4-6f49-8201-a7aa-01569055a9f6" dir="auto"/><h1 id="abf720e4-6f49-8391-a8f7-01f07c497f8f" class="" dir="auto">1. 실습 목표</h1><ol type="1" id="b86720e4-6f49-821a-9562-01e537a5adc1" class="numbered-list" start="1" dir="auto"><li>push 시 워크플로우 실행</li></ol><ol type="1" id="cf0720e4-6f49-8327-bc1c-8151b26cd183" class="numbered-list" start="2" dir="auto"><li>Python 코드 자동 실행</li></ol><ol type="1" id="a21720e4-6f49-830f-b847-81f21eeb1891" class="numbered-list" start="3" dir="auto"><li>Python 테스트 자동화</li></ol><ol type="1" id="004720e4-6f49-828b-851c-81fbb3ceb667" class="numbered-list" start="4" dir="auto"><li>결과 파일 생성</li></ol><ol type="1" id="f47720e4-6f49-8255-89fe-01429c31def1" class="numbered-list" start="5" dir="auto"><li>아티팩트 업로드</li></ol><ol type="1" id="999720e4-6f49-836f-84a3-8131bb6c98db" class="numbered-list" start="6" dir="auto"><li>브랜치별 실행 분기</li></ol><ol type="1" id="282720e4-6f49-827b-847e-81f6d8f0fb80" class="numbered-list" start="7" dir="auto"><li>Secret 사용</li></ol><ol type="1" id="1e9720e4-6f49-835a-abec-011c3868ef9d" class="numbered-list" start="8" dir="auto"><li>EC2 자동 배포</li></ol><hr id="258720e4-6f49-8234-b211-81c697de2bca" dir="auto"/><h1 id="efc720e4-6f49-8256-ae4a-816bf40361d5" class="" dir="auto">2. 실습 환경</h1><h2 id="914720e4-6f49-8206-8ec2-81239f339c35" class="" dir="auto">준비물</h2><ul id="918720e4-6f49-8248-83ab-01755a16bf5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub 계정</li></ul><ul id="0ef720e4-6f49-820c-8b1b-01c51bdc5035" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git 설치</li></ul><ul id="5e3720e4-6f49-83bf-bc61-8106f472c3d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python 3 설치</li></ul><ul id="40a720e4-6f49-8302-8fb9-0130b887fc27" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VS Code 또는 편집기</li></ul><ul id="861720e4-6f49-8270-bfd9-01d6ca0c6976" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub Repository 1개</li></ul><ul id="a77720e4-6f49-82b5-aeef-818e7a8f4c82" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 1대 SSH 접속 가능 상태 배포 실습 시 사용</li></ul><hr id="bf1720e4-6f49-829d-9dd7-01fde2b1ca22" dir="auto"/><h1 id="a72720e4-6f49-825d-aa7b-815fcfc8126b" class="" dir="auto">3. 실습 1 가장 기본적인 GitHub Actions 실행</h1><h2 id="d00720e4-6f49-8254-98ce-813f0e46d3dc" class="" dir="auto">3.1 실습 폴더 생성</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="1b4720e4-6f49-8362-9f20-81006c4c60ee" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">mkdir github-actions-python-lab
+cd github-actions-python-lab
+git init</code></pre><hr id="868720e4-6f49-8382-9aa4-81dff3fd720d" dir="auto"/><h2 id="27b720e4-6f49-83c9-b9e7-8195991e19a7" class="" dir="auto">3.2 README 파일 생성</h2><pre id="57c720e4-6f49-8327-9afe-0192a9604387" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">echo &quot;# github-actions-python-lab&quot; &gt; README.md</code></pre><hr id="3d2720e4-6f49-83db-ae28-010c53c55577" dir="auto"/><h2 id="ea5720e4-6f49-8340-9bad-813095369322" class="" dir="auto">3.3 워크플로우 디렉터리 생성</h2><pre id="b93720e4-6f49-8312-b360-01bdbc17b79c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">mkdir -p .github/workflows</code></pre><hr id="0a1720e4-6f49-8345-bc8b-815a7099c56f" dir="auto"/><h2 id="9a3720e4-6f49-8354-aae0-0197d9041c89" class="" dir="auto">3.4 첫 번째 워크플로우 작성</h2><pre id="967720e4-6f49-8282-8cbb-8153ce46ef74" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi .github/workflows/01-basic.yml</code></pre><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="765720e4-6f49-83e0-93d7-81f131914692" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">name: 01 Basic Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  hello:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: 메시지 출력
+        run: echo &quot;GitHub Actions Python Basic Workflow Running&quot;
+
+      - name: 현재 디렉터리 확인
+        run: pwd
+
+      - name: 파일 목록 확인
+        run: ls -al</code></pre><hr id="36d720e4-6f49-8267-be68-01bac7767764" dir="auto"/><h2 id="ddf720e4-6f49-8273-b87d-81b7b7f3557a" class="" dir="auto">3.5 GitHub에 업로드</h2><pre id="732720e4-6f49-831a-bb0e-014fa00b5beb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">git add .
+git commit -m &quot;add basic workflow&quot;
+git branch -M main
+git remote add origin https://github.com/계정명/github-actions-python-lab.git
+git push -u origin main</code></pre><hr id="c89720e4-6f49-83d3-a6fa-817d1d97a356" dir="auto"/><h2 id="b53720e4-6f49-8383-91be-01140a2ddba6" class="" dir="auto">3.6 확인</h2><p id="9c3720e4-6f49-82f0-9593-818477403682" class="" dir="auto">GitHub 저장소에서 아래 메뉴 이동</p><pre id="7a0720e4-6f49-8200-8e40-0132c6305ccf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Actions</code></pre><p id="5b5720e4-6f49-83e6-b7b7-014118f54e64" class="" dir="auto">실행된 워크플로우를 확인한다.</p><hr id="201720e4-6f49-8362-b850-01567280b5e3" dir="auto"/><h1 id="673720e4-6f49-836d-9a10-815ee4bade71" class="" dir="auto">4. 실습 2 Python 코드 자동 실행</h1><h2 id="28e720e4-6f49-8336-851f-0164ce32a193" class="" dir="auto">4.1 Python 파일 생성</h2><pre id="f81720e4-6f49-8288-b395-81d6d1a166ac" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi app.py</code></pre><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="17b720e4-6f49-8204-8464-01a8d9c7025a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">print(&quot;Hello from Python GitHub Actions&quot;)</code></pre><hr id="ae4720e4-6f49-8345-a8b3-01fc840e60c7" dir="auto"/><h2 id="39c720e4-6f49-823f-b730-01e4d9a6fcaf" class="" dir="auto">4.2 워크플로우 작성</h2><pre id="be3720e4-6f49-82c1-9c1f-012e122b7fd4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi .github/workflows/02-python-run.yml</code></pre><pre id="603720e4-6f49-820f-abcc-0134718c6572" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">name: 02 Python Run Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  run-python:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.11&quot;
+
+      - name: Python 버전 확인
+        run: python --version
+
+      - name: Python 파일 실행
+        run: python app.py</code></pre><hr id="87d720e4-6f49-8294-b7d8-01681ac9e7e0" dir="auto"/><h2 id="fd8720e4-6f49-8256-a576-817f85a50b67" class="" dir="auto">4.3 업로드 및 실행 확인</h2><pre id="db1720e4-6f49-8250-b6f4-01d953e1fe50" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">git add .
+git commit -m &quot;add python run workflow&quot;
+git push</code></pre><hr id="ee0720e4-6f49-82a4-a8de-018bc9874588" dir="auto"/><h1 id="a00720e4-6f49-82e2-bad1-014254c68a65" class="" dir="auto">5. 실습 3 Python 테스트 자동화</h1><h2 id="98a720e4-6f49-8329-9d52-810fc5e042ad" class="" dir="auto">5.1 테스트용 코드 작성</h2><h3 id="278720e4-6f49-8303-b732-018fec920694" class="" dir="auto">calc.py</h3><pre id="13c720e4-6f49-83a2-b646-01a318540a24" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi calc.py</code></pre><pre id="f0e720e4-6f49-82dc-b585-81fbef48a16f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def add(a, b):
+    return a + b</code></pre><hr id="aeb720e4-6f49-8375-a00f-017cbf2a0bb5" dir="auto"/><h3 id="8af720e4-6f49-82eb-9b65-01652ef9fd8d" class="" dir="auto">test_calc.py</h3><pre id="4f7720e4-6f49-825a-8b82-015ab5c1a9f8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi test_calc.py</code></pre><pre id="5c9720e4-6f49-82db-9e3c-017660b81e4b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from calc import add
+
+def test_add():
+    assert add(2, 3) == 5</code></pre><hr id="a55720e4-6f49-8333-9454-01aefc1b4ee6" dir="auto"/><h2 id="fe8720e4-6f49-8320-854b-812513fa4bd6" class="" dir="auto">5.2 pytest 설치 파일 작성</h2><pre id="484720e4-6f49-832c-915c-01aafb234a91" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi requirements.txt</code></pre><pre id="267720e4-6f49-8334-bae8-81478dda5e15" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pytest</code></pre><hr id="36e720e4-6f49-825d-9ef1-011a0dd55cb6" dir="auto"/><h2 id="611720e4-6f49-839b-a6b8-814fbc32868c" class="" dir="auto">5.3 테스트 워크플로우 작성</h2><pre id="fc6720e4-6f49-825f-beee-0155c1fea685" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi .github/workflows/03-python-test.yml</code></pre><pre id="4bc720e4-6f49-8286-a73c-819e21561310" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">name: 03 Python Test Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.11&quot;
+
+      - name: pip 업그레이드
+        run: python -m pip install --upgrade pip
+
+      - name: 패키지 설치
+        run: pip install -r requirements.txt
+
+      - name: 테스트 실행
+        run: pytest</code></pre><hr id="4b6720e4-6f49-8255-b997-01ab02f0612d" dir="auto"/><h2 id="037720e4-6f49-82ee-a91d-81548520c542" class="" dir="auto">5.4 업로드</h2><pre id="053720e4-6f49-83dd-83bd-81e9ef16fdc0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">git add .
+git commit -m &quot;add python test workflow&quot;
+git push</code></pre><hr id="e00720e4-6f49-820c-b1fa-016777358691" dir="auto"/><h1 id="692720e4-6f49-8343-8fc3-016ab14c29dc" class="" dir="auto">6. 실습 4 결과 파일 생성하기</h1><h2 id="6b2720e4-6f49-82be-a4e6-010d08f92e60" class="" dir="auto">6.1 결과 파일 생성 스크립트 작성</h2><pre id="6a5720e4-6f49-823e-9d26-017dafd43aae" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi generate_report.py</code></pre><pre id="06b720e4-6f49-829a-be5b-01e809ce4799" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from datetime import datetime
+
+with open(&quot;report.txt&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as f:
+    f.write(&quot;GitHub Actions Report\n&quot;)
+    f.write(f&quot;Generated at: {datetime.now()}\n&quot;)
+
+print(&quot;report.txt 생성 완료&quot;)</code></pre><hr id="1a0720e4-6f49-828e-80c7-8126bd2f21a3" dir="auto"/><h2 id="2cb720e4-6f49-82b1-9efd-81dbe7dbe81b" class="" dir="auto">6.2 워크플로우 작성</h2><pre id="c56720e4-6f49-82a3-b123-81b580f98c9a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi .github/workflows/04-generate-report.yml</code></pre><pre id="50d720e4-6f49-8252-a1ea-0103ffba08d3" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">name: 04 Generate Report Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  generate-report:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.11&quot;
+
+      - name: 리포트 파일 생성
+        run: python generate_report.py
+
+      - name: 생성 결과 확인
+        run: cat report.txt</code></pre><hr id="e4c720e4-6f49-831b-8978-0179ce5846c1" dir="auto"/><h1 id="b2a720e4-6f49-82cd-aa3d-814c616cf474" class="" dir="auto">7. 실습 5 아티팩트 업로드</h1><h2 id="d9a720e4-6f49-83bb-af00-01de5172a172" class="" dir="auto">7.1 워크플로우 수정</h2><pre id="288720e4-6f49-8379-afdd-017a69d8afb0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi .github/workflows/05-upload-artifact.yml</code></pre><pre id="9dd720e4-6f49-8352-b964-01aba60d7bc6" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">name: 05 Upload Artifact Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  upload-artifact:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.11&quot;
+
+      - name: 리포트 생성
+        run: python generate_report.py
+
+      - name: 리포트 파일 업로드
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-report
+          path: report.txt</code></pre><hr id="6f7720e4-6f49-82c2-90db-0188f2b42edf" dir="auto"/><h2 id="9bc720e4-6f49-8299-9559-8173e3155972" class="" dir="auto">7.2 확인</h2><p id="a67720e4-6f49-8333-800e-811896332b07" class="" dir="auto">실행된 워크플로우 상세 화면에서 <strong>Artifacts</strong> 영역 확인</p><hr id="cfc720e4-6f49-8358-a4fb-81c89db5f7e4" dir="auto"/><h1 id="3b7720e4-6f49-8356-9f23-01c1148c7de1" class="" dir="auto">8. 실습 6 브랜치별 실행 분기</h1><h2 id="878720e4-6f49-83b5-98c8-817d20fdc1b4" class="" dir="auto">8.1 워크플로우 작성</h2><pre id="de3720e4-6f49-83c1-8bea-81e1e9dd07e3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi .github/workflows/06-branch.yml</code></pre><pre id="c44720e4-6f49-8285-af16-81ce83b67cf2" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">name: 06 Branch Workflow
+
+on:
+  push:
+    branches:
+      - main
+      - dev
+
+jobs:
+  branch-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 브랜치 이름 출력
+        run: echo &quot;Current branch is ${{ github.ref_name }}&quot;
+
+      - name: main 브랜치일 때만 실행
+        if: github.ref_name == &#x27;main&#x27;
+        run: echo &quot;This is main branch&quot;
+
+      - name: dev 브랜치일 때만 실행
+        if: github.ref_name == &#x27;dev&#x27;
+        run: echo &quot;This is dev branch&quot;</code></pre><hr id="a1a720e4-6f49-8309-8f68-815d60193048" dir="auto"/><h2 id="468720e4-6f49-8335-a05c-011551c76d0a" class="" dir="auto">8.2 dev 브랜치 생성 후 테스트</h2><pre id="6b3720e4-6f49-8253-968e-816310c4fb54" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">git checkout -b dev
+echo &quot;dev test&quot; &gt;&gt; README.md
+git add .
+git commit -m &quot;test dev workflow&quot;
+git push -u origin dev</code></pre><hr id="dae720e4-6f49-82d6-ba73-816c2bae1dc2" dir="auto"/><h1 id="a01720e4-6f49-8208-bb99-81a2b8eb09a3" class="" dir="auto">9. 실습 7 Secret 사용</h1><h2 id="b7a720e4-6f49-83db-954d-0172e8d70103" class="" dir="auto">9.1 GitHub Secret 등록</h2><p id="1e8720e4-6f49-82c2-bfba-01fef3d26a9b" class="" dir="auto">GitHub 저장소에서 아래 경로 이동</p><pre id="0d4720e4-6f49-82ed-bee7-81f04e971201" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Settings → Secrets and variables → Actions → New repository secret</code></pre><p id="2d5720e4-6f49-82ce-9f6a-81c5647e0292" class="" dir="auto">예시 등록</p><pre id="077720e4-6f49-82e8-84e6-8145b949f7af" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SECRET_MESSAGE = hello-github-secret</code></pre><hr id="3e2720e4-6f49-8203-ab8f-01eb63f0f19b" dir="auto"/><h2 id="edd720e4-6f49-8353-ba81-0132e1ca338a" class="" dir="auto">9.2 Python 파일 작성</h2><pre id="a46720e4-6f49-8362-b00b-018cdcc6e384" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi secret_app.py</code></pre><pre id="d10720e4-6f49-823d-8872-01dc8210db47" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import os
+
+secret_value = os.getenv(&quot;SECRET_MESSAGE&quot;)
+
+if secret_value:
+    print(&quot;SECRET_MESSAGE 값 읽기 성공&quot;)
+else:
+    print(&quot;SECRET_MESSAGE 값 없음&quot;)</code></pre><hr id="ac3720e4-6f49-824f-b60c-81d47125bc97" dir="auto"/><h2 id="d8e720e4-6f49-823b-9565-01452fb0b11f" class="" dir="auto">9.3 워크플로우 작성</h2><pre id="645720e4-6f49-83f7-8997-81cd9f149b06" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi .github/workflows/07-secret.yml</code></pre><pre id="6e6720e4-6f49-82cd-9c4a-013f95be3991" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">name: 07 Secret Workflow
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  use-secret:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: Python 설치
+        uses: actions/setup-python@v5
+        with:
+          python-version: &quot;3.11&quot;
+
+      - name: Secret 사용 실행
+        env:
+          SECRET_MESSAGE: ${{ secrets.SECRET_MESSAGE }}
+        run: python secret_app.py</code></pre><hr id="f2d720e4-6f49-82c4-a8c3-01fa3fe26c34" dir="auto"/><h1 id="84e720e4-6f49-827c-8d14-81f908113c90" class="" dir="auto">10. 실습 8 EC2 자동 배포</h1><p id="146720e4-6f49-83ad-ba00-8195a1c5c82b" class="" dir="auto">이 실습은 <strong>GitHub Actions에서 Python 파일을 EC2로 복사하고 원격 실행</strong>하는 방식으로 진행한다.</p><hr id="07c720e4-6f49-82b2-aa24-8126c0ebf9ce" dir="auto"/><h2 id="22d720e4-6f49-8222-9962-01e262a21b98" class="" dir="auto">10.1 EC2 준비</h2><p id="05c720e4-6f49-8377-b7d6-01601392066a" class="" dir="auto">EC2에 Python 설치 확인</p><pre id="429720e4-6f49-83ae-87cc-819aef2a621a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python3 --version</code></pre><p id="e36720e4-6f49-829b-9f93-814ac5474382" class="" dir="auto">없으면 설치</p><h3 id="0a3720e4-6f49-83b9-aca5-01298cb25942" class="" dir="auto">Ubuntu</h3><pre id="ee8720e4-6f49-8302-b583-01470744e1e4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">sudo apt update
+sudo apt install -y python3</code></pre><h3 id="2ba720e4-6f49-8273-b800-010c6ebaa8d3" class="" dir="auto">Amazon Linux</h3><pre id="82f720e4-6f49-8240-a5a1-01a51f01237b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">sudo dnf install -y python3</code></pre><hr id="ff1720e4-6f49-8279-a8c0-0103e4558de2" dir="auto"/><h2 id="adc720e4-6f49-82c9-b72b-016673c0a4dc" class="" dir="auto">10.2 배포 대상 파일 작성</h2><pre id="e26720e4-6f49-8385-836f-019acd740bae" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi deploy_app.py</code></pre><pre id="bd5720e4-6f49-83e9-b0a3-01a2c10d5632" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">print(&quot;EC2 deployed python application running&quot;)</code></pre><hr id="5e5720e4-6f49-827b-8717-813aad6b2481" dir="auto"/><h2 id="454720e4-6f49-829a-bc08-81612d2f594a" class="" dir="auto">10.3 GitHub Secrets 등록</h2><p id="661720e4-6f49-82a1-98d0-01f5dcad0cc7" class="" dir="auto">다음 값을 저장소 Secret에 등록</p><pre id="e9a720e4-6f49-8346-8b94-816482b28c93" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2_HOST
+EC2_USER
+EC2_KEY</code></pre><p id="b6d720e4-6f49-83d5-84ba-01f774a5f270" class="" dir="auto">예</p><ul id="959720e4-6f49-8387-9e2b-8198cbf619cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>EC2_HOST</code> : 퍼블릭 IP 또는 도메인</li></ul><ul id="f1a720e4-6f49-820f-b076-0126fa8c1934" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>EC2_USER</code> : ubuntu 또는 ec2-user</li></ul><ul id="4af720e4-6f49-824c-8124-018b72608c47" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>EC2_KEY</code> : pem 파일 전체 내용</li></ul><hr id="cf5720e4-6f49-82e2-bf72-818fa815eacb" dir="auto"/><h2 id="fe2720e4-6f49-83d4-93ca-81952e44334d" class="" dir="auto">10.4 배포 워크플로우 작성</h2><pre id="eff720e4-6f49-8244-a858-014f283d172c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi .github/workflows/08-deploy-ec2.yml</code></pre><pre id="fdf720e4-6f49-824b-a61e-018a44c4f5d0" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">name: 08 Deploy to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 저장소 코드 가져오기
+        uses: actions/checkout@v4
+
+      - name: SSH 키 파일 생성
+        run: |
+          echo &quot;${{ secrets.EC2_KEY }}&quot; &gt; private_key.pem
+          chmod 600 private_key.pem
+
+      - name: EC2 접속 테스트
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} &quot;echo connected&quot;
+
+      - name: 파일 전송
+        run: |
+          scp -o StrictHostKeyChecking=no -i private_key.pem deploy_app.py ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:/home/${{ secrets.EC2_USER }}/
+
+      - name: 원격 실행
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} &quot;python3 /home/${{ secrets.EC2_USER }}/deploy_app.py&quot;</code></pre><hr id="3a8720e4-6f49-82bb-a472-81a9d45fa132" dir="auto"/><h1 id="c7f720e4-6f49-8212-aeac-8198483216c9" class="" dir="auto">11. 실습 9 requirements 설치 후 Flask 실행으로 확장</h1><p id="95e720e4-6f49-825e-bd0e-01cfadb3dd7e" class="" dir="auto">단순 Python 파일 실행이 아니라 웹 애플리케이션으로 확장하는 단계다.</p><hr id="874720e4-6f49-82a1-ace8-01d17368fe0a" dir="auto"/><h2 id="8d3720e4-6f49-83d9-bab0-01004b467bf6" class="" dir="auto">11.1 Flask 애플리케이션 작성</h2><pre id="05e720e4-6f49-82e6-850d-019e0129fec2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi flask_app.py</code></pre><pre id="0b1720e4-6f49-83aa-a773-81d35b9c3cb0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from flask import Flask
+
+app = Flask(__name__)
+
+@app.route(&quot;/&quot;)
+def home():
+    return &quot;Hello from Flask GitHub Actions&quot;
+
+if __name__ == &quot;__main__&quot;:
+    app.run(host=&quot;0.0.0.0&quot;, port=5000)</code></pre><hr id="c20720e4-6f49-8270-8bbf-81bb799343f2" dir="auto"/><h2 id="bd7720e4-6f49-83aa-b289-015ae9554f38" class="" dir="auto">11.2 requirements.txt 수정</h2><pre id="f1c720e4-6f49-8202-8c77-81019a2b4b61" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pytest
+flask</code></pre><hr id="cea720e4-6f49-8303-9831-01a7996736c4" dir="auto"/><h2 id="a7c720e4-6f49-8284-bd2d-81fbda3b4374" class="" dir="auto">11.3 EC2에서 실행 명령 변경 예시</h2><pre id="c22720e4-6f49-8377-b49a-8127c2e87627" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">      - name: 원격 배포 및 실행
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key.pem ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} &quot;
+            pip3 install flask &amp;&amp;
+            nohup python3 /home/${{ secrets.EC2_USER }}/flask_app.py &gt; app.log 2&gt;&amp;1 &amp;
+          &quot;</code></pre><hr id="a58720e4-6f49-8341-81d7-015f38b6964b" dir="auto"/><hr id="aa7720e4-6f49-8399-b912-0177add7b3ed" dir="auto"/><h1 id="931720e4-6f49-83f3-aa21-0135f094e789" class="" dir="auto">12. 실습용 최종 디렉터리 예시</h1><pre id="176720e4-6f49-83ff-9a15-01e806dea45d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">github-actions-python-lab/
+├── .github/
+│   └── workflows/
+│       ├── 01-basic.yml
+│       ├── 02-python-run.yml
+│       ├── 03-python-test.yml
+│       ├── 04-generate-report.yml
+│       ├── 05-upload-artifact.yml
+│       ├── 06-branch.yml
+│       ├── 07-secret.yml
+│       └── 08-deploy-ec2.yml
+├── README.md
+├── app.py
+├── calc.py
+├── test_calc.py
+├── generate_report.py
+├── secret_app.py
+├── deploy_app.py
+├── flask_app.py
+└── requirements.txt</code></pre><hr id="2a6720e4-6f49-8386-a829-019c25b97b06" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

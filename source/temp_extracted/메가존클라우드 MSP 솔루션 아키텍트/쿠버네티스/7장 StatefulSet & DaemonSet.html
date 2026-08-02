@@ -1,0 +1,1062 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>7장. StatefulSet &amp; DaemonSet</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="c9d720e4-6f49-82a5-80f4-01a097aebb55" class="page sans"><header><h1 class="page-title" dir="auto">7장. StatefulSet &amp; DaemonSet</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="3b2720e4-6f49-82d3-a292-813915477cb3" dir="auto"/><h1 id="d66720e4-6f49-8234-9773-01d77e0a0feb" class="" dir="auto">1. StatefulSet</h1><hr id="98d720e4-6f49-83bc-b7f6-016ea039c289" dir="auto"/><h2 id="296720e4-6f49-83f3-aff2-8122f654b2c4" class="" dir="auto">1.1 개념</h2><p id="87c720e4-6f49-8222-b090-010f9a9c4a25" class="" dir="auto">StatefulSet은 상태를 가진 애플리케이션(Stateful Application)을 관리하는 Kubernetes 리소스다.</p><p id="dfe720e4-6f49-8347-a786-016ce5902037" class="" dir="auto">각 Pod은 고유한 정체성(Identity)을 가지며 순서대로 배포되고 삭제된다.</p><p id="842720e4-6f49-8237-9717-019dde91d93c" class="" dir="auto">Deployment와의 가장 큰 차이점은 다음과 같다.</p><ul id="ee8720e4-6f49-8215-9b09-01ed972144ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 이름이 고정된다.</li></ul><ul id="8bf720e4-6f49-831c-9b8d-81df5b6d0a91" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod마다 독립적인 스토리지를 가진다.</li></ul><ul id="587720e4-6f49-83c9-94b6-81f3b354d380" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성 및 삭제 순서가 보장된다.</li></ul><hr id="eb4720e4-6f49-8209-80e9-81bce49d1c72" dir="auto"/><h2 id="5d6720e4-6f49-835d-aa23-01c46794506c" class="" dir="auto">1.2 특징</h2><hr id="5cb720e4-6f49-8294-862f-01a5330143c3" dir="auto"/><h3 id="316720e4-6f49-833b-9ab3-817399ce8d19" class="" dir="auto">1. 안정적인 네트워크 ID</h3><p id="64d720e4-6f49-823c-9862-0180fdb4502e" class="" dir="auto">Pod 이름이 고정된다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="14f720e4-6f49-82b7-87f3-81ce24086859" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">mysql-0
+mysql-1
+mysql-2</code></pre><p id="1f4720e4-6f49-83eb-9c65-01ba072a5171" class="" dir="auto">DNS 주소:</p><pre id="f95720e4-6f49-8230-8653-015fd27d48db" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">mysql-0.mysql-headless</code></pre><p id="b33720e4-6f49-8372-aa91-81f1e1f9ab82" class="" dir="auto">Pod이 재시작되어도 동일한 이름과 DNS를 유지한다.</p><p id="e29720e4-6f49-837d-b987-015c4550531c" class="" dir="auto">Headless Service가 반드시 필요하며, <code>clusterIP: None</code> 설정이 있어야 Pod 개별 DNS가 생성된다.</p><hr id="9c5720e4-6f49-831d-a733-019cadc7d1b9" dir="auto"/><h3 id="db7720e4-6f49-834a-ab11-01a4789695cd" class="" dir="auto">2. 순차적 배포 및 삭제</h3><p id="811720e4-6f49-83a2-b1e7-817d2a5ef559" class="" dir="auto">생성 순서:</p><pre id="682720e4-6f49-8350-94cc-01516b344493" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">mysql-0 → mysql-1 → mysql-2</code></pre><p id="cd3720e4-6f49-83e1-ae18-015ee73f6312" class="" dir="auto">삭제 순서:</p><pre id="de3720e4-6f49-82a0-b959-81bce6a17483" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">mysql-2 → mysql-1 → mysql-0</code></pre><p id="e14720e4-6f49-8390-92a8-81a9a74c23e0" class="" dir="auto">앞 Pod이 Ready 상태가 되기 전에는 다음 Pod이 생성되지 않는다.</p><p id="d93720e4-6f49-834c-b7c3-01f342cd85bb" class="" dir="auto">이 동작은 기본값 <code>podManagementPolicy: OrderedReady</code> 때문이다.</p><p id="f44720e4-6f49-8209-83c6-81409e3e17dc" class="" dir="auto">필요 시 <code>Parallel</code>로 변경 가능하다.</p><hr id="163720e4-6f49-829a-903c-8113bb3d6b2a" dir="auto"/><h3 id="be2720e4-6f49-8347-8da7-81847a5273f9" class="" dir="auto">3. Persistent Volume 연결</h3><p id="c42720e4-6f49-83a4-bb08-816d47125b19" class="" dir="auto">각 Pod이 자신의 독립적인 저장소를 가진다.</p><p id="24c720e4-6f49-832a-adb1-8106e8f8025d" class="" dir="auto">Pod 재시작 후에도 같은 PVC에 연결된다.</p><p id="63a720e4-6f49-8237-b5d5-818a8e5d9e23" class="" dir="auto">🔹 매우 중요</p><p id="9c2720e4-6f49-826c-9b45-812e0198b2b0" class="" dir="auto">운영 환경에서는 반드시 <code>volumeClaimTemplates</code>를 사용해야 한다.</p><p id="fdb720e4-6f49-83e9-8c28-01763fc44fb6" class="" dir="auto">emptyDir는 임시 저장소이므로 DB에서는 사용하면 안 된다.</p><hr id="e92720e4-6f49-8355-bb63-8149353c44be" dir="auto"/><h3 id="f5c720e4-6f49-8329-a9d6-01678941309f" class="" dir="auto">4. Headless Service 필요</h3><p id="0b9720e4-6f49-823a-a5ef-01f67274c6f6" class="" dir="auto">StatefulSet은 반드시 Headless Service와 함께 사용한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="3de720e4-6f49-8262-9f17-81d526373525" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">clusterIP: None</code></pre><p id="45d720e4-6f49-825b-9e86-81943fc0a631" class="" dir="auto">이 설정이 없으면 Pod DNS가 생성되지 않는다.</p><hr id="3c7720e4-6f49-8395-8a06-81becfa4a439" dir="auto"/><h2 id="fa3720e4-6f49-8268-aa97-81f0d42ddfa5" class="" dir="auto">1.3 사용 사례</h2><ul id="469720e4-6f49-83cc-ac56-81ddf400f7c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터베이스 (MySQL, PostgreSQL, MongoDB)</li></ul><ul id="a49720e4-6f49-8297-9e56-0132608ff6d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">메시지 큐 (Kafka, RabbitMQ)</li></ul><ul id="8ba720e4-6f49-83de-8aed-81d48da1560a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분산 시스템 (Cassandra, Elasticsearch)</li></ul><p id="d26720e4-6f49-827e-ae21-811f46c1bc85" class="" dir="auto">공통점:</p><ul id="636720e4-6f49-835f-9470-813c7433a619" class="bulleted-list" dir="auto"><li style="list-style-type:disc">순서 중요</li></ul><ul id="7ed720e4-6f49-83f1-b567-011fcb5bd0ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고정 hostname 필요</li></ul><ul id="d27720e4-6f49-8215-a31f-817081e30b61" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 영속성 필요</li></ul><hr id="b88720e4-6f49-82f5-8527-8148aeb26aed" dir="auto"/><h2 id="170720e4-6f49-8273-b18e-01a64c601a12" class="" dir="auto">1.4 YAML 예제(statefulset.yaml)</h2><pre id="dbe720e4-6f49-82ce-9f8f-81c52cadc261" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-headless
+spec:
+  clusterIP: None  # Headless Service
+  selector:
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+spec:
+  serviceName: mysql-headless  # StatefulSet과 연결할 Service
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        ports:
+        - containerPort: 3306
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: &quot;password123&quot;
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: mysql-storage
+        emptyDir: {}  # 임시 저장소, pod 삭제 시 데이터도 삭제됨</code></pre><hr id="60f720e4-6f49-830c-bc2d-8114220ad10a" dir="auto"/><h2 id="ee7720e4-6f49-82c3-bd06-8126ca639220" class="" dir="auto">1.5 YAML 설명</h2><h3 id="c4b720e4-6f49-8205-9e02-818060ef9ff3" class="" dir="auto">Service 부분</h3><ul id="1a8720e4-6f49-82a7-b811-0109122d66ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>clusterIP: None</code> → Headless Service 설정</li></ul><ul id="7aa720e4-6f49-82af-af30-01d458bd5cf5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>selector</code> → StatefulSet Pod과 연결</li></ul><ul id="4d7720e4-6f49-83d2-ac24-8122bedc0f44" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>port</code> → Service 포트</li></ul><ul id="a8f720e4-6f49-826d-8d8c-012ad6236e68" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>targetPort</code> → Pod 내부 포트</li></ul><hr id="d1f720e4-6f49-83b2-ba20-812ca50eecae" dir="auto"/><h3 id="191720e4-6f49-8389-b994-018e378d5c7f" class="" dir="auto">StatefulSet 부분</h3><ul id="7d5720e4-6f49-838d-8398-0181681f5d40" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>serviceName</code> → Headless Service 이름과 반드시 일치</li></ul><ul id="203720e4-6f49-8322-8b98-0166cb3fff43" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>replicas</code> → 생성할 Pod 수</li></ul><ul id="ef5720e4-6f49-82e5-8170-016bb7fa53a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>selector.matchLabels</code> → 관리 대상 Pod 라벨</li></ul><ul id="ad2720e4-6f49-83d1-8a09-0198731ff919" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>template.metadata.labels</code> → 반드시 selector와 동일</li></ul><ul id="fd9720e4-6f49-83b4-9fc9-813a796aaedc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>containers.image</code> → 컨테이너 이미지</li></ul><ul id="2c8720e4-6f49-822a-a7f4-013a0914bc4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>env</code> → 환경변수 설정</li></ul><ul id="5df720e4-6f49-839b-b8ea-0108cab8fd80" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>volumeMounts</code> → Pod 내부 경로에 볼륨 연결</li></ul><ul id="354720e4-6f49-8375-96ba-01999f49ab37" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>volumes.emptyDir</code> → 임시 저장소</li></ul><hr id="cfb720e4-6f49-8213-af58-81336d58ea81" dir="auto"/><h3 id="92b720e4-6f49-83e4-8351-81ae25bf3cc5" class="" dir="auto">🔴 중요한 보완 사항</h3><p id="eff720e4-6f49-8358-9daa-81a45690bd17" class="" dir="auto">현재 예제는:</p><pre id="958720e4-6f49-83f5-bb45-01f43dcfb8de" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">emptyDir: {}</code></pre><p id="179720e4-6f49-8217-9a5b-01e2650aa2fd" class="" dir="auto">으로 되어 있다.</p><p id="3d3720e4-6f49-82a1-8625-81bf62a8041f" class="" dir="auto">이 경우:</p><ul id="ddf720e4-6f49-8230-a48b-01d4d0fff5ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 삭제 시 데이터 삭제됨</li></ul><ul id="e6f720e4-6f49-821f-ad13-81d1fd3b38e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">StatefulSet의 장점이 사라짐</li></ul><p id="675720e4-6f49-824b-ae2d-818ae6b83a10" class="" dir="auto">운영 환경에서는 다음과 같이 변경해야 한다.</p><pre id="c94720e4-6f49-8345-9287-8100fa88b9a7" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">volumeClaimTemplates:
+- metadata:
+    name: mysql-storage
+  spec:
+    accessModes: [&quot;ReadWriteOnce&quot;]
+    resources:
+      requests:
+        storage: 1Gi</code></pre><hr id="dfd720e4-6f49-820e-9ed0-01bb1e33d520" dir="auto"/><h2 id="55b720e4-6f49-8347-8e44-8136416672c2" class="" dir="auto">1.6 실습 보완 포인트</h2><p id="be0720e4-6f49-820e-bf42-81cbf253f949" class="" dir="auto">StatefulSet 삭제 시 PVC는 자동 삭제되지 않는다.</p><p id="807720e4-6f49-8265-ad95-01f533bf238f" class="" dir="auto">확인:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="c50720e4-6f49-83a6-9ae7-011521c2c188" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pvc</code></pre><p id="0c8720e4-6f49-833f-994b-01a641ad1dd6" class="" dir="auto">이 점을 반드시 설명해야 한다.</p><hr id="5b7720e4-6f49-828f-b011-011e7b955b7c" dir="auto"/><h1 id="8a2720e4-6f49-82a1-8355-01c8ecb72c79" class="" dir="auto">2. DaemonSet</h1><hr id="40a720e4-6f49-826f-a9c1-01262cd6c3b1" dir="auto"/><h2 id="18e720e4-6f49-8335-815e-81913f1795b9" class="" dir="auto">2.1 개념</h2><p id="31c720e4-6f49-8315-a9ab-01553258507d" class="" dir="auto">DaemonSet은 <strong>모든 노드(또는 특정 노드)에 1개씩 Pod을 실행</strong>시키는 리소스다.</p><p id="f9a720e4-6f49-83da-bc2f-81346bf9458d" class="" dir="auto">replicas를 지정하지 않는다.</p><p id="82e720e4-6f49-83b0-a807-0121249a3707" class="" dir="auto">노드 수가 곧 Pod 수다.</p><hr id="f43720e4-6f49-8349-a3c7-014f3618b9d4" dir="auto"/><h2 id="f7f720e4-6f49-8285-9cf5-019cae0d8be3" class="" dir="auto">2.2 특징</h2><hr id="4ba720e4-6f49-828c-94ae-81947e2d7d44" dir="auto"/><h3 id="d62720e4-6f49-8228-8010-01afe333fb04" class="" dir="auto">1. 모든 노드에서 실행</h3><ul id="2a9720e4-6f49-8292-a305-015e29acc7d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새로운 노드가 추가되면 자동으로 Pod 배포</li></ul><ul id="cbf720e4-6f49-82bb-98db-01fba5fbad8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드 제거 시 Pod 삭제</li></ul><ul id="e70720e4-6f49-83f3-8d53-817fbf3e6566" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드당 정확히 1개 Pod 생성</li></ul><hr id="18e720e4-6f49-8203-8ed1-018848f55edc" dir="auto"/><h3 id="1ce720e4-6f49-83c6-bacf-81b0c9702f0a" class="" dir="auto">2. 상태 비저장</h3><ul id="f9a720e4-6f49-838a-9a11-01ede16e8847" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 간 순서 없음</li></ul><ul id="28e720e4-6f49-83a2-b90a-0178ab024bb9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고유 ID 없음</li></ul><ul id="e75720e4-6f49-82e5-a48e-81a5999358fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재시작 가능</li></ul><hr id="485720e4-6f49-831e-8c60-811d200b6fb6" dir="auto"/><h3 id="024720e4-6f49-833d-8cfe-81cbeda9f8b6" class="" dir="auto">3. 노드 선택 가능</h3><ul id="898720e4-6f49-8272-b55b-81e48cc4efed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">nodeSelector</li></ul><ul id="bc6720e4-6f49-839c-8124-81d27aab487a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">affinity</li></ul><ul id="be8720e4-6f49-83d9-bfa8-0174ea9624cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">tolerations</li></ul><p id="b14720e4-6f49-8308-abf6-814dd6c6d437" class="" dir="auto">특정 조건에 맞는 노드에만 배포 가능.</p><hr id="52e720e4-6f49-8204-8e07-01b4812511c1" dir="auto"/><h2 id="f54720e4-6f49-8220-b2e6-81109bb60bcb" class="" dir="auto">2.3 사용 사례</h2><p id="961720e4-6f49-8309-9654-815e5bbc5368" class="" dir="auto">모든 노드에 필요:</p><ul id="aa8720e4-6f49-8271-b16e-011442ac0827" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 수집기 (Fluentd)</li></ul><ul id="013720e4-6f49-8370-8843-817d3b0e5a64" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모니터링 에이전트 (Node Exporter)</li></ul><ul id="e35720e4-6f49-822b-b308-81c575d0652f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 플러그인</li></ul><p id="0ed720e4-6f49-8277-b7a3-01f42f2a6033" class="" dir="auto">특정 노드에만 필요:</p><ul id="ad2720e4-6f49-8355-a402-8153da7431b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GPU 노드 전용 작업</li></ul><hr id="efb720e4-6f49-8308-b3ea-815f081f9192" dir="auto"/><h2 id="6c6720e4-6f49-8395-8a87-01c9a3f86681" class="" dir="auto">2.4 YAML 예제(daemonset.yaml)</h2><pre id="a10720e4-6f49-838d-87eb-01d4901e0fca" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-logger
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: node-logger
+  template:
+    metadata:
+      labels:
+        app: node-logger
+    spec:
+      containers:
+      - name: logger
+        image: busybox:latest
+        command: [&quot;sh&quot;, &quot;-c&quot;]
+        args:
+          - |
+            while true; do
+              echo &quot;Running on node: $(hostname)&quot;
+              sleep 10
+            done
+        resources:
+          limits:
+            cpu: 100m
+            memory: 128Mi
+          requests:
+            cpu: 50m
+            memory: 64Mi</code></pre><hr id="b4e720e4-6f49-82af-abaa-81253c8dca49" dir="auto"/><h2 id="cce720e4-6f49-837b-b0fe-018ab7155ee5" class="" dir="auto">2.5 YAML 설명</h2><ul id="6fd720e4-6f49-82ca-bed0-01e60e255009" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>selector.matchLabels</code> → 관리 대상 Pod 선택</li></ul><ul id="442720e4-6f49-82c3-97bc-0164c7007798" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>template.metadata.labels</code> → 반드시 동일해야 함</li></ul><ul id="0c6720e4-6f49-82fd-9025-81cdec53a181" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>command</code> → ENTRYPOINT override</li></ul><ul id="fa4720e4-6f49-8362-8be5-01ab96c445ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>args</code> → CMD override</li></ul><ul id="867720e4-6f49-83fd-810f-0114ec20061e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>resources.requests</code> → 스케줄 기준</li></ul><ul id="ae4720e4-6f49-829e-97d1-813af46e710c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>resources.limits</code> → 최대 사용 자원</li></ul><hr id="49f720e4-6f49-83f3-baa5-0116cb19bc21" dir="auto"/><h2 id="1b6720e4-6f49-8211-a2be-819f3b7c8346" class="" dir="auto">🔹 추가 보완 (운영 관점)</h2><p id="0e5720e4-6f49-8373-acdd-818f1c39147b" class="" dir="auto">DaemonSet에는 <code>updateStrategy</code>가 존재한다.</p><p id="0b3720e4-6f49-82c6-92e3-01eb8ae3457a" class="" dir="auto">기본값:</p><pre id="879720e4-6f49-826a-a17a-81b2114ff7e5" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">RollingUpdate</code></pre><p id="dff720e4-6f49-8276-86c6-01b6f98a634a" class="" dir="auto">옵션:</p><pre id="0d0720e4-6f49-8298-bdcc-014cb29ccd1a" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 1</code></pre><p id="c74720e4-6f49-824e-b8f4-818b0b0668cc" class="" dir="auto">대규모 클러스터에서는 이 설정이 중요하다.</p><hr id="375720e4-6f49-820d-be93-0185f969e7af" dir="auto"/><h1 id="0d7720e4-6f49-83ed-a5a7-017ccd1a08ad" class="" dir="auto">3. 비교 분석</h1><table id="3fe720e4-6f49-8299-ae60-81d4df4cdcfc" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="aaf720e4-6f49-8355-9a4c-81a00eec2267" dir="ltr"><th id="zpMF" class="simple-table-header-color simple-table-header">항목</th><th id="nEPP" class="simple-table-header-color simple-table-header">StatefulSet</th><th id="FV^`" class="simple-table-header-color simple-table-header">DaemonSet</th></tr></thead><tbody><tr id="b53720e4-6f49-8224-baed-01954c25fd72" dir="ltr"><td id="zpMF" class="">목적</td><td id="nEPP" class="">상태 있는 앱 관리</td><td id="FV^`" class="">모든 노드 실행</td></tr><tr id="0fc720e4-6f49-8373-b475-019716e20e83" dir="ltr"><td id="zpMF" class="">Pod 개수</td><td id="nEPP" class="">replicas 수</td><td id="FV^`" class="">노드 수</td></tr><tr id="7a8720e4-6f49-826a-a416-011250f3c34f" dir="ltr"><td id="zpMF" class="">Pod 정체성</td><td id="nEPP" class="">고정</td><td id="FV^`" class="">노드마다 자동</td></tr><tr id="a6b720e4-6f49-829e-b00e-818c3777f4f1" dir="ltr"><td id="zpMF" class="">배포 순서</td><td id="nEPP" class="">순차</td><td id="FV^`" class="">동시</td></tr><tr id="1b4720e4-6f49-8296-bf18-818bf0586446" dir="ltr"><td id="zpMF" class="">네트워크 ID</td><td id="nEPP" class="">안정적 DNS</td><td id="FV^`" class="">변할 수 있음</td></tr><tr id="904720e4-6f49-8367-9645-01f315f52d1c" dir="ltr"><td id="zpMF" class="">스토리지</td><td id="nEPP" class="">PersistentVolume 필요</td><td id="FV^`" class="">보통 필요 없음</td></tr><tr id="48f720e4-6f49-83f6-87bd-81e45d4d7230" dir="ltr"><td id="zpMF" class="">사용 사례</td><td id="nEPP" class="">DB, 메시지큐</td><td id="FV^`" class="">로깅, 모니터링</td></tr><tr id="40e720e4-6f49-8278-af6a-016c28770ba6" dir="ltr"><td id="zpMF" class="">스케일링</td><td id="nEPP" class="">수동 (replicas)</td><td id="FV^`" class="">노드 추가 시 자동</td></tr></tbody></table><hr id="f0b720e4-6f49-8310-842a-01694ffccfa0" dir="auto"/><h2 id="431720e4-6f49-8382-b9c0-81e18b0edf45" class="" dir="auto">4. 실습 예제(sts-ds-client.yaml)</h2><pre id="80f720e4-6f49-82aa-bac1-81111a91baa2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># ============================================
+# PersistentVolume 생성
+# ============================================
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-1
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/mysql-1
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-2
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/mysql-2
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: mysql-pv-3
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data/mysql-3
+
+# ============================================
+# StatefulSet 예제
+# ============================================
+---
+# Headless Service (StatefulSet과 함께 사용)
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-headless
+  namespace: tutor-ns
+spec:
+  clusterIP: None  # 중요: Headless Service
+  selector:
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+    name: mysql
+---
+# StatefulSet
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: tutor-ns
+spec:
+  serviceName: mysql-headless  # Headless Service 이름
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:5.7
+        ports:
+        - containerPort: 3306
+          name: mysql
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          value: &quot;password123&quot;
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        resources:
+          requests:
+            memory: &quot;256Mi&quot;
+            cpu: &quot;100m&quot;
+          limits:
+            memory: &quot;512Mi&quot;
+            cpu: &quot;500m&quot;
+  # 각 Pod마다 독립적인 PVC 생성 (PV와 자동 바인딩)
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-storage
+    spec:
+      accessModes: [&quot;ReadWriteOnce&quot;]
+      resources:
+        requests:
+          storage: 1Gi
+
+# ============================================
+# DaemonSet 예제
+# ============================================
+---
+# DaemonSet (모든 노드에 배포)
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+  namespace: tutor-ns
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      containers:
+      - name: node-exporter
+        image: prom/node-exporter:latest
+        ports:
+        - containerPort: 9100
+        args:
+        - --path.procfs=/host/proc
+        - --path.sysfs=/host/sys
+        - --collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)
+        volumeMounts:
+        - name: proc
+          mountPath: /host/proc
+          readOnly: true
+        - name: sys
+          mountPath: /host/sys
+          readOnly: true
+        resources:
+          requests:
+            memory: &quot;32Mi&quot;
+            cpu: &quot;50m&quot;
+          limits:
+            memory: &quot;128Mi&quot;
+            cpu: &quot;200m&quot;
+      
+      volumes:
+      - name: proc
+        hostPath:
+          path: /proc
+      - name: sys
+        hostPath:
+          path: /sys
+
+# ============================================
+# 테스트용 Client Pod
+# ============================================
+---
+# busybox 테스트 Client (DNS 도구 포함)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: debug-client
+  namespace: tutor-ns
+spec:
+  containers:
+  - name: client
+    image: busybox:latest
+    command: [&#x27;sleep&#x27;, &#x27;3600&#x27;]
+  restartPolicy: Never
+</code></pre><h3 id="ee7720e4-6f49-83a6-9c52-817ac45ad8cb" class="" dir="auto">실습 1: StatefulSet 배포 및 확인</h3><pre id="bd2720e4-6f49-8231-8437-8181fae01cc7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># StatefulSet 배포
+kubectl apply -f statefulset.yaml
+
+# Pod 확인 (순차적 생성 확인)
+kubectl get pods -w
+
+# 특정 Pod의 hostname 확인
+kubectl exec mysql-0 -- cat /etc/hostname
+# 출력: mysql-0
+
+kubectl exec mysql-1 -- cat /etc/hostname
+# 출력: mysql-1
+
+# debug-client pod 접속
+kubectl exec -it debug-client -n tutor-ns -- sh
+
+nslookup mysql-0.mysql-headless.tutor-ns.svc.cluster.local
+
+</code></pre><h3 id="cc1720e4-6f49-835c-9b22-01e901e40630" class="" dir="auto">실습 2: DaemonSet 배포 및 확인</h3><pre id="41d720e4-6f49-83c1-9d03-010d89b6bb54" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># DaemonSet 배포
+kubectl apply -f daemonset.yaml
+
+# 각 노드에 1개씩 Pod 생성 확인
+kubectl get pods -o wide
+
+# 노드별 Pod 개수 확인
+kubectl get pods --all-namespaces -o wide | grep node-exporter
+
+
+# DaemonSet 삭제
+kubectl delete daemonset node-exporter
+</code></pre><h3 id="e2c720e4-6f49-8220-aa33-81c58a011a2c" class="" dir="auto">실습 3: StatefulSet 영속성 확인</h3><pre id="e7a720e4-6f49-82dd-b833-81a280e450c2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># Pod 내 파일 생성
+kubectl exec mysql-0 -- sh -c &#x27;echo &quot;test data&quot; &gt; /var/lib/mysql/test.txt&#x27;
+
+# Pod 삭제
+kubectl delete pod mysql-0
+
+# StatefulSet이 자동으로 mysql-0 재생성
+# 같은 PV에 연결되므로 파일 유지됨
+kubectl exec mysql-0 -- cat /var/lib/mysql/test.txt
+# 출력: test data
+</code></pre><hr id="3fe720e4-6f49-8230-8364-015c2d7dcae6" dir="auto"/><h2 id="aa3720e4-6f49-824d-a452-014cdb31fe1c" class="" dir="auto">핵심 정리</h2><p id="77e720e4-6f49-8300-a5be-01a007285167" class="" dir="auto"><strong>StatefulSet 선택 기준:</strong></p><ul id="0e2720e4-6f49-83c6-8e76-01d0fec46a8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✓ 순서가 중요한 애플리케이션</li></ul><ul id="f20720e4-6f49-8346-97a5-01f0517495c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✓ 고유한 네트워크 ID 필요</li></ul><ul id="f7f720e4-6f49-83da-b769-81f494748165" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✓ 데이터 영속성 필요</li></ul><ul id="a95720e4-6f49-8320-93df-0126238c28ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✓ Pod 간 역할 구분 필요</li></ul><p id="bde720e4-6f49-82ff-961c-017c3d7624e3" class="" dir="auto"><strong>DaemonSet 선택 기준:</strong></p><ul id="a80720e4-6f49-8211-9bba-01971fc3433a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✓ 모든 노드에서 실행 필요</li></ul><ul id="356720e4-6f49-8291-b1c7-81bf08e4827b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✓ 노드별 1개 Pod 필요</li></ul><ul id="438720e4-6f49-8238-baf2-018c76adf121" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✓ 상태 비저장 작업</li></ul><ul id="161720e4-6f49-8264-9f42-016d58561acb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">✓ 노드 추가 시 자동 확장 필요</li></ul><p id="365720e4-6f49-82c6-9422-01fa4e0c8f73" class="" dir="auto">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

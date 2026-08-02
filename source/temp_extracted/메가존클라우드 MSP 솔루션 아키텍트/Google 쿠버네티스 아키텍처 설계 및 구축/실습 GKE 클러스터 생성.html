@@ -1,0 +1,826 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. GKE 클러스터 생성</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="cfd720e4-6f49-833b-9045-8153248ed6ad" class="page sans"><header><h1 class="page-title" dir="auto">실습. GKE 클러스터 생성</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="094720e4-6f49-8302-9fab-818e8f52c17e" class="" dir="auto">실습 목표</h2><ul id="15e720e4-6f49-836d-b7ab-812cd55042e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE Autopilot 클러스터를 콘솔에서 생성함</li></ul><ul id="39b720e4-6f49-8335-b5e2-0143c28986cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE Autopilot 클러스터를 <code>gcloud</code>로 생성함</li></ul><ul id="b35720e4-6f49-82b6-b877-8181eacc7c3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성한 클러스터에 <code>kubectl</code>로 접속함</li></ul><ul id="27e720e4-6f49-8286-a37e-012f199f0ff5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 상태를 확인함</li></ul><ul id="474720e4-6f49-8242-b5c8-81862baf1007" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습 종료 후 클러스터를 삭제함</li></ul><hr id="d44720e4-6f49-8396-b733-01445cef23a9" dir="auto"/><h1 id="67a720e4-6f49-8206-9137-014a86d567cc" class="" dir="auto">1. 사전 준비</h1><h2 id="898720e4-6f49-8360-b735-819cbe7c33c6" class="" dir="auto">1-1. 프로젝트 선택</h2><ol type="1" id="98d720e4-6f49-8302-bfcd-81ad0a8600cd" class="numbered-list" start="1" dir="auto"><li>Google Cloud Console에 로그인</li></ol><ol type="1" id="209720e4-6f49-8301-8fad-018435c72a39" class="numbered-list" start="2" dir="auto"><li>상단의 프로젝트 선택 메뉴 클릭</li></ol><ol type="1" id="a5e720e4-6f49-8340-9182-81b65252e56d" class="numbered-list" start="3" dir="auto"><li>실습에 사용할 프로젝트 선택</li></ol><hr id="acc720e4-6f49-83ad-8243-814519f9efea" dir="auto"/><h2 id="bb7720e4-6f49-82d4-9519-810b89c50eed" class="" dir="auto">1-2. API 활성화</h2><p id="026720e4-6f49-82fd-a893-018b427d9ce0" class="" dir="auto">GKE를 사용하려면 <strong>Kubernetes Engine API</strong>를 활성화해야 함. 클러스터 생성 전에 GKE API 활성화가 필요함.</p><p id="f85720e4-6f49-8358-96b0-0162ab584167" class="" dir="auto">콘솔에서 진행:</p><ol type="1" id="f86720e4-6f49-83cd-b1de-01c924a93b74" class="numbered-list" start="1" dir="auto"><li>좌측 상단 메뉴</li></ol><ol type="1" id="554720e4-6f49-83b6-98fd-01e475750d2a" class="numbered-list" start="2" dir="auto"><li><strong>Kubernetes Engine</strong> 검색 또는 선택</li></ol><ol type="1" id="2b9720e4-6f49-8279-9249-81e93d01f33c" class="numbered-list" start="3" dir="auto"><li>처음 진입 시 <strong>사용 설정</strong> 버튼 클릭</li></ol><p id="4a3720e4-6f49-835d-8b66-01895a9b939c" class="" dir="auto">또는 Cloud Shell / 로컬 터미널에서 실행:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="ce7720e4-6f49-8228-81de-0115459d9453" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services enable container.googleapis.com</code></pre><h3 id="800720e4-6f49-8245-ad56-01485faa2d7b" class="" dir="auto">명령 설명</h3><ul id="910720e4-6f49-830b-b477-8148dbd78cbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud services enable</code><ul id="1fc720e4-6f49-8276-aa8b-01f822030ccc" class="bulleted-list" dir="auto"><li style="list-style-type:circle">특정 Google Cloud API를 활성화하는 명령</li></ul></li></ul><ul id="cbe720e4-6f49-8321-8ca4-014691210875" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>container.googleapis.com</code><ul id="1c0720e4-6f49-82d9-9cbc-8115c52e47e7" class="bulleted-list" dir="auto"><li style="list-style-type:circle">GKE에서 사용하는 Kubernetes Engine API 이름</li></ul></li></ul><hr id="a5e720e4-6f49-83f1-aef3-017f7708200f" dir="auto"/><h2 id="2f7720e4-6f49-83ac-86bc-01c425cfd0cb" class="" dir="auto">1-3. Cloud Shell 또는 로컬 환경 준비</h2><p id="cdc720e4-6f49-82e2-b285-019ef376d23a" class="" dir="auto">권장 방식은 <strong>Cloud Shell</strong> 사용임.</p><p id="fe0720e4-6f49-82b3-8208-812686cdaac5" class="" dir="auto">이유는 <code>gcloud</code>와 <code>kubectl</code>이 기본 준비돼 있어서 바로 실습 가능하기 때문임.</p><p id="f0d720e4-6f49-82c1-bdef-819a90b625ca" class="" dir="auto">로컬 PC에서 진행한다면 다음 확인이 필요함.</p><pre id="510720e4-6f49-828c-ba05-01249b28eec5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud version
+kubectl version --client</code></pre><hr id="706720e4-6f49-825e-bbea-811b16d051ec" dir="auto"/><h2 id="4ca720e4-6f49-82d9-b5aa-8167ca52c277" class="" dir="auto">1-4. 기본 프로젝트 및 리전 설정</h2><p id="471720e4-6f49-8273-82ba-01ce30a400f7" class="" dir="auto">예시는 서울 리전 기준으로 작성했음.</p><pre id="69d720e4-6f49-83f2-bdcd-0192c4d5276c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config set project [PROJECT_ID]
+gcloud config set compute/region asia-northeast3
+gcloud config set compute/zone asia-northeast3-a</code></pre><p id="af5720e4-6f49-82fd-9298-01cff734ef7e" class="" dir="auto">예시:</p><pre id="871720e4-6f49-8262-b113-01102aad02cd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config set project my-gke-project
+gcloud config set compute/region asia-northeast3
+gcloud config set compute/zone asia-northeast3-a</code></pre><p id="d75720e4-6f49-8213-8330-819cf20b01e5" class="" dir="auto">설정 확인:</p><pre id="659720e4-6f49-837a-a099-8186b3db7a37" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config list</code></pre><h3 id="022720e4-6f49-82a4-8453-813842db5a77" class="" dir="auto">명령 설명</h3><ul id="f4c720e4-6f49-8346-a052-01e6565228e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud config set project</code><ul id="fdd720e4-6f49-822e-adf1-018c0a50f2c5" class="bulleted-list" dir="auto"><li style="list-style-type:circle">현재 작업할 프로젝트를 지정함</li></ul></li></ul><ul id="b06720e4-6f49-8234-935a-81837019af98" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud config set compute/region</code><ul id="fdb720e4-6f49-83bc-974d-819605589bc5" class="bulleted-list" dir="auto"><li style="list-style-type:circle">기본 리전을 지정함</li></ul></li></ul><ul id="42a720e4-6f49-832b-8872-0129354d38fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud config set compute/zone</code><ul id="652720e4-6f49-8274-9011-01e6415c3fd5" class="bulleted-list" dir="auto"><li style="list-style-type:circle">기본 존을 지정함</li></ul></li></ul><hr id="68c720e4-6f49-8371-87cb-819c5b9b94e3" dir="auto"/><h1 id="1cd720e4-6f49-8365-ac8a-01b900d8992a" class="" dir="auto">2. 콘솔로 GKE 클러스터 생성</h1><h2 id="2a4720e4-6f49-8283-b493-81859d767f61" class="" dir="auto">2-1. GKE 메뉴 진입</h2><ol type="1" id="9e8720e4-6f49-834e-ba53-81dd795eff66" class="numbered-list" start="1" dir="auto"><li>Google Cloud Console 접속</li></ol><ol type="1" id="5fb720e4-6f49-83f7-8ab9-816b9294298b" class="numbered-list" start="2" dir="auto"><li>좌측 메뉴에서 <strong>Kubernetes Engine</strong></li></ol><ol type="1" id="4e0720e4-6f49-83c7-b08e-81e4fb674683" class="numbered-list" start="3" dir="auto"><li>클러스터 만들기 클</li></ol><ol type="1" id="4ab720e4-6f49-83f5-a19d-01001d99205f" class="numbered-list" start="4" dir="auto"><li><strong>Create</strong> 클릭</li></ol><hr id="f7d720e4-6f49-831c-9fc0-019cfd765c30" dir="auto"/><h2 id="a0e720e4-6f49-8343-8161-81b0f5482d20" class="" dir="auto">2-2. Autopilot 클러스터 만들기 </h2><p id="ba3720e4-6f49-83f6-a0f1-81f51e05b5ba" class="" dir="auto">Standard 클러스터를 만들려면 생성 화면에서 우측 상단에 Standard 클러스터 전환.</p><hr id="76b720e4-6f49-8215-b896-01363a1f334b" dir="auto"/><h2 id="de5720e4-6f49-8257-adf2-01f0562e616b" class="" dir="auto">2-3. 클러스터 정보 입력</h2><p id="0d8720e4-6f49-82a6-b667-01c79f64faed" class="" dir="auto">다음과 같이 입력</p><ul id="003720e4-6f49-82a8-83fb-01b08488211a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Name</strong>: <code>이니셜-gke-cluster-1</code></li></ul><ul id="ac5720e4-6f49-829c-82e6-016da854e30f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Region</strong>: <code>asia-northeast3</code></li></ul><hr id="6d3720e4-6f49-8331-bdab-0172ac7a2db8" dir="auto"/><h2 id="307720e4-6f49-8231-a836-815690b58ce3" class="" dir="auto">2-4. 네트워킹</h2><ul id="827720e4-6f49-83fc-934f-01045c4a8674" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 네트워크 선택 : Custom-vpc</li></ul><ul id="751720e4-6f49-825d-bb04-811d8c0508e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드 서브넷 선택 : subnet-seoul-1</li></ul><ul id="a36720e4-6f49-82a4-8d1f-015c8d03f103" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 기본 포드 IP주소 범위 설정(선택) : 192.168.0.0/16</li></ul><h2 id="cf5720e4-6f49-820e-9d8c-0197cedc6f62" class="" dir="auto">2-4. 생성 실행</h2><ol type="1" id="225720e4-6f49-8289-8f57-817516829a69" class="numbered-list" start="1" dir="auto"><li>하단의 <strong>Create</strong> 클릭</li></ol><ol type="1" id="932720e4-6f49-8237-ae57-819164672a78" class="numbered-list" start="2" dir="auto"><li>클러스터 생성 진행 상태 확인</li></ol><ol type="1" id="72b720e4-6f49-821a-9dc9-0162464f4e11" class="numbered-list" start="3" dir="auto"><li>상태가 정상으로 바뀔 때까지 대기</li></ol><hr id="451720e4-6f49-83c6-9629-81cfe77e4252" dir="auto"/><h2 id="091720e4-6f49-8380-adab-0189908aeff8" class="" dir="auto">2-5. 생성 결과 확인</h2><p id="061720e4-6f49-8363-8efc-81150ab2b750" class="" dir="auto">클러스터 목록에서 다음 항목 확인</p><ul id="453720e4-6f49-820f-9ea4-01547a5387b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 이름: <code>이니셜-gke-cluster-1</code></li></ul><ul id="bbd720e4-6f49-83b5-84dc-018a17a7ae20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">위치: <code>asia-northeast3</code></li></ul><ul id="b73720e4-6f49-82e0-826b-01d9af474d4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모드: <code>Autopilot</code></li></ul><ul id="e10720e4-6f49-8325-a457-819af60d3791" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태: 정상</li></ul><hr id="430720e4-6f49-8283-abdc-81aafcfee903" dir="auto"/><h1 id="8fc720e4-6f49-820a-8e99-010e6079c3b0" class="" dir="auto">3. gcloud로 GKE 클러스터 생성</h1><p id="737720e4-6f49-8220-be68-815c3f02aaf3" class="" dir="auto">Autopilot 클러스터 생성 명령은 <code>gcloud container clusters create-auto</code> 형식을 사용함.</p><h2 id="b0a720e4-6f49-833c-a295-01491d27cc8f" class="" dir="auto">3-1. 기본 생성 명령</h2><pre id="875720e4-6f49-821d-8756-01ddfa82543a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters create-auto 이니셜-gke-cluster-1 \
+  --location=asia-northeast3</code></pre><h3 id="69c720e4-6f49-83ea-b461-81a5a2381c61" class="" dir="auto">명령 설명</h3><ul id="57f720e4-6f49-8244-aca9-013b804391d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud container clusters</code><ul id="1d6720e4-6f49-83a4-af32-013f9f224fb2" class="bulleted-list" dir="auto"><li style="list-style-type:circle">GKE 클러스터를 다루는 명령 그룹</li></ul></li></ul><ul id="2d1720e4-6f49-82ae-bc4d-8151c77b82b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>create-auto</code><ul id="7c2720e4-6f49-8303-b8b0-011078020a42" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Autopilot 클러스터 생성 명령</li></ul></li></ul><ul id="63a720e4-6f49-8206-9348-8145e3f443bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>이니셜-gke-cluster-1</code><ul id="ce9720e4-6f49-8209-9947-8177aa8a3196" class="bulleted-list" dir="auto"><li style="list-style-type:circle">생성할 클러스터 이름</li></ul></li></ul><ul id="7f4720e4-6f49-83ef-9938-01d9f4200cfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--location=asia-northeast3</code><ul id="c2f720e4-6f49-8349-83bd-019b1a66a8ea" class="bulleted-list" dir="auto"><li style="list-style-type:circle">클러스터 생성 위치 지정</li></ul></li></ul><hr id="2fb720e4-6f49-82a7-b001-81e2e7813fad" dir="auto"/><h2 id="f3c720e4-6f49-8389-8f6c-01c510f89c2f" class="" dir="auto">3-2. 생성 완료 후 클러스터 목록 확인</h2><pre id="9cc720e4-6f49-837b-bcdd-014af5938c05" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters list</code></pre><p id="b01720e4-6f49-824f-bf3d-81c596c8fb1c" class="" dir="auto">특정 클러스터 상세 확인:</p><pre id="853720e4-6f49-83fd-8fbf-81fd027ed4a0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters describe 이니셜-gke-cluster-1 \
+  --location=asia-northeast3</code></pre><p id="409720e4-6f49-8246-b91c-814dd612e39e" class="" dir="auto">Autopilot 여부 확인 포인트:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="0fb720e4-6f49-822f-860c-81ad8c698e09" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">autopilot:
+  enabled: true</code></pre><hr id="6cb720e4-6f49-82cb-90c9-0133a56ad5c1" dir="auto"/><h1 id="31f720e4-6f49-83e5-80f1-0104efcd55e2" class="" dir="auto">4. kubectl 접속 정보 가져오기</h1><p id="5f8720e4-6f49-8264-8dba-013ec0d4aa86" class="" dir="auto">클러스터를 생성했다고 해서 바로 <code>kubectl</code>이 연결되는 것은 아님.</p><p id="4c3720e4-6f49-82c6-a304-0160a9ae967a" class="" dir="auto"><code>get-credentials</code> 명령으로 kubeconfig에 접속 정보를 저장해야 함.</p><p id="62a720e4-6f49-8351-b292-8123f1918b91" class="" dir="auto">클러스터를 연결:</p><pre id="042720e4-6f49-8354-9252-0134239e31a8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials 이니셜-gke-cluster-1 \
+  --location=asia-northeast3</code></pre><h3 id="ca8720e4-6f49-826d-86f3-01f5c59c2fa3" class="" dir="auto">명령 설명</h3><ul id="7a4720e4-6f49-83ce-92a4-01eb382e25f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>get-credentials</code><ul id="ee7720e4-6f49-8308-901b-01a619fad4db" class="bulleted-list" dir="auto"><li style="list-style-type:circle">클러스터 접속 정보를 로컬 kubeconfig에 등록함</li></ul></li></ul><ul id="363720e4-6f49-82d1-8835-81c1cf8c3e93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 <code>kubectl</code> 명령이 해당 클러스터 대상으로 동작하게 됨</li></ul><hr id="797720e4-6f49-82b1-9ac2-015771eacc2d" dir="auto"/><h1 id="511720e4-6f49-83c0-b5b7-01ac2e9141e8" class="" dir="auto">5. 클러스터 상태 확인</h1><h2 id="6a7720e4-6f49-8215-bf10-01b8582de048" class="" dir="auto">5-1. 현재 컨텍스트 확인</h2><pre id="5df720e4-6f49-83a7-894f-0111cb9412b2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl config current-context</code></pre><hr id="3c4720e4-6f49-839e-92ea-01822773f2bb" dir="auto"/><h2 id="9f2720e4-6f49-82be-8f85-81c0bea59598" class="" dir="auto">5-2. 노드 확인</h2><pre id="2a0720e4-6f49-8202-b49b-01f01a5ba89e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes</code></pre><p id="d83720e4-6f49-83bc-9d0f-813fe2b52f82" class="" dir="auto">정상이라면 <code>Ready</code> 상태의 노드 정보가 보임.</p><hr id="c78720e4-6f49-83dc-b5f5-81f3b0a4acb4" dir="auto"/><h2 id="63b720e4-6f49-8221-a29e-01ff4c4b949e" class="" dir="auto">5-3. 시스템 네임스페이스 확인</h2><pre id="dd1720e4-6f49-830e-a229-816f90e88ff5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ns</code></pre><hr id="394720e4-6f49-82de-94d5-8163de47474d" dir="auto"/><h2 id="ed0720e4-6f49-8315-a8a9-815d35244af7" class="" dir="auto">5-4. 전체 Pod 확인</h2><pre id="b9f720e4-6f49-835d-bc4f-817a4197de82" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -A</code></pre><hr id="47f720e4-6f49-8267-b9c5-81ac5f9f95a7" dir="auto"/><h1 id="7c9720e4-6f49-82c8-bd8d-01d04b33e71e" class="" dir="auto">6. 실습 확인용 최소 테스트</h1><p id="165720e4-6f49-82e8-a4b6-819ae6ca8a82" class="" dir="auto">클러스터 생성만 검증하려면 아래 정도만 확인하면 됨.</p><pre id="158720e4-6f49-8397-9714-81e1495a4e26" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters list
+kubectl config current-context
+kubectl get nodes
+kubectl get pods -A</code></pre><hr id="f82720e4-6f49-8342-aebb-81eff2b43514" dir="auto"/><h1 id="e94720e4-6f49-829a-b89e-8103d28ebcfe" class="" dir="auto">7. 삭제 실습</h1><p id="479720e4-6f49-8262-8c46-01b74e2255d8" class="" dir="auto">실습 종료 후 반드시 삭제해야 함.</p><h2 id="a1d720e4-6f49-8335-bfd3-01921046e02a" class="" dir="auto">7-1. 콘솔에서 만든 클러스터 삭제</h2><pre id="853720e4-6f49-8202-9bb2-01409de1f4d6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters delete gke-auto-lab \
+  --location=asia-northeast3</code></pre><h2 id="5ee720e4-6f49-83fb-b8c2-81b321ca1878" class="" dir="auto">7-2. gcloud로 만든 클러스터 삭제</h2><pre id="5bd720e4-6f49-8200-aa0c-8187679531a6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters delete gke-auto-cli \
+  --location=asia-northeast3</code></pre><h3 id="8ea720e4-6f49-833a-85fc-016fd86f17f6" class="" dir="auto">명령 설명</h3><ul id="3d0720e4-6f49-8253-82f9-0102e8757715" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>delete</code><ul id="284720e4-6f49-838e-ba07-01207a57b604" class="bulleted-list" dir="auto"><li style="list-style-type:circle">지정한 GKE 클러스터를 삭제함</li></ul></li></ul><ul id="9b7720e4-6f49-8355-82d2-015b6d73dbf8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-location</code><ul id="3ce720e4-6f49-820b-8cf6-01f0e850d912" class="bulleted-list" dir="auto"><li style="list-style-type:circle">생성한 위치와 동일하게 지정해야 함</li></ul></li></ul><hr id="13d720e4-6f49-82bb-9bee-01c48d5bead8" dir="auto"/><h1 id="b99720e4-6f49-8351-be7d-01398fa2906a" class="" dir="auto">8. 그대로 따라 하는 최소 실습 절차</h1><h2 id="049720e4-6f49-83b8-a02d-0175c14ee340" class="" dir="auto">8-1. 콘솔 생성 방식</h2><h3 id="dbd720e4-6f49-8389-805d-01837633f7ce" class="" dir="auto">실습 순서</h3><ol type="1" id="66a720e4-6f49-829c-b75d-815dbbcc6a03" class="numbered-list" start="1" dir="auto"><li>프로젝트 선택</li></ol><ol type="1" id="5f8720e4-6f49-82cb-a253-81440436fcb8" class="numbered-list" start="2" dir="auto"><li>Kubernetes Engine API 활성화</li></ol><ol type="1" id="b82720e4-6f49-821c-8f56-81441063c3f3" class="numbered-list" start="3" dir="auto"><li>Kubernetes Engine 메뉴 이동</li></ol><ol type="1" id="00f720e4-6f49-83b8-915d-8156c8796d7f" class="numbered-list" start="4" dir="auto"><li>Create 클릭</li></ol><ol type="1" id="dcb720e4-6f49-83a7-ab62-0126551a6a22" class="numbered-list" start="5" dir="auto"><li>Autopilot 선택</li></ol><ol type="1" id="315720e4-6f49-838b-88b8-814103dd67d6" class="numbered-list" start="6" dir="auto"><li>Name: <code>gke-auto-lab</code></li></ol><ol type="1" id="ccd720e4-6f49-8325-b293-8149b00b4eb7" class="numbered-list" start="7" dir="auto"><li>Region: <code>asia-northeast3</code></li></ol><ol type="1" id="d7e720e4-6f49-8252-83c3-81bbac9c3ccd" class="numbered-list" start="8" dir="auto"><li>Create 클릭</li></ol><ol type="1" id="8a9720e4-6f49-8325-b434-81407013c1ca" class="numbered-list" start="9" dir="auto"><li>생성 완료 확인</li></ol><ol type="1" id="940720e4-6f49-82df-89d3-819126ede7f8" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>Cloud Shell 열기</li></ol><ol type="1" id="8ea720e4-6f49-822f-8e08-816eeed2f7f4" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li>아래 명령 실행</li></ol><pre id="667720e4-6f49-82f5-9861-81acc1c75615" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials gke-auto-lab \
+  --location=asia-northeast3
+
+kubectl get nodes
+kubectl get pods -A</code></pre><hr id="2ea720e4-6f49-82cd-96ca-8157c27c5153" dir="auto"/><h2 id="505720e4-6f49-831e-9d50-01e769d50381" class="" dir="auto">8-2. gcloud 생성 방식</h2><h3 id="7ae720e4-6f49-8264-8615-01a34bb5b148" class="" dir="auto">실습 순서</h3><ol type="1" id="4f3720e4-6f49-8324-83db-015d872e19e4" class="numbered-list" start="1" dir="auto"><li>프로젝트 선택</li></ol><ol type="1" id="311720e4-6f49-83be-b400-017705d9cd76" class="numbered-list" start="2" dir="auto"><li>Kubernetes Engine API 활성화</li></ol><ol type="1" id="fc1720e4-6f49-823e-8284-81e05b57a1eb" class="numbered-list" start="3" dir="auto"><li>Cloud Shell 실행</li></ol><ol type="1" id="c99720e4-6f49-827b-96c4-01d555122e0a" class="numbered-list" start="4" dir="auto"><li>아래 명령 순서대로 실행</li></ol><pre id="104720e4-6f49-82de-88ed-010d3b3e70f8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config set project [PROJECT_ID]
+gcloud config set compute/region asia-northeast3
+
+gcloud services enable container.googleapis.com
+
+gcloud container clusters create-auto gke-auto-cli \
+  --location=asia-northeast3 \
+  --release-channel=regular
+
+gcloud container clusters get-credentials gke-auto-cli \
+  --location=asia-northeast3
+
+kubectl get nodes
+kubectl get pods -A</code></pre><ol type="1" id="7e3720e4-6f49-837f-b72a-0178b8444853" class="numbered-list" start="1" dir="auto"><li>실습 종료 후 삭제</li></ol><pre id="d6a720e4-6f49-829d-8478-0187e3f4327e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters delete gke-auto-cli \
+  --location=asia-northeast3</code></pre><hr id="0c1720e4-6f49-827f-b299-01b50b683b7e" dir="auto"/><h1 id="de6720e4-6f49-8372-a069-0191bcc9787e" class="" dir="auto">9. 자주 발생하는 오류</h1><h2 id="f22720e4-6f49-8291-902e-016e007974bc" class="" dir="auto">9-1. API 비활성화 오류</h2><p id="3f4720e4-6f49-829a-b54b-81cb54803dd5" class="" dir="auto">증상:</p><ul id="22f720e4-6f49-83e3-92be-81ce4f2e0c9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 생성 시 API 관련 오류 발생</li></ul><p id="9cf720e4-6f49-8257-b0df-813d67e50194" class="" dir="auto">해결:</p><pre id="d78720e4-6f49-82f8-a673-81705cd9bb0f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services enable container.googleapis.com</code></pre><p id="699720e4-6f49-8333-84fd-8132e8edbbc4" class="" dir="auto">공식 빠른 시작 문서에서도 GKE 사용 전 API 활성화가 필요하다고 안내함. (<a href="https://docs.cloud.google.com/kubernetes-engine/docs/quickstarts/create-cluster?utm_source=chatgpt.com">Google Cloud Documentation</a>)</p><hr id="651720e4-6f49-83bd-92e3-0116fa794280" dir="auto"/><h2 id="434720e4-6f49-83d0-9fdb-812d202e43c6" class="" dir="auto">9-2. <code>kubectl get nodes</code> 실패</h2><p id="e8c720e4-6f49-83da-92b3-01916660d9b4" class="" dir="auto">증상:</p><ul id="734720e4-6f49-830d-8afb-015a61759e0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증 오류</li></ul><ul id="c8c720e4-6f49-82ed-8cac-014746284e23" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 컨텍스트 없음</li></ul><ul id="194720e4-6f49-82c1-8361-01c048dda77b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 연결 실패</li></ul><p id="936720e4-6f49-83b8-a595-0193be9aea33" class="" dir="auto">해결:</p><pre id="29d720e4-6f49-8284-ae52-01c3510f3c94" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials gke-auto-cli \
+  --location=asia-northeast3
+
+kubectl config current-context</code></pre><hr id="f31720e4-6f49-827e-97f8-012da3488ff6" dir="auto"/><h2 id="cfc720e4-6f49-82fc-bb67-0174861c02fc" class="" dir="auto">9-3. 잘못된 프로젝트에 생성함</h2><p id="43d720e4-6f49-829e-8955-8154332c489f" class="" dir="auto">확인:</p><pre id="6a0720e4-6f49-8350-9ffd-019a3165894c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config list</code></pre><p id="834720e4-6f49-825b-b726-01266121c669" class="" dir="auto">필요 시 다시 지정:</p><pre id="96e720e4-6f49-827b-af98-81d96ec49382" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config set project [PROJECT_ID]</code></pre><hr id="892720e4-6f49-827f-99ed-81e35583e8d9" dir="auto"/><h1 id="095720e4-6f49-8205-9453-81bfd66b58c6" class="" dir="auto">10. 강의용 최종 실습본</h1><h2 id="6f4720e4-6f49-82c1-91a1-01f5bbe5ea36" class="" dir="auto">A안. 콘솔 생성만 진행하는 짧은 실습</h2><pre id="22c720e4-6f49-8209-967f-015740872e6c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 프로젝트 선택
+2. Kubernetes Engine API 활성화
+3. Kubernetes Engine &gt; Clusters &gt; Create
+4. Autopilot 선택
+5. Name: gke-auto-lab
+6. Region: asia-northeast3
+7. Create
+8. Cloud Shell 실행
+9. get-credentials 실행
+10. kubectl get nodes 확인
+11. 클러스터 삭제</code></pre><h2 id="7f6720e4-6f49-83d4-bb9a-81f238811d97" class="" dir="auto">B안. gcloud만으로 진행하는 짧은 실습</h2><pre id="c44720e4-6f49-83b6-a369-813cae596f46" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config set project [PROJECT_ID]
+gcloud services enable container.googleapis.com
+
+gcloud container clusters create-auto gke-auto-cli \
+  --location=asia-northeast3 \
+  --release-channel=regular
+
+gcloud container clusters get-credentials gke-auto-cli \
+  --location=asia-northeast3
+
+kubectl get nodes
+kubectl get pods -A
+
+gcloud container clusters delete gke-auto-cli \
+  --location=asia-northeast3</code></pre><p id="b41720e4-6f49-83b4-b26a-014fb4606b83" class="" dir="auto">원하면 다음 단계로 이어서 **“GKE 클러스터 생성 후 NGINX 배포까지 포함한 실습본”**으로 바로 확장해주겠어요.</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

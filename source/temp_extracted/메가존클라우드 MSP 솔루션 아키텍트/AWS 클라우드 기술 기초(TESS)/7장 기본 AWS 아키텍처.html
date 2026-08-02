@@ -1,0 +1,938 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>7장 기본 AWS 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="580720e4-6f49-83dd-a04c-01f35b38181b" class="page sans"><header><h1 class="page-title" dir="auto">7장 기본 AWS 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="f94720e4-6f49-82e8-88a2-01a42cc74d38" class="" dir="auto">7.1 웹 서비스 아키텍처의 기본 개념</h2><p id="928720e4-6f49-8366-98b8-0182a7104462" class="" dir="auto">대부분의 웹 서비스는 사용자 요청을 처리하는 서버와 데이터를 저장하는 저장소로 구성된다.</p><p id="080720e4-6f49-834b-8054-0170956729dd" class="" dir="auto">가장 단순한 형태는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="367720e4-6f49-82be-93a4-01b26836dd9d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ │
+Internet
+ │
+Web Server
+ │
+Database</code></pre><p id="bd5720e4-6f49-8221-a0ca-01261f5566c7" class="" dir="auto">이 구조에서 Web Server는 사용자의 요청을 받아 화면을 제공하거나 애플리케이션 로직을 수행한다.</p><p id="269720e4-6f49-82ff-94d2-81115d266db4" class="" dir="auto">Database는 회원 정보, 게시글, 주문 정보, 설정 정보와 같은 데이터를 저장한다.</p><p id="b7d720e4-6f49-8255-990c-01503b1e3f2d" class="" dir="auto">이 구조는 웹 서비스의 기본 원리를 이해하기에는 적절하지만, 실제 운영 환경에서는 여러 한계가 존재한다.</p><p id="7aa720e4-6f49-838b-9036-814ea4e02afa" class="" dir="auto">대표적인 문제는 다음과 같다.</p><pre id="f80720e4-6f49-82fd-9dcf-81e52ed01aaa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">단일 서버 장애 시 전체 서비스 중단
+사용자 증가 시 성능 저하
+서버 역할 분리가 부족함
+보안 구성이 단순함
+확장 구조가 비효율적임</code></pre><p id="6bd720e4-6f49-83d4-922f-01ea4cd317d4" class="" dir="auto">실제 서비스 환경에서는 트래픽 증가, 장애 대응, 데이터 보호, 운영 효율성을 고려해야 하므로</p><p id="7a0720e4-6f49-8303-b1da-010250cecddb" class="" dir="auto">서버 역할을 분리하고 네트워크를 나누는 방식으로 아키텍처를 설계한다.</p><p id="c43720e4-6f49-834d-a767-81d65dd37eda" class="" dir="auto">AWS에서는 이러한 요구를 반영하여</p><p id="538720e4-6f49-82bb-98dd-01eb75b021d0" class="" dir="auto">VPC, Subnet, Load Balancer, Auto Scaling, RDS, S3 등의 서비스를 조합해</p><p id="e05720e4-6f49-82fe-adf7-81b7a78f225c" class="" dir="auto">확장 가능하고 안정적인 웹 서비스 구조를 만든다.</p><hr id="ee8720e4-6f49-822e-8553-81fd62faaa1a" dir="auto"/><h2 id="d63720e4-6f49-83de-a679-817fbc5c9004" class="" dir="auto">7.2 기본 AWS 웹 아키텍처</h2><p id="ccf720e4-6f49-83ed-8e8e-818a5365755f" class="" dir="auto">AWS에서 웹 서비스를 구성할 때의 기본 구조는 다음과 같다.</p><pre id="4aa720e4-6f49-83b2-97fa-81edbd4cedb2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ │
+Internet
+ │
+Internet Gateway
+ │
+Public Subnet
+ │
+Load Balancer / Web Tier
+ │
+Private Subnet
+ │
+Application Tier / Database Tier</code></pre><p id="dcc720e4-6f49-83ea-9335-01a68196840e" class="" dir="auto">이 구조의 핵심은 네트워크를 외부 공개 영역과 내부 보호 영역으로 나누는 데 있다.</p><p id="5b2720e4-6f49-83b3-bf58-81fdbaa5ee71" class="" dir="auto">중요한 구성 요소는 다음과 같다.</p><pre id="841720e4-6f49-8264-a822-81f92b68f8da" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC
+Internet Gateway
+Public Subnet
+Private Subnet
+Load Balancer
+EC2
+Database</code></pre><p id="4b9720e4-6f49-83f0-aa12-01202efbe248" class="" dir="auto">각 요소의 역할은 다음과 같다.</p><h3 id="93c720e4-6f49-82d9-bb26-81e42dacefbd" class="" dir="auto">VPC</h3><p id="090720e4-6f49-82e2-b622-01567bd88c3d" class="" dir="auto">VPC는 AWS 안에 만드는 논리적인 사설 네트워크이다.</p><p id="9cf720e4-6f49-8265-8df9-81f47cdfa9df" class="" dir="auto">웹 서버, 애플리케이션 서버, 데이터베이스를 원하는 네트워크 구조 안에 배치할 수 있다.</p><h3 id="878720e4-6f49-8252-aeaa-81218bc8ae4e" class="" dir="auto">Internet Gateway</h3><p id="8ea720e4-6f49-8213-b92a-013b269130c9" class="" dir="auto">Internet Gateway는 VPC가 인터넷과 통신할 수 있도록 해주는 구성 요소이다.</p><p id="79b720e4-6f49-830f-b173-0108d85d0a52" class="" dir="auto">인터넷에서 접근해야 하는 리소스는 이 경로를 통해 외부와 연결된다.</p><h3 id="1de720e4-6f49-82ee-93a9-01ecaad14bf6" class="" dir="auto">Public Subnet</h3><p id="80c720e4-6f49-8327-b6bb-01901fc4ee52" class="" dir="auto">Public Subnet은 인터넷과 연결 가능한 서브넷이다.</p><p id="2a8720e4-6f49-835d-85d0-8134682c1462" class="" dir="auto">보통 외부 요청을 받는 Load Balancer, NAT Gateway, Bastion Host 등이 여기에 위치한다.</p><h3 id="01c720e4-6f49-8323-ab07-814974378135" class="" dir="auto">Private Subnet</h3><p id="4a7720e4-6f49-8227-8e02-01e61ef637f1" class="" dir="auto">Private Subnet은 인터넷에서 직접 접근할 수 없는 서브넷이다.</p><p id="463720e4-6f49-83b8-8595-01498331875d" class="" dir="auto">애플리케이션 서버, 데이터베이스, 내부 API, 캐시 서버와 같은 자원을 배치한다.</p><p id="a6a720e4-6f49-83f6-8159-010bb5de6a45" class="" dir="auto">AWS 아키텍처의 기본 방향은 다음과 같다.</p><pre id="f66720e4-6f49-83eb-a37b-812694f0a0fd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">외부에서 접근해야 하는 자원만 Public에 배치
+내부 처리 자원은 Private에 배치
+데이터 저장 계층은 외부에 직접 노출하지 않음</code></pre><hr id="2d7720e4-6f49-83f0-a698-81394d9b05cb" dir="auto"/><h2 id="e2b720e4-6f49-83a5-9bb5-01871d448cfe" class="" dir="auto">7.3 Public Tier</h2><p id="358720e4-6f49-824f-b82d-014a8c0226c6" class="" dir="auto">Public Tier는 인터넷과 직접 연결되는 계층이다.</p><p id="c49720e4-6f49-82c6-a1a6-816eeb4ccbec" class="" dir="auto">외부 요청을 처음 받아들이는 진입 지점 역할을 한다.</p><p id="773720e4-6f49-8336-8c54-810b8e731713" class="" dir="auto">이 계층에는 다음과 같은 리소스가 주로 위치한다.</p><pre id="a7e720e4-6f49-82c9-9a2a-01cf559b9a6b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Application Load Balancer
+Network Load Balancer
+Bastion Host
+NAT Gateway
+Public Web Server</code></pre><p id="ce1720e4-6f49-8259-baad-014300e3b1da" class="" dir="auto">구조는 다음과 같이 표현할 수 있다.</p><pre id="7a6720e4-6f49-83b1-aa27-81e3b2a49292" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+ │
+Internet Gateway
+ │
+Public Subnet
+ │
+Public Tier Resources</code></pre><p id="393720e4-6f49-828b-987f-01dc25303ce5" class="" dir="auto">Public Tier의 특징은 다음과 같다.</p><pre id="a1a720e4-6f49-82ee-9138-01d4a94985e4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">인터넷과 직접 통신 가능
+외부 요청 수신
+내부 계층으로 요청 전달
+보안 그룹과 라우팅 설정 중요
+최소한의 자원만 공개</code></pre><p id="d95720e4-6f49-83a1-89be-01229de20abd" class="" dir="auto">예를 들어 Application Load Balancer는</p><p id="5ec720e4-6f49-838e-8783-012527fa92b9" class="" dir="auto">외부 사용자로부터 HTTP 또는 HTTPS 요청을 받아 내부 서버로 전달하므로</p><p id="16a720e4-6f49-8345-b51c-01bc5171bdaf" class="" dir="auto">일반적으로 Public Subnet에 배치한다.</p><p id="ccd720e4-6f49-8353-9184-811ce6a6a417" class="" dir="auto">반면 Database처럼 외부에 직접 공개할 필요가 없는 자원은 Public Tier에 두지 않는다.</p><hr id="dca720e4-6f49-831f-9203-815c214b1844" dir="auto"/><h2 id="f09720e4-6f49-836c-aca5-815165fcb71c" class="" dir="auto">7.4 Private Tier</h2><p id="737720e4-6f49-8370-9311-81c8a0b20484" class="" dir="auto">Private Tier는 인터넷에서 직접 접근할 수 없는 계층이다.</p><p id="7b9720e4-6f49-824d-a51b-011c71f52971" class="" dir="auto">서비스의 핵심 로직과 데이터 처리가 이루어지는 영역이다.</p><p id="dbf720e4-6f49-820d-8155-815744759b71" class="" dir="auto">이 계층에는 다음과 같은 리소스가 위치한다.</p><pre id="2db720e4-6f49-83dc-a3bd-015efa5a0089" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Application Server
+Database
+Internal API
+Backend Service
+Cache
+Message Processing Service</code></pre><p id="9fc720e4-6f49-8241-a37e-81f1b661f3ed" class="" dir="auto">구조는 다음과 같다.</p><pre id="fc8720e4-6f49-829a-aeb7-818e3da6e46f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Public Tier
+ │
+Private Subnet
+ │
+Application Server
+ │
+Database</code></pre><p id="89e720e4-6f49-8286-a804-8186b342f0e5" class="" dir="auto">Private Tier의 특징은 다음과 같다.</p><pre id="433720e4-6f49-8223-9007-813dac9bfd82" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">외부 직접 접근 불가
+내부 서비스 처리
+민감한 데이터 저장 가능
+보안 강화에 유리
+접근 경로를 제한 가능</code></pre><p id="e9a720e4-6f49-8312-a835-018379c8598c" class="" dir="auto">사용자의 요청은 먼저 Public Tier를 거친 뒤</p><p id="4bf720e4-6f49-8205-9396-01f983849980" class="" dir="auto">필요에 따라 Private Tier의 애플리케이션 서버로 전달된다.</p><p id="4de720e4-6f49-8366-8eb0-81fe875056b7" class="" dir="auto">애플리케이션 서버는 비즈니스 로직을 수행한 뒤 데이터베이스에 접근한다.</p><p id="13b720e4-6f49-8237-949c-014266695a0f" class="" dir="auto">이 구조를 사용하면 데이터베이스나 내부 서버가 인터넷에 직접 노출되지 않으므로</p><p id="231720e4-6f49-8299-bc9d-01b7c3389763" class="" dir="auto">보안성이 크게 향상된다.</p><hr id="bf0720e4-6f49-8341-8b0e-01a482636051" dir="auto"/><h2 id="c2c720e4-6f49-839b-ad4b-018322379dfa" class="" dir="auto">7.5 3-Tier Architecture</h2><p id="fb7720e4-6f49-8383-8eaa-01ef3601b377" class="" dir="auto">AWS에서 가장 대표적으로 사용하는 웹 서비스 구조는 3-Tier Architecture이다.</p><p id="b47720e4-6f49-82a4-ad5b-0190d641f9a7" class="" dir="auto">3-Tier Architecture는 시스템을 다음 세 계층으로 나누는 방식이다.</p><pre id="7e2720e4-6f49-830e-8883-81d984943fd1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Presentation Tier
+Application Tier
+Database Tier</code></pre><p id="9d7720e4-6f49-82f6-b617-012fedb2d02e" class="" dir="auto">웹 서비스 구조로 표현하면 다음과 같다.</p><pre id="7ba720e4-6f49-838f-a761-817e9796df01" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ │
+Load Balancer
+ │
+Web Tier
+ │
+Application Tier
+ │
+Database Tier</code></pre><p id="a5c720e4-6f49-832d-b118-81a571552715" class="" dir="auto">각 계층의 역할은 다음과 같다.</p><h3 id="c81720e4-6f49-8238-8109-013010db5ddf" class="" dir="auto">Web Tier</h3><p id="533720e4-6f49-8326-8e70-01dbcc45a297" class="" dir="auto">사용자 요청을 수신하고 화면을 제공하거나</p><p id="436720e4-6f49-8266-8353-0109256cc625" class="" dir="auto">요청을 애플리케이션 계층으로 전달하는 역할을 한다.</p><h3 id="dcd720e4-6f49-8258-9e9c-81df3e1b6c7a" class="" dir="auto">Application Tier</h3><p id="e10720e4-6f49-82d6-a1e9-016b82928db2" class="" dir="auto">비즈니스 로직을 수행한다.</p><p id="189720e4-6f49-83d6-b698-814a3c8fd40e" class="" dir="auto">회원가입, 로그인, 주문 처리, API 실행, 권한 검사와 같은 핵심 처리가 이 계층에서 수행된다.</p><h3 id="915720e4-6f49-82a5-b42c-816ae6f590c1" class="" dir="auto">Database Tier</h3><p id="dfa720e4-6f49-827c-9815-8195b4855882" class="" dir="auto">서비스 데이터를 저장한다.</p><p id="711720e4-6f49-82c2-b85f-81f6e28a65db" class="" dir="auto">관계형 데이터, 키-값 데이터, 캐시 데이터 등이 이 계층에 포함된다.</p><p id="05f720e4-6f49-8236-89f9-016c00cdc512" class="" dir="auto">AWS에서 3-Tier 구조를 적용하면 다음과 같이 정리할 수 있다.</p><pre id="f44720e4-6f49-83f4-8d49-01bf0d6d53d0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ │
+Internet
+ │
+Application Load Balancer
+ │
+Public Subnet
+ │
+Web Tier
+ │
+Private Subnet
+ │
+Application Tier
+ │
+Database Tier</code></pre><p id="c3a720e4-6f49-8277-8841-010283c4e210" class="" dir="auto">이 구조의 장점은 다음과 같다.</p><pre id="87a720e4-6f49-836c-bd6c-8125ef26a157" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">역할 분리 가능
+계층별 보안 정책 적용 가능
+필요한 계층만 개별 확장 가능
+장애 영향 범위 축소
+운영 구조 명확화</code></pre><p id="b10720e4-6f49-82b9-8af2-01fb8ae90100" class="" dir="auto">예를 들어 웹 요청이 많아지면 Web Tier를 늘릴 수 있고,</p><p id="8a3720e4-6f49-8333-aca1-8184a552fadb" class="" dir="auto">비즈니스 로직 처리량이 증가하면 Application Tier 중심으로 확장할 수 있다.</p><hr id="346720e4-6f49-8309-9038-01a19d82a6f4" dir="auto"/><h2 id="088720e4-6f49-83cb-9c37-81cf0247214e" class="" dir="auto">7.6 Load Balancer</h2><p id="796720e4-6f49-833d-b632-8176c9a0a3c2" class="" dir="auto">Load Balancer는 여러 서버에 트래픽을 분산하는 구성 요소이다.</p><p id="1e8720e4-6f49-83d4-bb05-81e772539400" class="" dir="auto">사용자는 하나의 접점으로 접속하고, Load Balancer가 요청을 여러 서버로 나누어 전달한다.</p><p id="e8f720e4-6f49-8382-a6ab-016a8e04c495" class="" dir="auto">구조는 다음과 같다.</p><pre id="131720e4-6f49-83bb-9824-0160b407e29d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ │
+Load Balancer
+ │
+ ├─ EC2
+ ├─ EC2
+ └─ EC2</code></pre><p id="131720e4-6f49-824b-9a29-819668d01189" class="" dir="auto">Load Balancer의 주요 기능은 다음과 같다.</p><pre id="05a720e4-6f49-8284-a333-017c769887a0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">트래픽 분산
+고가용성 향상
+장애 서버 제외
+확장 구조 단순화
+하나의 진입점 제공</code></pre><p id="9f0720e4-6f49-8232-a039-019b4a3222be" class="" dir="auto">AWS에서는 Elastic Load Balancing 서비스를 사용하며, 대표적으로 다음 두 종류를 자주 사용한다.</p><pre id="efc720e4-6f49-83ad-a225-81227e9a78eb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Application Load Balancer
+Network Load Balancer</code></pre><h3 id="3cb720e4-6f49-837e-b7dd-81f2e73526c4" class="" dir="auto">Application Load Balancer</h3><p id="d55720e4-6f49-83a3-8a26-016d75d656e5" class="" dir="auto">ALB는 HTTP, HTTPS 기반 웹 서비스에 적합하다.</p><p id="b23720e4-6f49-829f-87b2-810c2ba1f5c2" class="" dir="auto">경로 기반 라우팅, 호스트 기반 라우팅, SSL 종료 같은 기능을 제공한다.</p><p id="bd9720e4-6f49-82ad-9816-81e7c04a3ce4" class="" dir="auto">예를 들면 다음과 같이 요청을 분기할 수 있다.</p><pre id="c6a720e4-6f49-83a2-ae1e-01bc05672472" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">/api      → API Server
+/admin    → Admin Server
+/images   → Static Service</code></pre><h3 id="e55720e4-6f49-831e-b4ab-81216a895376" class="" dir="auto">Network Load Balancer</h3><p id="70b720e4-6f49-8344-92d5-813a06338dab" class="" dir="auto">NLB는 TCP, UDP 기반 고성능 네트워크 처리에 적합하다.</p><p id="890720e4-6f49-83bb-984d-8164771f09f3" class="" dir="auto">지연 시간이 낮고 대량의 네트워크 트래픽을 빠르게 처리할 수 있다.</p><p id="d68720e4-6f49-82cd-b086-81c97a4bfe03" class="" dir="auto">웹 서비스 기초 학습 단계에서는 ALB를 먼저 이해하는 것이 일반적이다.</p><hr id="97d720e4-6f49-83df-b646-01cd10936260" dir="auto"/><h2 id="34d720e4-6f49-827d-8995-81f949939ebc" class="" dir="auto">7.7 Auto Scaling</h2><p id="e7d720e4-6f49-83a2-a99b-8135244b515c" class="" dir="auto">Auto Scaling은 서버 수를 자동으로 조절하는 기능이다.</p><p id="46e720e4-6f49-825a-9a4a-81213145cf34" class="" dir="auto">트래픽이 증가하면 인스턴스를 자동으로 추가하고, 트래픽이 감소하면 인스턴스를 자동으로 줄인다.</p><p id="2ca720e4-6f49-82eb-8ce0-016dc20d37e9" class="" dir="auto">구조는 다음과 같다.</p><pre id="6cd720e4-6f49-83e2-a439-81b6fa95a1a6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Load Balancer
+ │
+Auto Scaling Group
+ │
+EC2 Instances</code></pre><p id="0d7720e4-6f49-8288-b825-812f57930ffb" class="" dir="auto">기본 개념은 다음과 같다.</p><h3 id="fb7720e4-6f49-82e7-9906-0189b5494b61" class="" dir="auto">Auto Scaling Group</h3><p id="8ba720e4-6f49-83d7-b042-01fe30d93663" class="" dir="auto">동일한 역할을 수행하는 EC2 집합을 관리한다.</p><p id="ac0720e4-6f49-8310-acfe-8139e6fd6357" class="" dir="auto">최소 인스턴스 수, 최대 인스턴스 수, 원하는 인스턴스 수를 지정할 수 있다.</p><h3 id="760720e4-6f49-83b5-9327-816c9f1fe578" class="" dir="auto">Scaling Policy</h3><p id="7c8720e4-6f49-83f7-9404-81d7d051732e" class="" dir="auto">언제 인스턴스를 늘리거나 줄일지 결정하는 정책이다.</p><p id="d93720e4-6f49-8251-a409-8152469d389b" class="" dir="auto">예를 들어 CPU 사용률이 70%를 초과하면 인스턴스를 추가하도록 설정할 수 있다.</p><p id="e27720e4-6f49-8338-ac2b-819d1af05075" class="" dir="auto">예시는 다음과 같다.</p><pre id="854720e4-6f49-8359-ab68-8194f7134262" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">평상시
+EC2 2대 운영
+
+트래픽 증가
+EC2 4대 또는 6대로 자동 확장</code></pre><p id="9a7720e4-6f49-829f-9ad9-81d6e10d2e38" class="" dir="auto">Auto Scaling의 장점은 다음과 같다.</p><pre id="c8b720e4-6f49-8227-8271-0135a75b0baa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">자동 확장
+자동 축소
+장애 인스턴스 자동 교체
+비용 최적화
+운영 자동화</code></pre><p id="1b3720e4-6f49-8354-9b4f-011dd73c297f" class="" dir="auto">Auto Scaling은 단순히 서버 수를 늘리는 기능만이 아니라</p><p id="ce2720e4-6f49-8278-80f7-8198650ee085" class="" dir="auto">비정상 인스턴스를 감지하고 새 인스턴스로 교체하여 서비스 상태를 유지하는 역할도 한다.</p><hr id="53f720e4-6f49-83c9-96d4-010638200cf3" dir="auto"/><h2 id="fd3720e4-6f49-82f4-9bdf-812e3428caeb" class="" dir="auto">7.8 정적 콘텐츠 처리</h2><p id="628720e4-6f49-8231-ba57-81da2d3463bd" class="" dir="auto">웹 서비스에는 다양한 정적 파일이 존재한다.</p><pre id="15b720e4-6f49-8263-acec-818fc7f50e60" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이미지
+CSS
+JavaScript
+동영상
+폰트 파일
+문서 파일
+다운로드 파일</code></pre><p id="79f720e4-6f49-8200-81d3-810aeb2f99e8" class="" dir="auto">이러한 파일을 모두 웹 서버가 직접 제공하면</p><p id="2e0720e4-6f49-838e-94d7-8198d49b02e4" class="" dir="auto">웹 서버는 동적 요청 처리와 파일 전송을 동시에 수행해야 하므로 부담이 커질 수 있다.</p><p id="409720e4-6f49-82be-9681-8134d73a7969" class="" dir="auto">AWS에서는 정적 파일을 Amazon S3에 저장하고,</p><p id="259720e4-6f49-82a1-b5f2-01b9ece37611" class="" dir="auto">웹 서비스와 분리하여 제공하는 구조를 자주 사용한다.</p><p id="675720e4-6f49-8267-9c36-0123b15c33b2" class="" dir="auto">구조는 다음과 같다.</p><pre id="744720e4-6f49-83bd-b61c-81eec01cb130" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">           ┌────────────→ Web Server
+User ──────┤
+           └────────────→ S3 (Static Files)</code></pre><p id="a9b720e4-6f49-8265-92fd-8166c4139325" class="" dir="auto">동작 과정은 다음과 같다.</p><pre id="08c720e4-6f49-835c-bfd0-81e2e3b25ab3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 사용자가 웹 서비스에 접속한다.
+2. Web Server 또는 Application이 HTML 응답을 제공한다.
+3. HTML 안에는 이미지, CSS, JavaScript 파일 경로가 포함된다.
+4. 브라우저는 필요한 정적 파일을 S3에서 가져온다.</code></pre><p id="e68720e4-6f49-83a5-805f-81c46c8764bb" class="" dir="auto">이 구조의 장점은 다음과 같다.</p><pre id="378720e4-6f49-827d-9bd1-817c3b0ddce0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">웹 서버 부하 감소
+정적 파일 저장에 적합
+대용량 파일 처리에 유리
+높은 확장성 제공
+비용 효율적</code></pre><p id="1d5720e4-6f49-824c-a302-01888fbfa743" class="" dir="auto">실무에서는 S3 앞단에 CloudFront를 두는 경우가 많다.</p><pre id="7f5720e4-6f49-82a5-8602-01808a391ea0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">           ┌────────────→ Load Balancer → Web / App Server
+User ──────┤
+           └────────────→ CloudFront → S3</code></pre><p id="6b6720e4-6f49-8376-a7ef-01ae4cc5e062" class="" dir="auto">이 구조를 사용하면 정적 콘텐츠를 엣지 로케이션에 캐싱할 수 있으므로</p><p id="43c720e4-6f49-83ba-a7fb-01badfdac012" class="" dir="auto">응답 속도가 향상되고 원본 저장소에 대한 요청도 줄어든다.</p><hr id="cb4720e4-6f49-83df-8d57-01ce4a0b42b6" dir="auto"/><h2 id="288720e4-6f49-824e-8724-01b88fec3851" class="" dir="auto">7.9 기본 AWS 아키텍처 예시</h2><p id="288720e4-6f49-8225-8261-012496e4cbee" class="" dir="auto">지금까지의 내용을 종합하면 AWS의 기본 웹 서비스 아키텍처는 다음과 같이 정리할 수 있다.</p><pre id="da4720e4-6f49-8232-972e-01c92930156d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ │
+Internet
+ │
+Application Load Balancer
+ │
+Public Subnet
+ │
+Web Tier
+ │
+Private Subnet
+ │
+Application Tier
+ │
+Database Tier</code></pre><p id="206720e4-6f49-83b7-ad47-811bac717b9e" class="" dir="auto">정적 콘텐츠 처리까지 포함하면 다음과 같다.</p><pre id="738720e4-6f49-8262-9dda-815690209dbf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">           ┌────────────→ Application Load Balancer → Web Tier → Application Tier → Database Tier
+User ──────┤
+           └────────────→ S3 (Static Files)</code></pre><p id="465720e4-6f49-8392-ba06-0136ef6a556a" class="" dir="auto">CloudFront를 포함한 형태는 다음과 같다.</p><pre id="759720e4-6f49-8327-a2e1-01d7f950e069" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">           ┌────────────→ Application Load Balancer → Web Tier → Application Tier → Database Tier
+User ──────┤
+           └────────────→ CloudFront → S3</code></pre><p id="9d0720e4-6f49-8370-95e6-0171869973c5" class="" dir="auto">각 구성 요소의 역할은 다음과 같다.</p><pre id="48f720e4-6f49-8313-973f-811718d84364" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Application Load Balancer  : 사용자 요청 분산
+Web Tier                   : 요청 수신, 화면 제공, 전달 처리
+Application Tier           : 비즈니스 로직 수행
+Database Tier              : 데이터 저장
+S3                         : 정적 콘텐츠 저장
+CloudFront                 : 정적 콘텐츠 캐싱 및 전송 최적화
+Auto Scaling               : 서버 자동 확장 및 복구</code></pre><p id="119720e4-6f49-8356-8587-01fa847c59a2" class="" dir="auto">이 구조를 통해 다음과 같은 목표를 달성할 수 있다.</p><pre id="320720e4-6f49-8226-b81a-81498e41be0a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">확장성
+고가용성
+보안성
+운영 효율성
+비용 최적화</code></pre><hr id="c82720e4-6f49-82ef-820d-81885be278ef" dir="auto"/><h2 id="c84720e4-6f49-820e-b819-0159b2571415" class="" dir="auto">요약</h2><p id="8db720e4-6f49-8218-88ca-01ea4db95fee" class="" dir="auto">AWS의 기본 웹 서비스 아키텍처는 일반적으로 다음과 같이 구성된다.</p><pre id="c80720e4-6f49-82d2-bcaf-815e6fb4833d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+ │
+Load Balancer
+ │
+Web Tier
+ │
+Application Tier
+ │
+Database Tier</code></pre><p id="c7f720e4-6f49-83f8-9b4b-0156093de314" class="" dir="auto">정적 콘텐츠는 다음과 같은 별도 경로로 처리한다.</p><pre id="c29720e4-6f49-8371-b34d-8118ee5a1c35" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3
+또는
+CloudFront + S3</code></pre><p id="92e720e4-6f49-83ff-9053-01dfdf3dc6d5" class="" dir="auto">이 구조를 사용하면 다음과 같은 효과를 얻을 수 있다.</p><pre id="7cf720e4-6f49-8229-be33-01d7fdd0b970" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">확장성 향상
+가용성 향상
+보안 강화
+운영 자동화
+비용 효율화</code></pre><p id="bdf720e4-6f49-839d-aceb-814477b8e2a1" class="" dir="auto">웹 서비스 아키텍처를 설계할 때는</p><p id="437720e4-6f49-8242-8d8c-8147c4eeb815" class="" dir="auto">외부 공개 영역과 내부 보호 영역을 구분하고,</p><p id="2b7720e4-6f49-83e9-ab90-81775e44ac93" class="" dir="auto">정적 요청과 동적 요청의 처리 경로를 분리하며,</p><p id="a42720e4-6f49-83ba-845a-011d9223d5fe" class="" dir="auto">확장과 장애 대응이 가능한 구조로 설계하는 것이 중요하다.</p><hr id="06e720e4-6f49-8368-89e6-81ccf93330af" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

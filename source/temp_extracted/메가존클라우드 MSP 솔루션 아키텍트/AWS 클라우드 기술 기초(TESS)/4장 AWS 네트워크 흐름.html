@@ -1,0 +1,876 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>4장 AWS 네트워크 흐름</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="a7d720e4-6f49-83d5-9df4-81cbfaad3a9f" class="page sans"><header><h1 class="page-title" dir="auto">4장 AWS 네트워크 흐름</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="8e5720e4-6f49-82f6-80bb-011725a25cc3" class="" dir="auto">4.1 AWS 네트워크 흐름을 이해해야 하는 이유</h2><p id="932720e4-6f49-83a4-9d73-8130c64dfc7c" class="" dir="auto">AWS에서 네트워크 문제의 대부분은 <strong>구성요소가 없어서 발생하는 것이 아니라 흐름을 이해하지 못해서 발생</strong>한다.</p><p id="23e720e4-6f49-8378-9862-0147b1f137a2" class="" dir="auto">예를 들어 다음 질문이 자주 나온다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="ea7720e4-6f49-821c-afb4-815fdeb1a90f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2에 접속이 안됩니다
+Public Subnet인데 인터넷이 안됩니다
+apt update가 안 됩니다</code></pre><p id="503720e4-6f49-836d-aa27-811d3449294d" class="" dir="auto">이 문제들은 대부분 다음 중 하나 때문이다.</p><ul id="965720e4-6f49-82b9-af40-013853d3bf52" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table 설정 오류</li></ul><ul id="290720e4-6f49-8365-a434-0108690ab732" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway 연결 문제</li></ul><ul id="437720e4-6f49-82a4-b08f-01ff37978645" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group 설정 문제</li></ul><ul id="1c1720e4-6f49-8284-9e42-01b4fd090141" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public IP 문제</li></ul><p id="ac9720e4-6f49-8292-a72a-810927d7ef4e" class="" dir="auto">즉 AWS 네트워크를 이해하려면 단순히 구성요소 이름을 아는 것이 아니라</p><pre id="86d720e4-6f49-83af-839a-81df61632cf2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">패킷이 어떤 경로를 통해 이동하는지</code></pre><p id="7db720e4-6f49-83f4-8586-81a7ff32deb5" class="" dir="auto">를 이해해야 한다.</p><hr id="d0b720e4-6f49-8289-aa04-0153c457c8d7" dir="auto"/><h1 id="366720e4-6f49-83cd-90d0-818c28590a74" class="" dir="auto">4.2 외부 사용자 → EC2 접속 흐름</h1><p id="9b2720e4-6f49-8246-b65e-817b86a4beba" class="" dir="auto">가장 기본적인 네트워크 흐름은 <strong>외부 사용자가 EC2에 접속하는 경우</strong>이다.</p><p id="024720e4-6f49-83c5-abd2-81e0dd18d678" class="" dir="auto">예를 들어 웹 서버에 접속하는 상황을 생각해보자.</p><p id="ba6720e4-6f49-8325-a030-81315700ef37" class="" dir="auto">구조</p><pre id="ee2720e4-6f49-8365-bdd8-01d4035e5953" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ │
+Internet
+ │
+Internet Gateway
+ │
+VPC
+ │
+Public Subnet
+ │
+EC2</code></pre><p id="268720e4-6f49-8377-82ef-0163597b1651" class="" dir="auto">실제 패킷 흐름은 다음과 같다.</p><pre id="1c3720e4-6f49-82fc-ad87-81c3c4ef4c69" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ │
+Internet
+ │
+Public IP
+ │
+Internet Gateway
+ │
+Route Table
+ │
+Public Subnet
+ │
+EC2</code></pre><p id="ae4720e4-6f49-8339-b932-0133fb3d1ec6" class="" dir="auto">즉 외부에서 EC2로 접속하려면 다음 조건이 필요하다.</p><hr id="e1c720e4-6f49-8306-a345-01644a7420e1" dir="auto"/><h3 id="1a4720e4-6f49-8210-8423-012534fb2a17" class="" dir="auto">조건 1 : Public IP</h3><p id="d6f720e4-6f49-8389-a224-01d5ed70608d" class="" dir="auto">EC2는 기본적으로 Private IP를 가진다.</p><p id="dfe720e4-6f49-82de-a96f-012fb3c302b3" class="" dir="auto">예</p><pre id="460720e4-6f49-826f-8e13-01c8cfb1a3a0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.0.1.10</code></pre><p id="44e720e4-6f49-8304-921a-012a0d55f17e" class="" dir="auto">하지만 외부 인터넷에서 접속하려면 Public IP가 필요하다.</p><p id="ea6720e4-6f49-83af-944c-016a6a9e131b" class="" dir="auto">예</p><pre id="6be720e4-6f49-8200-a5a5-015bf816f966" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">3.34.120.10</code></pre><p id="1c9720e4-6f49-82a2-bcf3-81ee0105ab31" class="" dir="auto">즉 외부 사용자는 Public IP를 통해 EC2에 접속한다.</p><hr id="804720e4-6f49-82f6-8c46-8193173dcc26" dir="auto"/><h3 id="c0d720e4-6f49-8204-a42a-8161f108328d" class="" dir="auto">조건 2 : Internet Gateway</h3><p id="ee5720e4-6f49-8368-bd79-81b63dab3916" class="" dir="auto">VPC는 기본적으로 외부 인터넷과 연결되어 있지 않다.</p><p id="ca7720e4-6f49-82d8-abd5-01f36ec40c11" class="" dir="auto">따라서 Internet Gateway가 있어야 한다.</p><p id="0d1720e4-6f49-83c2-b5be-01c679c48d5a" class="" dir="auto">구조</p><pre id="eaf720e4-6f49-8220-a240-81db76a5dbb5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+ │
+Internet Gateway
+ │
+VPC</code></pre><p id="97a720e4-6f49-82ae-b24b-01bb6f4c109d" class="" dir="auto">Internet Gateway는 VPC와 인터넷 사이의 <strong>출입구 역할</strong>을 한다.</p><hr id="35e720e4-6f49-82d4-a807-0120aa5c9631" dir="auto"/><h3 id="cc9720e4-6f49-82a1-8861-010415e59a14" class="" dir="auto">조건 3 : Route Table</h3><p id="6d4720e4-6f49-8339-80c9-01b4b5cc801a" class="" dir="auto">Route Table에는 다음 경로가 있어야 한다.</p><pre id="880720e4-6f49-82df-941f-816a6cfeabdb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">0.0.0.0/0 → Internet Gateway</code></pre><p id="0a3720e4-6f49-82b4-9671-810a6c8cf642" class="" dir="auto">의미</p><pre id="ec7720e4-6f49-83a9-9e4d-81e46aa69fb2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">모든 외부 트래픽은 IGW로 전달</code></pre><p id="b48720e4-6f49-826c-95b3-814d93b3b25e" class="" dir="auto">이 경로가 있어야 Public Subnet이 된다.</p><hr id="280720e4-6f49-8226-9a2f-81d19c51a7a7" dir="auto"/><h3 id="c8b720e4-6f49-83ae-be91-8159558735cb" class="" dir="auto">조건 4 : Security Group</h3><p id="73a720e4-6f49-83f9-9122-815cf61acc82" class="" dir="auto">Security Group이 해당 포트를 허용해야 한다.</p><p id="e99720e4-6f49-82f1-a4c1-017c02752ec9" class="" dir="auto">예</p><pre id="8ae720e4-6f49-82cd-bbb0-014508a0a497" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Inbound
+TCP 22  SSH
+TCP 80  HTTP
+TCP 443 HTTPS</code></pre><p id="7b9720e4-6f49-8226-91ce-01a93a685c06" class="" dir="auto">허용되지 않은 포트는 접속할 수 없다.</p><hr id="d12720e4-6f49-83ec-9a7f-817d8c2660ee" dir="auto"/><h1 id="894720e4-6f49-83c2-91b1-010bd3ef076d" class="" dir="auto">4.3 EC2 → Internet 흐름</h1><p id="3df720e4-6f49-82e1-88a9-016880bacf94" class="" dir="auto">이번에는 EC2가 외부 인터넷으로 접속하는 경우를 보자.</p><p id="202720e4-6f49-827f-a831-01aedc999a34" class="" dir="auto">예</p><pre id="e79720e4-6f49-8389-9739-81930a50722d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">apt update
+yum update
+wget</code></pre><p id="964720e4-6f49-827a-9152-81e930dec166" class="" dir="auto">이 경우 패킷 흐름은 다음과 같다.</p><pre id="2c7720e4-6f49-8285-a76d-815c52507728" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2
+ │
+Subnet
+ │
+Route Table
+ │
+Internet Gateway
+ │
+Internet</code></pre><p id="23e720e4-6f49-836f-bf5d-014f69307d20" class="" dir="auto">하지만 여기에도 조건이 있다.</p><hr id="102720e4-6f49-820a-9d81-0182e4c11e12" dir="auto"/><h3 id="0fe720e4-6f49-83ff-9904-81229b4ed4f3" class="" dir="auto">Public IP 필요</h3><p id="e56720e4-6f49-83c6-8d4c-81d98088a7e3" class="" dir="auto">EC2가 Internet Gateway를 통해 외부로 나가려면 Public IP가 필요하다.</p><p id="a35720e4-6f49-827f-a274-0117b04c129a" class="" dir="auto">즉 다음 구조가 되어야 한다.</p><pre id="4e2720e4-6f49-83ad-a81d-017f390c4576" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Public Subnet
+ │
+EC2 (Public IP)
+ │
+IGW
+ │
+Internet</code></pre><p id="4be720e4-6f49-83ec-8706-81815a85d172" class="" dir="auto">Public IP가 없다면 외부 인터넷으로 직접 나갈 수 없다.</p><hr id="02b720e4-6f49-82b5-8788-010aa90ef5c5" dir="auto"/><h1 id="31b720e4-6f49-83c8-a8a0-81d38a44f239" class="" dir="auto">4.4 Private Subnet 구조</h1><p id="bd1720e4-6f49-8369-8746-01034111a93d" class="" dir="auto">AWS 아키텍처에서 대부분의 서버는 <strong>Private Subnet에 배치된다</strong>.</p><p id="f00720e4-6f49-83ae-9cf9-0193519b62d3" class="" dir="auto">예</p><pre id="561720e4-6f49-82ea-b094-81602165bffa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Application Server
+Database
+Internal Service</code></pre><p id="ef4720e4-6f49-83d9-8aa1-017613004aed" class="" dir="auto">구조</p><pre id="1c4720e4-6f49-8268-b345-01121f16ee34" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC
+ ├ Public Subnet
+ │   └ Load Balancer
+ │
+ └ Private Subnet
+     └ Application Server</code></pre><p id="a54720e4-6f49-83c7-ae47-01333e90bf49" class="" dir="auto">Private Subnet의 특징</p><pre id="db3720e4-6f49-82ed-89ab-8147145abb8a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet Gateway로 직접 나가지 않음
+외부에서 직접 접근 불가</code></pre><p id="dde720e4-6f49-83a8-8498-016f530599a7" class="" dir="auto">즉 보안이 필요한 서버는 Private Subnet에 배치한다.</p><hr id="796720e4-6f49-82fa-9eb0-01e37f515e8e" dir="auto"/><h1 id="0f9720e4-6f49-8311-813f-8123caea7541" class="" dir="auto">4.5 Private EC2 → Internet</h1><p id="ab7720e4-6f49-824b-885b-012a93da91c6" class="" dir="auto">문제는 Private EC2도 인터넷에 나가야 하는 경우가 많다는 것이다.</p><p id="5f9720e4-6f49-82ed-8ebd-8154e869d2f6" class="" dir="auto">예</p><pre id="27b720e4-6f49-825f-8a25-014893faf485" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">패키지 업데이트
+API 호출
+외부 서비스 접근</code></pre><p id="25c720e4-6f49-83d5-883e-01329d1e131a" class="" dir="auto">하지만 Private Subnet에는 IGW 경로가 없다.</p><p id="6fb720e4-6f49-828b-98f8-8146d60e0c26" class="" dir="auto">그래서 사용하는 것이 <strong>NAT Gateway</strong>이다.</p><hr id="91d720e4-6f49-83d0-909c-017dbdd59419" dir="auto"/><h1 id="450720e4-6f49-83e0-b697-01b7cdad23dd" class="" dir="auto">4.6 NAT Gateway 역할</h1><p id="c2b720e4-6f49-825e-972f-814103a4ac0d" class="" dir="auto">NAT Gateway는 Private 서버 대신 인터넷에 접속해주는 장비이다.</p><p id="010720e4-6f49-82e9-8854-817bf5cbd4f2" class="" dir="auto">구조</p><pre id="9fa720e4-6f49-82b1-b666-0114ded5b6ba" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Private EC2
+ │
+Private Subnet
+ │
+Route Table
+ │
+NAT Gateway
+ │
+Internet Gateway
+ │
+Internet</code></pre><p id="410720e4-6f49-82e4-a7bd-01d14bb25a51" class="" dir="auto">패킷 흐름</p><pre id="826720e4-6f49-838e-9b9a-819535ca203e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2
+ │
+NAT Gateway
+ │
+Internet</code></pre><p id="fe8720e4-6f49-82de-b17d-014450d7347a" class="" dir="auto">응답 흐름</p><pre id="34d720e4-6f49-8338-b562-01ac6ab3f9c3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+ │
+NAT Gateway
+ │
+EC2</code></pre><p id="0f2720e4-6f49-8231-b005-81c30d1e09c4" class="" dir="auto">즉 NAT Gateway는 <strong>Private 서버의 IP를 대신 변환하여 인터넷과 통신한다</strong>.</p><hr id="54a720e4-6f49-837a-b09a-8186e6757832" dir="auto"/><h1 id="b2a720e4-6f49-828a-928a-01819a07aaba" class="" dir="auto">4.7 NAT Gateway 특징</h1><p id="162720e4-6f49-834a-9994-8104925d7f5a" class="" dir="auto">NAT Gateway는 다음 특징을 가진다.</p><h3 id="217720e4-6f49-83b9-a03e-019ee8708866" class="" dir="auto">Outbound Only</h3><p id="5b1720e4-6f49-82ab-b1e7-8199cadca850" class="" dir="auto">인터넷에서 Private EC2로 직접 접속할 수 없다.</p><pre id="a83720e4-6f49-83da-8912-010de0deb06e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet → NAT → EC2</code></pre><p id="678720e4-6f49-8244-83cd-818dbe03f24a" class="" dir="auto">이 흐름은 불가능하다.</p><p id="560720e4-6f49-833b-9d32-0196d0150e20" class="" dir="auto">즉 NAT Gateway는 <strong>외부로 나가는 통신만 가능</strong>하다.</p><hr id="a99720e4-6f49-838e-ab33-01414dc8f678" dir="auto"/><h3 id="1d4720e4-6f49-83a1-9398-011786f2a6ed" class="" dir="auto">Public Subnet에 배치</h3><p id="bad720e4-6f49-8286-9ca9-8124ad211d2a" class="" dir="auto">NAT Gateway는 반드시 Public Subnet에 생성해야 한다.</p><p id="0e8720e4-6f49-83bb-b126-8110646bb7f3" class="" dir="auto">구조</p><pre id="1f4720e4-6f49-83f2-8c8a-818a7d46b90f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Public Subnet
+ └ NAT Gateway</code></pre><hr id="691720e4-6f49-8277-a7e6-8105c47a04f3" dir="auto"/><h3 id="0aa720e4-6f49-8249-81a5-01334edd36e0" class="" dir="auto">Private Subnet에서 사용</h3><p id="1c2720e4-6f49-8293-a79b-016b9a14edb8" class="" dir="auto">Private Subnet의 Route Table에 다음 경로를 추가한다.</p><pre id="6f0720e4-6f49-82b8-b749-811a5a46285d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">0.0.0.0/0 → NAT Gateway</code></pre><p id="6cb720e4-6f49-83eb-973f-011963bcaa81" class="" dir="auto">이렇게 하면 Private EC2도 인터넷에 나갈 수 있다.</p><hr id="30d720e4-6f49-835a-a46e-810b6f51d1d4" dir="auto"/><h1 id="270720e4-6f49-82af-8fb8-817116cdefe9" class="" dir="auto">4.8 내부 서버 통신</h1><p id="8e6720e4-6f49-8380-856c-81fb93a5193e" class="" dir="auto">같은 VPC 내부에서는 Private IP로 통신한다.</p><p id="6d6720e4-6f49-8284-a001-01efef7e518e" class="" dir="auto">예</p><pre id="642720e4-6f49-8209-b79f-0128794c37cc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Web Server
+10.0.1.10</code></pre><pre id="b01720e4-6f49-83cd-9e0b-81b5b6687ad5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">DB Server
+10.0.2.20</code></pre><p id="e2f720e4-6f49-83b0-88af-81b2a52ffff0" class="" dir="auto">통신 흐름</p><pre id="89c720e4-6f49-83a3-b88c-816b3c5585b4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Web Server
+ │
+VPC Network
+ │
+DB Server</code></pre><p id="f8a720e4-6f49-82be-9d1d-8166a4f5253c" class="" dir="auto">이 통신은 Internet Gateway나 NAT Gateway를 거치지 않는다.</p><p id="742720e4-6f49-83cb-bce9-817eed059d4a" class="" dir="auto">즉 VPC 내부 통신은 <strong>AWS 내부 네트워크를 통해 직접 연결된다</strong>.</p><hr id="872720e4-6f49-833b-82b5-012d56449a42" dir="auto"/><h1 id="251720e4-6f49-820f-b627-8114f83e6f6f" class="" dir="auto">4.9 AWS 기본 네트워크 구조</h1><p id="629720e4-6f49-823e-ad17-8141d21fffab" class="" dir="auto">지금까지 설명한 내용을 합치면 다음 구조가 된다.</p><pre id="a31720e4-6f49-837c-a384-01e27317bf40" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+ │
+Internet Gateway
+ │
+Public Subnet
+ │
+Load Balancer
+ │
+Private Subnet
+ │
+Application Server
+ │
+Database</code></pre><p id="893720e4-6f49-8332-bfda-814e71924afe" class="" dir="auto">그리고 Private Subnet에는 NAT Gateway 경로가 존재한다.</p><pre id="840720e4-6f49-82ce-8ae5-8152174c7ab8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Private Subnet
+ │
+NAT Gateway
+ │
+Internet</code></pre><p id="e58720e4-6f49-8200-9abb-01c6bb9e26a9" class="" dir="auto">이 구조가 <strong>AWS 웹 서비스 아키텍처의 기본 형태</strong>이다.</p><hr id="adf720e4-6f49-82db-8a39-011cd520a6fd" dir="auto"/><h1 id="9b1720e4-6f49-8295-b6f6-81e49bcd03a7" class="" dir="auto">요약</h1><p id="b59720e4-6f49-834d-a1ef-8191bc9caec3" class="" dir="auto">AWS 네트워크 흐름을 이해하려면 다음 세 가지를 기억하면 된다.</p><hr id="3ff720e4-6f49-8203-8a0c-015371594b81" dir="auto"/><h3 id="759720e4-6f49-8260-94bf-015418a44a73" class="" dir="auto">외부 → Public EC2</h3><pre id="af4720e4-6f49-824b-acc2-01f6208c83a0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ → Internet
+ → Internet Gateway
+ → Route Table
+ → Subnet
+ → EC2</code></pre><hr id="e4e720e4-6f49-831f-b930-01527da75b8c" dir="auto"/><h3 id="c4a720e4-6f49-8341-bd4e-010f2f74cf9b" class="" dir="auto">Public EC2 → Internet</h3><pre id="ab0720e4-6f49-82c7-abd3-01a787134216" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2
+ → Route Table
+ → Internet Gateway
+ → Internet</code></pre><hr id="f0b720e4-6f49-8305-a859-01e39e66e72e" dir="auto"/><h3 id="dc6720e4-6f49-836a-ae48-01a0d96ad277" class="" dir="auto">Private EC2 → Internet</h3><pre id="b55720e4-6f49-8341-a972-0128ef0f6f86" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2
+ → NAT Gateway
+ → Internet Gateway
+ → Internet</code></pre><hr id="efa720e4-6f49-82db-b742-8138f3e43009" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,1968 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이 확인</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="8f2720e4-6f49-8333-a768-0188191d4482" class="page sans"><header><h1 class="page-title" dir="auto">boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이 확인</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="422720e4-6f49-821b-a1c3-81086c198327" dir="auto"/><h2 id="c7c720e4-6f49-830a-90b0-012ce1b6caee" class="" dir="auto">1. 실습 개요</h2><p id="666720e4-6f49-83bd-b81d-81ca72e5c54f" class="" dir="auto"><strong>프론트엔드 로그인 사용자 기반 AWS 리소스 제어 실습</strong>을 준비하기 위해, AWS IAM Role 기반 권한 분리 구조를 먼저 구성한다.</p><p id="b58720e4-6f49-8374-bc9c-81984a410863" class="" dir="auto">실습에서는 다음 3개의 IAM Role을 생성한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="660720e4-6f49-82bc-a024-01c223d27c39" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">app-viewer-role
+app-operator-role
+app-admin-role</code></pre><p id="e97720e4-6f49-8231-a2d4-8146963b44d4" class="" dir="auto">각 Role은 서로 다른 권한을 가진다.</p><table id="0ea720e4-6f49-8336-91a4-81d18ee422ae" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="d4c720e4-6f49-8202-887b-810a8c8187ca" dir="ltr"><th id="b;w@" class="simple-table-header-color simple-table-header">애플리케이션 권한</th><th id=":D&gt;n" class="simple-table-header-color simple-table-header">IAM Role</th><th id="B[_y" class="simple-table-header-color simple-table-header">권한 수준</th></tr></thead><tbody><tr id="c8a720e4-6f49-823a-9b9e-0181a99eea40" dir="ltr"><td id="b;w@" class=""><code>viewer</code></td><td id=":D&gt;n" class=""><code>app-viewer-role</code></td><td id="B[_y" class="">EC2/S3 조회만 가능</td></tr><tr id="8f0720e4-6f49-82c3-833f-8199b45c6f32" dir="ltr"><td id="b;w@" class=""><code>operator</code></td><td id=":D&gt;n" class=""><code>app-operator-role</code></td><td id="B[_y" class="">EC2 조회, 시작, 중지 가능</td></tr><tr id="731720e4-6f49-83c4-886e-01267be300ae" dir="ltr"><td id="b;w@" class=""><code>admin</code></td><td id=":D&gt;n" class=""><code>app-admin-role</code></td><td id="B[_y" class="">EC2 운영 작업 + S3 객체 업로드 가능</td></tr></tbody></table><p id="801720e4-6f49-8298-b515-816bbe981805" class="" dir="auto">아직 프론트엔드 로그인 기능은 만들지 않는다.</p><p id="05e720e4-6f49-828b-ab4d-81961e13a19c" class="" dir="auto">대신 로컬에서 AWS Profile로 인증한 IAM User가 각 Role을 <code>AssumeRole</code> 한 뒤, Role별 권한 차이를 확인한다.</p><hr id="99c720e4-6f49-83bd-8795-01e3a84c4376" dir="auto"/><h2 id="380720e4-6f49-824a-a8c2-01836be61bf0" class="" dir="auto">2. 실습 목표</h2><p id="662720e4-6f49-8310-8b95-01b05a0c1e04" class="" dir="auto">이번 실습의 목표는 다음과 같다.</p><pre id="2df720e4-6f49-823d-ab64-819a2a951bbb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 현재 로컬 AWS Profile의 IAM User 정보를 확인한다.
+2. viewer, operator, admin Role을 생성한다.
+3. 각 Role의 Trust Policy에 현재 IAM User를 Principal로 등록한다.
+4. 각 Role에 서로 다른 Permission Policy를 연결한다.
+5. 로컬 IAM User가 각 Role을 AssumeRole 한다.
+6. AssumeRole 이후에는 IAM User 권한이 아니라 Role 권한으로 동작함을 확인한다.
+7. 이후 FastAPI와 프론트엔드 로그인 사용자 권한 제어 구조로 확장할 준비를 한다.</code></pre><hr id="533720e4-6f49-8253-b754-81afc010f403" dir="auto"/><h2 id="bee720e4-6f49-8207-ac23-014535927984" class="" dir="auto">3. 전체 구조</h2><p id="1bf720e4-6f49-832e-b62c-0127ce4a7d3c" class="" dir="auto">이번 실습 구조는 다음과 같다.</p><pre id="3c2720e4-6f49-831b-8e6b-8185da6ba8df" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">로컬 PC
+  ↓
+AWS Profile
+  ↓
+IAM User: instructor
+  ↓ sts:AssumeRole
+app-viewer-role
+app-operator-role
+app-admin-role
+  ↓
+각 Role 권한으로 AWS API 호출</code></pre><p id="480720e4-6f49-833a-8a0c-814a680fa1f4" class="" dir="auto">이후 FastAPI와 프론트엔드 실습에서는 아래 구조로 확장된다.</p><pre id="f3a720e4-6f49-8251-b2fd-81afed0bbc0d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">프론트엔드 로그인 사용자
+  ↓
+FastAPI 백엔드
+  ↓
+로그인 사용자 권한 확인
+  ↓
+USER_ROLE_MAP에서 IAM Role ARN 선택
+  ↓
+sts:AssumeRole
+  ↓
+Role 권한으로 AWS 리소스 제어</code></pre><hr id="4e5720e4-6f49-8240-a4c3-011ac6595a05" dir="auto"/><h1 id="eb4720e4-6f49-8375-acdc-0121077238b9" class="" dir="auto">4. 현재 실습 환경의 전제</h1><p id="e75720e4-6f49-822e-90b4-0160750083e4" class="" dir="auto">현재 학생들이 사용하는 IAM User에는 <code>AdministratorAccess</code> 또는 이에 준하는 FullAccess 권한이 부여되어 있다고 가정한다.</p><p id="c41720e4-6f49-8388-8bae-013cbfd96cad" class="" dir="auto">예를 들어 현재 profile로 인증한 IAM User가 다음과 같다고 가정한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="f93720e4-6f49-82a2-af89-81f3012d8c16" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws sts get-caller-identity --profile instructor</code></pre><p id="ca5720e4-6f49-837c-9a8b-0195a3fa5825" class="" dir="auto">예상 출력:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="8c1720e4-6f49-8242-b8f5-01647c6c82f7" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;UserId&quot;: &quot;AIDAxxxxxxxxxxxxx&quot;,
+    &quot;Account&quot;: &quot;471166314777&quot;,
+    &quot;Arn&quot;: &quot;arn:aws:iam::471166314777:user/instructor&quot;
+}</code></pre><p id="548720e4-6f49-836e-b7ef-813405e545d4" class="" dir="auto">현재 학생 IAM User는 관리자 권한이 있으므로 다음 작업을 수행할 수 있다.</p><pre id="aa7720e4-6f49-83d8-82d4-81b208743c83" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">iam:CreateRole
+iam:PutRolePolicy
+iam:UpdateAssumeRolePolicy
+iam:DeleteRole
+sts:AssumeRole
+ec2:*
+s3:*</code></pre><p id="530720e4-6f49-8371-8bea-81942a5e13fe" class="" dir="auto">따라서 이번 실습에서는 별도로 학생 IAM User에게 <code>sts:AssumeRole</code> 권한을 추가하지 않아도 된다.</p><p id="f87720e4-6f49-821c-abde-81820dbd8138" class="" dir="auto">하지만 이 점은 반드시 설명해야 한다.</p><hr id="036720e4-6f49-82b2-a765-01e4cd7d6fa0" dir="auto"/><h2 id="b25720e4-6f49-83fa-a42f-0162e11d7511" class="" dir="auto">4.1 일반 IAM User라면 AssumeRole 권한이 별도로 필요함</h2><p id="a61720e4-6f49-83e0-b21b-011bf1e33732" class="" dir="auto">현재 학생 IAM User는 관리자 권한이 있기 때문에 <code>sts:AssumeRole</code>도 이미 가능하다.</p><p id="f30720e4-6f49-821a-b34d-81061ccec248" class="" dir="auto">하지만 일반 IAM User라면 상황이 다르다.</p><p id="6fe720e4-6f49-823f-bd78-0104156fa67c" class="" dir="auto">일반 IAM User가 특정 Role을 AssumeRole 하려면, 해당 IAM User에게 명시적으로 <code>sts:AssumeRole</code> 권한이 있어야 한다.</p><p id="2dd720e4-6f49-8399-8462-8177c24b436a" class="" dir="auto">예를 들어 일반 IAM User가 아래 3개 Role을 AssumeRole 해야 한다면, 사용자에게 다음 정책이 필요하다.</p><pre id="16d720e4-6f49-823f-b99e-01af46ac117d" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;AllowAssumeApplicationRoles&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Action&quot;: &quot;sts:AssumeRole&quot;,
+      &quot;Resource&quot;: [
+        &quot;arn:aws:iam::471166314777:role/app-viewer-role&quot;,
+        &quot;arn:aws:iam::471166314777:role/app-operator-role&quot;,
+        &quot;arn:aws:iam::471166314777:role/app-admin-role&quot;
+      ]
+    }
+  ]
+}</code></pre><p id="e3b720e4-6f49-83ad-9174-018d7c7d0d3f" class="" dir="auto">이 정책은 다음 의미를 가진다.</p><table id="2ff720e4-6f49-8287-ad90-019a6a9b74dd" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="46a720e4-6f49-82eb-a7c0-81dbf643d6c6" dir="ltr"><th id="lsYc" class="simple-table-header-color simple-table-header">항목</th><th id="&lt;[Xk" class="simple-table-header-color simple-table-header">의미</th></tr></thead><tbody><tr id="615720e4-6f49-82ee-a038-81bf53e11cfd" dir="ltr"><td id="lsYc" class=""><code>Effect: Allow</code></td><td id="&lt;[Xk" class="">허용 정책</td></tr><tr id="168720e4-6f49-83c9-99ff-01a6147513f3" dir="ltr"><td id="lsYc" class=""><code>Action: sts:AssumeRole</code></td><td id="&lt;[Xk" class="">Role을 맡는 작업 허용</td></tr><tr id="5c1720e4-6f49-8394-91b2-81eeec4da597" dir="ltr"><td id="lsYc" class=""><code>Resource</code></td><td id="&lt;[Xk" class="">AssumeRole 가능한 대상 Role 제한</td></tr></tbody></table><p id="a26720e4-6f49-83fe-bef5-81e4918aeb1a" class="" dir="auto">즉, 일반 IAM User는 아무 Role이나 AssumeRole 할 수 있는 것이 아니다.</p><p id="b0b720e4-6f49-8364-86d2-814bd1dfd706" class="" dir="auto">허용된 Role ARN에 대해서만 AssumeRole 할 수 있다.</p><hr id="cef720e4-6f49-82e1-b5f5-81cb6ee3e590" dir="auto"/><h2 id="24e720e4-6f49-83e5-8cc4-018a3d4c6412" class="" dir="auto">4.2 AssumeRole 성공 조건</h2><p id="a21720e4-6f49-83a2-aef0-8148f9301a63" class="" dir="auto">AssumeRole이 성공하려면 항상 두 조건이 모두 필요하다.</p><pre id="0fe720e4-6f49-824b-934b-016456358405" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">조건 1. 호출하는 주체에게 sts:AssumeRole 권한이 있어야 한다.
+
+조건 2. 대상 Role의 Trust Policy가 호출 주체를 Principal로 신뢰해야 한다.</code></pre><p id="60a720e4-6f49-83f1-bfd8-8173852691b1" class="" dir="auto">현재 실습 환경에서는 학생 IAM User가 관리자 권한이 있으므로 조건 1은 이미 충족되어 있다.</p><p id="975720e4-6f49-82cf-bb51-81d1f2fe2480" class="" dir="auto">이번 실습 코드에서는 조건 2를 만족시키기 위해 Role의 Trust Policy에 현재 IAM User ARN을 넣는다.</p><p id="7be720e4-6f49-8250-a41f-01e99257a932" class="" dir="auto">예:</p><pre id="05e720e4-6f49-8296-b829-01e8366374b0" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Effect&quot;: &quot;Allow&quot;,
+  &quot;Principal&quot;: {
+    &quot;AWS&quot;: &quot;arn:aws:iam::471166314777:user/instructor&quot;
+  },
+  &quot;Action&quot;: &quot;sts:AssumeRole&quot;
+}</code></pre><p id="26b720e4-6f49-8341-a6c7-81317367a5a0" class="" dir="auto">정리하면 다음과 같다.</p><table id="377720e4-6f49-826e-a239-01478e9c9fb6" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="992720e4-6f49-82a9-a3c0-812f7fd8cb9b" dir="ltr"><th id="`AbA" class="simple-table-header-color simple-table-header">항목</th><th id="KIeM" class="simple-table-header-color simple-table-header">현재 실습 환경</th></tr></thead><tbody><tr id="22c720e4-6f49-8340-bef6-01fa5763a4fb" dir="ltr"><td id="`AbA" class="">학생 IAM User의 <code>sts:AssumeRole</code> 권한</td><td id="KIeM" class="">관리자 권한에 포함되어 있음</td></tr><tr id="743720e4-6f49-839d-8c1a-014fb3474a1f" dir="ltr"><td id="`AbA" class="">대상 Role의 Trust Policy</td><td id="KIeM" class="">실습 코드에서 직접 설정</td></tr><tr id="429720e4-6f49-823d-93ff-011ce8030c22" dir="ltr"><td id="`AbA" class="">대상 Role의 Permission Policy</td><td id="KIeM" class="">viewer/operator/admin별로 다르게 설정</td></tr></tbody></table><hr id="7e5720e4-6f49-8367-a821-81b5ed2809d2" dir="auto"/><h1 id="630720e4-6f49-822b-aceb-8195c4ad9a27" class="" dir="auto">5. 핵심 개념</h1><h2 id="02e720e4-6f49-8395-b9c8-01d643880414" class="" dir="auto">5.1 IAM User</h2><p id="c65720e4-6f49-827c-bfa7-01d977b6fb10" class="" dir="auto">IAM User는 AWS 계정 안에서 사람 또는 애플리케이션을 식별하는 장기 자격 증명이다.</p><p id="aa8720e4-6f49-83e9-93bd-015d9e6817ba" class="" dir="auto">이번 실습에서는 로컬 AWS Profile이 IAM User의 자격 증명을 사용한다.</p><pre id="886720e4-6f49-8206-9502-81ebadf83911" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS Profile
+  ↓
+IAM User instructor</code></pre><p id="098720e4-6f49-82dc-b0c2-014d97703e9f" class="" dir="auto">현재 학생 IAM User는 관리자 권한을 가지고 있으므로 직접 EC2, S3, IAM을 제어할 수 있다.</p><p id="364720e4-6f49-83f0-ab62-01540d5f1030" class="" dir="auto">하지만 이번 실습의 목적은 관리자 권한을 직접 사용하는 것이 아니다.</p><p id="e2e720e4-6f49-8252-8e28-018f4c985723" class="" dir="auto">핵심은 다음이다.</p><pre id="224720e4-6f49-83d1-9d87-814ffa0d0532" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">관리자 권한을 가진 IAM User가 Role을 AssumeRole 한 뒤,
+Assume한 Role의 권한으로만 동작하는지 확인한다.</code></pre><hr id="f77720e4-6f49-8349-beba-017f470754aa" dir="auto"/><h2 id="b92720e4-6f49-8321-b597-017c4bc390d1" class="" dir="auto">5.2 IAM Role</h2><p id="b92720e4-6f49-827d-99ee-8144c4961b7c" class="" dir="auto">IAM Role은 특정 주체가 임시로 맡아서 사용할 수 있는 권한 묶음이다.</p><p id="ebc720e4-6f49-8377-9fe7-81c28fb1ed71" class="" dir="auto">Role 자체는 Access Key를 직접 가지지 않는다.</p><p id="ca6720e4-6f49-830f-a83f-016236c9d79c" class="" dir="auto">대신 STS <code>AssumeRole</code>을 통해 임시 자격 증명을 발급받아 사용한다.</p><pre id="297720e4-6f49-83ea-97fb-019ce62e94b2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IAM User
+  ↓ sts:AssumeRole
+IAM Role
+  ↓
+임시 Access Key 발급
+  ↓
+Role 권한으로 AWS API 호출</code></pre><hr id="bb5720e4-6f49-8231-927c-813b8b0114f7" dir="auto"/><h2 id="dca720e4-6f49-838c-8a1f-8113131497b8" class="" dir="auto">5.3 Trust Policy</h2><p id="f11720e4-6f49-8228-aee1-81b10a019af5" class="" dir="auto">Trust Policy는 Role에 설정되는 정책이다.</p><p id="f69720e4-6f49-8351-945d-8142e0382435" class="" dir="auto">“누가 이 Role을 AssumeRole 할 수 있는가?”를 정의한다.</p><p id="7fa720e4-6f49-82df-9842-819fe62c3fc1" class="" dir="auto">예:</p><pre id="2ad720e4-6f49-82d8-9a16-013324aa14c9" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;TrustLocalIamUser&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Principal&quot;: {
+        &quot;AWS&quot;: &quot;arn:aws:iam::471166314777:user/instructor&quot;
+      },
+      &quot;Action&quot;: &quot;sts:AssumeRole&quot;
+    }
+  ]
+}</code></pre><p id="b7b720e4-6f49-838f-929b-8158f0b6dd52" class="" dir="auto">이 정책의 의미는 다음과 같다.</p><pre id="b5a720e4-6f49-8212-863c-81ca28387bb8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">arn:aws:iam::471166314777:user/instructor 사용자는
+이 Role을 AssumeRole 할 수 있다.</code></pre><p id="e42720e4-6f49-83dd-b8bc-0163c4950683" class="" dir="auto">여기서 중요한 점은 <code>Principal</code>이다.</p><pre id="2c2720e4-6f49-8323-b87d-818f3e67cb2b" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">&quot;Principal&quot;: {
+  &quot;AWS&quot;: &quot;arn:aws:iam::471166314777:user/instructor&quot;
+}</code></pre><p id="804720e4-6f49-8205-8808-811b4dc75356" class="" dir="auto"><code>Principal</code>에는 AssumeRole API를 실제 호출하는 AWS 주체를 넣는다.</p><p id="4b0720e4-6f49-83e6-bb01-01b7975dc88a" class="" dir="auto">이번 실습에서는 로컬에서 실행하므로 IAM User가 Principal이 된다.</p><p id="d1d720e4-6f49-8379-af78-01172cc8431a" class="" dir="auto">이후 EC2에서 FastAPI를 실행하면 Principal은 EC2에 연결된 Instance Profile Role이 된다.</p><hr id="4ac720e4-6f49-8372-bb78-01c967e2436e" dir="auto"/><h2 id="6fc720e4-6f49-8317-a826-01fb4df46eec" class="" dir="auto">5.4 Permission Policy</h2><p id="4d3720e4-6f49-835c-b7d6-814355474698" class="" dir="auto">Permission Policy는 Role을 Assume한 뒤 어떤 AWS 작업을 할 수 있는지 정의한다.</p><p id="ba3720e4-6f49-82bc-b333-01ffece564a8" class="" dir="auto">예를 들어 viewer Role에는 조회 권한만 부여한다.</p><pre id="485720e4-6f49-823b-b7bf-811c12ef70f8" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Effect&quot;: &quot;Allow&quot;,
+  &quot;Action&quot;: [
+    &quot;ec2:DescribeInstances&quot;,
+    &quot;s3:ListAllMyBuckets&quot;
+  ],
+  &quot;Resource&quot;: &quot;*&quot;
+}</code></pre><p id="87e720e4-6f49-83f0-b905-01b0aa10c922" class="" dir="auto">이 정책은 다음 의미를 가진다.</p><pre id="ddf720e4-6f49-82b7-8375-819d2fbf956d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이 Role을 Assume한 세션은 EC2 조회와 S3 버킷 목록 조회를 할 수 있다.</code></pre><p id="a7e720e4-6f49-822b-8800-81f276e4ab10" class="" dir="auto">하지만 <code>ec2:StopInstances</code>, <code>s3:PutObject</code> 같은 권한은 없으므로 해당 작업은 실패한다.</p><hr id="96f720e4-6f49-825e-b0e1-013db4018d31" dir="auto"/><h1 id="e15720e4-6f49-83e4-a72f-01a9fc79779a" class="" dir="auto">6. Role별 권한 설계</h1><h2 id="ae4720e4-6f49-8298-990e-0102307aed02" class="" dir="auto">6.1 viewer Role</h2><p id="757720e4-6f49-8267-8fc6-01f13ce89c25" class="" dir="auto"><code>app-viewer-role</code>은 조회 전용 Role이다.</p><p id="969720e4-6f49-8210-84e3-0166fd235c8c" class="" dir="auto">허용 작업:</p><pre id="d1e720e4-6f49-8363-9a9c-01ba0ddf7256" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ec2:DescribeInstances
+ec2:DescribeInstanceStatus
+ec2:DescribeTags
+ec2:DescribeSecurityGroups
+ec2:DescribeVolumes
+s3:ListAllMyBuckets
+s3:ListBucket</code></pre><p id="f44720e4-6f49-8205-a3e4-81d58a00a4e9" class="" dir="auto">허용하지 않는 작업:</p><pre id="9c8720e4-6f49-8339-94a0-8108b62a16e7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ec2:StartInstances
+ec2:StopInstances
+s3:PutObject</code></pre><hr id="843720e4-6f49-83e0-9a5f-81efd6d7a81e" dir="auto"/><h2 id="de1720e4-6f49-83d5-896a-016ae7a819f3" class="" dir="auto">6.2 operator Role</h2><p id="3d6720e4-6f49-83f3-9142-81486ea01870" class="" dir="auto"><code>app-operator-role</code>은 운영 담당자 Role이다.</p><p id="872720e4-6f49-8352-aa20-810d27a5bc03" class="" dir="auto">허용 작업:</p><pre id="90e720e4-6f49-8363-9f03-01b8d035225c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ec2:DescribeInstances
+ec2:DescribeInstanceStatus
+ec2:DescribeTags
+ec2:StartInstances
+ec2:StopInstances
+s3:ListAllMyBuckets
+s3:ListBucket</code></pre><p id="13f720e4-6f49-82f9-9a79-01d608b496e0" class="" dir="auto">허용하지 않는 작업:</p><pre id="1de720e4-6f49-8285-8527-018cc49c7f6b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3:PutObject
+iam:*
+ec2:TerminateInstances</code></pre><hr id="522720e4-6f49-8289-ad63-8154b5f52f2d" dir="auto"/><h2 id="747720e4-6f49-8348-b65b-014966f08dde" class="" dir="auto">6.3 admin Role</h2><p id="e84720e4-6f49-824c-83d4-81817fd49643" class="" dir="auto"><code>app-admin-role</code>은 실습용 관리자 Role이다.</p><p id="10e720e4-6f49-82d1-a0a9-01a8be2df196" class="" dir="auto">허용 작업:</p><pre id="ee4720e4-6f49-82c2-b73a-01895ef653a5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ec2:Describe*
+ec2:StartInstances
+ec2:StopInstances
+ec2:RebootInstances
+ec2:CreateTags
+ec2:DeleteTags
+s3:ListAllMyBuckets
+s3:ListBucket
+s3:GetObject
+s3:PutObject</code></pre><p id="e07720e4-6f49-838f-bd35-010ab11bfe54" class="" dir="auto">주의할 점은 <code>admin</code>이라고 해서 <code>AdministratorAccess</code>를 그대로 연결하지 않는다는 것이다.</p><p id="0ca720e4-6f49-83f0-b86e-01fcb43d9230" class="" dir="auto">이번 실습의 목적은 역할별 권한 차이를 확인하는 것이므로, 필요한 범위 안에서 권한을 넓힌다.</p><hr id="972720e4-6f49-829c-9494-01758f31e487" dir="auto"/><h1 id="a97720e4-6f49-825c-b3b4-81bdefe3c2f9" class="" dir="auto">7. 실습 파일 구성</h1><pre id="832720e4-6f49-83d8-a5e3-810c4f51c1b6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">iam-role-login-prep-lab/
+├── 01_create_roles.py
+├── 02_assume_role_test.py
+├── 03_cleanup_roles.py
+└── README.md</code></pre><hr id="6a7720e4-6f49-8274-96a3-810eccb0fcd7" dir="auto"/><h1 id="5c7720e4-6f49-8219-917f-01c0c53401f4" class="" dir="auto">8. 사전 준비</h1><h2 id="a70720e4-6f49-82f6-9d08-81fbcdd97803" class="" dir="auto">8.1 boto3 설치</h2><pre id="3d4720e4-6f49-824b-a31f-01910690611e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">pip install boto3</code></pre><p id="e45720e4-6f49-83d6-9456-01e6695d5f7d" class="" dir="auto">명령어 설명:</p><pre id="b58720e4-6f49-83a1-8926-0162d5a84a95" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pip
+  Python 패키지를 설치하는 명령어다.
+
+install
+  지정한 패키지를 현재 Python 환경에 설치한다.
+
+boto3
+  Python에서 AWS API를 호출하기 위한 AWS SDK다.</code></pre><hr id="8d3720e4-6f49-833c-92e5-0109b800310d" dir="auto"/><h2 id="93a720e4-6f49-8380-bece-01f231c81281" class="" dir="auto">8.2 AWS Profile 확인</h2><p id="055720e4-6f49-82f4-80e0-019c5ce2992d" class="" dir="auto">현재 학생들이 사용하는 profile 이름을 확인한다.</p><pre id="756720e4-6f49-8362-a478-013c9aa3fc66" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws configure list-profiles</code></pre><p id="b4b720e4-6f49-8256-902e-8125cf54cead" class="" dir="auto">예상 출력:</p><pre id="93c720e4-6f49-8392-8e40-8150d0716cf3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">default
+instructor</code></pre><p id="c62720e4-6f49-8390-a78a-81e71e8392c9" class="" dir="auto"><code>instructor</code> profile을 사용한다고 가정하고 현재 인증 주체를 확인한다.</p><pre id="809720e4-6f49-8274-8151-01e8c610b61c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws sts get-caller-identity --profile instructor</code></pre><p id="c96720e4-6f49-82c2-9d4f-819a623b0e72" class="" dir="auto">명령어 설명:</p><pre id="50e720e4-6f49-8316-8060-8140ab601cc9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws
+  AWS CLI 명령어 실행 프로그램이다.
+
+sts
+  AWS Security Token Service 관련 명령을 실행한다.
+
+get-caller-identity
+  현재 인증된 AWS 주체의 Account, UserId, Arn을 확인한다.
+
+--profile instructor
+  로컬 AWS 설정 중 instructor profile을 사용한다.</code></pre><p id="f9c720e4-6f49-828e-a347-01724a74d1c8" class="" dir="auto">예상 출력:</p><pre id="13d720e4-6f49-8273-86b9-81d0c82de590" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;UserId&quot;: &quot;AIDAxxxxxxxxxxxxx&quot;,
+    &quot;Account&quot;: &quot;471166314777&quot;,
+    &quot;Arn&quot;: &quot;arn:aws:iam::471166314777:user/instructor&quot;
+}</code></pre><p id="eb0720e4-6f49-8322-8f0d-810a09955ad1" class="" dir="auto">이 ARN이 이번 실습에서 Trust Policy의 Principal로 들어간다.</p><hr id="3a5720e4-6f49-831d-b2b3-812cbfd53ce0" dir="auto"/><h1 id="b97720e4-6f49-8296-a0e7-8173741302f1" class="" dir="auto">9. 1단계: Role 생성 및 정책 연결</h1><p id="4c5720e4-6f49-83e1-b060-81206f0eaa90" class="" dir="auto">파일명: <code>01_create_roles.py</code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="a9e720e4-6f49-834b-9f3e-01f447c80348" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+import boto3
+from botocore.exceptions import ClientError
+
+
+AWS_PROFILE = &quot;instructor&quot;
+AWS_REGION = &quot;ap-northeast-2&quot;
+
+ROLE_NAMES = {
+    &quot;viewer&quot;: &quot;app-viewer-role&quot;,
+    &quot;operator&quot;: &quot;app-operator-role&quot;,
+    &quot;admin&quot;: &quot;app-admin-role&quot;
+}
+
+
+def create_base_session():
+    &quot;&quot;&quot;
+    로컬 AWS Profile을 사용하는 boto3 Session을 생성한다.
+
+    boto3.Session은 AWS API 호출에 사용할 인증 정보와 리전 정보를 담는 객체다.
+
+    profile_name:
+        ~/.aws/config 또는 ~/.aws/credentials에 저장된 profile 이름이다.
+
+    region_name:
+        AWS API 호출 시 사용할 기본 리전이다.
+    &quot;&quot;&quot;
+
+    return boto3.Session(
+        profile_name=AWS_PROFILE,
+        region_name=AWS_REGION
+    )
+
+
+def get_current_identity(session):
+    &quot;&quot;&quot;
+    현재 boto3 Session이 어떤 AWS Principal로 인증되어 있는지 확인한다.
+
+    sts.get_caller_identity()는 현재 인증 주체의 정보를 반환한다.
+
+    이번 실습에서는 반환값 중 Arn을 Trust Policy의 Principal로 사용한다.
+    &quot;&quot;&quot;
+
+    sts_client = session.client(&quot;sts&quot;)
+    identity = sts_client.get_caller_identity()
+
+    print(&quot;=== 현재 인증 주체 ===&quot;)
+    print(f&quot;Account: {identity[&#x27;Account&#x27;]}&quot;)
+    print(f&quot;Arn    : {identity[&#x27;Arn&#x27;]}&quot;)
+    print(f&quot;UserId : {identity[&#x27;UserId&#x27;]}&quot;)
+    print()
+
+    return identity
+
+
+def build_trust_policy(principal_arn):
+    &quot;&quot;&quot;
+    IAM Role의 Trust Policy를 생성한다.
+
+    Trust Policy는 &#x27;누가 이 Role을 AssumeRole 할 수 있는가&#x27;를 정의한다.
+
+    principal_arn:
+        AssumeRole을 호출할 수 있는 AWS Principal ARN이다.
+        이번 실습에서는 현재 로컬 AWS profile의 IAM User ARN을 사용한다.
+
+    Action:
+        sts:AssumeRole
+
+    의미:
+        지정한 Principal이 이 Role을 맡을 수 있도록 허용한다.
+    &quot;&quot;&quot;
+
+    trust_policy = {
+        &quot;Version&quot;: &quot;2012-10-17&quot;,
+        &quot;Statement&quot;: [
+            {
+                &quot;Sid&quot;: &quot;TrustLocalIamUser&quot;,
+                &quot;Effect&quot;: &quot;Allow&quot;,
+                &quot;Principal&quot;: {
+                    &quot;AWS&quot;: principal_arn
+                },
+                &quot;Action&quot;: &quot;sts:AssumeRole&quot;
+            }
+        ]
+    }
+
+    return json.dumps(trust_policy)
+
+
+def build_viewer_policy():
+    &quot;&quot;&quot;
+    viewer Role에 연결할 Permission Policy를 생성한다.
+
+    viewer는 조회 전용 사용자다.
+    EC2와 S3의 조회 계열 작업만 허용한다.
+    &quot;&quot;&quot;
+
+    policy = {
+        &quot;Version&quot;: &quot;2012-10-17&quot;,
+        &quot;Statement&quot;: [
+            {
+                &quot;Sid&quot;: &quot;AllowEC2ReadOnly&quot;,
+                &quot;Effect&quot;: &quot;Allow&quot;,
+                &quot;Action&quot;: [
+                    &quot;ec2:DescribeInstances&quot;,
+                    &quot;ec2:DescribeInstanceStatus&quot;,
+                    &quot;ec2:DescribeTags&quot;,
+                    &quot;ec2:DescribeSecurityGroups&quot;,
+                    &quot;ec2:DescribeVolumes&quot;
+                ],
+                &quot;Resource&quot;: &quot;*&quot;
+            },
+            {
+                &quot;Sid&quot;: &quot;AllowS3ListOnly&quot;,
+                &quot;Effect&quot;: &quot;Allow&quot;,
+                &quot;Action&quot;: [
+                    &quot;s3:ListAllMyBuckets&quot;,
+                    &quot;s3:ListBucket&quot;
+                ],
+                &quot;Resource&quot;: &quot;*&quot;
+            }
+        ]
+    }
+
+    return json.dumps(policy)
+
+
+def build_operator_policy():
+    &quot;&quot;&quot;
+    operator Role에 연결할 Permission Policy를 생성한다.
+
+    operator는 운영 담당자 역할이다.
+    EC2 조회, 시작, 중지를 허용한다.
+    S3는 목록 조회만 허용한다.
+    &quot;&quot;&quot;
+
+    policy = {
+        &quot;Version&quot;: &quot;2012-10-17&quot;,
+        &quot;Statement&quot;: [
+            {
+                &quot;Sid&quot;: &quot;AllowEC2ReadAndOperate&quot;,
+                &quot;Effect&quot;: &quot;Allow&quot;,
+                &quot;Action&quot;: [
+                    &quot;ec2:DescribeInstances&quot;,
+                    &quot;ec2:DescribeInstanceStatus&quot;,
+                    &quot;ec2:DescribeTags&quot;,
+                    &quot;ec2:StartInstances&quot;,
+                    &quot;ec2:StopInstances&quot;
+                ],
+                &quot;Resource&quot;: &quot;*&quot;
+            },
+            {
+                &quot;Sid&quot;: &quot;AllowS3ListOnly&quot;,
+                &quot;Effect&quot;: &quot;Allow&quot;,
+                &quot;Action&quot;: [
+                    &quot;s3:ListAllMyBuckets&quot;,
+                    &quot;s3:ListBucket&quot;
+                ],
+                &quot;Resource&quot;: &quot;*&quot;
+            }
+        ]
+    }
+
+    return json.dumps(policy)
+
+
+def build_admin_policy():
+    &quot;&quot;&quot;
+    admin Role에 연결할 Permission Policy를 생성한다.
+
+    admin은 실습용 관리 역할이다.
+    EC2 운영 작업과 S3 객체 업로드를 허용한다.
+
+    실습용 admin이라고 해서 AdministratorAccess를 연결하지 않는다.
+    최소 권한 원칙을 유지하면서 viewer/operator보다 넓은 권한을 부여한다.
+    &quot;&quot;&quot;
+
+    policy = {
+        &quot;Version&quot;: &quot;2012-10-17&quot;,
+        &quot;Statement&quot;: [
+            {
+                &quot;Sid&quot;: &quot;AllowEC2AdminOperations&quot;,
+                &quot;Effect&quot;: &quot;Allow&quot;,
+                &quot;Action&quot;: [
+                    &quot;ec2:Describe*&quot;,
+                    &quot;ec2:StartInstances&quot;,
+                    &quot;ec2:StopInstances&quot;,
+                    &quot;ec2:RebootInstances&quot;,
+                    &quot;ec2:CreateTags&quot;,
+                    &quot;ec2:DeleteTags&quot;
+                ],
+                &quot;Resource&quot;: &quot;*&quot;
+            },
+            {
+                &quot;Sid&quot;: &quot;AllowS3BasicOperations&quot;,
+                &quot;Effect&quot;: &quot;Allow&quot;,
+                &quot;Action&quot;: [
+                    &quot;s3:ListAllMyBuckets&quot;,
+                    &quot;s3:ListBucket&quot;,
+                    &quot;s3:GetObject&quot;,
+                    &quot;s3:PutObject&quot;
+                ],
+                &quot;Resource&quot;: &quot;*&quot;
+            }
+        ]
+    }
+
+    return json.dumps(policy)
+
+
+def get_permission_policy_by_role_type(role_type):
+    &quot;&quot;&quot;
+    role_type에 맞는 Permission Policy 문서를 반환한다.
+
+    role_type 값:
+        viewer
+        operator
+        admin
+    &quot;&quot;&quot;
+
+    if role_type == &quot;viewer&quot;:
+        return build_viewer_policy()
+
+    if role_type == &quot;operator&quot;:
+        return build_operator_policy()
+
+    if role_type == &quot;admin&quot;:
+        return build_admin_policy()
+
+    raise ValueError(f&quot;지원하지 않는 role_type임: {role_type}&quot;)
+
+
+def create_or_update_role(iam_client, role_type, role_name, principal_arn):
+    &quot;&quot;&quot;
+    IAM Role을 생성한다.
+
+    Role이 이미 존재하면 새로 만들지 않고 Trust Policy만 업데이트한다.
+
+    create_role():
+        IAM Role을 새로 생성한다.
+
+    update_assume_role_policy():
+        기존 Role의 Trust Policy를 변경한다.
+    &quot;&quot;&quot;
+
+    trust_policy = build_trust_policy(principal_arn)
+
+    try:
+        response = iam_client.create_role(
+            RoleName=role_name,
+            AssumeRolePolicyDocument=trust_policy,
+            Description=f&quot;Application {role_type} role for login-based AWS control lab&quot;
+        )
+
+        role = response[&quot;Role&quot;]
+
+        print(f&quot;[생성 완료] {role_name}&quot;)
+        print(f&quot;RoleArn: {role[&#x27;Arn&#x27;]}&quot;)
+        print()
+
+        return role
+
+    except ClientError as e:
+        error_code = e.response[&quot;Error&quot;][&quot;Code&quot;]
+
+        if error_code == &quot;EntityAlreadyExists&quot;:
+            print(f&quot;[안내] 이미 존재하는 Role임: {role_name}&quot;)
+            print(&quot;[작업] Trust Policy를 현재 Principal 기준으로 업데이트함&quot;)
+
+            iam_client.update_assume_role_policy(
+                RoleName=role_name,
+                PolicyDocument=trust_policy
+            )
+
+            role = iam_client.get_role(RoleName=role_name)[&quot;Role&quot;]
+
+            print(f&quot;[업데이트 완료] {role_name}&quot;)
+            print(f&quot;RoleArn: {role[&#x27;Arn&#x27;]}&quot;)
+            print()
+
+            return role
+
+        print(f&quot;[오류] Role 생성 실패: {role_name}&quot;)
+        print(e)
+        raise
+
+
+def attach_inline_permission_policy(iam_client, role_type, role_name):
+    &quot;&quot;&quot;
+    Role에 Inline Permission Policy를 연결한다.
+
+    put_role_policy():
+        Role 내부에 Inline Policy를 추가하거나 덮어쓴다.
+
+    이번 실습에서는 Role별 권한 차이를 명확히 보여주기 위해 Inline Policy를 사용한다.
+    &quot;&quot;&quot;
+
+    policy_name = f&quot;{role_type}-permission-policy&quot;
+    policy_document = get_permission_policy_by_role_type(role_type)
+
+    iam_client.put_role_policy(
+        RoleName=role_name,
+        PolicyName=policy_name,
+        PolicyDocument=policy_document
+    )
+
+    print(f&quot;[정책 연결 완료] {role_name}&quot;)
+    print(f&quot;PolicyName: {policy_name}&quot;)
+    print()
+
+
+def print_role_map(account_id):
+    &quot;&quot;&quot;
+    이후 FastAPI에서 사용할 USER_ROLE_MAP 예시를 출력한다.
+    &quot;&quot;&quot;
+
+    print(&quot;=== 이후 FastAPI에서 사용할 USER_ROLE_MAP 예시 ===&quot;)
+    print(&quot;USER_ROLE_MAP = {&quot;)
+    print(f&#x27;    &quot;viewer&quot;: &quot;arn:aws:iam::{account_id}:role/app-viewer-role&quot;,&#x27;)
+    print(f&#x27;    &quot;operator&quot;: &quot;arn:aws:iam::{account_id}:role/app-operator-role&quot;,&#x27;)
+    print(f&#x27;    &quot;admin&quot;: &quot;arn:aws:iam::{account_id}:role/app-admin-role&quot;&#x27;)
+    print(&quot;}&quot;)
+    print()
+
+
+def main():
+    session = create_base_session()
+
+    identity = get_current_identity(session)
+    principal_arn = identity[&quot;Arn&quot;]
+    account_id = identity[&quot;Account&quot;]
+
+    iam_client = session.client(&quot;iam&quot;)
+
+    for role_type, role_name in ROLE_NAMES.items():
+        create_or_update_role(
+            iam_client=iam_client,
+            role_type=role_type,
+            role_name=role_name,
+            principal_arn=principal_arn
+        )
+
+        attach_inline_permission_policy(
+            iam_client=iam_client,
+            role_type=role_type,
+            role_name=role_name
+        )
+
+    print_role_map(account_id)
+
+    print(&quot;IAM Role 생성 및 정책 연결 완료&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><hr id="3fc720e4-6f49-82aa-8db5-81fd2009eecc" dir="auto"/><h2 id="2f4720e4-6f49-82d0-9dcb-01e73ea3ffe3" class="" dir="auto">9.1 실행</h2><pre id="c85720e4-6f49-8208-836a-01669d548564" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python 01_create_roles.py</code></pre><p id="1bd720e4-6f49-8267-9f70-81e0d559650a" class="" dir="auto">예상 출력:</p><pre id="ec9720e4-6f49-8250-8839-01877778a041" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">=== 현재 인증 주체 ===
+Account: 471166314777
+Arn    : arn:aws:iam::471166314777:user/instructor
+UserId : AIDAxxxxxxxxxxxxx
+
+[생성 완료] app-viewer-role
+RoleArn: arn:aws:iam::471166314777:role/app-viewer-role
+
+[정책 연결 완료] app-viewer-role
+PolicyName: viewer-permission-policy
+
+[생성 완료] app-operator-role
+RoleArn: arn:aws:iam::471166314777:role/app-operator-role
+
+[정책 연결 완료] app-operator-role
+PolicyName: operator-permission-policy
+
+[생성 완료] app-admin-role
+RoleArn: arn:aws:iam::471166314777:role/app-admin-role
+
+[정책 연결 완료] app-admin-role
+PolicyName: admin-permission-policy
+
+=== 이후 FastAPI에서 사용할 USER_ROLE_MAP 예시 ===
+USER_ROLE_MAP = {
+    &quot;viewer&quot;: &quot;arn:aws:iam::471166314777:role/app-viewer-role&quot;,
+    &quot;operator&quot;: &quot;arn:aws:iam::471166314777:role/app-operator-role&quot;,
+    &quot;admin&quot;: &quot;arn:aws:iam::471166314777:role/app-admin-role&quot;
+}
+
+IAM Role 생성 및 정책 연결 완료</code></pre><hr id="795720e4-6f49-83ea-8d19-016032162764" dir="auto"/><h1 id="cf7720e4-6f49-8280-bf3b-810e84aa7de5" class="" dir="auto">10. 2단계: Role별 AssumeRole 테스트</h1><p id="28b720e4-6f49-828b-bd0f-81bfbda99af1" class="" dir="auto">이번 단계에서는 로컬 IAM User가 각 Role을 AssumeRole 한 뒤, Role별 권한 차이를 확인한다.</p><p id="cc1720e4-6f49-83b4-86bf-812da5316566" class="" dir="auto">중요한 점은 다음이다.</p><pre id="a9c720e4-6f49-833d-8430-017e59cafeea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">학생 IAM User는 관리자 권한을 가지고 있다.
+
+하지만 AssumeRole 이후에 생성된 임시 자격 증명은
+학생 IAM User의 관리자 권한이 아니라
+Assume한 Role의 Permission Policy를 기준으로 동작한다.</code></pre><p id="0a5720e4-6f49-8213-a42d-01539ed0472b" class="" dir="auto">즉, <code>app-viewer-role</code>을 AssumeRole 하면 관리자 IAM User로 시작했더라도 viewer 권한만 가진다.</p><hr id="cff720e4-6f49-82ed-9900-016f07ec54e9" dir="auto"/><h2 id="215720e4-6f49-8373-b7bc-81eeba533263" class="" dir="auto">10.1 테스트 항목</h2><table id="67a720e4-6f49-82b9-b2fd-81c49bd3a3f2" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="116720e4-6f49-83f0-b0b6-81ff3f2efcdf" dir="ltr"><th id="x&gt;i&gt;" class="simple-table-header-color simple-table-header">테스트 작업</th><th id="\_cw" class="simple-table-header-color simple-table-header">viewer</th><th id="HJq=" class="simple-table-header-color simple-table-header">operator</th><th id="{bcI" class="simple-table-header-color simple-table-header">admin</th></tr></thead><tbody><tr id="6ab720e4-6f49-8213-adb2-01d9400c0a41" dir="ltr"><td id="x&gt;i&gt;" class="">AssumeRole</td><td id="\_cw" class="">성공</td><td id="HJq=" class="">성공</td><td id="{bcI" class="">성공</td></tr><tr id="bd6720e4-6f49-8232-9b06-81ee7367b1e0" dir="ltr"><td id="x&gt;i&gt;" class="">EC2 인스턴스 조회</td><td id="\_cw" class="">성공</td><td id="HJq=" class="">성공</td><td id="{bcI" class="">성공</td></tr><tr id="bf1720e4-6f49-8336-82ff-019419670f46" dir="ltr"><td id="x&gt;i&gt;" class="">S3 버킷 목록 조회</td><td id="\_cw" class="">성공</td><td id="HJq=" class="">성공</td><td id="{bcI" class="">성공</td></tr><tr id="8b0720e4-6f49-8242-84b5-01a19866e16f" dir="ltr"><td id="x&gt;i&gt;" class="">EC2 중지 DryRun</td><td id="\_cw" class="">실패</td><td id="HJq=" class="">성공</td><td id="{bcI" class="">성공</td></tr><tr id="f55720e4-6f49-826a-ac8e-01cb18df222d" dir="ltr"><td id="x&gt;i&gt;" class="">S3 객체 업로드</td><td id="\_cw" class="">실패</td><td id="HJq=" class="">실패</td><td id="{bcI" class="">성공</td></tr></tbody></table><hr id="444720e4-6f49-83f6-b194-81acfe9e9ed9" dir="auto"/><h2 id="876720e4-6f49-8210-9362-012b03f5fdba" class="" dir="auto">10.2 테스트 코드</h2><p id="b2c720e4-6f49-82e6-a0a2-818c19a93a69" class="" dir="auto">파일명: <code>02_assume_role_test.py</code></p><pre id="ff8720e4-6f49-82a4-9f9f-8152389a0c92" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+from botocore.exceptions import ClientError
+
+
+AWS_PROFILE = &quot;instructor&quot;
+AWS_REGION = &quot;ap-northeast-2&quot;
+
+ROLE_MAP = {
+    &quot;viewer&quot;: &quot;app-viewer-role&quot;,
+    &quot;operator&quot;: &quot;app-operator-role&quot;,
+    &quot;admin&quot;: &quot;app-admin-role&quot;
+}
+
+
+def create_base_session():
+    &quot;&quot;&quot;
+    로컬 IAM User profile을 사용하는 기본 Session을 생성한다.
+
+    이 Session은 sts:AssumeRole을 호출하기 위한 시작 세션이다.
+    아직 viewer/operator/admin 권한이 아니다.
+    &quot;&quot;&quot;
+
+    return boto3.Session(
+        profile_name=AWS_PROFILE,
+        region_name=AWS_REGION
+    )
+
+
+def get_account_id(session):
+    &quot;&quot;&quot;
+    현재 profile의 Account ID를 조회한다.
+
+    Role ARN을 자동으로 만들기 위해 사용한다.
+    &quot;&quot;&quot;
+
+    sts_client = session.client(&quot;sts&quot;)
+    identity = sts_client.get_caller_identity()
+
+    print(&quot;=== AssumeRole 호출 전 인증 주체 ===&quot;)
+    print(f&quot;Arn: {identity[&#x27;Arn&#x27;]}&quot;)
+    print()
+
+    return identity[&quot;Account&quot;]
+
+
+def build_role_arn(account_id, role_name):
+    &quot;&quot;&quot;
+    Role 이름을 Role ARN으로 변환한다.
+
+    입력:
+        account_id = 471166314777
+        role_name = app-viewer-role
+
+    출력:
+        arn:aws:iam::471166314777:role/app-viewer-role
+    &quot;&quot;&quot;
+
+    return f&quot;arn:aws:iam::{account_id}:role/{role_name}&quot;
+
+
+def assume_role(base_session, role_arn, role_type):
+    &quot;&quot;&quot;
+    지정한 Role을 AssumeRole 한다.
+
+    sts.assume_role()은 대상 Role의 권한을 가진 임시 자격 증명을 반환한다.
+
+    RoleArn:
+        AssumeRole 대상 IAM Role ARN이다.
+
+    RoleSessionName:
+        Role 세션 이름이다.
+        CloudTrail에서 누가 어떤 세션 이름으로 Role을 사용했는지 추적할 때 도움이 된다.
+    &quot;&quot;&quot;
+
+    sts_client = base_session.client(&quot;sts&quot;)
+
+    response = sts_client.assume_role(
+        RoleArn=role_arn,
+        RoleSessionName=f&quot;local-{role_type}-test-session&quot;
+    )
+
+    credentials = response[&quot;Credentials&quot;]
+
+    print(f&quot;[성공] {role_type} Role AssumeRole 완료&quot;)
+    print(f&quot;RoleArn     : {role_arn}&quot;)
+    print(f&quot;AccessKeyId : {credentials[&#x27;AccessKeyId&#x27;]}&quot;)
+    print(f&quot;Expiration  : {credentials[&#x27;Expiration&#x27;]}&quot;)
+    print()
+
+    return credentials
+
+
+def create_assumed_session(credentials):
+    &quot;&quot;&quot;
+    AssumeRole로 받은 임시 자격 증명을 사용해 새로운 boto3 Session을 생성한다.
+
+    주의:
+        임시 자격 증명은 AccessKeyId, SecretAccessKey, SessionToken이 모두 필요하다.
+        SessionToken이 없으면 STS 임시 자격 증명으로 인증할 수 없다.
+    &quot;&quot;&quot;
+
+    return boto3.Session(
+        aws_access_key_id=credentials[&quot;AccessKeyId&quot;],
+        aws_secret_access_key=credentials[&quot;SecretAccessKey&quot;],
+        aws_session_token=credentials[&quot;SessionToken&quot;],
+        region_name=AWS_REGION
+    )
+
+
+def check_assumed_identity(assumed_session):
+    &quot;&quot;&quot;
+    AssumeRole 이후 현재 AWS 인증 주체를 확인한다.
+
+    정상적으로 Role을 AssumeRole 했다면 ARN이 다음 형태로 나온다.
+
+    arn:aws:sts::471166314777:assumed-role/app-viewer-role/local-viewer-test-session
+    &quot;&quot;&quot;
+
+    sts_client = assumed_session.client(&quot;sts&quot;)
+    identity = sts_client.get_caller_identity()
+
+    print(&quot;=== AssumeRole 이후 인증 주체 ===&quot;)
+    print(f&quot;Account: {identity[&#x27;Account&#x27;]}&quot;)
+    print(f&quot;Arn    : {identity[&#x27;Arn&#x27;]}&quot;)
+    print(f&quot;UserId : {identity[&#x27;UserId&#x27;]}&quot;)
+    print()
+
+
+def test_ec2_describe_instances(assumed_session):
+    &quot;&quot;&quot;
+    EC2 인스턴스 조회 권한을 테스트한다.
+
+    필요한 권한:
+        ec2:DescribeInstances
+
+    viewer, operator, admin 모두 성공해야 한다.
+    &quot;&quot;&quot;
+
+    ec2_client = assumed_session.client(&quot;ec2&quot;, region_name=AWS_REGION)
+
+    try:
+        response = ec2_client.describe_instances()
+
+        instances = []
+
+        for reservation in response[&quot;Reservations&quot;]:
+            for instance in reservation[&quot;Instances&quot;]:
+                instances.append({
+                    &quot;InstanceId&quot;: instance[&quot;InstanceId&quot;],
+                    &quot;InstanceType&quot;: instance[&quot;InstanceType&quot;],
+                    &quot;State&quot;: instance[&quot;State&quot;][&quot;Name&quot;]
+                })
+
+        print(&quot;[성공] EC2 인스턴스 조회 가능&quot;)
+
+        if not instances:
+            print(&quot;조회된 EC2 인스턴스가 없음&quot;)
+        else:
+            for instance in instances:
+                print(
+                    f&quot;- {instance[&#x27;InstanceId&#x27;]} &quot;
+                    f&quot;{instance[&#x27;InstanceType&#x27;]} &quot;
+                    f&quot;{instance[&#x27;State&#x27;]}&quot;
+                )
+
+        print()
+
+    except ClientError as e:
+        print(&quot;[실패] EC2 인스턴스 조회 불가&quot;)
+        print(f&quot;ErrorCode: {e.response[&#x27;Error&#x27;][&#x27;Code&#x27;]}&quot;)
+        print()
+
+
+def test_s3_list_buckets(assumed_session):
+    &quot;&quot;&quot;
+    S3 버킷 목록 조회 권한을 테스트한다.
+
+    필요한 권한:
+        s3:ListAllMyBuckets
+
+    viewer, operator, admin 모두 성공해야 한다.
+    &quot;&quot;&quot;
+
+    s3_client = assumed_session.client(&quot;s3&quot;)
+
+    try:
+        response = s3_client.list_buckets()
+
+        buckets = response.get(&quot;Buckets&quot;, [])
+
+        print(&quot;[성공] S3 버킷 목록 조회 가능&quot;)
+
+        if not buckets:
+            print(&quot;조회된 S3 버킷이 없음&quot;)
+        else:
+            for bucket in buckets:
+                print(f&quot;- {bucket[&#x27;Name&#x27;]}&quot;)
+
+        print()
+
+    except ClientError as e:
+        print(&quot;[실패] S3 버킷 목록 조회 불가&quot;)
+        print(f&quot;ErrorCode: {e.response[&#x27;Error&#x27;][&#x27;Code&#x27;]}&quot;)
+        print()
+
+
+def get_first_instance_id(assumed_session):
+    &quot;&quot;&quot;
+    테스트용 EC2 인스턴스 ID 하나를 조회한다.
+
+    StopInstances DryRun 테스트에 사용할 인스턴스 ID를 찾는다.
+    인스턴스가 없으면 None을 반환한다.
+    &quot;&quot;&quot;
+
+    ec2_client = assumed_session.client(&quot;ec2&quot;, region_name=AWS_REGION)
+    response = ec2_client.describe_instances()
+
+    for reservation in response[&quot;Reservations&quot;]:
+        for instance in reservation[&quot;Instances&quot;]:
+            return instance[&quot;InstanceId&quot;]
+
+    return None
+
+
+def test_ec2_stop_dry_run(assumed_session):
+    &quot;&quot;&quot;
+    EC2 중지 권한을 DryRun으로 테스트한다.
+
+    필요한 권한:
+        ec2:StopInstances
+
+    DryRun=True 의미:
+        실제로 인스턴스를 중지하지 않는다.
+        권한이 있으면 DryRunOperation 오류가 발생한다.
+        권한이 없으면 UnauthorizedOperation 오류가 발생한다.
+
+    결과 해석:
+        DryRunOperation:
+            권한 있음
+
+        UnauthorizedOperation:
+            권한 없음
+    &quot;&quot;&quot;
+
+    instance_id = get_first_instance_id(assumed_session)
+
+    if instance_id is None:
+        print(&quot;[건너뜀] 테스트할 EC2 인스턴스가 없음&quot;)
+        print(&quot;EC2 StopInstances 권한 테스트를 수행하지 않음&quot;)
+        print()
+        return
+
+    ec2_client = assumed_session.client(&quot;ec2&quot;, region_name=AWS_REGION)
+
+    try:
+        ec2_client.stop_instances(
+            InstanceIds=[instance_id],
+            DryRun=True
+        )
+
+        print(&quot;[주의] DryRun=True인데 예외가 발생하지 않았음&quot;)
+        print(&quot;일반적으로 DryRun 권한 확인에서는 예외가 발생함&quot;)
+        print()
+
+    except ClientError as e:
+        error_code = e.response[&quot;Error&quot;][&quot;Code&quot;]
+
+        if error_code == &quot;DryRunOperation&quot;:
+            print(&quot;[권한 있음] EC2 StopInstances 가능&quot;)
+            print(f&quot;테스트 대상 InstanceId: {instance_id}&quot;)
+            print(&quot;DryRun=True이므로 실제 중지는 수행되지 않음&quot;)
+            print()
+            return
+
+        if error_code == &quot;UnauthorizedOperation&quot;:
+            print(&quot;[권한 없음] EC2 StopInstances 불가&quot;)
+            print(f&quot;테스트 대상 InstanceId: {instance_id}&quot;)
+            print()
+            return
+
+        print(&quot;[오류] 예상하지 못한 EC2 StopInstances 테스트 오류&quot;)
+        print(f&quot;ErrorCode: {error_code}&quot;)
+        print()
+
+
+def get_first_bucket_name(assumed_session):
+    &quot;&quot;&quot;
+    테스트용 S3 버킷 이름 하나를 조회한다.
+
+    S3 PutObject 권한 테스트에 사용할 버킷을 찾는다.
+    버킷이 없으면 None을 반환한다.
+    &quot;&quot;&quot;
+
+    s3_client = assumed_session.client(&quot;s3&quot;)
+    response = s3_client.list_buckets()
+
+    buckets = response.get(&quot;Buckets&quot;, [])
+
+    if not buckets:
+        return None
+
+    return buckets[0][&quot;Name&quot;]
+
+
+def test_s3_put_object(assumed_session):
+    &quot;&quot;&quot;
+    S3 PutObject 권한을 테스트한다.
+
+    S3 PutObject에는 EC2처럼 DryRun 옵션이 없다.
+    따라서 실제로 작은 테스트 객체를 업로드한다.
+
+    viewer:
+        실패해야 정상
+
+    operator:
+        실패해야 정상
+
+    admin:
+        성공할 수 있음
+
+    주의:
+        이 테스트는 실제 S3 버킷에 객체를 생성한다.
+        실습용 버킷을 사용하는 것이 좋다.
+    &quot;&quot;&quot;
+
+    bucket_name = get_first_bucket_name(assumed_session)
+
+    if bucket_name is None:
+        print(&quot;[건너뜀] 테스트할 S3 버킷이 없음&quot;)
+        print(&quot;S3 PutObject 권한 테스트를 수행하지 않음&quot;)
+        print()
+        return
+
+    s3_client = assumed_session.client(&quot;s3&quot;)
+
+    object_key = &quot;iam-role-lab/put-object-test.txt&quot;
+    body = b&quot;test object for iam role lab&quot;
+
+    try:
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Key=object_key,
+            Body=body
+        )
+
+        print(&quot;[권한 있음] S3 PutObject 가능&quot;)
+        print(f&quot;Bucket: {bucket_name}&quot;)
+        print(f&quot;Key   : {object_key}&quot;)
+        print()
+
+    except ClientError as e:
+        error_code = e.response[&quot;Error&quot;][&quot;Code&quot;]
+
+        print(&quot;[권한 없음 또는 실패] S3 PutObject 불가&quot;)
+        print(f&quot;Bucket   : {bucket_name}&quot;)
+        print(f&quot;ErrorCode: {error_code}&quot;)
+        print()
+
+
+def run_test_for_role(role_type, role_name, account_id, base_session):
+    &quot;&quot;&quot;
+    특정 Role에 대해 AssumeRole 후 권한 테스트를 수행한다.
+    &quot;&quot;&quot;
+
+    print(&quot;=&quot; * 80)
+    print(f&quot;권한 테스트 시작: {role_type}&quot;)
+    print(&quot;=&quot; * 80)
+
+    role_arn = build_role_arn(account_id, role_name)
+
+    try:
+        credentials = assume_role(
+            base_session=base_session,
+            role_arn=role_arn,
+            role_type=role_type
+        )
+
+        assumed_session = create_assumed_session(credentials)
+
+        check_assumed_identity(assumed_session)
+        test_ec2_describe_instances(assumed_session)
+        test_s3_list_buckets(assumed_session)
+        test_ec2_stop_dry_run(assumed_session)
+        test_s3_put_object(assumed_session)
+
+    except ClientError as e:
+        print(f&quot;[오류] {role_type} Role 테스트 실패&quot;)
+        print(f&quot;ErrorCode: {e.response[&#x27;Error&#x27;][&#x27;Code&#x27;]}&quot;)
+        print(f&quot;Message  : {e.response[&#x27;Error&#x27;][&#x27;Message&#x27;]}&quot;)
+        print()
+
+
+def main():
+    base_session = create_base_session()
+    account_id = get_account_id(base_session)
+
+    for role_type, role_name in ROLE_MAP.items():
+        run_test_for_role(
+            role_type=role_type,
+            role_name=role_name,
+            account_id=account_id,
+            base_session=base_session
+        )
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><hr id="202720e4-6f49-8251-b424-81690b8c4bcb" dir="auto"/><h2 id="7eb720e4-6f49-8385-b4ee-0123a94cb34b" class="" dir="auto">10.3 실행</h2><pre id="207720e4-6f49-837b-96bf-81c13b169ca6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python 02_assume_role_test.py</code></pre><hr id="c54720e4-6f49-8318-bbf4-81b6ee72ec03" dir="auto"/><h1 id="9a1720e4-6f49-82c3-b8bc-019b02ab16d6" class="" dir="auto">11. 예상 결과</h1><h2 id="13f720e4-6f49-8352-8916-81e116a552d9" class="" dir="auto">11.1 viewer Role 결과</h2><pre id="7bc720e4-6f49-8386-9680-81f550a9aad9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">================================================================================
+권한 테스트 시작: viewer
+================================================================================
+[성공] viewer Role AssumeRole 완료
+RoleArn     : arn:aws:iam::471166314777:role/app-viewer-role
+AccessKeyId : ASIAxxxxxxxxxxxxxxxx
+Expiration  : 2026-04-29 09:30:00+00:00
+
+=== AssumeRole 이후 인증 주체 ===
+Account: 471166314777
+Arn    : arn:aws:sts::471166314777:assumed-role/app-viewer-role/local-viewer-test-session
+UserId : AROAxxxxxxxxxxxx:local-viewer-test-session
+
+[성공] EC2 인스턴스 조회 가능
+- i-0123456789abcdef0 t3.micro running
+
+[성공] S3 버킷 목록 조회 가능
+- my-lab-bucket
+
+[권한 없음] EC2 StopInstances 불가
+테스트 대상 InstanceId: i-0123456789abcdef0
+
+[권한 없음 또는 실패] S3 PutObject 불가
+Bucket   : my-lab-bucket
+ErrorCode: AccessDenied</code></pre><p id="b92720e4-6f49-82b2-b157-01865fb3721a" class="" dir="auto">해석:</p><pre id="53a720e4-6f49-82d5-9c2f-01d52b78ec7f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">viewer는 조회 전용 Role이다.
+EC2 조회와 S3 목록 조회는 가능하다.
+EC2 중지와 S3 업로드는 실패해야 정상이다.</code></pre><hr id="52e720e4-6f49-8257-b109-019e62724fc0" dir="auto"/><h2 id="469720e4-6f49-83a6-8f26-81f21558c3d2" class="" dir="auto">11.2 operator Role 결과</h2><pre id="dd9720e4-6f49-823b-87b0-01afaba74947" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">================================================================================
+권한 테스트 시작: operator
+================================================================================
+[성공] operator Role AssumeRole 완료
+RoleArn     : arn:aws:iam::471166314777:role/app-operator-role
+AccessKeyId : ASIAxxxxxxxxxxxxxxxx
+Expiration  : 2026-04-29 09:30:00+00:00
+
+=== AssumeRole 이후 인증 주체 ===
+Account: 471166314777
+Arn    : arn:aws:sts::471166314777:assumed-role/app-operator-role/local-operator-test-session
+UserId : AROAxxxxxxxxxxxx:local-operator-test-session
+
+[성공] EC2 인스턴스 조회 가능
+- i-0123456789abcdef0 t3.micro running
+
+[성공] S3 버킷 목록 조회 가능
+- my-lab-bucket
+
+[권한 있음] EC2 StopInstances 가능
+테스트 대상 InstanceId: i-0123456789abcdef0
+DryRun=True이므로 실제 중지는 수행되지 않음
+
+[권한 없음 또는 실패] S3 PutObject 불가
+Bucket   : my-lab-bucket
+ErrorCode: AccessDenied</code></pre><p id="882720e4-6f49-8369-93a2-812228ea8568" class="" dir="auto">해석:</p><pre id="23a720e4-6f49-823e-93fb-811f17e320fe" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">operator는 EC2 운영 권한을 가진다.
+EC2 StopInstances DryRun 테스트는 성공해야 한다.
+하지만 S3 PutObject 권한은 없으므로 업로드는 실패해야 정상이다.</code></pre><hr id="28c720e4-6f49-83b3-ac67-0106b8aa4ee6" dir="auto"/><h2 id="919720e4-6f49-8357-b07a-016cd18d81e6" class="" dir="auto">11.3 admin Role 결과</h2><pre id="923720e4-6f49-83eb-92f2-010d4eb2e62b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">================================================================================
+권한 테스트 시작: admin
+================================================================================
+[성공] admin Role AssumeRole 완료
+RoleArn     : arn:aws:iam::471166314777:role/app-admin-role
+AccessKeyId : ASIAxxxxxxxxxxxxxxxx
+Expiration  : 2026-04-29 09:30:00+00:00
+
+=== AssumeRole 이후 인증 주체 ===
+Account: 471166314777
+Arn    : arn:aws:sts::471166314777:assumed-role/app-admin-role/local-admin-test-session
+UserId : AROAxxxxxxxxxxxx:local-admin-test-session
+
+[성공] EC2 인스턴스 조회 가능
+- i-0123456789abcdef0 t3.micro running
+
+[성공] S3 버킷 목록 조회 가능
+- my-lab-bucket
+
+[권한 있음] EC2 StopInstances 가능
+테스트 대상 InstanceId: i-0123456789abcdef0
+DryRun=True이므로 실제 중지는 수행되지 않음
+
+[권한 있음] S3 PutObject 가능
+Bucket: my-lab-bucket
+Key   : iam-role-lab/put-object-test.txt</code></pre><p id="3ee720e4-6f49-823f-9e69-01b68e425335" class="" dir="auto">해석:</p><pre id="87b720e4-6f49-83ea-ad6d-01f8691260b9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">admin은 EC2 운영 권한과 S3 PutObject 권한을 가진다.
+따라서 EC2 StopInstances DryRun과 S3 PutObject가 가능하다.</code></pre><hr id="42d720e4-6f49-826a-b1a9-81ba28c2ddde" dir="auto"/><h1 id="6f6720e4-6f49-83dd-ad2f-8109c7fa76ec" class="" dir="auto">12. 결과 정리</h1><table id="590720e4-6f49-8266-8edc-012bb9bec3aa" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="841720e4-6f49-835a-a898-0103ea650908" dir="ltr"><th id="Ys:[" class="simple-table-header-color simple-table-header">작업</th><th id="d[{h" class="simple-table-header-color simple-table-header">viewer</th><th id="qsCB" class="simple-table-header-color simple-table-header">operator</th><th id="c[Y{" class="simple-table-header-color simple-table-header">admin</th></tr></thead><tbody><tr id="98e720e4-6f49-8258-8133-01d9cb834e01" dir="ltr"><td id="Ys:[" class="">AssumeRole</td><td id="d[{h" class="">가능</td><td id="qsCB" class="">가능</td><td id="c[Y{" class="">가능</td></tr><tr id="fdf720e4-6f49-826f-876d-81df0de430f6" dir="ltr"><td id="Ys:[" class="">EC2 인스턴스 조회</td><td id="d[{h" class="">가능</td><td id="qsCB" class="">가능</td><td id="c[Y{" class="">가능</td></tr><tr id="2be720e4-6f49-839a-9d55-81083deb5342" dir="ltr"><td id="Ys:[" class="">S3 버킷 목록 조회</td><td id="d[{h" class="">가능</td><td id="qsCB" class="">가능</td><td id="c[Y{" class="">가능</td></tr><tr id="25e720e4-6f49-837f-90e8-01e5a4f856e0" dir="ltr"><td id="Ys:[" class="">EC2 중지 DryRun</td><td id="d[{h" class="">불가</td><td id="qsCB" class="">가능</td><td id="c[Y{" class="">가능</td></tr><tr id="94a720e4-6f49-83fd-a8ef-018525027240" dir="ltr"><td id="Ys:[" class="">S3 객체 업로드</td><td id="d[{h" class="">불가</td><td id="qsCB" class="">불가</td><td id="c[Y{" class="">가능</td></tr></tbody></table><hr id="2b7720e4-6f49-82cd-810d-01306b52dcfe" dir="auto"/><h1 id="725720e4-6f49-82f9-a134-818ac6d7cdf0" class="" dir="auto">13. 중요한 해석: IAM User가 관리자 권한이어도 Role 권한으로 제한됨</h1><p id="07c720e4-6f49-83b2-b4b5-819b89b7c7c0" class="" dir="auto">이번 실습에서 학생 IAM User는 관리자 권한을 가지고 있다.</p><p id="c6a720e4-6f49-82dd-b67a-813dc664d7bb" class="" dir="auto">그런데도 <code>app-viewer-role</code>을 AssumeRole한 뒤에는 <code>ec2:StopInstances</code>가 실패한다.</p><p id="37c720e4-6f49-8387-8cb0-015c592a48b9" class="" dir="auto">이유는 다음과 같다.</p><pre id="649720e4-6f49-827a-9e23-81ec50d11987" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AssumeRole 이전:
+  IAM User instructor 권한으로 동작
+  관리자 권한 보유
+
+AssumeRole 이후:
+  app-viewer-role 권한으로 동작
+  viewer Role의 Permission Policy만 적용</code></pre><p id="eef720e4-6f49-82dd-a0cb-01623e67ea22" class="" dir="auto">즉, AssumeRole 이후에는 원래 IAM User의 관리자 권한을 그대로 사용하는 것이 아니다.</p><p id="2ae720e4-6f49-832d-bb0d-01305f55f8c0" class="" dir="auto">이 점이 이번 실습의 핵심이다.</p><hr id="59f720e4-6f49-8209-b8a4-014cc43b4aea" dir="auto"/><h1 id="6e2720e4-6f49-83c0-b06c-81a0e5bae08d" class="" dir="auto">14. 이후 FastAPI 로그인 실습과 연결</h1><p id="d42720e4-6f49-82d0-aeac-01ddec651897" class="" dir="auto">이번 실습에서 생성한 Role은 이후 FastAPI 코드에서 그대로 사용할 수 있다.</p><h2 id="a31720e4-6f49-8291-a1d7-01e482be3710" class="" dir="auto">14.1 USER_ROLE_MAP 예시</h2><pre id="93b720e4-6f49-8297-a31e-812d0eb675ce" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">USER_ROLE_MAP = {
+    &quot;viewer&quot;: &quot;arn:aws:iam::471166314777:role/app-viewer-role&quot;,
+    &quot;operator&quot;: &quot;arn:aws:iam::471166314777:role/app-operator-role&quot;,
+    &quot;admin&quot;: &quot;arn:aws:iam::471166314777:role/app-admin-role&quot;
+}</code></pre><p id="b3e720e4-6f49-8281-9311-01809a32fcdd" class="" dir="auto">이 매핑은 다음 의미를 가진다.</p><pre id="c7a720e4-6f49-833d-a34e-81e714c455c5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">프론트엔드 로그인 사용자 role 값
+  ↓
+FastAPI 내부 USER_ROLE_MAP
+  ↓
+해당 IAM Role ARN 선택
+  ↓
+sts:AssumeRole</code></pre><p id="321720e4-6f49-83c4-a88e-01e2b1991b01" class="" dir="auto">예를 들어 로그인 사용자가 viewer라면:</p><pre id="4ea720e4-6f49-83be-a03f-8182738aea2a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">current_user = {
+    &quot;username&quot;: &quot;kim&quot;,
+    &quot;role&quot;: &quot;viewer&quot;
+}
+
+role_arn = USER_ROLE_MAP[current_user[&quot;role&quot;]]</code></pre><p id="389720e4-6f49-8336-86c8-81d9d1832c5e" class="" dir="auto">선택되는 Role은 다음이다.</p><pre id="300720e4-6f49-8377-8539-01b8ae17ac4e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">arn:aws:iam::471166314777:role/app-viewer-role</code></pre><hr id="3fc720e4-6f49-83df-aebc-010b557b9f6c" dir="auto"/><h2 id="2bf720e4-6f49-8361-862c-81e64dde0cfd" class="" dir="auto">14.2 로컬 실행과 EC2 실행의 Principal 차이</h2><p id="962720e4-6f49-8233-a06d-0198fdb2fe12" class="" dir="auto">이번 실습에서는 로컬에서 실행하므로 Trust Policy Principal이 IAM User다.</p><pre id="e33720e4-6f49-8248-80f4-815606e995bc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">arn:aws:iam::471166314777:user/instructor</code></pre><p id="bf8720e4-6f49-8269-9209-819d0c48cf4e" class="" dir="auto">하지만 이후 FastAPI를 EC2에서 실행하면 AssumeRole을 호출하는 주체가 바뀐다.</p><p id="f81720e4-6f49-8323-9193-81a33c4a61bd" class="" dir="auto">EC2에서 FastAPI가 실행될 경우 구조는 다음과 같다.</p><pre id="82b720e4-6f49-82d1-939e-0185ede69a6a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 Instance
+  ↓
+Instance Profile Role
+  ↓
+fastapi-backend-base-role
+  ↓ sts:AssumeRole
+app-viewer-role / app-operator-role / app-admin-role</code></pre><p id="919720e4-6f49-82e0-9a8e-01884151e380" class="" dir="auto">이때 대상 Role의 Trust Policy Principal은 아래처럼 바꿔야 한다.</p><pre id="8d9720e4-6f49-82d7-b236-81172fd15a60" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;TrustFastAPIBackendBaseRole&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Principal&quot;: {
+        &quot;AWS&quot;: &quot;arn:aws:iam::471166314777:role/fastapi-backend-base-role&quot;
+      },
+      &quot;Action&quot;: &quot;sts:AssumeRole&quot;
+    }
+  ]
+}</code></pre><p id="9c5720e4-6f49-8314-9a8f-01aff64c1313" class="" dir="auto">로컬과 EC2를 둘 다 허용하려면 배열로 설정할 수 있다.</p><pre id="bdf720e4-6f49-82f9-ba23-0199cf897e98" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;TrustLocalUserAndBackendRole&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Principal&quot;: {
+        &quot;AWS&quot;: [
+          &quot;arn:aws:iam::471166314777:user/instructor&quot;,
+          &quot;arn:aws:iam::471166314777:role/fastapi-backend-base-role&quot;
+        ]
+      },
+      &quot;Action&quot;: &quot;sts:AssumeRole&quot;
+    }
+  ]
+}</code></pre><hr id="f41720e4-6f49-83b9-ab75-01c97feb493d" dir="auto"/><h1 id="04e720e4-6f49-824c-8763-01b391f6b45b" class="" dir="auto">15. 실습 리소스 정리</h1><p id="55c720e4-6f49-83ce-a314-81c9659cd3b3" class="" dir="auto">이 Role들은 이후 프론트엔드/FastAPI 실습에서 계속 사용할 예정이라면 삭제하지 않는다.</p><p id="2c6720e4-6f49-82b1-9629-813967037ec8" class="" dir="auto">실습만 하고 정리하려면 아래 코드를 사용한다.</p><p id="6cb720e4-6f49-8313-aefa-013e0e0ff256" class="" dir="auto">파일명: <code>03_cleanup_roles.py</code></p><pre id="cb8720e4-6f49-833d-a16f-01706d0df04d" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+from botocore.exceptions import ClientError
+
+
+AWS_PROFILE = &quot;instructor&quot;
+AWS_REGION = &quot;ap-northeast-2&quot;
+
+ROLE_POLICY_MAP = {
+    &quot;app-viewer-role&quot;: &quot;viewer-permission-policy&quot;,
+    &quot;app-operator-role&quot;: &quot;operator-permission-policy&quot;,
+    &quot;app-admin-role&quot;: &quot;admin-permission-policy&quot;
+}
+
+
+def create_base_session():
+    return boto3.Session(
+        profile_name=AWS_PROFILE,
+        region_name=AWS_REGION
+    )
+
+
+def delete_inline_policy(iam_client, role_name, policy_name):
+    &quot;&quot;&quot;
+    Role에 연결된 Inline Policy를 삭제한다.
+
+    IAM Role을 삭제하기 전에 Inline Policy를 먼저 삭제한다.
+    &quot;&quot;&quot;
+
+    try:
+        iam_client.delete_role_policy(
+            RoleName=role_name,
+            PolicyName=policy_name
+        )
+
+        print(f&quot;[삭제 완료] Inline Policy 삭제: {role_name} / {policy_name}&quot;)
+
+    except ClientError as e:
+        error_code = e.response[&quot;Error&quot;][&quot;Code&quot;]
+
+        if error_code == &quot;NoSuchEntity&quot;:
+            print(f&quot;[안내] Inline Policy가 없음: {role_name} / {policy_name}&quot;)
+            return
+
+        print(f&quot;[오류] Inline Policy 삭제 실패: {role_name}&quot;)
+        print(e)
+        raise
+
+
+def delete_role(iam_client, role_name):
+    &quot;&quot;&quot;
+    IAM Role을 삭제한다.
+    &quot;&quot;&quot;
+
+    try:
+        iam_client.delete_role(RoleName=role_name)
+        print(f&quot;[삭제 완료] IAM Role 삭제: {role_name}&quot;)
+
+    except ClientError as e:
+        error_code = e.response[&quot;Error&quot;][&quot;Code&quot;]
+
+        if error_code == &quot;NoSuchEntity&quot;:
+            print(f&quot;[안내] Role이 없음: {role_name}&quot;)
+            return
+
+        print(f&quot;[오류] Role 삭제 실패: {role_name}&quot;)
+        print(e)
+        raise
+
+
+def main():
+    session = create_base_session()
+    iam_client = session.client(&quot;iam&quot;)
+
+    for role_name, policy_name in ROLE_POLICY_MAP.items():
+        delete_inline_policy(iam_client, role_name, policy_name)
+        delete_role(iam_client, role_name)
+
+    print(&quot;실습 Role 정리 완료&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><p id="0b5720e4-6f49-8261-b19a-01afe89a6258" class="" dir="auto">실행:</p><pre id="308720e4-6f49-83c9-a6fc-011963d5c212" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python 03_cleanup_roles.py</code></pre><hr id="893720e4-6f49-8354-bc72-01cdbf8b7114" dir="auto"/><h1 id="58f720e4-6f49-834a-992d-01a85f22ef8c" class="" dir="auto">16. 수업 진행 순서 추천</h1><pre id="83a720e4-6f49-8359-a640-81e9547f5a78" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 현재 학생 IAM User가 관리자 권한을 가지고 있음을 설명한다.
+2. 하지만 일반 IAM User는 sts:AssumeRole 권한이 별도로 필요함을 설명한다.
+3. Trust Policy와 Permission Policy 차이를 설명한다.
+4. aws sts get-caller-identity로 현재 Principal을 확인한다.
+5. boto3로 viewer/operator/admin Role을 생성한다.
+6. 각 Role의 Trust Policy에 현재 IAM User ARN을 넣는다.
+7. 각 Role에 서로 다른 Permission Policy를 연결한다.
+8. Role별로 AssumeRole 한다.
+9. AssumeRole 이후 get_caller_identity 결과를 확인한다.
+10. viewer/operator/admin 권한 차이를 테스트한다.
+11. 이후 FastAPI USER_ROLE_MAP 구조와 연결한다.
+12. EC2 배포 시 Principal이 IAM User에서 EC2 Role로 바뀐다는 점을 설명한다.</code></pre><hr id="e18720e4-6f49-8312-b4ab-81e01b6f1f51" dir="auto"/><h1 id="dc4720e4-6f49-839c-bab0-014cb0a73c6d" class="" dir="auto">17. 학생 과제</h1><h2 id="65e720e4-6f49-820b-9300-814c93d05196" class="" dir="auto">과제 1. Role별 권한 차이 확인</h2><p id="7f0720e4-6f49-8314-8268-81904b143f31" class="" dir="auto">다음 Role을 생성하고 권한 테스트 결과를 제출한다.</p><pre id="aa8720e4-6f49-8267-b100-816068d05486" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">app-viewer-role
+app-operator-role
+app-admin-role</code></pre><p id="f65720e4-6f49-8251-8c0d-8138c56164aa" class="" dir="auto">제출물:</p><pre id="262720e4-6f49-8262-ab00-011d332860d4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 01_create_roles.py
+2. 02_assume_role_test.py
+3. 실행 결과 캡처
+4. viewer/operator/admin 권한 차이 표
+5. Trust Policy와 Permission Policy 차이 설명</code></pre><hr id="71d720e4-6f49-83fa-9bcc-81f4f16b1e0f" dir="auto"/><h2 id="4f8720e4-6f49-822b-805a-81da23d17fb3" class="" dir="auto">과제 2. 일반 IAM User라면 필요한 정책 설명</h2><p id="eab720e4-6f49-83f8-9df9-01a028cdd8ac" class="" dir="auto">현재 실습 환경에서는 학생 IAM User가 관리자 권한을 가지고 있다.</p><p id="000720e4-6f49-82a7-847a-817f09726585" class="" dir="auto">하지만 일반 IAM User라면 어떤 정책이 추가로 필요한지 설명한다.</p><p id="97e720e4-6f49-8274-80c6-01fff4674659" class="" dir="auto">포함해야 할 내용:</p><pre id="5c3720e4-6f49-8298-a34b-01074bf3a4e6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 일반 IAM User에게 sts:AssumeRole 권한이 필요한 이유
+2. 대상 Role의 Trust Policy가 필요한 이유
+3. 두 조건 중 하나라도 빠지면 AssumeRole이 실패하는 이유
+4. Resource를 &quot;*&quot;로 열지 않고 특정 Role ARN으로 제한해야 하는 이유</code></pre><p id="671720e4-6f49-8201-a3fa-0169e08a802b" class="" dir="auto">예시 정책:</p><pre id="73d720e4-6f49-82c4-a7f6-01c623870544" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;AllowAssumeApplicationRoles&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Action&quot;: &quot;sts:AssumeRole&quot;,
+      &quot;Resource&quot;: [
+        &quot;arn:aws:iam::471166314777:role/app-viewer-role&quot;,
+        &quot;arn:aws:iam::471166314777:role/app-operator-role&quot;,
+        &quot;arn:aws:iam::471166314777:role/app-admin-role&quot;
+      ]
+    }
+  ]
+}</code></pre><hr id="396720e4-6f49-835a-8508-81b4e509bcfe" dir="auto"/><h1 id="a45720e4-6f49-829c-8f15-8132b2f52aa4" class="" dir="auto">18. 핵심 정리</h1><p id="057720e4-6f49-83b4-b2b6-012dabc2d754" class="" dir="auto">이번 실습의 핵심은 다음이다.</p><pre id="bb8720e4-6f49-832a-bd51-016f669bd985" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 학생 IAM User는 현재 관리자 권한을 가지고 있으므로 AssumeRole 호출 권한이 이미 있음
+2. 하지만 일반 IAM User라면 sts:AssumeRole 권한을 별도로 부여해야 함
+3. Role의 Trust Policy에는 AssumeRole을 실제 호출하는 AWS Principal을 넣음
+4. 로컬 실행에서는 IAM User가 Principal이 됨
+5. EC2 실행에서는 EC2 Instance Profile Role이 Principal이 됨
+6. viewer/operator/admin Role은 서로 다른 Permission Policy를 가짐
+7. AssumeRole 이후에는 원래 IAM User의 권한이 아니라 Role 권한으로 동작함
+8. 이 구조를 이후 FastAPI 로그인 사용자별 Role 매핑 구조로 확장함</code></pre><p id="774720e4-6f49-822b-80ea-8157c0ebee2a" class="" dir="auto">최종적으로 이번 실습은 다음 질문에 답하기 위한 준비 과정이다.</p><pre id="289720e4-6f49-8371-8b07-01aa8bdf5e2c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">로그인 사용자가 viewer이면 왜 조회만 가능해야 하는가?
+로그인 사용자가 operator이면 왜 EC2 시작/중지는 가능하지만 S3 업로드는 불가능해야 하는가?
+로그인 사용자가 admin이면 왜 더 넓은 운영 작업이 가능해야 하는가?</code></pre><p id="892720e4-6f49-8367-ae2b-0173c445ffed" class="" dir="auto">그리고 그 답은 다음 구조에 있다.</p><pre id="af5720e4-6f49-8203-8213-013cabefedc9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">로그인 사용자 권한
+  ↓
+FastAPI USER_ROLE_MAP
+  ↓
+IAM Role 선택
+  ↓
+sts:AssumeRole
+  ↓
+Role Permission Policy 기준으로 AWS API 호출</code></pre></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

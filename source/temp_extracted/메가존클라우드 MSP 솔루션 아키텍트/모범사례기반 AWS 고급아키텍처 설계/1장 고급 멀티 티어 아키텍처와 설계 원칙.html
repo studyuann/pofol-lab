@@ -1,0 +1,787 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>1장 고급 멀티 티어 아키텍처와 설계 원칙</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="7a4720e4-6f49-82ed-9018-815c71ad1b64" class="page sans"><header><h1 class="page-title" dir="auto">1장 고급 멀티 티어 아키텍처와 설계 원칙</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="e99720e4-6f49-8244-bf7f-01d929a35c52" dir="auto"/><h1 id="4c7720e4-6f49-830e-a114-010dbac3b412" class="" dir="auto">1.1 고급 아키텍처 설계란 무엇인가</h1><p id="7d9720e4-6f49-828c-b328-01e334a2cf27" class="" dir="auto">AWS에서 아키텍처를 설계한다는 것은 단순히 서비스를 나열하고 연결해서 동작시키는 작업이 아님.</p><p id="4e1720e4-6f49-83b2-a6bb-81c22ccb7ecb" class="" dir="auto">기초 단계에서는 “서비스를 만들 수 있는가”, “기능이 동작하는가”가 중요했음.</p><p id="197720e4-6f49-82a7-886f-01d17d26d30c" class="" dir="auto">하지만 고급 단계에서는 “왜 이 구조를 선택했는가”, “장애와 확장, 보안, 운영, 비용까지 함께 고려했는가”가 더 중요해짐.</p><p id="cdd720e4-6f49-82f8-986a-815e49bb5b7a" class="" dir="auto">즉, 고급 아키텍처 설계는 다음 질문에 답할 수 있어야 함.</p><ul id="5b2720e4-6f49-8308-a661-814b1198900a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">왜 이 서비스를 선택했는가</li></ul><ul id="133720e4-6f49-82fd-ab1f-016d289aeada" class="bulleted-list" dir="auto"><li style="list-style-type:disc">왜 이 계층을 분리했는가</li></ul><ul id="0f7720e4-6f49-827f-aa46-81aab4fc8a6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애가 발생하면 어디까지 영향이 전파되는가</li></ul><ul id="d8b720e4-6f49-83fc-b274-81b024bd12b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장이 필요할 때 어떤 계층을 먼저 확장할 것인가</li></ul><ul id="b3f720e4-6f49-825f-ba7f-0178e4ad47f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 경계를 어디에 둘 것인가</li></ul><ul id="d0f720e4-6f49-82ec-ab23-01d1ed448a77" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 자동화가 가능한 구조인가</li></ul><ul id="7f8720e4-6f49-82c2-af5a-0135a841ae09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용이 증가할 때 어디가 원인인가</li></ul><ul id="b88720e4-6f49-833c-8a62-01c0b5e81bff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조직 규모가 커져도 유지 가능한 구조인가</li></ul><p id="fa4720e4-6f49-834f-ada8-818720ed123a" class="" dir="auto">즉, 고급 아키텍처 설계는 <strong>서비스 사용법을 아는 수준이 아니라, 구조적 의사결정을 설명할 수 있는 수준</strong>을 의미함.</p><hr id="1ec720e4-6f49-8272-b6f5-01a016e0849f" dir="auto"/><h1 id="a52720e4-6f49-8250-bb4f-01223d3e4acc" class="" dir="auto">1.2 왜 단순한 구조로는 한계가 생기는가</h1><p id="995720e4-6f49-8241-a8d2-01a4f906697c" class="" dir="auto">초기 서비스나 소규모 환경에서는 하나의 서버에 웹 서버, 애플리케이션, 데이터 저장 기능을 함께 올려서도 운영할 수 있음.</p><p id="6c7720e4-6f49-8267-b304-8171aa0ca36f" class="" dir="auto">이 방식은 빠르게 시작할 수 있다는 장점이 있음.</p><p id="956720e4-6f49-824f-8173-01777a2cd3e7" class="" dir="auto">하지만 시스템 규모가 커지면 다음 문제가 발생함.</p><ul id="4ae720e4-6f49-8272-9a2f-0124c64fd4fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 요청 처리와 애플리케이션 로직이 섞여 역할이 불명확해짐</li></ul><ul id="9d9720e4-6f49-8282-8008-01cd47703228" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터베이스가 애플리케이션과 같은 보안 경계에 놓이게 됨</li></ul><ul id="88f720e4-6f49-8261-a7a3-013076ebddf9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 기능만 확장하고 싶어도 전체 서버를 함께 키워야 함</li></ul><ul id="aa9720e4-6f49-8202-b8d3-01206ce985e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한 부분의 장애가 전체 장애로 확산되기 쉬움</li></ul><ul id="6bb720e4-6f49-829e-b4b7-0166fb9ea69d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 시 전체 시스템 영향 범위가 커짐</li></ul><ul id="7df720e4-6f49-82cd-998d-0110021cd4ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 책임이 뒤엉켜 문제 분석이 어려워짐</li></ul><p id="8c4720e4-6f49-82e0-9414-813f5ebb3d4a" class="" dir="auto">즉, 단순 구조는 시작은 쉬우나 규모가 커질수록 <strong>확장성, 보안성, 운영성, 복원성 측면에서 한계</strong>가 드러남.</p><hr id="d3c720e4-6f49-834b-9a61-81c84683a234" dir="auto"/><h1 id="c56720e4-6f49-8210-a6c6-8104f5a68450" class="" dir="auto">1.3 멀티 티어 아키텍처의 기본 개념</h1><p id="66e720e4-6f49-8230-8271-817af6be6c4b" class="" dir="auto">멀티 티어 아키텍처는 애플리케이션을 역할별로 여러 계층으로 나누어 설계하는 방식임.</p><p id="37d720e4-6f49-8299-9653-0106c41e2f18" class="" dir="auto">가장 대표적인 형태는 3계층 구조임.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="38e720e4-6f49-82cd-b5e3-818039810c80" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+  │
+Presentation / Web Tier
+  │
+Application Tier
+  │
+Data Tier</code></pre><p id="3ba720e4-6f49-83d1-b7aa-01f351108148" class="" dir="auto">이 구조는 단순히 서버를 여러 대 두는 방식이 아님.</p><p id="ea3720e4-6f49-8302-b186-014ab7f81988" class="" dir="auto">핵심은 <strong>역할 분리</strong>, <strong>보안 경계 분리</strong>, <strong>확장 단위 분리</strong>, <strong>장애 영향 범위 분리</strong>에 있음.</p><hr id="ffd720e4-6f49-8259-a929-81fcb49e6bf2" dir="auto"/><h1 id="082720e4-6f49-836b-a90b-8113d11ae7a5" class="" dir="auto">1.4 각 계층의 역할</h1><h2 id="32a720e4-6f49-83bb-8d8c-017921c226ca" class="" dir="auto">1.4.1 Web Tier</h2><p id="a4f720e4-6f49-8215-9ca1-0160c1acad02" class="" dir="auto">Web Tier는 외부 요청을 가장 먼저 수신하는 계층임.</p><p id="e3b720e4-6f49-822b-ab06-01bd46a37ef2" class="" dir="auto">일반적으로 사용자와 가장 가까운 위치에 있으며, 외부 노출이 허용되는 계층이기도 함.</p><p id="577720e4-6f49-830e-b246-01b11979d2ec" class="" dir="auto">대표 구성 요소</p><ul id="3d5720e4-6f49-823f-aadc-81d4614b8b1f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53</li></ul><ul id="180720e4-6f49-82e1-95b5-81a01adb9484" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront</li></ul><ul id="ab4720e4-6f49-8268-984c-0157595a9569" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF</li></ul><ul id="a96720e4-6f49-82f1-8a60-016b9da90aaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB</li></ul><ul id="293720e4-6f49-8220-b775-018ab1f617a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Nginx / Apache 웹 서버</li></ul><ul id="e9c720e4-6f49-837c-9235-0180d603958c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 콘텐츠 진입점</li></ul><p id="f92720e4-6f49-82c4-b6a7-81a36a7130b4" class="" dir="auto">주요 역할</p><ul id="93c720e4-6f49-8210-9444-81f3e09d809d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 요청 수신</li></ul><ul id="330720e4-6f49-83ec-a21f-812a6153a457" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TLS 종료</li></ul><ul id="806720e4-6f49-83a4-9bee-81f2a3ed36d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적/동적 요청 분기</li></ul><ul id="526720e4-6f49-83c9-bdd3-8143c512bc8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 라우팅</li></ul><ul id="b27720e4-6f49-82d0-b8dd-81bed79dca96" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 노출 지점 최소화</li></ul><ul id="f1f720e4-6f49-82c6-87d7-01b98a893671" class="bulleted-list" dir="auto"><li style="list-style-type:disc">1차 보안 통제</li></ul><p id="f59720e4-6f49-82e9-bdf8-819850c52554" class="" dir="auto">즉, Web Tier는 애플리케이션의 “입구” 역할을 담당함.</p><hr id="358720e4-6f49-83c8-89e8-81b9cb8c186e" dir="auto"/><h2 id="01a720e4-6f49-82d7-b9b2-019a8220b3e2" class="" dir="auto">1.4.2 Application Tier</h2><p id="1ca720e4-6f49-8287-8f90-01e888952f24" class="" dir="auto">Application Tier는 실제 비즈니스 로직이 수행되는 계층임.</p><p id="74d720e4-6f49-8363-931a-01b0d1d4f2f0" class="" dir="auto">사용자의 요청을 받아 계산, 검증, 처리, 응답 생성 작업을 수행함.</p><p id="f4e720e4-6f49-8214-931f-01b10e1dfe09" class="" dir="auto">대표 구성 요소</p><ul id="b44720e4-6f49-8369-bd11-81f89d350b44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 기반 애플리케이션 서버</li></ul><ul id="760720e4-6f49-824d-b706-01d033eb2c75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ECS / Fargate 기반 컨테이너 애플리케이션</li></ul><ul id="c12720e4-6f49-8263-854d-0144556c80d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EKS 기반 워크로드</li></ul><ul id="4de720e4-6f49-82ff-8fb7-0143352d3f86" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 함수</li></ul><ul id="097720e4-6f49-832d-ac2e-0142629f6851" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부 API 서비스</li></ul><p id="19a720e4-6f49-83f8-80e3-01a2a10d5b97" class="" dir="auto">주요 역할</p><ul id="72c720e4-6f49-8250-90dd-01ec18600258" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증 및 인가 처리</li></ul><ul id="2f2720e4-6f49-8202-8a87-81565cacfc08" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비즈니스 규칙 실행</li></ul><ul id="843720e4-6f49-8216-b7bc-01a0b7fd7cd4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API 응답 생성</li></ul><ul id="ba1720e4-6f49-83d0-80dc-81327e65272d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 서비스 연동</li></ul><ul id="498720e4-6f49-8281-b2d8-013930ddd5fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 계층과의 통신</li></ul><p id="79c720e4-6f49-83d1-8f03-01c2cbc94ccc" class="" dir="auto">즉, App Tier는 서비스의 핵심 기능을 수행하는 “두뇌” 역할을 담당함.</p><hr id="e41720e4-6f49-8211-a1f0-819088808008" dir="auto"/><h2 id="794720e4-6f49-8345-81d0-81885057706a" class="" dir="auto">1.4.3 Data Tier</h2><p id="12f720e4-6f49-8351-b34b-81b4c39fd910" class="" dir="auto">Data Tier는 데이터를 저장하고 조회하는 계층임.</p><p id="2e4720e4-6f49-8364-9362-813cc9234667" class="" dir="auto">애플리케이션 상태와 핵심 비즈니스 데이터를 보관하므로 가장 민감한 계층에 속함.</p><p id="23a720e4-6f49-82c2-85f8-0189f62ea564" class="" dir="auto">대표 구성 요소</p><ul id="743720e4-6f49-823b-ac84-81f73e138fd3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon RDS</li></ul><ul id="86f720e4-6f49-831c-8e0d-0148afb51c5f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon Aurora</li></ul><ul id="aa9720e4-6f49-8262-848a-810c3da1c5f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon DynamoDB</li></ul><ul id="50c720e4-6f49-8310-a7fe-01b92c92bfa4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon ElastiCache for Redis</li></ul><ul id="eb4720e4-6f49-83f4-81a3-015517815349" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon S3</li></ul><ul id="4ca720e4-6f49-8203-8b87-810f0d9027cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon EFS</li></ul><p id="ec2720e4-6f49-8323-95e6-81486b2ccb9f" class="" dir="auto">주요 역할</p><ul id="0fb720e4-6f49-835c-852b-817c4d4c6014" class="bulleted-list" dir="auto"><li style="list-style-type:disc">트랜잭션 데이터 저장</li></ul><ul id="b1a720e4-6f49-8366-8a81-019bf9eda7cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세션/캐시 저장</li></ul><ul id="cd9720e4-6f49-820f-85d5-81303fa006b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 저장</li></ul><ul id="c73720e4-6f49-8239-b15f-011d2f0277b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공유 파일 저장</li></ul><ul id="0da720e4-6f49-839c-9ebd-8157007e6ad9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 영속성 보장</li></ul><p id="33c720e4-6f49-82be-8b4b-01b88ef84fb9" class="" dir="auto">즉, Data Tier는 서비스의 “기억 장치” 역할을 담당함.</p><hr id="30e720e4-6f49-83c6-a3f2-81add4e2fed2" dir="auto"/><h1 id="e46720e4-6f49-82f2-b1da-01a333ac6e06" class="" dir="auto">1.5 계층 분리가 필요한 이유</h1><p id="78e720e4-6f49-8334-bcaa-01628d387c35" class="" dir="auto">멀티 티어 구조는 보기 좋게 나누기 위한 구성이 아니라, 실제 운영과 장애 대응을 위한 핵심 설계 원칙임.</p><hr id="9d4720e4-6f49-8399-a219-815d6085b288" dir="auto"/><h2 id="f3f720e4-6f49-82c5-9189-81be28ee859b" class="" dir="auto">1.5.1 책임 분리</h2><p id="934720e4-6f49-822d-8f8f-01a58437eeba" class="" dir="auto">계층별 역할이 다르면 변경 범위를 제어하기 쉬워짐.</p><p id="aa8720e4-6f49-826b-ba09-815f975d4bba" class="" dir="auto">예를 들어</p><ul id="775720e4-6f49-82ee-8d6e-8130e0c275fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Web Tier는 요청 수신과 전달만 담당</li></ul><ul id="3a6720e4-6f49-8287-8de9-01bd3bfb0870" class="bulleted-list" dir="auto"><li style="list-style-type:disc">App Tier는 비즈니스 로직만 담당</li></ul><ul id="001720e4-6f49-823c-8ef7-8161372e08ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Tier는 저장과 조회만 담당</li></ul><p id="c02720e4-6f49-83dd-9d8c-0192823da10a" class="" dir="auto">이렇게 나누면 특정 계층에서 문제가 발생했을 때 원인을 좁히기 쉬움.</p><p id="36e720e4-6f49-828e-89cf-01280e3f1c7d" class="" dir="auto">또한 배포, 성능 튜닝, 보안 정책 적용도 계층별로 다르게 가져갈 수 있음.</p><p id="c5a720e4-6f49-821e-8c73-81ea8427da69" class="" dir="auto">즉, 책임 분리는 <strong>운영 복잡도를 낮추는 첫 번째 원칙</strong>임.</p><hr id="269720e4-6f49-8255-b8ba-816b4d91fef4" dir="auto"/><h2 id="051720e4-6f49-827a-a25c-8102c7916fa9" class="" dir="auto">1.5.2 보안 경계 분리</h2><p id="b0e720e4-6f49-83aa-bedd-81ddc27ef9a6" class="" dir="auto">모든 리소스를 외부와 직접 통신하게 두면 공격 표면이 넓어짐.</p><p id="d40720e4-6f49-8265-9297-0137cd9abe9b" class="" dir="auto">따라서 일반적으로는 다음과 같이 설계함.</p><ul id="b55720e4-6f49-833d-afe4-817011445006" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인터넷과 직접 통신하는 계층은 최소화</li></ul><ul id="749720e4-6f49-8202-a15f-0176f009d38f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">App Tier는 Private Subnet에 배치</li></ul><ul id="cbf720e4-6f49-8311-b68d-01fe5dbb513c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DB는 Public IP 없이 내부 통신만 허용</li></ul><ul id="17a720e4-6f49-8346-a076-01aeb4787194" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group으로 계층 간 접근만 허용</li></ul><ul id="79b720e4-6f49-8248-bc20-81805d4a60b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secrets는 코드나 로컬 파일이 아니라 별도 서비스에 저장</li></ul><p id="8ea720e4-6f49-82a1-824a-8178ea5a6f3d" class="" dir="auto">예를 들어 App 서버만 DB에 접근 가능하게 하고, 사용자는 DB에 직접 도달할 수 없도록 설계함.</p><p id="0d2720e4-6f49-834a-a0e1-8196b0628833" class="" dir="auto">즉, 멀티 티어 구조는 <strong>방어 심층화(Defense in Depth)</strong> 를 구현하기 쉬운 구조임.</p><hr id="945720e4-6f49-833a-9a33-010ccee1838d" dir="auto"/><h2 id="64e720e4-6f49-8204-8ddd-8107df5c1467" class="" dir="auto">1.5.3 독립 확장</h2><p id="7d3720e4-6f49-836c-a4f9-818289cc27c5" class="" dir="auto">서비스 부하는 모든 계층에 동일하게 발생하지 않음.</p><p id="b7b720e4-6f49-83f7-89c1-013f216cd05e" class="" dir="auto">예를 들어</p><ul id="431720e4-6f49-8295-9973-81008cb54985" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 접속 증가 → ALB / App Tier 확장 필요</li></ul><ul id="8b9720e4-6f49-827d-8575-017cad2c1214" class="bulleted-list" dir="auto"><li style="list-style-type:disc">읽기 요청 급증 → 캐시 또는 Read Replica 확장 필요</li></ul><ul id="1d8720e4-6f49-82d8-9c95-0160c4cc3138" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 업로드 증가 → S3 중심 설계 필요</li></ul><ul id="ea8720e4-6f49-8208-bf98-01ed80975cb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 콘텐츠 증가 → CloudFront 캐시 활용 필요</li></ul><p id="c81720e4-6f49-83a5-841b-011f8993de8b" class="" dir="auto">단일 구조에서는 전체 시스템을 함께 키워야 하지만, 계층이 분리되어 있으면 병목이 발생한 부분만 선택적으로 확장 가능함.</p><p id="a8b720e4-6f49-8315-a58e-8127e0276563" class="" dir="auto">즉, 멀티 티어 구조는 <strong>수평 확장과 자원 최적화의 기반</strong>이 됨.</p><hr id="8c7720e4-6f49-83d7-ab05-01b02614a867" dir="auto"/><h2 id="dc3720e4-6f49-82a5-99ad-81a104191736" class="" dir="auto">1.5.4 장애 격리</h2><p id="424720e4-6f49-831a-b521-81f49e1f803d" class="" dir="auto">단일 서버 구조에서는 한 부분이 고장 나면 전체 시스템이 함께 영향을 받기 쉬움.</p><p id="913720e4-6f49-8277-a11f-81f81822dd5d" class="" dir="auto">반면 멀티 티어 구조에서는 장애 영향을 계층 단위로 격리할 수 있음.</p><p id="3a0720e4-6f49-82ee-97d1-81220fd171b3" class="" dir="auto">예시</p><ul id="8b2720e4-6f49-825f-a254-01b3e970bd93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">App 인스턴스 1대 장애 → ALB가 정상 인스턴스로 우회</li></ul><ul id="ab1720e4-6f49-8351-be64-01044dd95517" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한 AZ 장애 → Multi-AZ 배치로 일부 서비스 지속</li></ul><ul id="b05720e4-6f49-82dd-b9d1-016cf344b491" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Redis 장애 → 일시적으로 DB 직접 조회로 fallback</li></ul><ul id="8e5720e4-6f49-8204-ba88-018a3493e8da" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배치 작업 지연 → API 처리 계층과 분리되어 사용자 영향 최소화</li></ul><p id="651720e4-6f49-82c2-b7df-81c2f210fa03" class="" dir="auto">즉, 멀티 티어 구조는 <strong>장애를 없애는 구조가 아니라, 장애의 영향을 제한하는 구조</strong>임.</p><hr id="899720e4-6f49-8314-b779-017d648d72f8" dir="auto"/><h1 id="42b720e4-6f49-82df-ac87-813a7e8cef9d" class="" dir="auto">1.6 AWS에서 멀티 티어 아키텍처를 구현하는 방식</h1><p id="083720e4-6f49-83ab-b15c-8151b5d55952" class="" dir="auto">AWS에서 멀티 티어 구조는 특정 서비스 하나로 구현되지 않음.</p><p id="927720e4-6f49-8227-932d-81186d8331a4" class="" dir="auto">여러 서비스를 계층 역할에 맞게 조합해서 구현함.</p><p id="d35720e4-6f49-8226-b8c5-815fa9587536" class="" dir="auto">대표 구성 요소</p><ul id="4ab720e4-6f49-83c6-93b4-0195c674ccd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC</li></ul><ul id="1e0720e4-6f49-82e2-961e-018aa4faa159" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public / Private Subnet</li></ul><ul id="454720e4-6f49-82eb-a215-8163cc285dd9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table</li></ul><ul id="8f4720e4-6f49-82b4-8070-817304f18cef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway / NAT Gateway</li></ul><ul id="9d2720e4-6f49-83b2-8716-8165a3ad7e5c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group / NACL</li></ul><ul id="dd2720e4-6f49-8294-98e1-814914e3d88a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53</li></ul><ul id="66a720e4-6f49-83b9-82fb-01a5cac3eec3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront</li></ul><ul id="1f9720e4-6f49-837e-8df7-81f4932ff4ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF</li></ul><ul id="587720e4-6f49-8281-8c1b-81cebd53b570" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB / NLB</li></ul><ul id="dff720e4-6f49-8344-a429-817e65409aca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 / ECS / EKS / Lambda</li></ul><ul id="f84720e4-6f49-8242-bb7f-81a0158b7419" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS / Aurora / DynamoDB / ElastiCache / S3 / EFS</li></ul><ul id="486720e4-6f49-8304-900b-0193a0455416" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch</li></ul><ul id="c08720e4-6f49-8268-9666-81fa6d6ac2bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling</li></ul><ul id="ffd720e4-6f49-8214-8809-8126c9ee7642" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backup 서비스</li></ul><p id="712720e4-6f49-8316-a66f-01c65a870f3c" class="" dir="auto">즉, 멀티 티어 아키텍처는 AWS 서비스를 나열한 결과가 아니라,</p><p id="750720e4-6f49-82c2-b709-81b5181bda1b" class="" dir="auto"><strong>각 서비스에 명확한 역할을 부여해 계층별로 배치한 결과물</strong>임.</p><hr id="66b720e4-6f49-835b-936d-01c00f50af6e" dir="auto"/><h1 id="e9a720e4-6f49-82f7-bcdb-018d8f708381" class="" dir="auto">1.7 대표적인 AWS 멀티 티어 아키텍처 예시</h1><p id="f51720e4-6f49-82ee-916c-01ef61ab18d8" class="" dir="auto">전형적인 구조는 다음과 같음.</p><pre id="259720e4-6f49-8318-948e-01f9ce4aeb3b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+  │
+Route 53
+  │
+CloudFront
+  │
+AWS WAF
+  │
+ALB
+  │
+App Tier (EC2 / ECS / EKS / Lambda)
+  │
+Data Tier (RDS / Aurora / DynamoDB / Redis / S3)</code></pre><p id="42c720e4-6f49-8327-8d89-01107f62ae99" class="" dir="auto">이를 AWS 인프라 관점에서 조금 더 세분화하면 다음과 같이 볼 수 있음.</p><figure id="8c3720e4-6f49-8305-bb0f-0187899a4cc9" class="image" data-notion-image="1%EC%9E%A5%20%EA%B3%A0%EA%B8%89%20%EB%A9%80%ED%8B%B0%20%ED%8B%B0%EC%96%B4%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98%EC%99%80%20%EC%84%A4%EA%B3%84%20%EC%9B%90%EC%B9%99/image.png" dir="ltr"><a href="1%EC%9E%A5%20%EA%B3%A0%EA%B8%89%20%EB%A9%80%ED%8B%B0%20%ED%8B%B0%EC%96%B4%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98%EC%99%80%20%EC%84%A4%EA%B3%84%20%EC%9B%90%EC%B9%99/image.png"><img style="width:709.9910888671875px" src="1%EC%9E%A5%20%EA%B3%A0%EA%B8%89%20%EB%A9%80%ED%8B%B0%20%ED%8B%B0%EC%96%B4%20%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98%EC%99%80%20%EC%84%A4%EA%B3%84%20%EC%9B%90%EC%B9%99/image.png"/></a></figure><p id="5f8720e4-6f49-8387-b3ad-0162ddc1f119" class="" dir="auto">각 요소의 의미</p><ul id="7ff720e4-6f49-831e-90fe-01c3aa372fe0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53: DNS 질의 응답 및 서비스 진입점 제공</li></ul><ul id="b73720e4-6f49-83c1-84bc-8118b10f86e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront: 전 세계 사용자 대상 콘텐츠 캐싱 및 전송 가속</li></ul><ul id="32d720e4-6f49-8273-806e-81969a506174" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF: 웹 계층 보안 통제</li></ul><ul id="c9f720e4-6f49-8369-a965-81a4630c164a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB: HTTP/HTTPS 요청 분산 및 경로 기반 라우팅</li></ul><ul id="b1b720e4-6f49-820a-842b-814ea7aa4b6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">App Tier: 실제 비즈니스 로직 처리</li></ul><ul id="985720e4-6f49-83d4-bf63-81201a44d51d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Tier: 영속 데이터, 캐시, 객체 저장소 담당</li></ul><p id="f0c720e4-6f49-8280-9f61-0173354968a0" class="" dir="auto">즉, 고급 멀티 티어 아키텍처는 <strong>네트워크, 보안, 컴퓨팅, 데이터, 운영 요소가 함께 결합된 구조</strong>임.</p><hr id="695720e4-6f49-83ba-a3c0-8183fda55515" dir="auto"/><h1 id="2f1720e4-6f49-820a-acd7-0173e244b1e7" class="" dir="auto">1.8 AWS Well-Architected Framework와 설계 판단 기준</h1><p id="409720e4-6f49-83ae-9015-81876d828716" class="" dir="auto">고급 아키텍처 설계에서는 AWS Well-Architected Framework를 단순 암기 대상으로 보면 안 됨.</p><p id="271720e4-6f49-8267-93be-016b4bcfe320" class="" dir="auto">이 프레임워크는 실제 설계 판단 기준으로 사용해야 함.</p><p id="b63720e4-6f49-82a6-8c1a-81815dc41944" class="" dir="auto">AWS Well-Architected Framework는 다음 <strong>6개 Pillar</strong> 로 구성됨.</p><ul id="f2f720e4-6f49-8324-8c77-8154f2c0d7cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Operational Excellence</li></ul><ul id="bc0720e4-6f49-831e-a14e-013b002d94fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security</li></ul><ul id="a73720e4-6f49-8344-8731-012ad40f345d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Reliability</li></ul><ul id="b01720e4-6f49-835b-8ed5-8103104defb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Performance Efficiency</li></ul><ul id="175720e4-6f49-83e0-a7fc-811ba638b6e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cost Optimization</li></ul><ul id="c38720e4-6f49-8260-921d-8181bc03eb2f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Sustainability</li></ul><p id="5a8720e4-6f49-833c-af66-01be33705e9b" class="" dir="auto">즉, Well-Architected는 “좋은 구조인지 아닌지”를 판단하는 체크리스트이자 설계 관점임.</p><hr id="5af720e4-6f49-83e4-a128-01fd18494362" dir="auto"/><h2 id="6eb720e4-6f49-833a-b39a-01bc9503f3ea" class="" dir="auto">1.8.1 Operational Excellence</h2><p id="689720e4-6f49-8342-9e61-8185db4f2591" class="" dir="auto">운영 우수성은 시스템을 효율적으로 운영하고, 변화에 대응하며, 반복 가능한 방식으로 관리할 수 있는가를 보는 관점임.</p><p id="58e720e4-6f49-825e-9785-01ee20b0f650" class="" dir="auto">주요 질문</p><ul id="990720e4-6f49-8398-8399-81213a3b17d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인프라를 수작업이 아니라 IaC로 관리하는가</li></ul><ul id="844720e4-6f49-8345-b572-815e0c603cde" class="bulleted-list" dir="auto"><li style="list-style-type:disc">표준화된 배포 방식이 있는가</li></ul><ul id="40c720e4-6f49-82e9-ab7f-0175c68b65a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그와 메트릭, 추적 정보를 수집하는가</li></ul><ul id="0a9720e4-6f49-825e-add7-816039322a6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영자가 문제를 빠르게 탐지할 수 있는가</li></ul><ul id="dd4720e4-6f49-8276-b4b0-017450203f33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반복 작업을 자동화했는가</li></ul><p id="96c720e4-6f49-8356-abe8-8182507878a7" class="" dir="auto">핵심은 사람이 기억에 의존해 운영하지 않는 구조를 만드는 것임.</p><hr id="150720e4-6f49-8249-83c8-81da29a920d9" dir="auto"/><h2 id="076720e4-6f49-8392-869e-818e92a68b6a" class="" dir="auto">1.8.2 Security</h2><p id="9d1720e4-6f49-83ee-8152-014cada66c48" class="" dir="auto">보안은 IAM 설정만 의미하지 않음.</p><p id="0f0720e4-6f49-83d2-909f-8194c3352ff8" class="" dir="auto">네트워크, 데이터, 애플리케이션, 운영 전반을 함께 고려해야 함.</p><p id="a2a720e4-6f49-82e3-81a2-81da15f5d577" class="" dir="auto">주요 질문</p><ul id="38d720e4-6f49-8221-b5d4-8180de55ce23" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 계층이 외부에 노출되는가</li></ul><ul id="a27720e4-6f49-820a-b1c7-811e9b544dee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최소 권한 원칙이 지켜지는가</li></ul><ul id="5bc720e4-6f49-824b-bf3d-017aaf309279" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터가 암호화되는가</li></ul><ul id="9f3720e4-6f49-837d-90ff-8113d3e8b4f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비밀정보를 안전하게 저장하는가</li></ul><ul id="d00720e4-6f49-8264-9a8a-818e5577b3f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그와 감사 추적이 남는가</li></ul><ul id="f83720e4-6f49-8377-8bbe-017be4557bbe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">침해 가능성을 줄이는 구조인가</li></ul><p id="c77720e4-6f49-83fe-afb6-019c9905d347" class="" dir="auto">보안은 기능 추가가 아니라 <strong>처음부터 구조 안에 포함되어야 하는 설계 기준</strong>임.</p><hr id="85a720e4-6f49-8313-bec8-01524f7c318a" dir="auto"/><h2 id="210720e4-6f49-8312-96ec-813693a65f54" class="" dir="auto">1.8.3 Reliability</h2><p id="25a720e4-6f49-8306-a17f-819811273fc7" class="" dir="auto">신뢰성은 장애를 견디고 복구할 수 있는 능력을 의미함.</p><p id="40b720e4-6f49-83b1-8a23-816ea125189c" class="" dir="auto">주요 질문</p><ul id="b0f720e4-6f49-8227-ac58-81c951e5dcce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단일 장애점이 존재하는가</li></ul><ul id="85f720e4-6f49-834a-9fcf-0133c4c9fc4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다중 AZ 구성이 되어 있는가</li></ul><ul id="303720e4-6f49-8375-af7b-813cfa267d27" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 복구가 가능한가</li></ul><ul id="888720e4-6f49-823c-a425-01a2033461e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업과 복원 절차가 준비되어 있는가</li></ul><ul id="d65720e4-6f49-8384-82e2-813f4b039d06" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 조치(failover)가 가능한가</li></ul><ul id="6c6720e4-6f49-82cb-98a7-01eaaa25ed84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 시 시스템이 완전히 멈추지 않는가</li></ul><p id="29a720e4-6f49-82ed-b715-010941c4d27b" class="" dir="auto">즉, 신뢰성은 “장애가 없을 것”을 가정하는 것이 아니라,</p><p id="d0e720e4-6f49-82fa-bf75-01f7686fe5a5" class="" dir="auto"><strong>장애가 발생해도 계속 운영 가능한 구조인가</strong>를 보는 관점임.</p><hr id="c7e720e4-6f49-8373-acac-812f89cc5113" dir="auto"/><h2 id="6ce720e4-6f49-82ac-b2d0-8127bc58e405" class="" dir="auto">1.8.4 Performance Efficiency</h2><p id="01e720e4-6f49-8332-9251-0141bafccfbe" class="" dir="auto">성능 효율성은 무조건 큰 인스턴스를 쓰는 것이 아님.</p><p id="1ef720e4-6f49-83c0-8eaa-01cf9c08c084" class="" dir="auto">필요한 성능을 가장 적절한 방식으로 확보하는 것이 중요함.</p><p id="76e720e4-6f49-83b5-9ade-01c7c33d84c8" class="" dir="auto">주요 질문</p><ul id="208720e4-6f49-8344-a74d-81f684f8b3f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CDN으로 지연 시간을 줄일 수 있는가</li></ul><ul id="c7e720e4-6f49-8398-973c-814444e6745e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">캐시를 도입할 수 있는가</li></ul><ul id="0f9720e4-6f49-8376-805e-81ac1556b4ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버리스가 더 적합한가</li></ul><ul id="3dd720e4-6f49-821d-853e-011196dd0133" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너가 더 적합한가</li></ul><ul id="6d0720e4-6f49-822a-b26e-0148285bcf1f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">병렬 처리가 가능한 구조인가</li></ul><ul id="cbc720e4-6f49-8326-95f4-816f6602d85c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">읽기 부하를 분산할 수 있는가</li></ul><p id="be8720e4-6f49-8328-9ff7-811b848c6c0f" class="" dir="auto">즉, 성능 효율성은 <strong>기술 선택과 구조 선택의 문제</strong>임.</p><hr id="c69720e4-6f49-82e8-b861-017615e6565e" dir="auto"/><h2 id="f17720e4-6f49-824e-8f3f-81eb0979b156" class="" dir="auto">1.8.5 Cost Optimization</h2><p id="401720e4-6f49-8245-8feb-01d84551e1c5" class="" dir="auto">비용 최적화는 단순히 저렴한 서비스를 선택하는 것이 아님.</p><p id="679720e4-6f49-83d5-9add-01fd73db3c9a" class="" dir="auto">필요한 수준의 성능과 가용성을 유지하면서 불필요한 낭비를 줄이는 설계가 중요함.</p><p id="3d8720e4-6f49-8209-9cb7-814ad6561033" class="" dir="auto">주요 질문</p><ul id="b0e720e4-6f49-82f4-823e-81d8001301ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">과도하게 큰 인스턴스를 계속 유지하고 있지 않은가</li></ul><ul id="662720e4-6f49-83aa-b79a-81c7620f418d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling으로 사용량에 따라 증감할 수 있는가</li></ul><ul id="521720e4-6f49-8207-b2b6-81d56de5daa1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리형 서비스를 사용해 운영비를 줄일 수 있는가</li></ul><ul id="1e5720e4-6f49-8394-b82f-012c4e2b52d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스토리지 계층화를 적용할 수 있는가</li></ul><ul id="951720e4-6f49-834f-9890-0183fa722a99" class="bulleted-list" dir="auto"><li style="list-style-type:disc">캐시로 DB 비용을 줄일 수 있는가</li></ul><p id="3cd720e4-6f49-8257-af38-01c98efe9566" class="" dir="auto">즉, 비용 최적화는 “싸게 하자”가 아니라</p><p id="89e720e4-6f49-829c-84e0-01d915aa1c48" class="" dir="auto"><strong>구조적으로 낭비를 줄이자</strong>는 관점임.</p><hr id="9e0720e4-6f49-8218-9505-812d62cf2f3f" dir="auto"/><h2 id="a28720e4-6f49-838f-a9da-810a6a76fc62" class="" dir="auto">1.8.6 Sustainability</h2><p id="5ac720e4-6f49-838e-86b9-0154f2aedc60" class="" dir="auto">지속 가능성은 자원을 효율적으로 사용해 환경 영향을 줄이는 관점임.</p><p id="4d7720e4-6f49-8339-b33b-81769f9a0209" class="" dir="auto">주요 질문</p><ul id="a1c720e4-6f49-82d8-8994-01ae1589f6d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">과도한 리소스를 계속 켜두고 있지 않은가</li></ul><ul id="d33720e4-6f49-83f7-93fb-010d559b2afc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용량에 따라 자동으로 줄어드는 구조인가</li></ul><ul id="cde720e4-6f49-839c-a8c2-81c55903da75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버리스나 관리형 서비스를 활용해 효율을 높일 수 있는가</li></ul><ul id="f90720e4-6f49-8382-88a6-812584cfb06e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 보관 정책을 정리해 불필요한 저장을 줄이고 있는가</li></ul><p id="42e720e4-6f49-8337-8ae3-014a79bc295c" class="" dir="auto">즉, Sustainability는 단지 친환경 구호가 아니라</p><p id="397720e4-6f49-8358-b6eb-815dfc737dce" class="" dir="auto"><strong>효율적인 자원 사용과 운영 방식 개선</strong>으로 이어지는 설계 관점임.</p><hr id="5e9720e4-6f49-8382-a911-81e4b1fb6409" dir="auto"/><h1 id="3d1720e4-6f49-83e0-87eb-019b927287fa" class="" dir="auto">1.9 고급 아키텍처 설계 시 반드시 던져야 할 질문</h1><p id="b17720e4-6f49-8247-917f-81a64fe82594" class="" dir="auto">고급 아키텍트는 서비스를 많이 아는 사람이라기보다,</p><p id="26b720e4-6f49-83e9-803b-01cd4a2fe307" class="" dir="auto">설계 전에 올바른 질문을 먼저 던질 수 있는 사람이어야 함.</p><p id="24f720e4-6f49-83fe-b81c-01772d694e87" class="" dir="auto">핵심 질문은 다음과 같음.</p><hr id="939720e4-6f49-82ed-a0ca-015fdd7f671f" dir="auto"/><h2 id="3cf720e4-6f49-8352-89c3-81b6747cfde3" class="" dir="auto">1.9.1 외부에 직접 노출되어야 하는 계층은 어디인가</h2><p id="b01720e4-6f49-83a5-9793-8170f77cb47e" class="" dir="auto">모든 서버가 인터넷과 직접 통신하면 안 됨.</p><p id="1eb720e4-6f49-836f-bc7c-81e7eca36f8c" class="" dir="auto">일반적으로 외부 노출은 ALB, CloudFront, WAF 같은 진입 계층으로 제한함.</p><hr id="799720e4-6f49-8212-890a-81ab7d8b3596" dir="auto"/><h2 id="c32720e4-6f49-8247-b622-01c741645b95" class="" dir="auto">1.9.2 어떤 계층을 Private으로 둘 것인가</h2><p id="a34720e4-6f49-82aa-b314-81cb4781d1a6" class="" dir="auto">App Tier와 Data Tier는 가능하면 Private Subnet에 두는 것이 일반적임.</p><p id="0a9720e4-6f49-82eb-b59b-8196ec6b0a61" class="" dir="auto">이렇게 해야 직접 접근 경로를 줄이고 공격 표면을 최소화할 수 있음.</p><hr id="c6e720e4-6f49-83da-a347-015d4cb2098e" dir="auto"/><h2 id="a2c720e4-6f49-83f5-a525-813f020cd6b4" class="" dir="auto">1.9.3 병목은 어디에서 먼저 발생할 것인가</h2><p id="17e720e4-6f49-828b-9c8e-01ff9c83db3c" class="" dir="auto">웹 서버, 애플리케이션 서버, DB, 캐시, 네트워크 중 어디가 한계에 먼저 도달할지 예상해야 함.</p><p id="a1a720e4-6f49-83db-b6ff-81b519ad2192" class="" dir="auto">그래야 사전에 확장 전략을 세울 수 있음.</p><hr id="87d720e4-6f49-8353-a6cd-817e7f2739bc" dir="auto"/><h2 id="6b5720e4-6f49-8323-9ad5-01e0591b8892" class="" dir="auto">1.9.4 장애 시 어떤 방식으로 유지할 것인가</h2><p id="4e1720e4-6f49-835b-ba1e-011883f91060" class="" dir="auto">고급 설계에서는 장애를 가정해야 함.</p><p id="f2e720e4-6f49-834e-8cd5-81ec831ef59c" class="" dir="auto">예를 들어 다음 상황을 각각 따로 검토해야 함.</p><ul id="ddc720e4-6f49-8231-8dcf-814e276ef2f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 1대 장애</li></ul><ul id="ed5720e4-6f49-83aa-bd5b-81bccc02d7bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 AZ 장애</li></ul><ul id="4ec720e4-6f49-8334-90a6-815a354221ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DB 장애</li></ul><ul id="e29720e4-6f49-834b-a8f7-814fa581da11" class="bulleted-list" dir="auto"><li style="list-style-type:disc">캐시 장애</li></ul><ul id="771720e4-6f49-8325-be9a-01085a7d0bb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 API 장애</li></ul><ul id="16a720e4-6f49-8359-b17c-01da352a9e60" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영자 실수</li></ul><p id="152720e4-6f49-8306-b84d-01aa90527cfc" class="" dir="auto">즉, “장애가 나면 어떻게 될까”가 아니라</p><p id="058720e4-6f49-82e0-b22e-015496785a6c" class="" dir="auto"><strong>“장애가 나더라도 무엇이 계속 살아남아야 하는가”</strong> 를 먼저 생각해야 함.</p><hr id="aef720e4-6f49-83c1-97e5-81b7fa3e7d60" dir="auto"/><h2 id="d00720e4-6f49-83de-9f34-01f10c4041ae" class="" dir="auto">1.9.5 상태를 어디에 저장할 것인가</h2><p id="4fb720e4-6f49-82d5-9b35-012f304ece50" class="" dir="auto">애플리케이션 서버 내부에 상태를 저장하면 교체와 확장이 어려워짐.</p><p id="69c720e4-6f49-8207-abf6-8197a17f36d0" class="" dir="auto">따라서 상태 저장 위치를 명확히 분리해야 함.</p><p id="e47720e4-6f49-826f-ab31-016d8c1212d8" class="" dir="auto">예시</p><ul id="b97720e4-6f49-82e3-8f23-01a786702499" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세션 정보 → Redis</li></ul><ul id="313720e4-6f49-831d-b25c-017b40bc2c10" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업로드 파일 → S3 또는 EFS</li></ul><ul id="961720e4-6f49-8226-b74d-01bf0b5562c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비즈니스 데이터 → RDS / DynamoDB</li></ul><ul id="0c1720e4-6f49-8291-ad23-01078ee69a4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정값/비밀값 → Systems Manager Parameter Store / Secrets Manager</li></ul><hr id="6be720e4-6f49-83cc-9a83-01635f771358" dir="auto"/><h2 id="63a720e4-6f49-83e9-b641-8166ad2c4199" class="" dir="auto">1.9.6 관리형 서비스로 대체 가능한가</h2><p id="037720e4-6f49-82ca-ad6a-01a1265a5ae0" class="" dir="auto">직접 설치하고 운영하는 방식이 항상 최선은 아님.</p><p id="161720e4-6f49-822e-be00-81982cf91de1" class="" dir="auto">예를 들어</p><ul id="6f1720e4-6f49-8228-9f79-01a44f3c4228" class="bulleted-list" dir="auto"><li style="list-style-type:disc">직접 DB 설치 대신 RDS</li></ul><ul id="d1c720e4-6f49-83e3-a5b0-01e4cd95f96e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">직접 Redis 운영 대신 ElastiCache</li></ul><ul id="986720e4-6f49-8350-861d-8101ecf5b88f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">직접 서버 확장 대신 Auto Scaling</li></ul><ul id="8d9720e4-6f49-83ee-9f9f-01fcf1e03873" class="bulleted-list" dir="auto"><li style="list-style-type:disc">직접 배포 자동화 대신 관리형 CI/CD 서비스 활용</li></ul><p id="102720e4-6f49-8286-9fcb-0114195f51e2" class="" dir="auto">고급 설계에서는 “내가 운영할 수 있는가”보다</p><p id="191720e4-6f49-82ac-8b77-81d2aa5c3f86" class="" dir="auto"><strong>“굳이 내가 직접 운영해야 하는가”</strong> 를 먼저 검토해야 함.</p><hr id="ca8720e4-6f49-8350-bf48-010aee76dbac" dir="auto"/><h1 id="f03720e4-6f49-8388-a99f-8150d4bd711e" class="" dir="auto">1.10 상태 비저장(Stateless) 설계의 중요성</h1><p id="992720e4-6f49-8380-a4c4-01aa223be622" class="" dir="auto">고급 아키텍처에서는 Web Tier와 App Tier를 가능하면 <strong>Stateless</strong> 하게 설계하는 것이 매우 중요함.</p><p id="26e720e4-6f49-822c-a532-818ef8f5132d" class="" dir="auto">Stateless 설계란, 특정 요청을 처리하는 데 필요한 상태가 서버 로컬 메모리나 로컬 디스크에 강하게 묶여 있지 않은 구조를 말함.</p><p id="96d720e4-6f49-82cb-8aba-8127de190363" class="" dir="auto">이 방식이 중요한 이유</p><ul id="cae720e4-6f49-8312-a7bf-01f89996c8e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling이 쉬움</li></ul><ul id="d48720e4-6f49-837e-88cc-011b977d8bbe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 발생 시 다른 인스턴스로 대체하기 쉬움</li></ul><ul id="f32720e4-6f49-83b0-9237-81b05f88acba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">무중단 배포가 쉬움</li></ul><ul id="0c5720e4-6f49-8393-8175-0132fa7a7a48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동일 역할 인스턴스를 여러 대 두기 쉬움</li></ul><ul id="23a720e4-6f49-8252-8256-0189e5ef2194" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 서버에 세션이 고정되지 않음</li></ul><p id="4dd720e4-6f49-8322-830f-0180085fb248" class="" dir="auto">예를 들어 로그인 세션을 웹 서버 메모리에 저장하면, 해당 서버가 내려갔을 때 사용자가 다시 로그인해야 할 수 있음.</p><p id="895720e4-6f49-8398-92de-018ab1e97936" class="" dir="auto">반면 Redis 같은 외부 저장소에 세션을 저장하면 여러 인스턴스가 같은 상태를 공유할 수 있음.</p><p id="344720e4-6f49-8207-8e08-819b17024f31" class="" dir="auto">즉, 현대적 아키텍처에서는 서버가 상태를 오래 들고 있기보다</p><p id="c32720e4-6f49-828c-ab2a-814688345d49" class="" dir="auto"><strong>처리 로직에 집중하고, 상태는 외부 저장소에 위임하는 구조</strong>를 선호함.</p><hr id="31b720e4-6f49-821d-ac8a-01be651418f3" dir="auto"/><h1 id="c72720e4-6f49-836e-a67e-01c9729e3f7c" class="" dir="auto">1.11 고급 아키텍처에서 자주 사용하는 설계 원칙</h1><p id="51a720e4-6f49-83ab-a04d-01dd00372ea9" class="" dir="auto">이 과정 전체에서 공통으로 적용할 설계 원칙을 먼저 정리하면 다음과 같음.</p><hr id="7ef720e4-6f49-82fc-9f79-01d483922c15" dir="auto"/><h2 id="d12720e4-6f49-8373-a813-01c42b7f9308" class="" dir="auto">1.11.1 단일 장애점을 만들지 않음</h2><p id="156720e4-6f49-83c7-b7b4-01dd56ccd1fc" class="" dir="auto">서버 1대, AZ 1개, NAT Gateway 1개, 수동 승인 프로세스 1개 등</p><p id="b52720e4-6f49-83af-9421-0157f5dc98d1" class="" dir="auto">하나에만 의존하는 구조는 위험함.</p><hr id="fc1720e4-6f49-839b-a120-01bd0ff8a974" dir="auto"/><h2 id="b0b720e4-6f49-8340-86b8-015ec1b2f3a2" class="" dir="auto">1.11.2 외부 노출을 최소화함</h2><p id="086720e4-6f49-826b-ac46-81bcadace372" class="" dir="auto">인터넷과 직접 통신하는 리소스는 꼭 필요한 것만 두고,</p><p id="88e720e4-6f49-82d5-9716-8133005efe13" class="" dir="auto">나머지는 내부 경계 뒤로 숨기는 것이 기본 원칙임.</p><hr id="ae6720e4-6f49-835d-9b69-8191b4e69d0c" dir="auto"/><h2 id="3c0720e4-6f49-8202-8d3d-8128fa757f41" class="" dir="auto">1.11.3 상태를 처리 계층에서 분리함</h2><p id="144720e4-6f49-83bd-9969-010b4133be8e" class="" dir="auto">애플리케이션 서버가 상태를 독점하면 확장과 교체가 어려워짐.</p><p id="7b4720e4-6f49-8383-a2c5-81f1fb6f056c" class="" dir="auto">세션, 파일, 비밀값, 핵심 데이터는 외부 저장소로 분리하는 것이 유리함.</p><hr id="1c7720e4-6f49-8259-8644-81e45d4d9888" dir="auto"/><h2 id="cb5720e4-6f49-82e5-bdda-01152327d93d" class="" dir="auto">1.11.4 수평 확장을 우선 고려함</h2><p id="535720e4-6f49-82a9-86dd-011e30c4b402" class="" dir="auto">큰 서버 1대를 계속 키우는 수직 확장보다,</p><p id="6d3720e4-6f49-8268-9487-816c5ef59090" class="" dir="auto">동일 역할의 서버 여러 대를 두는 수평 확장이 고가용성과 운영 측면에서 더 유리한 경우가 많음.</p><hr id="652720e4-6f49-8230-966a-0126550e387a" dir="auto"/><h2 id="30d720e4-6f49-83e9-812c-01c967f55132" class="" dir="auto">1.11.5 관리형 서비스를 우선 검토함</h2><p id="0b2720e4-6f49-8377-9ab1-8168a089f067" class="" dir="auto">직접 운영이 반드시 필요한 특별한 이유가 없다면,</p><p id="244720e4-6f49-83a2-b436-01dd4279f36f" class="" dir="auto">AWS 관리형 서비스를 우선 검토하는 것이 일반적으로 더 안정적이고 운영 부담이 적음.</p><hr id="02e720e4-6f49-83a5-aac8-81752b3b2d83" dir="auto"/><h2 id="d16720e4-6f49-823d-a3bb-81694aac33a1" class="" dir="auto">1.11.6 자동화를 전제로 설계함</h2><p id="277720e4-6f49-837c-8127-810afaf5a2a2" class="" dir="auto">좋은 구조는 콘솔 클릭 순서를 기억하는 구조가 아님.</p><p id="50d720e4-6f49-8292-9973-0130d33b8c47" class="" dir="auto">누가 다시 구축해도 동일한 결과를 재현할 수 있어야 함.</p><p id="296720e4-6f49-82ad-aaed-01388b910c53" class="" dir="auto">즉,</p><ul id="691720e4-6f49-82c4-8440-010fe269d892" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IaC</li></ul><ul id="8a0720e4-6f49-828a-95c5-8192a3324b0e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CI/CD</li></ul><ul id="4cd720e4-6f49-8389-829f-01fe9d92d59a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 배포</li></ul><ul id="1cb720e4-6f49-8382-bc98-81ef7f3e2d66" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 복구</li></ul><ul id="e08720e4-6f49-83f9-bc92-01a96a5388d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 확장</li></ul><ul id="a01720e4-6f49-8372-b6e8-0150866a0593" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 백업</li></ul><p id="683720e4-6f49-8378-9864-812b4b9ec364" class="" dir="auto">을 기본 전제로 생각해야 함.</p><hr id="b24720e4-6f49-8383-ad28-01743e04b2e9" dir="auto"/><h2 id="9de720e4-6f49-83fb-b381-015a2e39f793" class="" dir="auto">1.11.7 관측 가능성(Observability)을 함께 설계함</h2><p id="a87720e4-6f49-8380-9615-81dc028bcdb1" class="" dir="auto">운영 중 문제가 생겼을 때 보이지 않는 시스템은 관리하기 어려움.</p><p id="9a8720e4-6f49-838a-8cb7-0148c6ca2035" class="" dir="auto">따라서 처음부터 다음 요소를 함께 설계해야 함.</p><ul id="c09720e4-6f49-8232-a542-01e704cb22e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">메트릭 수집</li></ul><ul id="5a8720e4-6f49-8229-a02d-81eb9e529a24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 수집</li></ul><ul id="a20720e4-6f49-83f4-8ba4-814dbab1fffd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분산 추적</li></ul><ul id="a37720e4-6f49-829d-b91d-81bb36a7f82b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">경보</li></ul><ul id="7ca720e4-6f49-8395-9cb8-8123b5395ad4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대시보드</li></ul><p id="e1b720e4-6f49-8347-a67d-01a70d704e9a" class="" dir="auto">즉, “운영 후에 붙이는 모니터링”이 아니라</p><p id="ec9720e4-6f49-82fd-946e-0186aee290d9" class="" dir="auto"><strong>처음부터 보이게 설계하는 것</strong>이 중요함.</p><hr id="969720e4-6f49-82a9-9c72-01605be19ccb" dir="auto"/><h1 id="83a720e4-6f49-8358-9f2b-0120ba0eb8ce" class="" dir="auto">1.12 엔터프라이즈 환경에서 추가로 고려해야 할 요소</h1><p id="841720e4-6f49-8342-b30e-81570c49156d" class="" dir="auto">실습 환경에서는 하나의 AWS 계정과 단순한 VPC만으로도 충분할 수 있음.</p><p id="870720e4-6f49-83c8-aa32-815b37676da7" class="" dir="auto">하지만 실제 조직 환경에서는 고려해야 할 범위가 더 넓어짐.</p><p id="34b720e4-6f49-8381-9671-818643e567f2" class="" dir="auto">대표 요소</p><ul id="00c720e4-6f49-82b2-baf0-01c913dc7e8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 계정 구조</li></ul><ul id="73c720e4-6f49-8383-bc16-81e6f963979d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 보안 정책</li></ul><ul id="a08720e4-6f49-8268-8289-01199edc96f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공용 네트워크 허브 구조</li></ul><ul id="669720e4-6f49-82e7-9486-81a1cc31e863" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 감사 로그 수집</li></ul><ul id="005720e4-6f49-83e6-ac96-811257cdd340" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 표준화</li></ul><ul id="1da720e4-6f49-832d-8992-018b4de1002a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용 배부와 가시성 확보</li></ul><ul id="45c720e4-6f49-83e8-a148-819c163d1751" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 서비스 공유 구조</li></ul><ul id="60d720e4-6f49-831e-b470-81821ab2ceda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">표준 계정 생성 및 거버넌스</li></ul><p id="45e720e4-6f49-827a-818e-013b5e7463a5" class="" dir="auto">예를 들어 조직 전체 관점에서는 단일 애플리케이션의 ALB 하나보다,</p><p id="436720e4-6f49-8293-9081-0105cdd7901a" class="" dir="auto"><strong>여러 계정에 배포된 수십 개 시스템을 어떻게 통제하고 표준화할 것인가</strong>가 더 중요한 이슈가 될 수 있음.</p><p id="a64720e4-6f49-83f0-8827-81fc06e1e929" class="" dir="auto">즉, 고급 아키텍처는 애플리케이션 한 개의 구조를 넘어서</p><p id="70c720e4-6f49-8351-8458-8113de0acf3c" class="" dir="auto"><strong>조직 전체 운영 구조와 거버넌스까지 포함하는 설계 문제</strong>로 확장됨.</p><hr id="8ea720e4-6f49-829c-8cdd-019ea05dbc84" dir="auto"/><h1 id="285720e4-6f49-82a7-bc09-81f8fc86578b" class="" dir="auto">1.13 현대적 플랫폼에서 멀티 티어 구조를 구현하는 방법</h1><p id="dab720e4-6f49-8235-9f33-0127ca43c28d" class="" dir="auto">멀티 티어 구조는 EC2 기반으로만 구현되는 것이 아님.</p><p id="428720e4-6f49-82bd-a052-8189cc84d575" class="" dir="auto">본질은 계층 분리에 있고, 구현 방식은 다양하게 선택할 수 있음.</p><p id="dbe720e4-6f49-8369-9e0d-812d317bf100" class="" dir="auto">App Tier 예시</p><ul id="a11720e4-6f49-831b-bb47-81759d3a69e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 기반 애플리케이션 서버</li></ul><ul id="6dd720e4-6f49-83e8-8e59-018d0c21f72d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ECS / Fargate 기반 컨테이너</li></ul><ul id="dd6720e4-6f49-8256-bee6-81ad3facd7ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EKS 기반 쿠버네티스 워크로드</li></ul><ul id="d31720e4-6f49-83b3-b53e-8109d1bc8dd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 기반 서버리스 함수</li></ul><p id="0cf720e4-6f49-821e-8d86-81bf651889e4" class="" dir="auto">Data Tier 예시</p><ul id="212720e4-6f49-83f8-b295-81881253865b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS / Aurora</li></ul><ul id="aaa720e4-6f49-8343-b3cd-0131c741a9a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB</li></ul><ul id="35b720e4-6f49-8244-8a0e-817b366777d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ElastiCache for Redis</li></ul><ul id="10e720e4-6f49-82cb-acac-81b65008d7e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="897720e4-6f49-828d-9e0a-81a6f596eea9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS</li></ul><p id="d6c720e4-6f49-82c4-bf19-015f6a586e48" class="" dir="auto">즉, 멀티 티어 아키텍처의 핵심은 특정 서비스 이름이 아니라</p><p id="bfe720e4-6f49-82d5-a7ac-81c1f3a64fb6" class="" dir="auto"><strong>각 계층의 역할을 어떻게 분리하고 연결할 것인가</strong>에 있음.</p><hr id="957720e4-6f49-83a7-b936-01facce72d5e" dir="auto"/><h1 id="22a720e4-6f49-8237-823e-819031c8ddff" class="" dir="auto">1.14 장 요약</h1><ul id="0be720e4-6f49-8318-bcc9-81b43d6459f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고급 아키텍처 설계는 구조적 의사결정의 문제임</li></ul><ul id="14c720e4-6f49-838e-9d39-01cfb564bb6f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 티어 아키텍처는 역할, 보안, 확장, 장애 범위를 분리하는 구조임</li></ul><ul id="346720e4-6f49-8399-96e8-010eb5c5ed19" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Web / App / Data Tier는 각각 진입, 처리, 저장 역할을 담당함</li></ul><ul id="9a0720e4-6f49-838a-a985-8153df7d8666" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계층 분리는 책임 분리, 보안 경계 형성, 독립 확장, 장애 격리를 가능하게 함</li></ul><ul id="214720e4-6f49-83ac-aa2d-01e83adabc89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Well-Architected Framework는 6개 Pillar로 구성됨</li></ul><ul id="d6a720e4-6f49-838e-ab56-8134771d2ef7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고급 설계에서는 장애, 상태 저장 위치, 외부 노출 범위, 관리형 서비스 활용 여부를 먼저 검토해야 함</li></ul><ul id="132720e4-6f49-8265-a3dc-01131f0a8dce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Stateless 설계와 수평 확장은 현대적 아키텍처의 핵심 원칙임</li></ul><ul id="1f4720e4-6f49-834f-a9f6-8137c8820c63" class="bulleted-list" dir="auto"><li style="list-style-type:disc">엔터프라이즈 환경에서는 멀티 계정, 거버넌스, 중앙 통제가 추가로 중요해짐</li></ul><hr id="5dc720e4-6f49-8392-a317-816b9b267a48" dir="auto"/><h1 id="dab720e4-6f49-82c3-b5c9-811c9ab45a36" class="" dir="auto">1.15 한 줄 정리</h1><pre id="5c7720e4-6f49-82a3-986e-81ac70ebdc83" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">고급 멀티 티어 아키텍처 설계는 AWS 서비스를 많이 아는 것이 아니라,
+계층 분리를 기반으로 보안, 가용성, 확장성, 운영성, 비용, 지속 가능성까지 함께 고려해
+왜 이 구조를 선택했는지 설명할 수 있는 능력이다.</code></pre><hr id="2f5720e4-6f49-827a-867f-0199cc18cf5c" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

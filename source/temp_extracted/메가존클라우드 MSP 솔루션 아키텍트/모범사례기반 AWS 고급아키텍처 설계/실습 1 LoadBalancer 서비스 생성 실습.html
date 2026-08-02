@@ -1,0 +1,771 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습 1. LoadBalancer 서비스 생성 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="5d4720e4-6f49-8321-8221-018ae256c594" class="page sans"><header><h1 class="page-title" dir="auto">실습 1. LoadBalancer 서비스 생성 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="33a720e4-6f49-8349-9e2b-0150a54db7a3" class="" dir="auto">1. 실습 목표</h2><p id="242720e4-6f49-82c3-94cf-81501ec0b26c" class="" dir="auto">nginx 애플리케이션을 배포하고, 이를 <code>Service type=LoadBalancer</code>로 외부에 공개해 봄.</p><ul id="1f1720e4-6f49-82c5-ad4d-81f9c93ce1ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deployment가 Pod를 생성하는 방식</li></ul><ul id="bae720e4-6f49-8286-8966-8170bb840470" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service가 Pod 앞단에 고정 진입점을 제공하는 방식</li></ul><ul id="92e720e4-6f49-82b9-8cca-8114b98688de" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>LoadBalancer</code> 타입 서비스가 EKS에서 외부 로드밸런서와 연결되는 방식</li></ul><ul id="c3c720e4-6f49-83b2-b3c2-8150b109a908" class="bulleted-list" dir="auto"><li style="list-style-type:disc">온프레미스 Kubernetes와 EKS의 차이점</li></ul><p id="1c9720e4-6f49-8227-a4a3-819c71fe8300" class="" dir="auto">Kubernetes 공식 문서는 <code>LoadBalancer</code>를 지원되는 클라우드 공급자 환경에서 외부 로드밸런서를 생성하는 Service 방식으로 설명함.</p><hr id="8e4720e4-6f49-82bb-8b14-81f574688a93" dir="auto"/><h2 id="b32720e4-6f49-8331-82db-01a07f989843" class="" dir="auto">2. 실습 개요</h2><p id="e4c720e4-6f49-8282-a3c9-81b9ee54c544" class="" dir="auto">온프레미스 Kubernetes에서는 Pod를 외부에 공개하려면 보통 다음 중 하나가 필요함.</p><ul id="51e720e4-6f49-83c1-8a6a-81b670685645" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NodePort 사용</li></ul><ul id="29a720e4-6f49-83ad-b993-01e899954cfa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress Controller 설치</li></ul><ul id="87f720e4-6f49-82df-9723-81f649894bbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MetalLB 같은 별도 LoadBalancer 구성</li></ul><ul id="88b720e4-6f49-8337-af83-814b4d3dc752" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 L4/L7 장비와 수동 연동</li></ul><p id="a8f720e4-6f49-8223-a9b3-81be33285152" class="" dir="auto">반면 EKS에서는 <code>Service</code>를 <code>LoadBalancer</code> 타입으로 만들면 AWS 쪽 로드밸런서 생성과 연결이 가능함.  </p><hr id="43a720e4-6f49-83c1-8d41-8189342f1a4e" dir="auto"/><h2 id="49a720e4-6f49-83e9-b609-81874f9cad20" class="" dir="auto">3. 실습 전 확인 사항</h2><p id="85d720e4-6f49-82cd-8bf9-013579e9cee7" class="" dir="auto">다음 조건이 준비되어 있어야 함.</p><ol type="1" id="797720e4-6f49-83e0-a32d-0116c9c7ee5d" class="numbered-list" start="1" dir="auto"><li>EKS 클러스터가 이미 생성되어 있어야 함</li></ol><ol type="1" id="bfc720e4-6f49-82b7-acce-016d173d30fd" class="numbered-list" start="2" dir="auto"><li><code>kubectl</code>이 현재 클러스터에 연결된 상태여야 함</li></ol><ol type="1" id="2fd720e4-6f49-8296-a78a-81e50a5302fc" class="numbered-list" start="3" dir="auto"><li>워커 노드가 <code>Ready</code> 상태여야 함</li></ol><ol type="1" id="5c4720e4-6f49-824b-a81c-01ee2a5e5133" class="numbered-list" start="4" dir="auto"><li>실습용 네임스페이스 또는 기본 네임스페이스를 사용할 수 있어야 함</li></ol><p id="4d9720e4-6f49-8373-bc23-818bd8f3577e" class="" dir="auto">먼저 아래 명령으로 현재 연결 상태를 확인함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="84e720e4-6f49-822e-b8fa-01d6abfdf315" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl config current-context
+kubectl get nodes</code></pre><p id="df9720e4-6f49-8288-861c-814dfff21425" class="" dir="auto"><code>kubectl get nodes</code> 결과에서 노드 상태가 <code>Ready</code>로 보이면 기본적인 클러스터 연결은 정상임. Kubernetes에서 Service는 결국 선택된 Pod 집합에 트래픽을 보내는 추상화 계층이므로, 노드와 Pod가 정상이어야 의미 있는 실습이 가능함. </p><hr id="541720e4-6f49-82ed-a3f1-01e894204a1c" dir="auto"/><h2 id="cda720e4-6f49-8239-aabf-81ee97ed1fc5" class="" dir="auto">4. 실습 흐름</h2><p id="1be720e4-6f49-8212-bd63-81b80dccb4a4" class="" dir="auto">이번 실습은 다음 순서로 진행함.</p><ol type="1" id="930720e4-6f49-830d-97b6-812a18f17a94" class="numbered-list" start="1" dir="auto"><li>nginx Deployment 생성</li></ol><ol type="1" id="64e720e4-6f49-834d-9ee1-81e6e8b74aca" class="numbered-list" start="2" dir="auto"><li>Pod 생성 여부 확인</li></ol><ol type="1" id="088720e4-6f49-8366-8819-81d78386372e" class="numbered-list" start="3" dir="auto"><li>LoadBalancer 타입 Service 생성</li></ol><ol type="1" id="fcd720e4-6f49-83d0-9bcb-01893382e358" class="numbered-list" start="4" dir="auto"><li>Service 상태 확인</li></ol><ol type="1" id="e65720e4-6f49-83ad-a48d-01299d5f4225" class="numbered-list" start="5" dir="auto"><li>외부 주소 확인</li></ol><ol type="1" id="e35720e4-6f49-82b0-bf3f-81af908e5318" class="numbered-list" start="6" dir="auto"><li>브라우저 또는 <code>curl</code>로 접속 테스트</li></ol><ol type="1" id="b53720e4-6f49-835f-a59b-811bd13e6ed2" class="numbered-list" start="7" dir="auto"><li>결과 해석</li></ol><ol type="1" id="6a6720e4-6f49-833b-9dbf-0129285c374f" class="numbered-list" start="8" dir="auto"><li>실습 정리 및 삭제</li></ol><p id="a0e720e4-6f49-822a-8a11-815e9b595b1a" class="" dir="auto">이 순서는 Kubernetes의 기본 객체 관계를 이해하기에 좋음. 먼저 Deployment가 Pod를 만들고, 그 다음 Service가 Pod 집합을 네트워크로 노출함.</p><hr id="3c5720e4-6f49-8307-a213-81e20a094f78" dir="auto"/><h2 id="0b6720e4-6f49-83b2-b701-014f084bcba0" class="" dir="auto">5. 1단계 - nginx Deployment 생성</h2><p id="c8d720e4-6f49-83d4-9790-01d518a23714" class="" dir="auto">먼저 nginx 애플리케이션을 배포함.</p><pre id="4bc720e4-6f49-83bd-b90f-81412f2ec411" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create deployment nginx --image=nginx</code></pre><h3 id="5df720e4-6f49-8307-b10b-01025f5109c7" class="" dir="auto">명령어 설명</h3><h3 id="68b720e4-6f49-8268-a0e1-810a9d0ac82a" class="" dir="auto"><code>kubectl create deployment</code></h3><p id="f46720e4-6f49-8385-89fc-81680c384c2e" class="" dir="auto">Deployment 리소스를 생성하는 명령임.</p><p id="676720e4-6f49-835d-b9ba-8162d539547b" class="" dir="auto">Deployment는 단순히 Pod 하나만 띄우는 것이 아니라,</p><p id="d6c720e4-6f49-8208-867b-015e95f6bd89" class="" dir="auto">원하는 개수의 Pod가 항상 유지되도록 관리하는 상위 리소스임.</p><h3 id="c8c720e4-6f49-83df-a855-81edad60d933" class="" dir="auto"><code>nginx</code></h3><p id="ed5720e4-6f49-83ab-90d8-81ef9439f59d" class="" dir="auto">Deployment 이름임.</p><h3 id="f4a720e4-6f49-8275-9d8a-012239528ffd" class="" dir="auto"><code>--image=nginx</code></h3><p id="dcd720e4-6f49-8215-876d-015f5d98c72f" class="" dir="auto">Docker Hub의 <code>nginx</code> 이미지를 사용해서 컨테이너를 생성하라는 의미임.</p><p id="1b2720e4-6f49-83d0-9b59-81c94267451f" class="" dir="auto">즉, 이 명령은 nginx 웹 서버 컨테이너를 실행하는 Deployment를 생성하는 명령임.</p><hr id="088720e4-6f49-822a-8135-0151de2c162c" dir="auto"/><h2 id="567720e4-6f49-820a-aaab-0102f42e62b1" class="" dir="auto">6. 2단계 - Pod 생성 여부 확인</h2><p id="4da720e4-6f49-821d-9f8e-81f4ed0e76f5" class="" dir="auto">Deployment가 생성되었다고 바로 애플리케이션이 준비된 것은 아님.</p><p id="7aa720e4-6f49-8396-9b39-015e88faa989" class="" dir="auto">실제로 Pod가 정상 생성되고 실행 중인지 확인해야 함.</p><pre id="453720e4-6f49-8208-ae20-017a0eb6fbee" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods</code></pre><p id="ba9720e4-6f49-833f-bc31-0154c84938ff" class="" dir="auto">조금 더 자세히 보고 싶으면 아래 명령도 가능함.</p><pre id="fbf720e4-6f49-82c6-8dfc-816431edf1d2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -o wide</code></pre><h3 id="f01720e4-6f49-8343-af1c-8105aaf615b6" class="" dir="auto">확인 포인트</h3><ul id="f62720e4-6f49-824c-b44a-016248ef5b7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>STATUS</code>가 <code>Running</code>인지 확인</li></ul><ul id="37a720e4-6f49-8222-b26b-01f3760965f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>READY</code> 값이 <code>1/1</code>인지 확인</li></ul><ul id="241720e4-6f49-8305-97fd-0112b08b72a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 노드에 배치되었는지 확인</li></ul><ul id="752720e4-6f49-8210-8be2-813373de9a18" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-o wide</code> 옵션은 Pod IP, Node 정보까지 출력</li></ul><hr id="030720e4-6f49-8220-8394-014ebe11e8c0" dir="auto"/><h2 id="0ed720e4-6f49-829d-bef9-81179db14dc0" class="" dir="auto">7. 3단계 - LoadBalancer 타입 Service 생성</h2><p id="706720e4-6f49-823a-895a-8131f3eda3f5" class="" dir="auto">이제 nginx Deployment를 외부에 공개함.</p><pre id="1a7720e4-6f49-824b-9c45-019fdc1cb674" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl expose deployment nginx --port=80 --type=LoadBalancer</code></pre><h3 id="d0e720e4-6f49-82e6-bf10-0161221cf716" class="" dir="auto">명령어 설명</h3><h3 id="749720e4-6f49-83ad-a533-011a77de59b0" class="" dir="auto"><code>kubectl expose deployment nginx</code></h3><p id="7f9720e4-6f49-8298-866e-8188d45a8d34" class="" dir="auto">기존 Deployment를 네트워크 서비스로 노출하라는 의미임.</p><h3 id="be1720e4-6f49-83bb-93de-81f2678e0f2e" class="" dir="auto"><code>--port=80</code></h3><p id="e67720e4-6f49-82ee-b252-01b9489a14d3" class="" dir="auto">Service가 외부에 제공할 포트를 80으로 지정함.</p><h3 id="351720e4-6f49-83d3-837a-817026b3f0f4" class="" dir="auto"><code>--type=LoadBalancer</code></h3><p id="400720e4-6f49-8341-9369-01132f6fd419" class="" dir="auto">Service 타입을 <code>LoadBalancer</code>로 지정함.</p><p id="313720e4-6f49-823c-b488-81594c65b696" class="" dir="auto">이 설정이 핵심임.</p><p id="69f720e4-6f49-8349-9a56-01f837304b6c" class="" dir="auto">Kubernetes에서 <code>LoadBalancer</code>는 <code>NodePort</code>를 포함하는 상위 개념으로 동작하며, 지원되는 클라우드 환경에서는 외부 로드밸런서를 생성함. </p><hr id="d5d720e4-6f49-82ad-8a4e-8182cb1da6ec" dir="auto"/><h2 id="8b4720e4-6f49-8216-a39e-811e43f19cc2" class="" dir="auto">8. 4단계 - Service 상태 확인</h2><p id="f2d720e4-6f49-836a-b11d-01329c575f0e" class="" dir="auto">Service가 제대로 생성되었는지 확인함.</p><pre id="08d720e4-6f49-8231-8940-819f1aaa4b6e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc</code></pre><p id="673720e4-6f49-82d2-a51c-81838b18e35c" class="" dir="auto">예상 출력 예시는 다음과 비슷함.</p><pre id="02b720e4-6f49-835c-a320-8164cc514bb5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">NAME         TYPE           CLUSTER-IP      EXTERNAL-IP                                                               PORT(S)        AGE
+kubernetes   ClusterIP      10.100.0.1      &lt;none&gt;                                                                    443/TCP        1h
+nginx        LoadBalancer   10.100.20.145   a1b2c3d4e5f6g7h8.ap-northeast-2.elb.amazonaws.com                        80:31245/TCP   2m</code></pre><h3 id="fe3720e4-6f49-82bf-b95d-01f6ae156bbf" class="" dir="auto">각 항목 해설</h3><h3 id="afe720e4-6f49-833c-9c04-817f5485343d" class="" dir="auto"><code>NAME</code></h3><p id="cb5720e4-6f49-8268-a054-814eb3020710" class="" dir="auto">Service 이름임.</p><h3 id="77c720e4-6f49-82fb-ac1b-8184d5d62996" class="" dir="auto"><code>TYPE</code></h3><p id="a7f720e4-6f49-83ff-9d6b-012a572f70ff" class="" dir="auto">Service 타입임.</p><p id="138720e4-6f49-8280-aa25-81fdb24ee2c4" class="" dir="auto">이번 실습에서는 <code>LoadBalancer</code>여야 함.</p><h3 id="e8b720e4-6f49-82be-ac4b-01f941aa4eda" class="" dir="auto"><code>CLUSTER-IP</code></h3><p id="08e720e4-6f49-826a-a91b-01b5aed00d9e" class="" dir="auto">클러스터 내부에서만 사용하는 가상 IP임.</p><p id="72c720e4-6f49-825c-a431-0172fa51d332" class="" dir="auto">Pod나 다른 서비스가 내부 통신할 때 사용함.</p><h3 id="327720e4-6f49-830a-99a4-81e6f8ab255c" class="" dir="auto"><code>EXTERNAL-IP</code></h3><p id="435720e4-6f49-8284-8b98-01d6de3a9720" class="" dir="auto">외부 접속용 주소임.</p><p id="be8720e4-6f49-8281-9f8f-01bc7e45b7d0" class="" dir="auto">EKS에서는 ELB 계열 DNS 이름이 표시될 수 있음.</p><h3 id="382720e4-6f49-8261-99c2-81a3abe20074" class="" dir="auto"><code>PORT(S)</code></h3><p id="990720e4-6f49-8302-b538-01177d672979" class="" dir="auto">서비스 포트 정보임.</p><p id="611720e4-6f49-8299-b54e-0165122102bf" class="" dir="auto"><code>80:31245/TCP</code>처럼 보이면 앞의 <code>80</code>은 서비스 포트, 뒤의 숫자는 NodePort임.</p><p id="4cf720e4-6f49-83ad-b098-81d958dd8cef" class="" dir="auto">Kubernetes 문서 기준으로 <code>LoadBalancer</code>는 클러스터 밖에서 접근 가능한 주소를 제공하며, 내부적으로 <code>NodePort</code> 메커니즘을 포함할 수 있음. </p><hr id="5c7720e4-6f49-83dd-878d-81d4ce1cd3c4" dir="auto"/><h2 id="016720e4-6f49-8327-b070-014983e0117c" class="" dir="auto">9. 5단계 - EXTERNAL-IP 또는 DNS 이름 대기</h2><p id="ffd720e4-6f49-8375-8a18-81703018420c" class="" dir="auto">Service를 만들자마자 바로 외부 주소가 생기지 않을 수 있음.</p><p id="089720e4-6f49-8326-b452-81f570c8e2ec" class="" dir="auto">잠시 후 다시 확인해야 할 수 있음.</p><pre id="720720e4-6f49-836c-8120-014ca2938787" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc</code></pre><p id="cce720e4-6f49-82f9-bd14-01eb20ee442c" class="" dir="auto">처음에는 <code>EXTERNAL-IP</code>가 아래처럼 보일 수 있음.</p><pre id="f84720e4-6f49-827d-9066-81ff85a88751" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&lt;pending&gt;</code></pre><p id="888720e4-6f49-831d-9d85-8166fa3fcb08" class="" dir="auto">이 상태는 아직 외부 로드밸런서 생성 및 연결이 완료되지 않았다는 뜻임.</p><p id="cb6720e4-6f49-8279-acf0-01e2e6c4e0e0" class="" dir="auto">EKS에서 외부 로드밸런서 생성은 Kubernetes 리소스 생성 직후 즉시 끝나는 것이 아니라, AWS 측 리소스 프로비저닝 과정을 거침. AWS Load Balancer Controller 또는 클라우드 공급자 로직이 AWS ELB 리소스를 생성하고 연결해야 하므로 대기 시간이 생길 수 있음.</p><hr id="8c4720e4-6f49-82ab-b9ef-01a46ab3c387" dir="auto"/><h2 id="57e720e4-6f49-832f-a0bf-8156c39130c9" class="" dir="auto">10. 6단계 - 브라우저 또는 curl로 접속 테스트</h2><p id="fdb720e4-6f49-8398-9e5c-810945f05034" class="" dir="auto"><code>EXTERNAL-IP</code> 또는 DNS 이름이 생성되면 접속을 확인함.</p><p id="faf720e4-6f49-8256-9428-81a56a0b112f" class="" dir="auto">CMD에서는 아래처럼 테스트 가능함.</p><pre id="59b720e4-6f49-8273-a19b-81b6f07a146f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://a1b2c3d4e5f6g7h8.ap-northeast-2.elb.amazonaws.com</code></pre><p id="be0720e4-6f49-820b-a323-01db7d457d7b" class="" dir="auto">또는 브라우저 주소창에 해당 DNS 이름을 그대로 넣어도 됨.</p><p id="e94720e4-6f49-83ed-977c-81002e722980" class="" dir="auto">정상이라면 nginx 기본 페이지 HTML이 보이거나, 브라우저에서 nginx 시작 화면이 열림.</p><hr id="cbf720e4-6f49-8314-bac1-0135141384f4" dir="auto"/><h2 id="106720e4-6f49-8325-b301-814e11e65108" class="" dir="auto">11. 7단계 - Service 상세 정보 확인</h2><p id="c5c720e4-6f49-82a8-95c0-81b971aca188" class="" dir="auto">문제 해결이나 구조 설명을 위해 아래 명령도 자주 사용함.</p><pre id="97d720e4-6f49-836c-add2-01e68f29d92d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe svc nginx</code></pre><p id="0e2720e4-6f49-8331-8158-01ce4eb44fee" class="" dir="auto">이 명령은 Service 상세 정보를 보여줌.</p><p id="f1b720e4-6f49-83c7-a143-81e4d7ba47f4" class="" dir="auto">특히 다음 항목을 볼 수 있음.</p><ul id="dd6720e4-6f49-8396-b3c7-81cd4862a4d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Labels</li></ul><ul id="eff720e4-6f49-823e-b604-815c6013e10e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Selector</li></ul><ul id="69a720e4-6f49-832b-9236-81cc53ed4ba9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Type</li></ul><ul id="959720e4-6f49-82bd-a5e2-01080667885c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP</li></ul><ul id="98a720e4-6f49-8212-925d-81fb90a5deba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Port</li></ul><ul id="9f6720e4-6f49-827d-90b0-01a213fa8724" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Endpoints</li></ul><ul id="e46720e4-6f49-821c-80ad-812a7ade3019" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Events</li></ul><h3 id="885720e4-6f49-838c-8c00-01b2ececba9b" class="" dir="auto">중요한 확인 포인트</h3><h3 id="d39720e4-6f49-8276-97cb-81ffdc9e2e08" class="" dir="auto"><code>Selector</code></h3><p id="38d720e4-6f49-8215-ad7c-816df7a95ad0" class="" dir="auto">이 Service가 어떤 Pod를 선택하는지 보여줌.</p><h3 id="9f5720e4-6f49-8200-bf50-0152208c3741" class="" dir="auto"><code>Endpoints</code></h3><p id="bfd720e4-6f49-82ce-8092-817ccaa57762" class="" dir="auto">실제로 트래픽을 전달할 Pod IP와 포트가 보임.</p><p id="6fb720e4-6f49-82de-9b98-8140f23a9a45" class="" dir="auto">즉, Service는 라벨 셀렉터로 Pod를 고르고, 그 Pod를 엔드포인트로 등록해서 트래픽을 전달함. </p><hr id="bfe720e4-6f49-823a-8784-815ac81e5ffd" dir="auto"/><h2 id="808720e4-6f49-835e-9050-8100e1347f8b" class="" dir="auto">12. 결과</h2><h3 id="8ce720e4-6f49-8304-841c-811efd25e97f" class="" dir="auto">12-1. Deployment와 Service는 역할이 다름</h3><ul id="f59720e4-6f49-82b1-9061-013b04357df4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deployment는 애플리케이션 실행 상태를 유지함</li></ul><ul id="f9f720e4-6f49-8212-be71-8184aa98fb34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service는 애플리케이션에 접근하는 네트워크 진입점을 제공함</li></ul><h3 id="7dc720e4-6f49-8393-a925-01ea3e0321f5" class="" dir="auto">12-2. <code>LoadBalancer</code>는 EKS에서 특히 의미가 큼</h3><p id="c3b720e4-6f49-825a-971a-0194ab283c84" class="" dir="auto">온프레미스에서는 <code>LoadBalancer</code> 타입 Service가 바로 외부 공개로 이어지지 않는 경우가 많음.</p><p id="eb4720e4-6f49-828e-a0a5-811382b2bb25" class="" dir="auto">EKS에서는 AWS 로드밸런서 서비스와 결합되므로, 같은 Kubernetes 명령이라도 결과가 훨씬 실무적임.</p><hr id="54b720e4-6f49-8276-94d1-81cb90890ff2" dir="auto"/><h2 id="341720e4-6f49-8391-8e7c-014908b7523a" class="" dir="auto">13. 자주 발생하는 문제</h2><h3 id="9e3720e4-6f49-8238-811e-81261c2e63c5" class="" dir="auto">13-1. <code>EXTERNAL-IP</code>가 계속 <code>&lt;pending&gt;</code> 상태인 경우</h3><p id="579720e4-6f49-831f-bdae-014c9de00cce" class="" dir="auto">가능한 원인은 다음과 같음.</p><ul id="e56720e4-6f49-83b6-9497-018bfce80d9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로드밸런서 생성 권한 문제</li></ul><ul id="b38720e4-6f49-8288-a135-812c5272d55f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷 태그 문제</li></ul><ul id="099720e4-6f49-83ae-9e6e-010f11995202" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Load Balancer Controller 또는 관련 설정 문제</li></ul><ul id="c40720e4-6f49-828f-934e-015b1c6c649f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC/서브넷 네트워크 설정 문제</li></ul><p id="255720e4-6f49-83d9-8985-013856bb1e41" class="" dir="auto">특히 AWS Load Balancer Controller를 사용하는 구성에서는 IAM 권한과 서브넷 태그가 중요함. </p><h2 id="4ed720e4-6f49-8254-b768-017b4e119cd9" class="" dir="auto">14. 실습 정리</h2><p id="32c720e4-6f49-8250-975b-01bf9ccf442c" class="" dir="auto">이번 실습을 통해 확인한 내용은 다음과 같음.</p><ul id="5a5720e4-6f49-82ca-af17-81fbdd7c1b8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>kubectl create deployment</code>로 애플리케이션을 배포할 수 있음</li></ul><ul id="4a7720e4-6f49-83eb-9f04-0122b77a1aaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>kubectl expose deployment --type=LoadBalancer</code>로 외부 공개 구성을 만들 수 있음</li></ul><ul id="6aa720e4-6f49-824e-9f69-01f9781e9822" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EKS에서는 이 Service가 AWS 외부 로드밸런서와 연결될 수 있음</li></ul><hr id="f10720e4-6f49-8381-96c1-817387871cb4" dir="auto"/><h2 id="53d720e4-6f49-8372-bf50-8105fcaa8d59" class="" dir="auto">15. 실습 후 정리 명령</h2><p id="9ff720e4-6f49-82a0-9f05-01e6c2f29522" class="" dir="auto">실습이 끝났으면 리소스를 삭제함.</p><pre id="3fb720e4-6f49-832a-8c28-019dafd7e816" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete svc nginx
+kubectl delete deployment nginx</code></pre><p id="413720e4-6f49-83d6-beeb-812fc47a1bb6" class="" dir="auto">서비스를 먼저 지우면 외부 로드밸런서 정리도 함께 진행됨. 외부 공개용 Service는 클라우드 로드밸런서와 연결될 수 있으므로, 비용과 리소스 정리를 위해 실습 후 반드시 삭제</p><hr id="b2f720e4-6f49-8349-977a-01de44c48ec3" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

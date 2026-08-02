@@ -1,0 +1,1069 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>5장. AWS 운영/보안 점검 자동화</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="594720e4-6f49-82f0-a155-01d14a2de3d2" class="page sans"><header><h1 class="page-title" dir="auto">5장. AWS 운영/보안 점검 자동화</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="e80720e4-6f49-8360-bab6-81dd72255d30" class="" dir="auto">장 개요</h2><p id="b68720e4-6f49-82b5-8def-01e1aa1674ab" class="" dir="auto">이 장에서는 <code>boto3</code>를 사용해 IAM 사용자 목록과 정책 정보를 조회하고, 운영 점검에 활용할 수 있는 기본 자동화 코드를 작성한다.</p><p id="1f2720e4-6f49-8395-a2ba-011baad0ec19" class="" dir="auto">IAM은 AWS에서 인증과 권한을 다루는 핵심 서비스이므로, 단순한 목록 조회도 운영 확인과 보안 점검의 기초가 된다.</p><p id="c45720e4-6f49-838e-8eea-01900205ecc5" class="" dir="auto">또한 조회 결과를 보기 좋게 정리하고, 필요한 항목만 추출해 출력하는 방법도 함께 다룬다.</p><p id="2e9720e4-6f49-8266-89ed-01ceb5a86da3" class="" dir="auto">이 장의 목표는  <strong>Python 코드로 IAM 정보를 조회하고 점검용 출력으로 정리하는 흐름</strong>을 익히는 것이다.</p><hr id="a28720e4-6f49-8216-aa61-01b3882d579c" dir="auto"/><h2 id="352720e4-6f49-8254-b758-011f8cd231c7" class="" dir="auto">학습 목표</h2><ul id="b74720e4-6f49-82df-bc6c-01206b4ea4c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM의 역할을 설명할 수 있다.</li></ul><ul id="b1c720e4-6f49-823c-a4a1-81d9c3bfd428" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>boto3</code>로 IAM 사용자 목록을 조회할 수 있다.</li></ul><ul id="f23720e4-6f49-82b8-9bda-81a6b2b286e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>boto3</code>로 정책 목록을 조회할 수 있다.</li></ul><ul id="094720e4-6f49-8241-b82c-813f6ba16fc5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 결과에서 필요한 항목만 추출해 출력할 수 있다.</li></ul><ul id="c64720e4-6f49-82e4-9ffe-0186a8e87650" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 점검 관점에서 어떤 IAM 정보를 확인할 수 있는지 설명할 수 있다.</li></ul><ul id="961720e4-6f49-8319-8473-01d8d70757f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수 분리와 예외 처리를 통해 IAM 조회 코드를 정리할 수 있다.</li></ul><hr id="517720e4-6f49-8246-9142-815bf675e42c" dir="auto"/><h2 id="4c3720e4-6f49-8220-8749-010ba9440377" class="" dir="auto">주요 키워드</h2><ul id="344720e4-6f49-82a9-ab55-811790443c54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM</li></ul><ul id="ef7720e4-6f49-82ef-8dec-817a455fad7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">User</li></ul><ul id="9bb720e4-6f49-82e2-b4aa-01325faa4bea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Policy</li></ul><ul id="85e720e4-6f49-82a9-9690-81f99225d927" class="bulleted-list" dir="auto"><li style="list-style-type:disc">list_users</li></ul><ul id="725720e4-6f49-8387-966e-8138480390ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">list_policies</li></ul><ul id="c3b720e4-6f49-822a-a6b3-81dd65bdf22a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 자동화</li></ul><ul id="6d7720e4-6f49-820d-b287-81a248e8bf35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 점검</li></ul><ul id="ffa720e4-6f49-82a0-b7d4-01de489687fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">boto3</li></ul><ul id="c01720e4-6f49-838d-a6fa-01534a99acc2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">권한</li></ul><ul id="38d720e4-6f49-83e1-9483-015ebf1ba3bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정 정보</li></ul><hr id="190720e4-6f49-8212-af72-01006354e4c2" dir="auto"/><h1 id="408720e4-6f49-8259-8264-8191e09daa2b" class="" dir="auto">7.1 IAM 기본 이해</h1><h2 id="4e3720e4-6f49-83e0-a02a-817a132d812f" class="" dir="auto">1. IAM이란 무엇인가</h2><p id="784720e4-6f49-8213-9fa9-810ba683f82c" class="" dir="auto">IAM은 AWS에서 <strong>인증(Authentication)</strong> 과 <strong>권한 부여(Authorization)</strong> 를 담당하는 서비스이다.</p><p id="f47720e4-6f49-8240-8b50-013006116be9" class="" dir="auto">쉽게 말하면 “누가 AWS를 사용할 수 있는가”와 “무엇을 할 수 있는가”를 관리하는 영역이다.</p><p id="ac1720e4-6f49-82e5-86ef-818815a00455" class="" dir="auto">IAM에서 자주 보는 대상은 다음과 같다.</p><ul id="940720e4-6f49-8349-9517-01d7353dd440" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자(User)</li></ul><ul id="836720e4-6f49-82ab-85e1-01d42e41fae6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그룹(Group)</li></ul><ul id="ceb720e4-6f49-8259-b6b9-81845b2e1d7d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">역할(Role)</li></ul><ul id="eff720e4-6f49-82a7-aa60-81c6ff99de39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정책(Policy)</li></ul><p id="ed9720e4-6f49-839c-9211-811962ec4a33" class="" dir="auto">이번 장에서는 이 중에서도 <strong>사용자와 정책 조회</strong>를 중심으로 다룬다.</p><hr id="833720e4-6f49-83ea-b4fc-016da531c8ca" dir="auto"/><h2 id="956720e4-6f49-8363-a4d9-81084b0cce7b" class="" dir="auto">2. 왜 IAM 조회가 중요한가</h2><p id="d07720e4-6f49-83b7-bbf3-81509bd641a3" class="" dir="auto">운영 환경에서는 리소스만 중요한 것이 아니다.</p><p id="d06720e4-6f49-83f6-9efe-81d097457165" class="" dir="auto">어떤 계정이 존재하는지, 어떤 정책이 있는지, 어떤 이름 규칙으로 관리되는지 확인하는 것도 매우 중요하다.</p><p id="01e720e4-6f49-836d-b124-01cf17a3c1e3" class="" dir="auto">예를 들면 다음과 같은 상황에서 IAM 조회가 필요하다.</p><ul id="739720e4-6f49-83df-bc46-81352995734e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 계정에 어떤 사용자가 있는지 확인</li></ul><ul id="2de720e4-6f49-8272-b225-81a640d1d463" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름 규칙이 맞게 적용되었는지 확인</li></ul><ul id="900720e4-6f49-8230-a9e7-016ca53b6129" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 정책이 존재하는지 확인</li></ul><ul id="692720e4-6f49-8387-b660-013c75404056" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 계정과 실습 계정을 구분해 확인</li></ul><ul id="052720e4-6f49-82d5-9a65-01705f436dc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보고용 목록을 정리</li></ul><p id="aad720e4-6f49-8244-826a-817340cf67a4" class="" dir="auto">즉, IAM 조회 자동화는 <strong>운영 점검의 기초 단계</strong>라고 볼 수 있다.</p><hr id="ae6720e4-6f49-82d0-b49e-81a449a58878" dir="auto"/><h1 id="8d0720e4-6f49-827f-bb80-019ae4e84444" class="" dir="auto">7.2 IAM client 생성</h1><h2 id="5e1720e4-6f49-83ab-baa0-0189135bda97" class="" dir="auto">1. IAM client 기본 구조</h2><p id="ad2720e4-6f49-83d6-87d0-8181e1234da2" class="" dir="auto">IAM도 <code>boto3</code> client로 접근할 수 있다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="646720e4-6f49-8253-aa38-01a7ebf18a93" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+iam = session.client(&quot;iam&quot;)
+
+print(iam)</code></pre><p id="831720e4-6f49-8302-9518-817c21bb8907" class="" dir="auto">IAM은 글로벌 서비스 성격이 강하므로 EC2, S3처럼 항상 <code>region_name</code>을 강조하지는 않지만, 세션 구조 자체는 동일하다.</p><hr id="a8a720e4-6f49-83c5-bd5a-81048e1ac7d1" dir="auto"/><h2 id="96e720e4-6f49-8214-a7ff-01a3170aafa2" class="" dir="auto">2. 함수로 분리한 기본 구조</h2><pre id="dd9720e4-6f49-8373-b862-019bf72445e1" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+iam = get_iam_client()
+print(iam)</code></pre><p id="52a720e4-6f49-839c-900d-8144ca8f9002" class="" dir="auto">이 방식은 이후 사용자 조회, 정책 조회에서도 그대로 사용된다.</p><hr id="f4b720e4-6f49-831a-aed1-8100d0fdf657" dir="auto"/><h2 id="e84720e4-6f49-8206-b2d6-8121552c6209" class="" dir="auto">실습 1. IAM client 생성</h2><p id="21b720e4-6f49-8384-9625-014ca8027bc3" class="" dir="auto">파일명: <code>iam_client_test.py</code></p><pre id="0d7720e4-6f49-8382-81b8-0166b0e8ca94" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+iam = get_iam_client()
+
+print(&quot;iam client created&quot;)
+print(iam)</code></pre><ul id="d5d720e4-6f49-8236-83ad-01eb5b72bd6b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM도 다른 AWS 서비스처럼 <code>boto3</code> client로 다룰 수 있음을 확인한다.</li></ul><ul id="01d720e4-6f49-8353-82eb-81cc2f51f409" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세션 생성 구조가 EC2, S3와 동일하다는 점을 확인한다.</li></ul><hr id="ad4720e4-6f49-8266-a387-81ec0e24ed3a" dir="auto"/><h1 id="791720e4-6f49-82af-be77-012db5339aad" class="" dir="auto">7.3 IAM 사용자 목록 조회</h1><h2 id="710720e4-6f49-833e-9041-811610bec9de" class="" dir="auto">1. 사용자 목록 조회 API</h2><p id="c50720e4-6f49-82b1-84ef-016422113e89" class="" dir="auto">IAM 사용자 목록을 조회할 때는 <code>list_users()</code>를 사용한다.</p><p id="8b0720e4-6f49-8263-8d48-81ea5cf62fdf" class="" dir="auto">기본 예제는 다음과 같다.</p><pre id="94e720e4-6f49-8246-95ed-81010b59c9f5" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+iam = session.client(&quot;iam&quot;)
+
+response = iam.list_users()
+print(response)</code></pre><p id="c93720e4-6f49-83e4-ae5c-017b37802345" class="" dir="auto">이 응답은 보통 <code>Users</code> 리스트를 포함한다.</p><p id="72d720e4-6f49-8361-a27a-01a3be312c90" class="" dir="auto">즉, 구조는 대략 다음과 같다.</p><pre id="4e9720e4-6f49-831a-9acc-817b1d4ab023" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;Users&quot;: [
+        {
+            &quot;UserName&quot;: &quot;alice&quot;,
+            &quot;UserId&quot;: &quot;...&quot;,
+            &quot;Arn&quot;: &quot;...&quot;,
+            &quot;CreateDate&quot;: &quot;...&quot;
+        },
+        ...
+    ]
+}</code></pre><p id="d61720e4-6f49-82d9-87ac-81d135e7985a" class="" dir="auto">따라서 <code>Users</code>를 반복해서 필요한 값을 출력하면 된다.</p><hr id="6f3720e4-6f49-8306-b813-8180bd50baa5" dir="auto"/><h2 id="06f720e4-6f49-83ae-a997-81ad88bdbe60" class="" dir="auto">2. 사용자 이름만 출력</h2><pre id="0c3720e4-6f49-8250-814d-8184b1f50138" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+iam = session.client(&quot;iam&quot;)
+
+response = iam.list_users()
+
+for user in response[&quot;Users&quot;]:
+    print(user[&quot;UserName&quot;])</code></pre><hr id="8f3720e4-6f49-8377-b109-0117bf407b10" dir="auto"/><h2 id="2b0720e4-6f49-8237-bf69-8103f08f4767" class="" dir="auto">3. 사용자 이름과 ARN 출력</h2><pre id="ee1720e4-6f49-8389-b6a4-81ba3e5bc0a6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+iam = session.client(&quot;iam&quot;)
+
+response = iam.list_users()
+
+for user in response[&quot;Users&quot;]:
+    print(
+        f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+        f&quot;arn={user[&#x27;Arn&#x27;]}&quot;
+    )</code></pre><p id="83e720e4-6f49-83ba-ac2f-01533062f1a8" class="" dir="auto">이 방식은 사용자 이름만 보는 것보다 더 많은 정보를 제공한다.</p><hr id="462720e4-6f49-83d4-bdd4-8191ba41c516" dir="auto"/><h2 id="578720e4-6f49-8356-b602-81d5a89ace5a" class="" dir="auto">실습 2. IAM 사용자 목록 출력</h2><p id="495720e4-6f49-830b-a6b7-81b284772ec9" class="" dir="auto">파일명: <code>iam_list_users.py</code></p><pre id="bd3720e4-6f49-8228-b063-01f291aa0db7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+iam = get_iam_client()
+response = iam.list_users()
+
+print(&quot;IAM 사용자 목록&quot;)
+for user in response[&quot;Users&quot;]:
+    print(
+        f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+        f&quot;arn={user[&#x27;Arn&#x27;]}&quot;
+    )</code></pre><ul id="317720e4-6f49-83ec-90d7-0161c9d7f5ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Users</code>가 리스트라는 점을 확인한다.</li></ul><ul id="b01720e4-6f49-82b6-8622-81e24002aa49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 사용자 항목이 딕셔너리라는 점을 확인한다.</li></ul><ul id="d41720e4-6f49-82f2-a69c-01551f11d05b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>UserName</code>, <code>Arn</code> 같은 키를 직접 읽는 방식을 익힌다.</li></ul><hr id="3ee720e4-6f49-8399-adf9-8168aea9ab56" dir="auto"/><h1 id="8ea720e4-6f49-8363-83a5-0116fc14d975" class="" dir="auto">7.4 IAM 사용자 생성일 확인</h1><p id="351720e4-6f49-83ad-ae12-813174e26993" class="" dir="auto">운영 점검 관점에서는 단순히 사용자 이름만 보는 것이 아니라, 언제 생성되었는지도 함께 보고 싶을 수 있다.</p><h2 id="cbd720e4-6f49-837a-a5b0-81d18057a8f1" class="" dir="auto">1. 생성일 포함 출력</h2><pre id="23b720e4-6f49-82c5-81cd-81e066677c87" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+iam = get_iam_client()
+response = iam.list_users()
+
+for user in response[&quot;Users&quot;]:
+    print(
+        f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+        f&quot;created={user[&#x27;CreateDate&#x27;]}&quot;
+    )</code></pre><p id="a85720e4-6f49-83f6-b058-015ee39d8954" class="" dir="auto">이 출력은 계정이 언제 생성되었는지 확인하는 데 도움이 된다.</p><ul id="884720e4-6f49-8358-a4a4-016ced4105ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 결과에서 필요한 필드를 하나씩 확장해 출력할 수 있음을 이해한다.</li></ul><ul id="df8720e4-6f49-8280-88d6-016f7ef0a7e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 점검 출력은 “전체 응답을 그대로 찍는 것”이 아니라 “필요한 정보만 정리해 보여주는 것”임을 이해한다.</li></ul><hr id="0fa720e4-6f49-82c7-9c82-01c84d5e65d0" dir="auto"/><h1 id="4f1720e4-6f49-825e-806a-813d66e6c96f" class="" dir="auto">7.5 IAM 정책 목록 조회</h1><h2 id="a3c720e4-6f49-8239-ba8c-01a0c3f4b33d" class="" dir="auto">1. 정책 조회 API</h2><p id="43b720e4-6f49-83a7-8df9-815afbc512d6" class="" dir="auto">IAM 정책 목록을 조회할 때는 <code>list_policies()</code>를 사용할 수 있다.</p><p id="c1b720e4-6f49-8384-ae78-81d24b788c39" class="" dir="auto">기본 예제는 다음과 같다.</p><pre id="ad3720e4-6f49-8387-925c-014cdf95afd6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+iam = session.client(&quot;iam&quot;)
+
+response = iam.list_policies()
+print(response)</code></pre><p id="ac5720e4-6f49-82bf-8ee4-01f55da7156c" class="" dir="auto">응답에는 보통 <code>Policies</code> 리스트가 포함된다.</p><p id="8d3720e4-6f49-83a6-be3b-817b3ee74e4a" class="" dir="auto">각 정책 항목에는 <code>PolicyName</code>, <code>Arn</code>, <code>DefaultVersionId</code> 같은 정보가 들어 있다.</p><hr id="996720e4-6f49-83e8-8ff0-01f67eb1bfd5" dir="auto"/><h2 id="df3720e4-6f49-8366-a96e-01be0884ab7d" class="" dir="auto">2. 정책 이름만 출력</h2><pre id="112720e4-6f49-8280-a6ab-81a69ee309d8" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+iam = session.client(&quot;iam&quot;)
+
+response = iam.list_policies()
+
+for policy in response[&quot;Policies&quot;]:
+    print(policy[&quot;PolicyName&quot;])</code></pre><hr id="5a2720e4-6f49-838c-a260-01e375c9d922" dir="auto"/><h2 id="675720e4-6f49-822a-979d-81ad6e22ea1b" class="" dir="auto">3. 정책 이름과 ARN 출력</h2><pre id="a56720e4-6f49-8242-bdbd-0153a0ff3df9" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+iam = session.client(&quot;iam&quot;)
+
+response = iam.list_policies()
+
+for policy in response[&quot;Policies&quot;]:
+    print(
+        f&quot;policy={policy[&#x27;PolicyName&#x27;]}, &quot;
+        f&quot;arn={policy[&#x27;Arn&#x27;]}&quot;
+    )</code></pre><hr id="a04720e4-6f49-825d-8d2c-016488910995" dir="auto"/><h2 id="9f3720e4-6f49-83fe-8ee8-018622fd373f" class="" dir="auto">실습 4. IAM 정책 목록 조회</h2><p id="bd5720e4-6f49-8275-8174-017764aa5549" class="" dir="auto">파일명: <code>iam_list_policies.py</code></p><pre id="408720e4-6f49-8251-b3f4-811119e7a282" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+iam = get_iam_client()
+response = iam.list_policies()
+
+print(&quot;IAM 정책 목록&quot;)
+for policy in response[&quot;Policies&quot;]:
+    print(
+        f&quot;policy={policy[&#x27;PolicyName&#x27;]}, &quot;
+        f&quot;arn={policy[&#x27;Arn&#x27;]}&quot;
+    )</code></pre><h3 id="a0c720e4-6f49-820d-a718-013780de14bd" class="" dir="auto">학습 포인트</h3><ul id="0a5720e4-6f49-8398-a4aa-0182febdc868" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Policies</code> 리스트 구조를 확인한다.</li></ul><ul id="6f1720e4-6f49-8232-a21d-81d5e766bac6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정책 이름과 ARN을 읽는 패턴을 익힌다.</li></ul><ul id="1d5720e4-6f49-8290-bfc5-01ad37259287" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 조회와 정책 조회가 매우 비슷한 구조임을 이해한다.</li></ul><hr id="427720e4-6f49-83e3-9dd0-81a6405b2fe3" dir="auto"/><h1 id="c48720e4-6f49-82bb-97dd-01bdadb5fd6d" class="" dir="auto">7.6 AWS 관리형 정책과 사용자 정의 정책 구분</h1><p id="d08720e4-6f49-837e-9f4c-81db7c6976b0" class="" dir="auto">정책 목록은 매우 많을 수 있으며, AWS 관리형 정책과 사용자 정의 정책이 함께 섞여 있을 수 있다.</p><p id="f61720e4-6f49-83a0-8fc6-81fddd7dc401" class="" dir="auto">이때 운영 점검에서는 특정 유형만 보고 싶을 수 있다.</p><p id="f00720e4-6f49-82f1-9eed-81a4cf98b97e" class="" dir="auto">정책 항목에는 보통 <code>Arn</code>이 있으므로, 이름과 ARN을 기준으로 구분에 참고할 수 있다.</p><p id="f20720e4-6f49-8238-82a1-81de661ca2cc" class="" dir="auto">예를 들어 아래처럼 출력하면서 눈으로 구분할 수 있다.</p><pre id="11c720e4-6f49-820d-8265-8184a3bf2c86" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+iam = get_iam_client()
+response = iam.list_policies()
+
+for policy in response[&quot;Policies&quot;]:
+    print(
+        f&quot;name={policy[&#x27;PolicyName&#x27;]}, &quot;
+        f&quot;arn={policy[&#x27;Arn&#x27;]}&quot;
+    )</code></pre><p id="529720e4-6f49-83b2-9eec-81fd31fba986" class="" dir="auto">이후에는 특정 문자열 포함 여부를 기준으로 필터링하는 형태로 확장할 수 있다.</p><hr id="f0b720e4-6f49-82bf-8be5-01def369f746" dir="auto"/><h2 id="c21720e4-6f49-830e-8b9e-816dbcd15646" class="" dir="auto">실습 5. 정책 이름 필터링 기초</h2><p id="88c720e4-6f49-824c-8eef-012e373c6be3" class="" dir="auto">파일명: <code>iam_policy_filter.py</code></p><pre id="064720e4-6f49-82d1-b7e3-019385355abf" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+iam = get_iam_client()
+response = iam.list_policies()
+
+print(&quot;ReadOnly가 포함된 정책&quot;)
+for policy in response[&quot;Policies&quot;]:
+    if &quot;ReadOnly&quot; in policy[&quot;PolicyName&quot;]:
+        print(
+            f&quot;name={policy[&#x27;PolicyName&#x27;]}, &quot;
+            f&quot;arn={policy[&#x27;Arn&#x27;]}&quot;
+        )</code></pre><h3 id="bd3720e4-6f49-833f-be63-817c8b351933" class="" dir="auto">학습 포인트</h3><ul id="506720e4-6f49-8210-a09e-017345a29858" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문자열 포함 여부를 활용한 간단한 필터링을 익힌다.</li></ul><ul id="297720e4-6f49-82f1-a04f-813d05b9fd01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 점검에서는 전체 출력보다 필요한 항목만 골라 보는 방식이 유용함을 이해한다.</li></ul><hr id="86b720e4-6f49-839a-8774-01ac0e7066e9" dir="auto"/><h1 id="2cb720e4-6f49-8328-9247-010adb6aaa91" class="" dir="auto">7.7 운영 점검 자동화 관점에서의 IAM 조회</h1><h2 id="52f720e4-6f49-83fa-97b3-8164a7d199a4" class="" dir="auto">1. 운영 점검 자동화란 무엇인가</h2><p id="809720e4-6f49-830b-8286-81218b9d5210" class="" dir="auto">운영 점검 자동화는 리소스를 생성하거나 삭제하는 것이 아니라, <strong>현재 상태를 확인하고 보기 좋게 정리하는 자동화</strong>에 가깝다.</p><p id="8f1720e4-6f49-8381-a8f4-01d3103c4d95" class="" dir="auto">IAM 조회를 운영 점검 관점에서 보면 다음과 같은 질문을 던질 수 있다.</p><ul id="707720e4-6f49-82a9-aee8-012b5634ee08" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 어떤 사용자가 존재하는가</li></ul><ul id="9ae720e4-6f49-836f-a796-016134d2ea65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름 규칙이 일정한가</li></ul><ul id="12c720e4-6f49-828b-a634-01cb4d2df260" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 정책이 존재하는가</li></ul><ul id="a83720e4-6f49-83da-b557-01068d844381" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정책 목록을 정리해 보고할 수 있는가</li></ul><ul id="8d5720e4-6f49-82b7-9b17-8148e170982f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습용 계정만 따로 보거나 특정 패턴만 볼 수 있는가</li></ul><p id="edf720e4-6f49-821e-b405-01912a9fd691" class="" dir="auto">즉, 운영 점검 자동화는 “수정”보다 “확인과 정리”에 더 가깝다.</p><hr id="b26720e4-6f49-82f8-bfce-8177484dcd6c" dir="auto"/><h2 id="230720e4-6f49-83d7-a8b4-017ec18afa6b" class="" dir="auto">2. 사용자 이름 규칙 점검 예제</h2><p id="9d0720e4-6f49-83d3-a0e9-01033dc312cc" class="" dir="auto">예를 들어 사용자 이름에 <code>lab-</code> 접두사가 붙는 계정만 보고 싶다고 하자.</p><pre id="58c720e4-6f49-821b-ba0b-010e01e1cef3" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+iam = get_iam_client()
+response = iam.list_users()
+
+print(&quot;lab- 접두사 사용자&quot;)
+for user in response[&quot;Users&quot;]:
+    if user[&quot;UserName&quot;].startswith(&quot;lab-&quot;):
+        print(
+            f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+            f&quot;arn={user[&#x27;Arn&#x27;]}&quot;
+        )</code></pre><p id="de2720e4-6f49-838c-aa4c-014a12e0e54e" class="" dir="auto">이 구조는 운영 기준 이름 규칙 점검에 응용할 수 있다.</p><hr id="d9d720e4-6f49-8220-a3d2-81e95a3c1b1d" dir="auto"/><h2 id="28d720e4-6f49-8218-9adc-01809639dd79" class="" dir="auto">실습 6. 사용자 이름 규칙 점검</h2><p id="8f6720e4-6f49-8322-9b11-81f1e4ec5357" class="" dir="auto">파일명: <code>iam_user_prefix_check.py</code></p><pre id="ecf720e4-6f49-83d9-a64a-0174a2a81425" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+iam = get_iam_client()
+response = iam.list_users()
+
+print(&quot;lab- 접두사 사용자&quot;)
+for user in response[&quot;Users&quot;]:
+    if user[&quot;UserName&quot;].startswith(&quot;lab-&quot;):
+        print(
+            f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+            f&quot;arn={user[&#x27;Arn&#x27;]}&quot;
+        )</code></pre><h3 id="a11720e4-6f49-8335-85b9-81f397dc763a" class="" dir="auto">학습 포인트</h3><ul id="638720e4-6f49-8254-8371-01ed695dbec5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>startswith()</code>를 사용한 문자열 패턴 점검을 익힌다.</li></ul><ul id="9c2720e4-6f49-83f9-9fd4-01acd3ff1da5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 점검은 복잡한 분석보다 이런 작은 규칙 확인부터 시작할 수 있음을 이해한다.</li></ul><hr id="ed4720e4-6f49-82ba-a326-01cfedc834a7" dir="auto"/><h1 id="23c720e4-6f49-8233-9049-81cd51be6d78" class="" dir="auto">7.8 함수로 구조 정리하기</h1><p id="78e720e4-6f49-823f-915d-811ea07c5421" class="" dir="auto">조회 코드도 점점 길어질 수 있으므로, 기능별로 함수 분리를 하는 것이 좋다.</p><p id="2dd720e4-6f49-8322-a385-81588153f575" class="" dir="auto">예를 들면 아래처럼 나눌 수 있다.</p><ul id="a83720e4-6f49-8277-be69-012599c2934e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM client 생성 함수</li></ul><ul id="22b720e4-6f49-838e-9ea2-811bf499c726" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 목록 조회 함수</li></ul><ul id="8e2720e4-6f49-820e-b81a-014ad4287439" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정책 목록 조회 함수</li></ul><ul id="389720e4-6f49-83c1-b143-81d0e8c90373" class="bulleted-list" dir="auto"><li style="list-style-type:disc">출력 전용 함수</li></ul><hr id="607720e4-6f49-83bc-a572-81777aaa7c73" dir="auto"/><h2 id="8d6720e4-6f49-821e-ad39-817f63cc5f7a" class="" dir="auto">1. 함수 분리 예제</h2><pre id="cb9720e4-6f49-8304-915f-81111d52f8a3" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+def list_users():
+    iam = get_iam_client()
+    response = iam.list_users()
+
+    for user in response[&quot;Users&quot;]:
+        print(
+            f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+            f&quot;arn={user[&#x27;Arn&#x27;]}&quot;
+        )
+
+list_users()</code></pre><p id="0b3720e4-6f49-83f3-b5c9-8101c20e9e88" class="" dir="auto">이 구조를 만들면 이후 다른 출력 형식이나 필터 조건을 추가하기도 쉬워진다.</p><hr id="cf0720e4-6f49-83ee-9a4c-81cf32be2fe3" dir="auto"/><h2 id="493720e4-6f49-838f-b3db-011bbe181736" class="" dir="auto">실습 7. 함수 분리 버전 작성</h2><p id="799720e4-6f49-8366-b8f6-01fff853d48e" class="" dir="auto">파일명: <code>iam_users_func.py</code></p><pre id="d55720e4-6f49-8373-8665-01b561c59913" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+def list_users():
+    iam = get_iam_client()
+    response = iam.list_users()
+
+    print(&quot;IAM 사용자 목록&quot;)
+    for user in response[&quot;Users&quot;]:
+        print(
+            f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+            f&quot;arn={user[&#x27;Arn&#x27;]}&quot;
+        )
+
+list_users()</code></pre><h3 id="734720e4-6f49-8266-8b0d-0102697799c4" class="" dir="auto">학습 포인트</h3><ul id="235720e4-6f49-8270-a66a-8121be2e5d11" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클라이언트 생성과 실제 조회 기능을 분리한다.</li></ul><ul id="e79720e4-6f49-834c-b02e-815e91056caf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 읽기가 더 쉬워지는지 확인한다.</li></ul><hr id="8d6720e4-6f49-830e-abbb-01eaf87c28d1" dir="auto"/><h1 id="939720e4-6f49-8360-a866-81bf8ea0f0e7" class="" dir="auto">7.9 예외 처리 추가하기</h1><p id="b79720e4-6f49-830a-9100-01d41a8d5c32" class="" dir="auto">IAM 조회도 인증, 권한, 프로필 문제로 오류가 날 수 있으므로 기본적인 예외 처리를 넣는 것이 좋다.</p><pre id="ea0720e4-6f49-82ba-9048-814684fe1207" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+def list_users():
+    iam = get_iam_client()
+    response = iam.list_users()
+
+    for user in response[&quot;Users&quot;]:
+        print(
+            f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+            f&quot;arn={user[&#x27;Arn&#x27;]}&quot;
+        )
+
+try:
+    list_users()
+except Exception as e:
+    print(&quot;IAM 사용자 조회 실패&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><hr id="eb4720e4-6f49-82d9-bbc7-81bdc5ed8374" dir="auto"/><h2 id="1c3720e4-6f49-8262-8293-0168f2feffea" class="" dir="auto">실습 8. 예외 처리 포함 사용자 조회</h2><p id="282720e4-6f49-83de-b14b-016c7e7c821a" class="" dir="auto">파일명: <code>iam_users_safe.py</code></p><pre id="740720e4-6f49-8206-b2c2-01493a5591cd" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+def list_users():
+    iam = get_iam_client()
+    response = iam.list_users()
+
+    print(&quot;IAM 사용자 목록&quot;)
+    for user in response[&quot;Users&quot;]:
+        print(
+            f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+            f&quot;arn={user[&#x27;Arn&#x27;]}&quot;
+        )
+
+try:
+    list_users()
+except Exception as e:
+    print(&quot;IAM 사용자 조회 실패&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><h3 id="7f5720e4-6f49-8267-9ecf-01f833c3b6f7" class="" dir="auto">학습 포인트</h3><ul id="95e720e4-6f49-83b2-aa72-011a65551105" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 코드에도 기본적인 예외 처리가 필요함을 이해한다.</li></ul><ul id="d95720e4-6f49-82db-999a-012298d49b88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 EC2, S3, Bedrock 코드와 동일한 구조를 유지하는 것이 좋음을 확인한다.</li></ul><hr id="f53720e4-6f49-8343-b4a1-81916b3d3f29" dir="auto"/><h1 id="3d9720e4-6f49-8370-a373-0199717bddaf" class="" dir="auto">7.10 생성형 AI로 IAM 조회 코드 요청하기</h1><h2 id="872720e4-6f49-82a3-93a8-011c7129a488" class="" dir="auto">1. 요청 예시</h2><pre id="831720e4-6f49-83d4-8efa-01f094f82b32" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python boto3 코드를 작성해줘.
+AWS CLI 프로필 기반 인증을 사용하고 profile_name은 lab으로 해줘.
+IAM 사용자 목록을 조회해서 사용자 이름과 ARN을 출력해줘.
+예외 처리도 포함해줘.</code></pre><hr id="f34720e4-6f49-82ce-9e65-81a3f576924c" dir="auto"/><h2 id="533720e4-6f49-8269-876a-81ff830ee153" class="" dir="auto">3. 향상된 요청 예시</h2><pre id="114720e4-6f49-83d8-bc16-818ef70fc10f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python boto3 코드를 작성해줘.
+AWS CLI 프로필 기반 인증을 사용하고 profile_name은 lab으로 해줘.
+IAM client 생성 함수와 사용자 목록 조회 함수를 분리해줘.
+IAM 사용자 목록을 조회해서 UserName, Arn, CreateDate를 출력해줘.
+출력은 f-string으로 정리하고, try/except 예외 처리도 포함해줘.</code></pre><hr id="263720e4-6f49-836c-a3e2-014de32cbce4" dir="auto"/><h2 id="1a2720e4-6f49-8304-a48e-81eae8897054" class="" dir="auto">4. 정책 조회 코드 요청 예시</h2><pre id="508720e4-6f49-8368-a09f-81d484a7bd6d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python boto3 코드를 작성해줘.
+AWS CLI 프로필 기반 인증을 사용하고 profile_name은 lab으로 해줘.
+IAM 정책 목록을 조회해서 PolicyName과 Arn을 출력해줘.
+ReadOnly가 포함된 정책만 출력하는 예제도 포함해줘.
+함수로 분리하고 예외 처리도 넣어줘.</code></pre><hr id="94f720e4-6f49-82e9-8592-017815e31fe4" dir="auto"/><h1 id="5ff720e4-6f49-8287-bc87-0121aa5b8f48" class="" dir="auto">7.11 자동화 스타일 종합 예제</h1><p id="bbb720e4-6f49-8351-ba41-01e28483f538" class="" dir="auto">이제 이 장의 흐름을 모은 종합 예제를 보자.</p><p id="d92720e4-6f49-8291-8b64-0170c85966f4" class="" dir="auto">파일명: <code>iam_summary.py</code></p><pre id="0bd720e4-6f49-8249-9da9-81e72ee20de0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_iam_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;iam&quot;)
+
+def list_users():
+    iam = get_iam_client()
+    response = iam.list_users()
+
+    print(&quot;IAM 사용자 목록&quot;)
+    for user in response[&quot;Users&quot;]:
+        print(
+            f&quot;user={user[&#x27;UserName&#x27;]}, &quot;
+            f&quot;arn={user[&#x27;Arn&#x27;]}, &quot;
+            f&quot;created={user[&#x27;CreateDate&#x27;]}&quot;
+        )
+
+def list_readonly_policies():
+    iam = get_iam_client()
+    response = iam.list_policies()
+
+    print(&quot;ReadOnly 정책 목록&quot;)
+    for policy in response[&quot;Policies&quot;]:
+        if &quot;ReadOnly&quot; in policy[&quot;PolicyName&quot;]:
+            print(
+                f&quot;name={policy[&#x27;PolicyName&#x27;]}, &quot;
+                f&quot;arn={policy[&#x27;Arn&#x27;]}&quot;
+            )
+
+try:
+    list_users()
+    list_readonly_policies()
+
+except Exception as e:
+    print(&quot;IAM 조회 자동화 실패&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><h3 id="fc7720e4-6f49-8367-a055-015ca3d1f87e" class="" dir="auto">학습 포인트</h3><p id="2fb720e4-6f49-8314-bafb-814d6744d4ce" class="" dir="auto">이 예제에는 다음 흐름이 들어 있다.</p><ul id="41d720e4-6f49-8214-87b9-01c2f10a6b0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로필 기반 IAM client 생성</li></ul><ul id="945720e4-6f49-8290-a9de-81e6c1d397ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 목록 조회</li></ul><ul id="1b1720e4-6f49-8208-8874-81c3b7688541" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정책 목록 조회</li></ul><ul id="4d1720e4-6f49-8206-a940-816bb180a2dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문자열 조건 기반 필터링</li></ul><ul id="422720e4-6f49-8227-b70d-814b4834c444" class="bulleted-list" dir="auto"><li style="list-style-type:disc">출력 형식 정리</li></ul><ul id="033720e4-6f49-82e2-be3e-81497e6a841a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수 분리</li></ul><ul id="bba720e4-6f49-82e0-973f-01a18987a679" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예외 처리</li></ul><p id="fe7720e4-6f49-83c5-a038-81412e17697c" class="" dir="auto">즉, 이 코드는 조회 중심 운영 점검 자동화의 기본형이라고 볼 수 있다.</p><hr id="48b720e4-6f49-83fa-bc97-816ea6319761" dir="auto"/><h1 id="2a6720e4-6f49-83b8-9940-8136e3dace22" class="" dir="auto">7.12 정리</h1><ul id="a7a720e4-6f49-82da-88c6-01e284da48c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM은 AWS에서 인증과 권한을 다루는 핵심 서비스이다.</li></ul><ul id="5f4720e4-6f49-82dd-8008-8120a25210bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>boto3</code>로 IAM client를 생성해 사용자와 정책 정보를 조회할 수 있다.</li></ul><ul id="cd8720e4-6f49-82ff-90bd-01fb42010154" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>list_users()</code> 응답에는 <code>Users</code> 리스트가 포함되며, <code>UserName</code>, <code>Arn</code>, <code>CreateDate</code> 같은 정보를 볼 수 있다.</li></ul><ul id="0bb720e4-6f49-8308-9ca1-8110e5e7ad4f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>list_policies()</code> 응답에는 <code>Policies</code> 리스트가 포함되며, <code>PolicyName</code>, <code>Arn</code> 같은 정보를 볼 수 있다.</li></ul><ul id="36d720e4-6f49-8270-842b-01704749edb6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 점검 자동화는 리소스를 바꾸는 것이 아니라 현재 상태를 확인하고 정리하는 데 초점이 있다.</li></ul><ul id="aba720e4-6f49-83fb-b96f-01f142dd73a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 이름 규칙이나 정책 이름 패턴처럼 간단한 조건 필터링도 운영 점검에 유용하다.</li></ul><ul id="dce720e4-6f49-824b-a3da-811881e0a8c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수 분리와 예외 처리를 통해 IAM 조회 코드를 더 읽기 좋고 안정적으로 만들 수 있다.</li></ul><ul id="711720e4-6f49-83ce-b14f-814568535495" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성형 AI에게 요청할 때는 인증 방식, 조회 대상, 출력할 필드, 필터링 조건, 예외 처리 요구를 함께 적는 것이 좋다.</li></ul><p id="3d0720e4-6f49-8282-89b5-81fd2c88355e" class="" dir="auto">
+</p><figure id="8f2720e4-6f49-8333-a768-0188191d4482" class="link-to-page"><a href="5%EC%9E%A5%20AWS%20%EC%9A%B4%EC%98%81%20%EB%B3%B4%EC%95%88%20%EC%A0%90%EA%B2%80%20%EC%9E%90%EB%8F%99%ED%99%94/boto3%EB%A1%9C%20%EB%A1%9C%EA%B7%B8%EC%9D%B8%20%EC%82%AC%EC%9A%A9%EC%9E%90%20%EA%B6%8C%ED%95%9C%EB%B3%84%20IAM%20Role%20%EC%83%9D%EC%84%B1%20%EB%B0%8F%20AssumeRole%20%EA%B6%8C%ED%95%9C%20%EC%B0%A8%EC%9D%B4%20%208f2720e46f498333a7680188191d4482.html" data-notion-page-id="8f2720e4-6f49-8333-a768-0188191d4482" data-notion-space-id="56e9dfa9-059a-473f-a2ad-357c52ceb825">boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이 확인</a></figure><figure id="5b0720e4-6f49-8339-9d18-01697992cca8" class="link-to-page"><a href="5%EC%9E%A5%20AWS%20%EC%9A%B4%EC%98%81%20%EB%B3%B4%EC%95%88%20%EC%A0%90%EA%B2%80%20%EC%9E%90%EB%8F%99%ED%99%94/%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%94%EB%93%9C,%20FastAPI,%20MariaDB,%20boto3%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EB%A1%9C%EA%B7%B8%EC%9D%B8%20%EA%B8%B0%EB%B0%98%20AWS%20%EC%9A%B4%EC%98%81%20%205b0720e46f4983399d1801697992cca8.html" data-notion-page-id="5b0720e4-6f49-8339-9d18-01697992cca8" data-notion-space-id="56e9dfa9-059a-473f-a2ad-357c52ceb825">프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영 자동화</a></figure></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

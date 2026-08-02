@@ -1,0 +1,1017 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>3장. boto3와 AWS API 자동화 입문</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="6aa720e4-6f49-8306-ab6f-0161421d0839" class="page sans"><header><h1 class="page-title" dir="auto">3장. boto3와 AWS API 자동화 입문</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="40e720e4-6f49-83ef-b644-0172480cfcbe" class="" dir="auto">장 개요</h2><p id="35c720e4-6f49-823d-95f3-8115bfd7c1a1" class="" dir="auto">이 장에서는 Python에서 AWS 서비스를 제어할 때 사용하는 AWS SDK인 <strong>boto3</strong>의 기본 구조를 학습한다.</p><p id="9a7720e4-6f49-835f-bf36-8177c5bed840" class="" dir="auto">AWS CLI 프로필 기반 인증과 <code>boto3.Session()</code> 사용 방식, <code>client</code>와 <code>resource</code>의 개념, AWS API 응답 구조를 읽는 방법을 익히고, 생성형 AI를 활용해 기본적인 boto3 코드 초안을 만드는 실습까지 진행한다.</p><p id="87e720e4-6f49-828c-a764-017f3e6d5f1b" class="" dir="auto">이 장의 목표는 단순히 boto3 문법을 외우는 것이 아니라, <strong>AWS 콘솔에서 하던 작업을 Python 코드로 어떻게 옮기는지 이해하는 것</strong>이다.</p><hr id="dd5720e4-6f49-8278-9f11-01db1a347b01" dir="auto"/><h2 id="6cd720e4-6f49-821e-b70a-81529cfefeb0" class="" dir="auto">학습 목표</h2><p id="efb720e4-6f49-83f3-a638-81f994e9f28d" class="" dir="auto">이 장을 마치면 다음을 할 수 있어야 한다.</p><ul id="820720e4-6f49-835b-866f-0182bb8351d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">boto3가 무엇인지 설명할 수 있다.</li></ul><ul id="b25720e4-6f49-8321-9bed-0177b677371d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS SDK와 AWS API의 관계를 설명할 수 있다.</li></ul><ul id="c55720e4-6f49-8381-b6ca-81cff8548643" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>boto3.Session()</code>을 사용해 프로필 기반 세션을 만들 수 있다.</li></ul><ul id="47b720e4-6f49-83c9-a145-01d75d334059" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>client</code> 방식과 <code>resource</code> 방식의 차이를 설명할 수 있다.</li></ul><ul id="823720e4-6f49-82cf-b05a-812b0eacf4b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">boto3로 EC2, S3 같은 AWS 서비스 클라이언트를 생성할 수 있다.</li></ul><ul id="b0b720e4-6f49-8223-a84d-011fe92f445b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS API 응답이 딕셔너리와 리스트 구조로 반환된다는 점을 이해할 수 있다.</li></ul><ul id="99b720e4-6f49-83b1-ab1c-819f1bf73c1a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">응답 구조에서 필요한 값을 추출할 수 있다.</li></ul><ul id="5fa720e4-6f49-825d-9d58-01194748cf01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성형 AI에게 boto3 코드 생성을 요청하고, 결과를 검토할 수 있다.</li></ul><hr id="bbc720e4-6f49-8254-8ac4-81242ef563a0" dir="auto"/><h1 id="b79720e4-6f49-826b-bf85-81b3fd5deb58" class="" dir="auto">4.1 AWS SDK와 boto3 이해</h1><h2 id="315720e4-6f49-83bc-be88-01072053a21c" class="" dir="auto">1. SDK와 API란 무엇인가</h2><p id="7f6720e4-6f49-836f-a9af-81cb3dde1156" class="" dir="auto">AWS는 다양한 클라우드 서비스를 제공한다.</p><p id="4a0720e4-6f49-8234-b841-81aeac4d7645" class="" dir="auto">예를 들면 다음과 같은 서비스가 있다.</p><ul id="1e6720e4-6f49-833e-9a5f-0176886aeac5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2</li></ul><ul id="720720e4-6f49-82a4-86ec-8194104f1fff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="d95720e4-6f49-8236-92ec-814f2d810a84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM</li></ul><ul id="855720e4-6f49-83ca-a8f1-016144bdb4f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch</li></ul><ul id="1dd720e4-6f49-8293-af55-01d49102e99b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bedrock</li></ul><p id="8e2720e4-6f49-8274-85a7-81ecc3bd51c8" class="" dir="auto">이 서비스들은 콘솔 화면에서 클릭으로도 사용할 수 있지만, 내부적으로는 모두 <strong>API(Application Programming Interface)</strong> 를 통해 동작한다.</p><p id="5c1720e4-6f49-82fe-b9e3-0136a0ea1791" class="" dir="auto">즉, 콘솔에서 버튼을 눌러 인스턴스를 조회하거나 버킷 목록을 보는 것도 결국은 AWS API를 호출하는 것이다.</p><p id="59c720e4-6f49-8296-9b46-0192efe25a96" class="" dir="auto">이 API를 Python 코드에서 편하게 사용할 수 있도록 만들어 놓은 라이브러리가 <strong>AWS SDK</strong>이다.</p><p id="3b2720e4-6f49-835b-981e-01f71a44fe58" class="" dir="auto">Python에서 AWS SDK 역할을 하는 대표 라이브러리가 바로 <strong>boto3</strong>이다.</p><hr id="1a4720e4-6f49-83b2-a4df-81304b89cd88" dir="auto"/><h2 id="3e8720e4-6f49-829e-975a-81decd1194cb" class="" dir="auto">2. boto3란 무엇인가</h2><p id="821720e4-6f49-829a-bc68-81ce4e827cd4" class="" dir="auto">boto3는 Python에서 AWS 서비스를 제어하기 위한 공식 SDK이다.</p><p id="470720e4-6f49-8252-9aa2-81a38193a644" class="" dir="auto">즉, Python 코드로 AWS API를 호출할 수 있게 해주는 도구이다.</p><p id="48f720e4-6f49-8348-b4e5-81a79d9f47bc" class="" dir="auto">예를 들어 boto3를 사용하면 다음과 같은 작업을 할 수 있다.</p><ul id="b83720e4-6f49-8388-a197-016f121210bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 인스턴스 목록 조회</li></ul><ul id="b62720e4-6f49-8258-89a2-81db98a26ece" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷 목록 조회</li></ul><ul id="d80720e4-6f49-8326-9454-81eee9930dfd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 업로드 및 다운로드</li></ul><ul id="bc1720e4-6f49-8244-9b12-010fc6725789" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 사용자 조회</li></ul><ul id="79b720e4-6f49-8252-b579-01dc36f1ec12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch 지표 조회</li></ul><ul id="444720e4-6f49-839e-b596-010aa0de54c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bedrock 모델 호출</li></ul><p id="623720e4-6f49-8391-b940-0118f7b3b249" class="" dir="auto">즉, AWS 콘솔에서 하던 작업을 Python 코드로 자동화할 수 있게 만든다.</p><hr id="a3c720e4-6f49-83b0-abda-01a517ae551e" dir="auto"/><h2 id="a8b720e4-6f49-8377-be5e-816705c90052" class="" dir="auto">3. 왜 boto3를 배우는가</h2><p id="bbe720e4-6f49-838f-ae6c-01b360416a1a" class="" dir="auto">콘솔 사용과 boto3 사용은 완전히 같은 경험은 아니다.</p><p id="8c8720e4-6f49-8208-9345-012146b1c579" class="" dir="auto">콘솔은 사람이 직접 클릭하고 확인하는 방식이고,</p><p id="8e3720e4-6f49-8296-b727-011f93d8ef96" class="" dir="auto">boto3는 코드를 통해 <strong>반복 가능하고 재사용 가능한 자동화 흐름</strong>을 만드는 방식이다.</p><p id="776720e4-6f49-83b6-a112-016318f4b94d" class="" dir="auto">예를 들어 콘솔에서는 여러 인스턴스를 하나씩 확인해야 할 수도 있지만,</p><p id="0ad720e4-6f49-8259-bb9f-01c44cb6c71e" class="" dir="auto">boto3를 사용하면 한 번의 API 호출과 반복문으로 전체 상태를 바로 확인할 수 있다.</p><p id="194720e4-6f49-8389-9a86-8169923c653e" class="" dir="auto">즉, boto3는 AWS 서비스를 “사용하는 것”에서 나아가 <strong>자동화 가능한 코드로 바꾸는 단계</strong>라고 볼 수 있다.</p><hr id="508720e4-6f49-8229-975c-8101d013e54c" dir="auto"/><h1 id="9e7720e4-6f49-828e-a68b-81ff972c63f9" class="" dir="auto">4.2 boto3 설치와 기본 준비</h1><h2 id="3e4720e4-6f49-82e2-9fae-01593d5f3765" class="" dir="auto">1. boto3 설치 - 이미 1장에서 설치 했음.</h2><p id="372720e4-6f49-83ad-8369-019e17b6d2ad" class="" dir="auto">가상환경이 활성화된 상태에서 다음 명령으로 설치한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="797720e4-6f49-8392-8bd1-81aefc213d10" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">pip install boto3[crt]
+</code></pre><p id="b0a720e4-6f49-836c-b734-01b95ebdcc6e" class="" dir="auto">설치 여부는 아래처럼 확인할 수 있다.</p><pre id="07e720e4-6f49-83eb-ade2-81dee3f6a2af" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">pip show boto3</code></pre><hr id="b8c720e4-6f49-839b-bf86-81bf10394dbf" dir="auto"/><h2 id="72f720e4-6f49-82d1-a66f-81a4596d3e76" class="" dir="auto">2. boto3 import</h2><p id="a9a720e4-6f49-8223-b1e0-810694d24f03" class="" dir="auto">Python 코드에서는 아래처럼 불러온다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="df2720e4-6f49-8341-8068-810d8836ab1f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+from botocore.exceptions import BotoCoreError, ClientError, NoCredentialsError, ProfileNotFound</code></pre><p id="f41720e4-6f49-8201-84c7-01ebcb873b97" class="" dir="auto">이제 Python 코드 안에서 AWS SDK를 사용할 수 있다.</p><hr id="14c720e4-6f49-826d-9b5a-816356dacd40" dir="auto"/><h1 id="818720e4-6f49-824b-98cc-014b6a8ad1aa" class="" dir="auto">4.3 Session과 프로필 기반 인증</h1><h2 id="cb9720e4-6f49-839a-8aeb-8121fe9e33e8" class="" dir="auto">1. 왜 Session을 사용하는가</h2><p id="ac2720e4-6f49-8238-a0e3-81723a2a7ccf" class="" dir="auto">이번 과정에서는 AWS CLI 프로필 기반 인증을 사용한다.</p><p id="20c720e4-6f49-824e-8aa4-812cfa72f124" class="" dir="auto">따라서 boto3 코드도 같은 인증 흐름을 따르는 것이 좋다.</p><p id="b98720e4-6f49-83e2-a01b-813f87b037bf" class="" dir="auto">이때 사용하는 구조가 <code>boto3.Session()</code>이다.</p><p id="d42720e4-6f49-83e7-ac23-0188fda68589" class="" dir="auto">기본 예제는 다음과 같다.</p><pre id="6a0720e4-6f49-83a2-bcdb-8158d249c669" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+print(session)</code></pre><p id="820720e4-6f49-8360-85f0-81489328b546" class="" dir="auto">여기서 <code>profile_name=&quot;lab&quot;</code>은 AWS CLI에 로그인한 프로필 이름을 의미한다.</p><p id="091720e4-6f49-82dc-a9bb-8111e8b9e9c6" class="" dir="auto">즉, 이 코드는 “lab 프로필로 AWS 세션을 만든다”는 뜻이다.</p><hr id="d3d720e4-6f49-8360-8f75-01b1fdff211d" dir="auto"/><h2 id="ab8720e4-6f49-8279-873a-014c26542d2f" class="" dir="auto">2. Session이 필요한 이유</h2><p id="d58720e4-6f49-838c-931d-810624f69423" class="" dir="auto"><code>Session</code>을 사용하면 다음과 같은 장점이 있다.</p><ul id="9d7720e4-6f49-83e4-ab1a-01fa965fbe1b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 프로필을 쓸지 명확하게 지정할 수 있다.</li></ul><ul id="c54720e4-6f49-8357-a173-010580e2c9c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 여러 서비스 클라이언트를 같은 세션에서 만들 수 있다.</li></ul><ul id="a53720e4-6f49-830a-9256-8152ef846372" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습 환경에서 인증 흐름을 통일하기 쉽다.</li></ul><p id="3ff720e4-6f49-831f-9e23-015a005e2b06" class="" dir="auto">예를 들어 한 세션으로 EC2와 S3 클라이언트를 모두 만들 수 있다.</p><pre id="2bd720e4-6f49-839e-876c-019ec256c76e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+print(ec2)
+print(s3)</code></pre><hr id="61e720e4-6f49-82de-b0ff-819bc08b3016" dir="auto"/><h2 id="4c9720e4-6f49-8205-ad09-81816b6b3a2e" class="" dir="auto">3. region_name 지정</h2><p id="4ee720e4-6f49-8267-a735-015e7d57e216" class="" dir="auto">일부 AWS 서비스는 리전이 중요하다.</p><p id="ebf720e4-6f49-82bd-8a34-01a2546ea916" class="" dir="auto">따라서 클라이언트를 만들 때 <code>region_name</code>을 명시하는 습관이 좋다.</p><pre id="548720e4-6f49-82a8-b70a-815ef1286c12" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)</code></pre><p id="ced720e4-6f49-83e3-8db6-81f522796c48" class="" dir="auto">이 구조는 이후 장에서도 계속 사용된다.</p><hr id="ef9720e4-6f49-821a-8e47-8111e8559099" dir="auto"/><h2 id="603720e4-6f49-8209-b45d-81a20ab15e2d" class="" dir="auto">실습 1. 세션 만들기</h2><p id="1dc720e4-6f49-832a-b23e-01f16bf52d9b" class="" dir="auto">파일명: <code>session_test.py</code></p><pre id="fe6720e4-6f49-8284-822d-01bc5068cb26" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+print(&quot;session created&quot;)
+print(session)</code></pre><h3 id="517720e4-6f49-8245-a496-8157f8474640" class="" dir="auto">확인할 내용</h3><ul id="7e1720e4-6f49-838d-bf92-0195875f9bb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>profile_name</code>이 포함된 세션이 만들어지는지 확인한다.</li></ul><ul id="1f8720e4-6f49-8249-bad8-811aad8042a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세션 생성 자체는 AWS API 호출이 아니므로 기본 구조 확인용으로 적절하다.</li></ul><hr id="444720e4-6f49-82a3-be50-0169730719d7" dir="auto"/><h1 id="8c4720e4-6f49-83e4-a619-8190b98eb5ff" class="" dir="auto">4.4 client와 resource</h1><h2 id="771720e4-6f49-83fa-b3d6-813d088d8869" class="" dir="auto">1. client 방식</h2><p id="c8d720e4-6f49-8269-b1c8-01eb74a707cd" class="" dir="auto">boto3에는 크게 두 가지 접근 방식이 있다.</p><ul id="e42720e4-6f49-8322-b39c-015af92230c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>client</code></li></ul><ul id="cad720e4-6f49-8369-bcc0-814ebe777cc6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>resource</code></li></ul><p id="c68720e4-6f49-8273-b791-01143d360b63" class="" dir="auto"> <code>client</code>는 서비스의 API와 거의 1:1로 매핑되는 <strong>저수준(Low-level)</strong> 인터페이스이다.</p><p id="8df720e4-6f49-8207-816e-0173925f7894" class="" dir="auto">예를 들어 EC2 client 생성은 다음과 같다.</p><pre id="fa7720e4-6f49-82c6-936f-015807dfb098" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+print(ec2)</code></pre><p id="768720e4-6f49-837b-8d1a-01b777769957" class="" dir="auto">이 <code>ec2</code> 객체를 사용해 <code>describe_instances()</code> 같은 API를 호출할 수 있다.</p><hr id="9df720e4-6f49-8283-93f3-017404756727" dir="auto"/><h2 id="ebd720e4-6f49-8231-a10a-818a7e35359a" class="" dir="auto">2. resource 방식</h2><p id="556720e4-6f49-83ef-9002-8100028b0e10" class="" dir="auto"> <code>resource</code>는 객체 지향적으로 설계된 <strong>고수준(High-level)</strong> 인터페이스이다.</p><p id="07f720e4-6f49-82d3-a0e4-015ccddcb812" class="" dir="auto">예:</p><pre id="eb3720e4-6f49-821d-95d5-010298ff640e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3_resource = session.resource(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+print(s3_resource)</code></pre><p id="1ef720e4-6f49-821d-bf2a-810217d38068" class="" dir="auto">이 방식은 특정 서비스에서 편리한 경우도 있지만, 실습과 응답 구조 학습 관점에서는 <code>client</code>가 더 명확할 때가 많다.</p><hr id="afb720e4-6f49-83b2-8e9b-0145f66ad8d4" dir="auto"/><h2 id="9d9720e4-6f49-8308-91e2-819bf419b650" class="" dir="auto">3. 이 과정에서는  client를 중심으로 다룬다.</h2><p id="f84720e4-6f49-8290-a0af-81446804e802" class="" dir="auto">이유는 다음과 같다.</p><ul id="447720e4-6f49-8358-b144-01e120cabb20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS API 응답 구조를 그대로 보기 좋다.</li></ul><ul id="3ed720e4-6f49-83a4-826d-0169c8c90a8e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">딕셔너리/리스트 구조 학습과 연결된다.</li></ul><ul id="e27720e4-6f49-8355-9a65-010db50a245c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성형 AI가 <code>client</code> 예제를 자주 생성한다.</li></ul><ul id="e31720e4-6f49-8218-915e-81e740d775d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2, IAM, Bedrock 등에서 일관된 패턴으로 다루기 좋다.</li></ul><p id="0c8720e4-6f49-8229-8ae2-8119f8138dea" class="" dir="auto">따라서 이후 장에서는 주로 아래 구조를 사용한다.</p><pre id="57c720e4-6f49-8354-8f89-01f65099a2c0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)</code></pre><hr id="ff4720e4-6f49-8253-9e3e-811958698847" dir="auto"/><h2 id="83f720e4-6f49-8238-bf14-811b37995a99" class="" dir="auto">실습 2. client와 resource 생성</h2><p id="8e4720e4-6f49-82d6-a2d0-016cc364603b" class="" dir="auto">파일명: <code>client_resource_test.py</code></p><pre id="cb3720e4-6f49-8309-b19d-81c5335abbda" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+
+ec2_client = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+s3_resource = session.resource(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+print(&quot;ec2 client created&quot;)
+print(ec2_client)
+
+print(&quot;s3 resource created&quot;)
+print(s3_resource)</code></pre><h3 id="43b720e4-6f49-8324-b02a-01993c4d58c8" class="" dir="auto">확인할 내용</h3><ul id="6be720e4-6f49-82d7-8d20-8120351cba7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>client</code>와 <code>resource</code> 모두 생성할 수 있는지 확인한다.</li></ul><ul id="fd4720e4-6f49-83d8-a1e6-01a79702af93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">두 객체가 각각 다른 방식의 접근이라는 점을 이해한다.</li></ul><hr id="a96720e4-6f49-8280-a76b-0133e0f3b09a" dir="auto"/><h1 id="0eb720e4-6f49-820f-9f7a-01a0572f6ec2" class="" dir="auto">4.5 첫 번째 AWS API 호출</h1><h2 id="a43720e4-6f49-82fa-8533-01f831b7c38e" class="" dir="auto">1. EC2 리전 목록 조회 예제</h2><p id="95e720e4-6f49-827e-967c-818d6f05544e" class="" dir="auto">API 호출 구조를 처음 익힐 때는 간단한 예제를 보는 것이 좋다.</p><pre id="ce5720e4-6f49-823f-96f4-01979afccb33" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = ec2.describe_regions()
+print(response)</code></pre><p id="e92720e4-6f49-839a-9f59-019f6d2e8779" class="" dir="auto">이 코드에서 중요한 부분은 다음과 같다.</p><ul id="e3a720e4-6f49-8334-9dc1-015ccc5b8841" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ec2.describe_regions()</code>가 AWS API 호출이다.</li></ul><ul id="1b9720e4-6f49-8255-a746-0115de1786f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과는 <code>response</code> 변수에 저장된다.</li></ul><ul id="393720e4-6f49-83ef-9b9f-0103e41c7d61" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>response</code>는 딕셔너리 구조이다.</li></ul><p id="da1720e4-6f49-83c5-a5af-81fd8dcedc64" class="" dir="auto">즉, boto3는 대부분 이런 흐름이다.</p><ol type="1" id="315720e4-6f49-829f-99a9-81e101a6993d" class="numbered-list" start="1" dir="auto"><li>세션 생성</li></ol><ol type="1" id="807720e4-6f49-83ee-ad2b-81d4fa883f21" class="numbered-list" start="2" dir="auto"><li>client 생성</li></ol><ol type="1" id="94d720e4-6f49-8380-bdd7-81efdb086506" class="numbered-list" start="3" dir="auto"><li>API 호출</li></ol><ol type="1" id="63f720e4-6f49-82d0-af86-81ce5b7dbe19" class="numbered-list" start="4" dir="auto"><li>응답값 저장</li></ol><ol type="1" id="61f720e4-6f49-82b8-bcbc-012229d0dc58" class="numbered-list" start="5" dir="auto"><li>응답 구조에서 필요한 값 추출</li></ol><hr id="489720e4-6f49-823f-bc9d-0171dab41a51" dir="auto"/><h2 id="7c7720e4-6f49-8237-9036-01e38d10ba65" class="" dir="auto">2. 응답값 전체를 바로 출력하는 이유</h2><p id="4a9720e4-6f49-8305-a8bd-8151dd567e1d" class="" dir="auto">처음에는 응답값 전체를 한 번 출력해보는 것이 중요하다.</p><p id="011720e4-6f49-8240-b397-014dd0302cd8" class="" dir="auto">그래야 어떤 키가 들어 있는지, 리스트가 어디에 있는지 구조를 볼 수 있다.</p><p id="284720e4-6f49-8212-9f18-01663416380b" class="" dir="auto">예를 들어 <code>describe_regions()</code> 결과는 대략 아래와 비슷한 구조를 가진다.</p><pre id="ab6720e4-6f49-83b8-8f63-819529ad3ba6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;Regions&quot;: [
+        {&quot;RegionName&quot;: &quot;ap-northeast-2&quot;, ...},
+        {&quot;RegionName&quot;: &quot;us-east-1&quot;, ...}
+    ],
+    &quot;ResponseMetadata&quot;: {...}
+}</code></pre><p id="699720e4-6f49-83bc-8c1e-01b32526cb1f" class="" dir="auto">즉,</p><ul id="412720e4-6f49-8241-9a03-01acd12a71af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">바깥쪽은 딕셔너리</li></ul><ul id="d1a720e4-6f49-829f-b7e9-01317d0271e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;Regions&quot;</code> 값은 리스트</li></ul><ul id="f1a720e4-6f49-8236-a9b2-810c0de91a8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리스트 안 각 항목은 딕셔너리</li></ul><p id="66b720e4-6f49-82ab-bcea-01d063203f3f" class="" dir="auto">구조이다.</p><hr id="411720e4-6f49-837b-acfb-81e97fba7d15" dir="auto"/><h2 id="eb2720e4-6f49-8304-a079-016e0789f5d1" class="" dir="auto">실습 3. EC2 리전 목록 조회</h2><p id="a8c720e4-6f49-82c4-a42d-816ce67bce7a" class="" dir="auto">파일명: <code>describe_regions.py</code></p><pre id="409720e4-6f49-8392-b6da-016e5f179d3a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = ec2.describe_regions()
+
+print(&quot;전체 응답 출력&quot;)
+print(response)</code></pre><h3 id="09e720e4-6f49-824b-a78b-81962af8e7e7" class="" dir="auto">확인할 내용</h3><ul id="031720e4-6f49-8379-9086-0105ed69e1cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">응답이 딕셔너리 구조로 보이는지 확인한다.</li></ul><ul id="478720e4-6f49-82c0-944d-013aa8e9a55f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;Regions&quot;</code> 키가 있는지 확인한다.</li></ul><ul id="475720e4-6f49-827d-8a09-012b113dd005" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그 안에 리스트가 들어 있는지 확인한다.</li></ul><hr id="aaf720e4-6f49-82b0-8d8d-81e1c0fccaff" dir="auto"/><h1 id="a36720e4-6f49-82d0-a0b8-01db4c7a60f8" class="" dir="auto">4.6 AWS API 응답 구조 읽기</h1><h2 id="746720e4-6f49-82cc-84b6-01cd36395fda" class="" dir="auto">1. 응답은 왜 복잡해 보이는가</h2><p id="7ce720e4-6f49-8241-b698-811c23e364da" class="" dir="auto">AWS API 응답은 단순 문자열 하나만 주지 않는다.</p><p id="f42720e4-6f49-8260-aa34-8194c2d71c51" class="" dir="auto">보통 아래 정보가 함께 들어 있다.</p><ul id="dba720e4-6f49-826d-98a4-01ba13ed3a42" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 데이터</li></ul><ul id="173720e4-6f49-83fc-ad46-01e7aa5fd720" class="bulleted-list" dir="auto"><li style="list-style-type:disc">메타데이터</li></ul><ul id="713720e4-6f49-83f3-876b-81efb98551f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태 정보</li></ul><ul id="648720e4-6f49-8212-9c9f-81823730bcf1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">페이지 관련 정보</li></ul><ul id="cbd720e4-6f49-837a-bf57-81fd07e1dfdb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">추가 속성들</li></ul><p id="853720e4-6f49-8267-956d-01d403c93e95" class="" dir="auto">그래서 응답은 종종 길고 복잡해 보인다.</p><p id="e26720e4-6f49-8307-be75-81f79b56d7c8" class="" dir="auto">하지만 중요한 것은 <strong>필요한 부분만 찾아서 읽는 것</strong>이다.</p><hr id="fce720e4-6f49-8385-a263-01166811d97c" dir="auto"/><h2 id="062720e4-6f49-82b1-8d19-81f352a16959" class="" dir="auto">2. 응답 구조 해석 순서</h2><p id="aab720e4-6f49-8333-b2bf-811a83474a37" class="" dir="auto">AWS API 응답을 읽을 때는 보통 아래 순서로 본다.</p><h3 id="982720e4-6f49-82fc-8262-01e6d1ba535c" class="" dir="auto">1) 가장 바깥쪽 키 확인</h3><p id="f70720e4-6f49-83d6-a4bf-81afce21e6af" class="" dir="auto">예:</p><ul id="bc5720e4-6f49-82cd-bd52-0173b3270135" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Regions</code></li></ul><ul id="ef8720e4-6f49-8248-8a74-819aa5d04ae9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Reservations</code></li></ul><ul id="701720e4-6f49-82f3-b2d6-818bf948ad07" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Buckets</code></li></ul><h3 id="a52720e4-6f49-8215-86c9-81f81c8a97df" class="" dir="auto">2) 그 값이 리스트인지 딕셔너리인지 확인</h3><p id="db2720e4-6f49-82bd-b459-0175b74dff26" class="" dir="auto">리스트면 반복문이 필요하고, 딕셔너리면 키로 들어간다.</p><h3 id="bec720e4-6f49-839b-8d0e-01d0e7890de0" class="" dir="auto">3) 리스트 안 항목 구조 확인</h3><p id="c8b720e4-6f49-82b1-a06a-81ff5141c63b" class="" dir="auto">각 항목이 딕셔너리인 경우가 많다.</p><h3 id="da8720e4-6f49-8370-9009-817599891cf9" class="" dir="auto">4) 필요한 필드만 골라서 출력</h3><p id="bc3720e4-6f49-83ac-86a1-81854b19f024" class="" dir="auto">예:</p><ul id="5eb720e4-6f49-8393-9653-810ade9b8127" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>RegionName</code></li></ul><ul id="540720e4-6f49-825e-8b21-81fbd48347c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>InstanceId</code></li></ul><ul id="c62720e4-6f49-824f-b128-0143a39ca84c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>State</code></li></ul><ul id="897720e4-6f49-83e1-bf8c-01ca6b218553" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Name</code></li></ul><hr id="b02720e4-6f49-832d-a0e6-81b2d33d4c94" dir="auto"/><h2 id="ad1720e4-6f49-8310-aa5e-8155ed2d09f7" class="" dir="auto">3. Regions 응답에서 값 꺼내기</h2><pre id="33c720e4-6f49-8261-b3ab-0192b6b71a46" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = ec2.describe_regions()
+
+for region in response[&quot;Regions&quot;]:
+    print(region[&quot;RegionName&quot;])</code></pre><p id="3dc720e4-6f49-8364-a9aa-81a2dadcc337" class="" dir="auto">이 코드는 다음 구조를 따른다.</p><ul id="479720e4-6f49-82e9-94cf-81baff20344b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>response</code>는 딕셔너리</li></ul><ul id="0e5720e4-6f49-8319-aa4f-01f2bbe99821" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>response[&quot;Regions&quot;]</code>는 리스트</li></ul><ul id="c47720e4-6f49-828e-b75e-814e521ad77f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리스트 안 <code>region</code>은 딕셔너리</li></ul><ul id="b0c720e4-6f49-82e7-acfe-01db53b17a0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>region[&quot;RegionName&quot;]</code>은 문자열</li></ul><p id="964720e4-6f49-8356-a10e-011da6e1e3f9" class="" dir="auto">즉, 앞에서 배운 리스트/딕셔너리/반복문 구조가 그대로 연결된다.</p><hr id="9ed720e4-6f49-834f-99e3-0150fdb575d7" dir="auto"/><h2 id="172720e4-6f49-820a-b5a7-8193ea7e4aa6" class="" dir="auto">실습 4. 리전 이름만 출력하기</h2><p id="d0a720e4-6f49-82c9-8e4f-817c618a574c" class="" dir="auto">파일명: <code>region_names.py</code></p><pre id="c85720e4-6f49-82fd-ad12-8120d7ac0613" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = ec2.describe_regions()
+
+print(&quot;리전 이름 목록&quot;)
+for region in response[&quot;Regions&quot;]:
+    print(region[&quot;RegionName&quot;])</code></pre><h3 id="502720e4-6f49-831f-8b88-8139f76d8bc3" class="" dir="auto">확인할 내용</h3><ul id="9c6720e4-6f49-8283-813f-811143a2d8bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">응답 전체를 보지 않고 필요한 값만 꺼내는 방식을 확인한다.</li></ul><ul id="87a720e4-6f49-8265-a579-01f90e3df3b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리스트 반복과 딕셔너리 키 접근이 함께 사용되는지 확인한다.</li></ul><hr id="695720e4-6f49-83f3-a4a3-01dbb4b55a03" dir="auto"/><h1 id="841720e4-6f49-83aa-8cd9-814f78ee437f" class="" dir="auto">4.7 EC2 인스턴스 조회 구조 미리 보기</h1><p id="3fc720e4-6f49-82ed-9532-8138d1db4ef6" class="" dir="auto">이제 실제 자동화에서 자주 쓰는 EC2 조회 구조를 간단히 보자.</p><pre id="0b3720e4-6f49-8209-9223-81a52cacb6bc" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = ec2.describe_instances()
+print(response)</code></pre><p id="296720e4-6f49-8240-b8e7-01e0a93b986a" class="" dir="auto">이 응답은 보통 다음과 비슷한 구조를 가진다.</p><pre id="fd0720e4-6f49-830c-9f82-816784dffb84" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;Reservations&quot;: [
+        {
+            &quot;Instances&quot;: [
+                {
+                    &quot;InstanceId&quot;: &quot;i-1234...&quot;,
+                    &quot;State&quot;: {&quot;Name&quot;: &quot;running&quot;},
+                    ...
+                }
+            ]
+        }
+    ],
+    &quot;ResponseMetadata&quot;: {...}
+}</code></pre><p id="166720e4-6f49-82ae-9d86-010cd2c18db1" class="" dir="auto">즉, 구조가 한 단계 더 깊다.</p><ul id="f91720e4-6f49-8376-87d3-01606ba78e17" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>response</code> → 딕셔너리</li></ul><ul id="776720e4-6f49-8395-b2b8-8111aceb7ec1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>response[&quot;Reservations&quot;]</code> → 리스트</li></ul><ul id="5f9720e4-6f49-8377-a7ad-0141408fe3eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 <code>reservation</code> → 딕셔너리</li></ul><ul id="38c720e4-6f49-8312-a2e7-819515622b95" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reservation[&quot;Instances&quot;]</code> → 리스트</li></ul><ul id="6d5720e4-6f49-82c1-8f07-81a944a5cc8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 <code>instance</code> → 딕셔너리</li></ul><p id="f1b720e4-6f49-82c4-b4db-81225192cf76" class="" dir="auto">그래서 반복문이 두 번 필요하다.</p><hr id="dad720e4-6f49-829e-aff5-0113b5f9e66f" dir="auto"/><h2 id="daf720e4-6f49-8384-88d6-01e7685d32b6" class="" dir="auto">1. 인스턴스 ID와 상태 출력</h2><pre id="7db720e4-6f49-8350-97a3-8101f8d54d8a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = ec2.describe_instances()
+
+for reservation in response[&quot;Reservations&quot;]:
+    for instance in reservation[&quot;Instances&quot;]:
+        print(instance[&quot;InstanceId&quot;], instance[&quot;State&quot;][&quot;Name&quot;])</code></pre><p id="e10720e4-6f49-83d3-be7d-812f7c1b6b86" class="" dir="auto">이 코드가 어렵게 느껴진다면 구조를 단계적으로 보면 된다.</p><h3 id="a24720e4-6f49-83c7-b70c-81bcc6f874c1" class="" dir="auto">첫 번째 반복문</h3><p id="ff1720e4-6f49-838b-abef-8116bb9b1574" class="" dir="auto"><code>Reservations</code> 리스트를 돈다.</p><h3 id="9e1720e4-6f49-836c-9faa-012821f9fbaf" class="" dir="auto">두 번째 반복문</h3><p id="e60720e4-6f49-82c4-8ea1-0157defa5607" class="" dir="auto">각 reservation 안의 <code>Instances</code> 리스트를 돈다.</p><h3 id="82f720e4-6f49-8279-89b9-01d2c54dde58" class="" dir="auto">출력 부분</h3><p id="bfe720e4-6f49-83a2-a229-81db8430bdc8" class="" dir="auto">각 instance 딕셔너리에서 <code>InstanceId</code>와 <code>State -&gt; Name</code> 값을 꺼낸다.</p><hr id="327720e4-6f49-83ae-b202-81c5e0a6245e" dir="auto"/><h2 id="cdf720e4-6f49-8219-a041-81baa4c61136" class="" dir="auto">실습 5. EC2 인스턴스 ID와 상태 출력</h2><p id="e48720e4-6f49-832f-8635-810ab01fca78" class="" dir="auto">파일명: <code>ec2_basic_list.py</code></p><pre id="35d720e4-6f49-832c-b874-81fc751d2759" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = ec2.describe_instances()
+
+for reservation in response[&quot;Reservations&quot;]:
+    for instance in reservation[&quot;Instances&quot;]:
+        print(
+            f&quot;id={instance[&#x27;InstanceId&#x27;]}, &quot;
+            f&quot;state={instance[&#x27;State&#x27;][&#x27;Name&#x27;]}&quot;
+        )</code></pre><h3 id="187720e4-6f49-82fe-85d9-818ba63c1f3e" class="" dir="auto">확인할 내용</h3><ul id="ee2720e4-6f49-83a0-9d82-01e9e87e1ca6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반복문이 두 번 사용되는 이유를 이해한다.</li></ul><ul id="ca1720e4-6f49-837e-9520-81d8787af71d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>State</code>가 중첩 딕셔너리라는 점을 확인한다.</li></ul><hr id="6d6720e4-6f49-822e-89fa-01a43940ac02" dir="auto"/><h1 id="872720e4-6f49-83d3-a4b6-812c3f161798" class="" dir="auto">4.8 이름 태그를 다루는 방식</h1><h2 id="8db720e4-6f49-83c4-9979-81641f41cc7e" class="" dir="auto">1. 이름이 바로 있는 것이 아님</h2><p id="54a720e4-6f49-82aa-8156-01c821118f74" class="" dir="auto">처음 boto3를 배울 때 많이 헷갈리는 부분이 이름 태그이다.</p><p id="99c720e4-6f49-82aa-a6c5-816eb7766a20" class="" dir="auto">이름이 <code>instance[&quot;Name&quot;]</code>처럼 바로 있는 것이 아니라, 보통 <code>Tags</code> 안에 들어 있다.</p><p id="0fd720e4-6f49-83b2-b544-01d40a215787" class="" dir="auto">예를 들어 구조는 다음과 비슷하다.</p><pre id="47b720e4-6f49-83b6-a547-81b58531a2b7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">&quot;Tags&quot;: [
+    {&quot;Key&quot;: &quot;Name&quot;, &quot;Value&quot;: &quot;web-1&quot;},
+    {&quot;Key&quot;: &quot;Env&quot;, &quot;Value&quot;: &quot;dev&quot;}
+]</code></pre><p id="db4720e4-6f49-8359-8665-01b65edb251b" class="" dir="auto">즉, 이름을 바로 꺼낼 수 없고, <code>Tags</code> 리스트를 돌면서 <code>Key == &quot;Name&quot;</code>인 항목을 찾아야 한다.</p><hr id="b5d720e4-6f49-826a-a1f1-814808f7e62e" dir="auto"/><h2 id="e62720e4-6f49-82cb-836d-0194509ad0b8" class="" dir="auto">2. 이름 태그 찾기 예제</h2><pre id="6e2720e4-6f49-8301-a9ea-813617656841" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def get_name_tag(instance):
+    tags = instance.get(&quot;Tags&quot;, [])
+
+    for tag in tags:
+        if tag[&quot;Key&quot;] == &quot;Name&quot;:
+            return tag[&quot;Value&quot;]
+
+    return &quot;NoName&quot;</code></pre><p id="820720e4-6f49-826e-bc24-812f2962ecd6" class="" dir="auto">이 함수의 의미는 다음과 같다.</p><ul id="30e720e4-6f49-83ce-8d87-017166dda783" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Tags</code>가 없으면 빈 리스트 사용</li></ul><ul id="581720e4-6f49-8224-8182-01bd4ab273c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그를 하나씩 반복</li></ul><ul id="062720e4-6f49-82c7-bf26-81c3daf836fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Key</code>가 <code>&quot;Name&quot;</code>이면 그 값을 반환</li></ul><ul id="1c8720e4-6f49-830b-a0ca-01bd4193dcc0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">끝까지 없으면 <code>&quot;NoName&quot;</code> 반환</li></ul><p id="182720e4-6f49-8273-98f6-01d448ff13e1" class="" dir="auto">이 구조는 이후 EC2 실습에서 매우 중요하다.</p><hr id="225720e4-6f49-8235-8bd3-81c1a78da598" dir="auto"/><h2 id="f14720e4-6f49-8245-8232-81dee611950f" class="" dir="auto">실습 6. 이름 태그 찾기 함수 구조 읽기</h2><p id="a53720e4-6f49-83f4-b1d8-0102ff04b6bf" class="" dir="auto">파일명: <code>name_tag_test.py</code></p><pre id="b77720e4-6f49-8311-862b-01acf1f68c17" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def get_name_tag(instance):
+    tags = instance.get(&quot;Tags&quot;, [])
+
+    for tag in tags:
+        if tag[&quot;Key&quot;] == &quot;Name&quot;:
+            return tag[&quot;Value&quot;]
+
+    return &quot;NoName&quot;
+
+sample_instance = {
+    &quot;InstanceId&quot;: &quot;i-1111&quot;,
+    &quot;State&quot;: {&quot;Name&quot;: &quot;running&quot;},
+    &quot;Tags&quot;: [
+        {&quot;Key&quot;: &quot;Name&quot;, &quot;Value&quot;: &quot;web-1&quot;},
+        {&quot;Key&quot;: &quot;Env&quot;, &quot;Value&quot;: &quot;dev&quot;}
+    ]
+}
+
+print(get_name_tag(sample_instance))</code></pre><h3 id="e87720e4-6f49-8370-8b0e-013b54baadaf" class="" dir="auto">확인할 내용</h3><ul id="136720e4-6f49-822b-9527-81dc92fb5c67" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Tags</code>가 리스트라는 점을 확인한다.</li></ul><ul id="9ba720e4-6f49-82d5-b1db-01bc6c5727d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반복문과 조건문으로 원하는 태그를 찾는 구조를 이해한다.</li></ul><ul id="a84720e4-6f49-82d2-a9d1-01d2df034c34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그가 없을 때 기본값을 반환하는 방식을 이해한다.</li></ul><hr id="422720e4-6f49-83d7-b83a-01355f593484" dir="auto"/><h1 id="646720e4-6f49-82f6-af52-81cd35e5bcb5" class="" dir="auto">4.9 boto3 코드에 예외 처리 넣기</h1><p id="f3d720e4-6f49-826d-a2c1-01064429b747" class="" dir="auto">AWS API 호출은 네트워크, 인증, 권한, 리전 설정 등의 이유로 오류가 날 수 있다.</p><p id="678720e4-6f49-83dd-b479-817e17db9b98" class="" dir="auto">그래서 기본적인 예외 처리를 함께 넣는 것이 좋다.</p><pre id="b19720e4-6f49-83cd-b346-81f8e9d35e69" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+try:
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+    response = ec2.describe_regions()
+
+    for region in response[&quot;Regions&quot;]:
+        print(region[&quot;RegionName&quot;])
+
+except Exception as e:
+    print(&quot;AWS API 호출 중 오류 발생&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><p id="817720e4-6f49-8264-a8c0-01a3cee1cdcd" class="" dir="auto">이 구조는 이후 장에서도 계속 사용된다.</p><hr id="ef7720e4-6f49-8335-ab0f-81fd84c318d7" dir="auto"/><h2 id="3d5720e4-6f49-82ec-9f53-011483f99811" class="" dir="auto">실습 7. 예외 처리 포함 리전 조회</h2><p id="a63720e4-6f49-82a5-a380-01f989a6adc2" class="" dir="auto">파일명: <code>describe_regions_safe.py</code></p><pre id="e02720e4-6f49-8271-9499-81fa08f62c8b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+try:
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+    response = ec2.describe_regions()
+
+    for region in response[&quot;Regions&quot;]:
+        print(region[&quot;RegionName&quot;])
+
+except Exception as e:
+    print(&quot;리전 조회 실패&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><h3 id="fae720e4-6f49-839c-9936-011ed4ed9c30" class="" dir="auto">확인할 내용</h3><ul id="ecf720e4-6f49-83d9-ba9b-811cbec2d4a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API 호출 전체를 <code>try/except</code>로 감싸는 구조를 확인한다.</li></ul><ul id="18f720e4-6f49-83fe-88db-810b4664d37d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오류가 발생했을 때 메시지가 출력되도록 준비하는 방식을 이해한다.</li></ul><hr id="f68720e4-6f49-83df-b3f4-81a216d42b8e" dir="auto"/><h1 id="f80720e4-6f49-82ce-888a-81a3f114744d" class="" dir="auto">4.10 생성형 AI로 boto3 코드 생성 요청하기</h1><p id="984720e4-6f49-8278-a19a-8101d498adb3" class="" dir="auto">이제 생성형 AI에게 boto3 코드 생성을 요청하는 흐름을 보자.</p><h2 id="2f3720e4-6f49-825e-ba4a-81d94404b098" class="" dir="auto">1. 좋지 않은 요청</h2><pre id="a48720e4-6f49-8308-9faa-012a21d9bf8a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 코드 짜줘</code></pre><p id="bc8720e4-6f49-82ad-a1a4-81509acf5991" class="" dir="auto">이 요청은 정보가 부족하다.</p><hr id="f44720e4-6f49-82a4-8c78-0102532c965a" dir="auto"/><h2 id="163720e4-6f49-82e1-870e-0132e926b226" class="" dir="auto">2. 개선된 요청</h2><pre id="3ac720e4-6f49-82de-8458-01c0a9b1dff9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python boto3 코드를 작성해줘.
+AWS 프로필 이름은 lab, 리전은 ap-northeast-2로 사용해줘.
+EC2 인스턴스 목록을 조회하고, 인스턴스 ID와 상태를 출력해줘.
+예외 처리도 포함해줘.</code></pre><p id="08f720e4-6f49-8263-9d53-01a3cf033f08" class="" dir="auto">이 요청은 구체적이다.</p><hr id="98f720e4-6f49-8341-b28e-8106eb3c3aa3" dir="auto"/><h2 id="36c720e4-6f49-82ad-9780-81eeae102033" class="" dir="auto">3. 더 나은 요청</h2><pre id="7fe720e4-6f49-82e6-9fc5-8107df0b1d8e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python boto3 코드를 작성해줘.
+AWS CLI 프로필 기반 인증을 사용하고, profile_name은 lab으로 해줘.
+region_name은 ap-northeast-2로 지정해줘.
+EC2 인스턴스 목록을 조회해서 인스턴스 ID, 이름 태그, 상태를 출력해줘.
+이름 태그가 없으면 NoName으로 표시해줘.
+함수로 분리하고, try/except 예외 처리도 포함해줘.</code></pre><p id="837720e4-6f49-82b5-89d5-81887c1ca85a" class="" dir="auto">이 요청은 필요한 정보를 모두 포함하고 있다.</p><pre id="bd2720e4-6f49-82ec-8e03-0133c20fdaba" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+from botocore.exceptions import ProfileNotFound, ClientError
+
+def list_lab_ec2_instances():
+    try:
+        # 1. &#x27;lab&#x27; 프로필과 지정된 리전을 사용하여 세션을 생성으로 한다.
+        session = boto3.Session(
+            profile_name=&#x27;lab&#x27;,
+            region_name=&#x27;ap-northeast-2&#x27;
+        )
+        
+        # 2. EC2 클라이언트 생성으로 한다.
+        ec2 = session.client(&#x27;ec2&#x27;)
+        
+        # 3. 인스턴스 정보 호출로 한다.
+        response = ec2.describe_instances()
+        
+        # 결과 출력 헤더 설정으로 한다.
+        print(f&quot;{&#x27;Instance ID&#x27;:&lt;20} | {&#x27;Status&#x27;:&lt;15}&quot;)
+        print(&quot;-&quot; * 40)
+        
+        # 4. 응답 데이터를 파싱하여 ID와 상태 출력으로 한다.
+        found = False
+        for reservation in response.get(&#x27;Reservations&#x27;, []):
+            for instance in reservation.get(&#x27;Instances&#x27;, []):
+                instance_id = instance[&#x27;InstanceId&#x27;]
+                state = instance[&#x27;State&#x27;][&#x27;Name&#x27;]
+                print(f&quot;{instance_id:&lt;20} | {state:&lt;15}&quot;)
+                found = True
+        
+        if not found:
+            print(&quot;해당 리전에 활성화된 인스턴스가 존재하지 않는다.&quot;)
+
+    except ProfileNotFound:
+        print(&quot;에러: &#x27;lab&#x27; 프로필을 찾을 수 없음. &#x27;aws login --profile lab&#x27; 설정을 확인하시오.&quot;)
+    except ClientError as e:
+        print(f&quot;AWS 서비스 오류: {e.response[&#x27;Error&#x27;][&#x27;Message&#x27;]}&quot;)
+    except Exception as e:
+        print(f&quot;기타 오류 발생: {str(e)}&quot;)
+
+if __name__ == &quot;__main__&quot;:
+    list_lab_ec2_instances()</code></pre><hr id="e89720e4-6f49-8208-bba4-819c9d2b6726" dir="auto"/><h1 id="2e2720e4-6f49-83a8-b1cc-810f399a74d0" class="" dir="auto">4.11 생성된 boto3 코드를 검토하는 기준</h1><p id="bab720e4-6f49-83ec-8163-01fc33c09ee7" class="" dir="auto">AI가 boto3 코드를 생성했다면 아래 항목을 먼저 확인한다.</p><h2 id="439720e4-6f49-832c-9b10-011f40109f00" class="" dir="auto">1. import가 맞는가</h2><pre id="17d720e4-6f49-838c-8df1-01c446faa5c6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3</code></pre><h2 id="e85720e4-6f49-826b-a1bf-81d4df40f284" class="" dir="auto">2. 세션과 프로필이 맞는가</h2><pre id="608720e4-6f49-8357-b133-0178acb51eef" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">session = boto3.Session(profile_name=&quot;lab&quot;)</code></pre><h2 id="087720e4-6f49-829e-bf5b-818c905af16e" class="" dir="auto">3. 리전이 명시되었는가</h2><pre id="53d720e4-6f49-8360-a87e-8172e90cf0f6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)</code></pre><h2 id="52f720e4-6f49-83fe-8092-81a0cb02e902" class="" dir="auto">4. 응답 구조를 올바르게 처리하는가</h2><ul id="bb6720e4-6f49-82a8-a065-8196410d65f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리스트인지</li></ul><ul id="8ba720e4-6f49-83f9-8910-8111deb5662f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">딕셔너리인지</li></ul><ul id="f1e720e4-6f49-8366-a6b0-01845cbfba33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반복문이 필요한지</li></ul><h2 id="0e2720e4-6f49-8281-807e-01598eb45a04" class="" dir="auto">5. 없는 값 처리 방식이 안전한가</h2><ul id="704720e4-6f49-829c-93a8-81cf1e95339a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그가 없을 때 기본값 처리</li></ul><ul id="69a720e4-6f49-83c1-8c1c-8166261e355a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>get()</code> 사용 여부</li></ul><h2 id="a96720e4-6f49-8296-9414-01c8061c9826" class="" dir="auto">6. 예외 처리가 있는가</h2><ul id="bf2720e4-6f49-820e-9e80-81707f85585d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>try/except</code> 포함 여부</li></ul><h2 id="603720e4-6f49-8338-94fa-014b5e74ccf8" class="" dir="auto">7. 요청한 작업만 하는가</h2><ul id="036720e4-6f49-835e-97b2-01e4771e8867" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회 요청인데 삭제나 중지가 들어 있지 않은지 확인</li></ul><hr id="8e4720e4-6f49-8248-a2a6-014749194156" dir="auto"/><h1 id="6e3720e4-6f49-825b-bf1f-01bdf6948fde" class="" dir="auto">4.12 자동화 스타일 종합 예제</h1><p id="8a9720e4-6f49-83e7-9f32-81b6249cb462" class="" dir="auto">이제 지금까지 배운 구조를 모은 예제를 보자.</p><p id="74d720e4-6f49-8248-8491-810f4feaf1fb" class="" dir="auto">파일명: <code>boto3_summary.py</code></p><pre id="722720e4-6f49-83fd-ba0a-017e81f5e7e8" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_name_tag(instance):
+    tags = instance.get(&quot;Tags&quot;, [])
+
+    for tag in tags:
+        if tag[&quot;Key&quot;] == &quot;Name&quot;:
+            return tag[&quot;Value&quot;]
+
+    return &quot;NoName&quot;
+
+def print_instances():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    ec2 = session.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+    response = ec2.describe_instances()
+
+    for reservation in response[&quot;Reservations&quot;]:
+        for instance in reservation[&quot;Instances&quot;]:
+            instance_id = instance[&quot;InstanceId&quot;]
+            state = instance[&quot;State&quot;][&quot;Name&quot;]
+            name = get_name_tag(instance)
+
+            print(f&quot;id={instance_id}, name={name}, state={state}&quot;)
+
+try:
+    print_instances()
+except Exception as e:
+    print(&quot;EC2 조회 중 오류 발생&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><h3 id="86d720e4-6f49-8214-a661-814aec775fd6" class="" dir="auto">학습 포인트</h3><p id="5a4720e4-6f49-83b3-a98c-0171fe583dfd" class="" dir="auto">이 예제에는 다음 내용이 모두 포함되어 있다.</p><ul id="94f720e4-6f49-83e4-8516-0142a6ce1f23" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>boto3</code> import</li></ul><ul id="f8d720e4-6f49-828c-b173-011faa7fd2b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로필 기반 세션 생성</li></ul><ul id="06a720e4-6f49-8266-a1ed-8180861d0915" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 client 생성</li></ul><ul id="b00720e4-6f49-8391-8004-0174e19aaa09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API 호출</li></ul><ul id="411720e4-6f49-8283-8731-813cef77e52c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중첩 응답 구조 반복 처리</li></ul><ul id="f8b720e4-6f49-820c-a59a-017302eb254f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 조회 함수</li></ul><ul id="32b720e4-6f49-823d-bb64-81603007c8fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">f-string 출력</li></ul><ul id="026720e4-6f49-83b6-8bf1-0148f1b77758" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예외 처리</li></ul><p id="6b4720e4-6f49-8222-97fd-811ba6baf825" class="" dir="auto">즉, 이후 EC2 자동화 장으로 가기 전 준비 단계로 매우 적절한 예제이다.</p><hr id="416720e4-6f49-82f3-a7e9-816a11e5e81b" dir="auto"/><h1 id="3ce720e4-6f49-8295-b1bf-81d8ec3d9667" class="" dir="auto">4.13 자주 하는 실수</h1><h2 id="271720e4-6f49-827b-9fee-815d1ae285d8" class="" dir="auto">1. boto3 import를 빼먹는 경우</h2><pre id="668720e4-6f49-8374-9157-0143b8d029c8" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all"># ec2 = boto3.client(&quot;ec2&quot;)</code></pre><p id="e03720e4-6f49-8279-8cab-019600805ad3" class="" dir="auto">이렇게 쓰면 <code>boto3</code>가 정의되지 않았다는 오류가 날 수 있다.</p><hr id="c7d720e4-6f49-82aa-a0c5-019b279b76e9" dir="auto"/><h2 id="b3e720e4-6f49-82af-98fc-81898d7b8ade" class="" dir="auto">2. 세션 없이 인증을 모호하게 처리하는 경우</h2><p id="397720e4-6f49-8271-95c0-0147b98f5e10" class="" dir="auto">이번 과정에서는 프로필 기반 인증을 사용하므로, 가능하면 아래 구조를 유지하는 것이 좋다.</p><pre id="cc8720e4-6f49-82f7-96ed-816926f32d15" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">session = boto3.Session(profile_name=&quot;lab&quot;)</code></pre><hr id="a1e720e4-6f49-8301-ab8b-8189216e6a96" dir="auto"/><h2 id="00a720e4-6f49-8311-8a0e-817d034dc4ce" class="" dir="auto">3. 리전을 빼먹는 경우</h2><p id="333720e4-6f49-838c-a3c2-0127e1085163" class="" dir="auto">서비스에 따라 리전 지정이 없으면 원하는 결과가 나오지 않거나 오류가 날 수 있다.</p><hr id="7e1720e4-6f49-83ce-ac3c-012be6a34a90" dir="auto"/><h2 id="3df720e4-6f49-838a-8f63-018d1f9d7990" class="" dir="auto">4. 응답 구조를 잘못 이해하는 경우</h2><p id="6c6720e4-6f49-8231-b467-81bfe9351406" class="" dir="auto">예를 들어 <code>describe_instances()</code> 결과에서 바로 아래처럼 접근하면 안 될 수 있다.</p><pre id="50c720e4-6f49-82c8-b037-01dbbd724aa6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all"># print(response[&quot;Instances&quot;])</code></pre><p id="863720e4-6f49-82ab-8b0d-01e7cddd9ea2" class="" dir="auto">실제로는 보통 <code>Reservations -&gt; Instances</code> 구조를 따라가야 한다.</p><hr id="44e720e4-6f49-83fa-8d67-81ff9b348d3c" dir="auto"/><h2 id="6ab720e4-6f49-839e-994b-81e830c48670" class="" dir="auto">5. 이름 태그를 바로 <code>instance[&quot;Name&quot;]</code>으로 찾는 경우</h2><p id="46c720e4-6f49-8315-bef3-01b8ca1ee194" class="" dir="auto">이름 태그는 보통 <code>Tags</code> 리스트 안에 있으므로 별도 조회 로직이 필요하다.</p><hr id="518720e4-6f49-8359-b0d0-01adf2720539" dir="auto"/><h1 id="cef720e4-6f49-83ff-b066-8150fe2f7bc6" class="" dir="auto">4.14 정리</h1><ul id="4a4720e4-6f49-82b6-b0e9-01aafea9a9f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">boto3는 Python에서 AWS 서비스를 제어하는 공식 SDK이다.</li></ul><ul id="c0b720e4-6f49-8341-9c60-815154031947" class="bulleted-list" dir="auto"><li style="list-style-type:disc">콘솔 사용과 달리 boto3는 AWS 작업을 코드로 자동화할 수 있게 해준다.</li></ul><ul id="a1e720e4-6f49-8278-a8ee-81967a81cbc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이번 과정에서는 <code>boto3.Session(profile_name=&quot;lab&quot;)</code> 방식으로 프로필 기반 인증을 사용한다.</li></ul><ul id="4d9720e4-6f49-8278-95b8-01ed016cb611" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>client</code> 방식은 AWS API 응답 구조를 그대로 다루기 좋다.</li></ul><ul id="dc8720e4-6f49-8320-820d-81fe45b7f336" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS API 응답은 보통 딕셔너리와 리스트가 중첩된 구조이다.</li></ul><ul id="821720e4-6f49-83df-9324-011bbb7974e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">응답을 읽을 때는 바깥 키, 리스트 여부, 반복문 필요 여부를 순서대로 보면 이해하기 쉽다.</li></ul><ul id="208720e4-6f49-838a-b493-01ccb9d8cf14" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 응답에서는 <code>Reservations -&gt; Instances</code> 구조를 자주 보게 된다.</li></ul><ul id="391720e4-6f49-83f9-91bd-81b350afc139" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름 태그는 보통 <code>Tags</code> 리스트 안에서 찾아야 한다.</li></ul><ul id="efc720e4-6f49-83e2-b565-819d57b96ccd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성형 AI에게 boto3 코드 생성을 요청할 때는 인증 방식, 리전, 출력 형식, 예외 처리 요구를 함께 적는 것이 좋다.</li></ul><ul id="9f4720e4-6f49-8269-b584-0189a99c5054" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성된 코드는 반드시 인증, 리전, 응답 구조, 예외 처리 기준으로 검토해야 한다.</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

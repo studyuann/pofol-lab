@@ -1,0 +1,912 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습 1. Jenkins 기반 CI 파이프라인 구성</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="1c8720e4-6f49-8385-a91d-010486c31ae9" class="page sans"><header><h1 class="page-title" dir="auto">실습 1. Jenkins 기반 CI 파이프라인 구성</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="d90720e4-6f49-8224-863e-818bdc38c048" class="" dir="auto">실습 목표</h2><p id="9b5720e4-6f49-8281-a226-8121699f1b2a" class="" dir="auto">이 실습에서는 Jenkins를 이용해 GitHub 저장소의 코드 변경을 감지하고, 자동으로 소스코드를 가져와 Docker 이미지를 빌드한 뒤 컨테이너 레지스트리에 업로드하는 <strong>기본 CI 파이프라인</strong>을 구성한다.</p><p id="33a720e4-6f49-823a-b0df-818fb7abca71" class="" dir="auto">또한 Jenkins가 단순 빌드 도구가 아니라, <strong>코드 변경 → 자동 실행 → 이미지 생성 → 결과물 배포 준비</strong>까지 연결하는 자동화 서버라는 점을 실습으로 확인한다.</p><p id="abd720e4-6f49-82c7-8b26-015878f19d35" class="" dir="auto">이 실습을 끝내면 다음이 가능해진다.</p><ul id="42b720e4-6f49-829e-8adb-81d91f8a52c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 설치 및 초기 접속</li></ul><ul id="cdc720e4-6f49-83e4-87bb-0148d36b8d4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub 저장소 연동</li></ul><ul id="e32720e4-6f49-82cf-8891-816e550a988d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins Pipeline Job 생성</li></ul><ul id="7b8720e4-6f49-8384-a1b0-01eda631b943" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub Webhook 기반 자동 실행</li></ul><ul id="d5f720e4-6f49-83e2-ac3b-01e6fda4d872" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 이미지 빌드</li></ul><ul id="fc4720e4-6f49-820e-96a7-81e56b3dded1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 레지스트리 Push</li></ul><ul id="bad720e4-6f49-83e5-85aa-01ef8a2546be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전체 CI 흐름 검증</li></ul><hr id="232720e4-6f49-8313-9903-81b7ac93a45b" dir="auto"/><h2 id="878720e4-6f49-82b3-a39e-01d8cf3b0a75" class="" dir="auto">실습 개요</h2><p id="df7720e4-6f49-8370-8747-813948cc6276" class="" dir="auto">이번 실습은 앞에서 나눠서 보았던 Jenkins 관련 세부 실습을 <strong>하나의 흐름</strong>으로 묶어서 수행하는 통합 실습이다.</p><p id="310720e4-6f49-8291-84df-01487099a7a6" class="" dir="auto">실습 전체 흐름은 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="196720e4-6f49-8384-ac76-815429f1a585" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Jenkins 설치
+→ 초기 관리자 설정
+→ GitHub 저장소 준비
+→ Jenkins Pipeline Job 생성
+→ GitHub Webhook 등록
+→ 코드 push 시 자동 실행
+→ Docker 이미지 빌드
+→ 컨테이너 레지스트리 Push
+→ 결과 확인</code></pre><p id="ab6720e4-6f49-8399-a460-81d88aa5a272" class="" dir="auto">즉, 이번 실습은 Jenkins를 &quot;설치만 해보는 것&quot;이 아니라</p><p id="5cf720e4-6f49-82d8-b7c2-01145f6885e2" class="" dir="auto"><strong>실제로 CI 파이프라인 역할을 수행하게 만드는 것</strong>이 목적이다.</p><hr id="251720e4-6f49-82a5-b74d-815e8b01a242" dir="auto"/><h2 id="1fe720e4-6f49-82be-8f2d-810ac8b69c56" class="" dir="auto">전체 아키텍처</h2><pre id="8f9720e4-6f49-8265-abb4-01b28c4fe109" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">개발자
+   ↓ git push
+GitHub Repository
+   ↓ Webhook
+Jenkins Server
+   ├─ Pipeline Job 실행
+   ├─ Git checkout
+   ├─ Docker 이미지 빌드
+   └─ Registry Push
+        ↓
+Container Registry</code></pre><p id="34f720e4-6f49-8341-b9c0-01d9bac85435" class="" dir="auto">이 구조에서 각 구성요소 역할은 다음과 같다.</p><h3 id="144720e4-6f49-8223-a60b-0156a3640959" class="" dir="auto">GitHub</h3><p id="a00720e4-6f49-82aa-860d-81275850be0b" class="" dir="auto">소스코드 저장소 역할을 하며, 코드 변경 이벤트를 Jenkins에 전달한다.</p><h3 id="bdc720e4-6f49-82df-8e9a-01ff66211934" class="" dir="auto">Jenkins</h3><p id="cf8720e4-6f49-837d-886e-01a8bd15563c" class="" dir="auto">CI 파이프라인 실행 서버 역할을 하며, 코드를 받아 이미지 빌드와 업로드를 수행한다.</p><h3 id="0f6720e4-6f49-82bb-b208-81a2d5903078" class="" dir="auto">Container Registry</h3><p id="06f720e4-6f49-83d3-90b9-01990a88629b" class="" dir="auto">Jenkins가 생성한 이미지를 저장하는 중앙 저장소 역할을 한다.</p><hr id="ff4720e4-6f49-8374-ac85-01cc3bb9d37a" dir="auto"/><h2 id="640720e4-6f49-824c-9930-015a5947687c" class="" dir="auto">실습 환경</h2><h3 id="ab3720e4-6f49-8287-81d2-81a6e2215c19" class="" dir="auto">서버 환경</h3><ul id="f4d720e4-6f49-8214-9caa-01dcc84c725b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OS: Ubuntu 22.04 LTS</li></ul><ul id="b3e720e4-6f49-83aa-ae46-0114f5061ea3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU: 2 vCPU 이상</li></ul><ul id="ca1720e4-6f49-83fb-906b-81096b300b5f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Memory: 4GB 이상</li></ul><ul id="5b7720e4-6f49-8300-965a-81da71dd6894" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Disk: 20GB 이상</li></ul><h3 id="6e2720e4-6f49-828e-a7e2-0192e7f5d1e1" class="" dir="auto">소프트웨어</h3><ul id="a70720e4-6f49-8362-b978-0116975e8eef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins LTS</li></ul><ul id="6c6720e4-6f49-83a0-bfab-812119b6534f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OpenJDK 21</li></ul><ul id="4e4720e4-6f49-82c7-b3bf-8156ec282f02" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git</li></ul><ul id="e3f720e4-6f49-83c6-a7f3-81c7e186d20c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker</li></ul><ul id="b09720e4-6f49-8293-95fd-01fddbaa3efe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브라우저</li></ul><ul id="1ab720e4-6f49-839d-aaf4-0185d32937ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub 계정</li></ul><ul id="111720e4-6f49-821f-88ea-816cb37f3cbb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub 계정 또는 다른 컨테이너 레지스트리 계정</li></ul><h3 id="10c720e4-6f49-8338-a55f-81b653e17a8e" class="" dir="auto">네트워크 조건</h3><ul id="b19720e4-6f49-8388-9717-014d46d67b34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 서버에서 인터넷 접근 가능</li></ul><ul id="9d8720e4-6f49-8264-9cfd-814c5f4ebd97" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub에서 Jenkins로 접근 가능한 주소 보유</li></ul><ul id="720720e4-6f49-83cb-9bb9-81d834f5e55f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 8080 포트 외부 접근 가능</li></ul><ul id="a92720e4-6f49-82ac-a8b3-011f984466f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub 또는 사용하는 레지스트리 접근 가능</li></ul><hr id="f2c720e4-6f49-8221-b8ea-019e37fcdaf1" dir="auto"/><h2 id="43d720e4-6f49-83ce-8713-01d06adf7738" class="" dir="auto">사전 준비사항</h2><p id="c77720e4-6f49-824d-85fc-81cfa251c334" class="" dir="auto">실습 전에 다음을 준비한다.</p><ul id="567720e4-6f49-83e7-a008-013e6b651031" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub 저장소 1개</li></ul><ul id="d6e720e4-6f49-82ab-bf57-0141d25f87c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub 계정 1개</li></ul><ul id="49c720e4-6f49-8384-9bb7-81ffcea65c05" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 서버 1대</li></ul><ul id="70e720e4-6f49-8336-acf3-813977fb9ec8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공인 IP 또는 외부 접근 가능한 도메인</li></ul><ul id="36f720e4-6f49-829c-878d-81f691c3982b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ubuntu 서버 sudo 권한 계정</li></ul><hr id="e8d720e4-6f49-82aa-b749-81ce4d72ff61" dir="auto"/><h2 id="a40720e4-6f49-834c-ada8-81000079f60b" class="" dir="auto">실습용 GitHub 저장소 준비</h2><p id="792720e4-6f49-83f0-aa52-0124d9e6ad91" class="" dir="auto">이번 실습에서는 Docker 이미지 빌드를 위해 간단한 정적 웹 예제를 사용한다.</p><p id="9de720e4-6f49-826b-a91c-8142a8f1f451" class="" dir="auto">저장소 예시 이름:</p><pre id="8fd720e4-6f49-8243-ac25-81f54eeecdc6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">jenkins-ci-lab</code></pre><p id="815720e4-6f49-825e-a548-81ca9d978914" class="" dir="auto">저장소 구조는 다음처럼 구성한다.</p><pre id="f09720e4-6f49-824b-affc-01bf98fff9db" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">jenkins-ci-lab/
+ ├─ Dockerfile
+ ├─ index.html
+ └─ README.md</code></pre><h3 id="550720e4-6f49-82d3-9ee5-01b3681c7b72" class="" dir="auto"><code>index.html</code></h3><pre id="d53720e4-6f49-83f2-99b7-01ce50f18aea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+&lt;metacharset=&quot;UTF-8&quot;&gt;
+&lt;title&gt;Jenkins CI Lab&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;Jenkins CI Pipeline Success&lt;/h1&gt;
+&lt;p&gt;This page is served from an image built by Jenkins.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre><h3 id="94f720e4-6f49-8278-a682-01cea5fb58bb" class="" dir="auto"><code>Dockerfile</code></h3><pre id="d35720e4-6f49-83f9-b43f-81a9f745a721" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">FROM nginx:latest
+
+COPY index.html /usr/share/nginx/html/index.html</code></pre><h3 id="fcc720e4-6f49-8282-8fa3-81fa5b432d32" class="" dir="auto">Dockerfile 설명</h3><h3 id="bd8720e4-6f49-8247-84c6-8100aabb0af2" class="" dir="auto"><code>FROM nginx:latest</code></h3><p id="b59720e4-6f49-83c8-a96e-816f23df97c1" class="" dir="auto">Nginx 공식 이미지를 기반 이미지로 사용한다.</p><h3 id="943720e4-6f49-83f2-8954-81eb37a4158b" class="" dir="auto"><code>COPY index.html ...</code></h3><p id="fef720e4-6f49-82f9-81af-01ac83fe4d3c" class="" dir="auto">현재 저장소의 <code>index.html</code> 파일을 Nginx 웹 루트 위치에 복사한다.</p><p id="136720e4-6f49-825e-b544-019a72dab907" class="" dir="auto">즉, 이 이미지는 <strong>Nginx + 사용자 정의 정적 페이지</strong> 구조를 가진다.</p><hr id="094720e4-6f49-833d-aea7-815a150c0d30" dir="auto"/><h2 id="224720e4-6f49-82a3-8f61-813b00acbcda" class="" dir="auto">1단계. Jenkins 설치</h2><p id="458720e4-6f49-82d4-8193-019d183d13d7" class="" dir="auto">먼저 Ubuntu 서버에 접속한다.</p><h3 id="e67720e4-6f49-82b7-a684-01e42c1612b5" class="" dir="auto">1-1. 패키지 목록 갱신</h3><pre id="01b720e4-6f49-82e9-b7c1-01c153895618" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo apt update
+sudo apt upgrade -y</code></pre><h3 id="022720e4-6f49-83e0-b55e-012924c88b70" class="" dir="auto">설명</h3><ul id="8ec720e4-6f49-8374-8d1c-816cb08db812" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>apt update</code>는 설치 가능한 패키지 목록을 최신화한다.</li></ul><ul id="528720e4-6f49-82ff-b819-013630a1fad0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>apt upgrade -y</code>는 현재 설치된 패키지를 최신 버전으로 갱신한다.</li></ul><hr id="438720e4-6f49-838f-bf37-81271c53d2e2" dir="auto"/><h3 id="312720e4-6f49-834a-a7a2-81d8f40c2af3" class="" dir="auto">1-2. Java 설치</h3><pre id="65a720e4-6f49-832f-b298-816047ae1a4b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo apt install -y openjdk-21-jdk</code></pre><p id="b6f720e4-6f49-83d9-ad42-81a7ccf749a3" class="" dir="auto">설치 확인:</p><pre id="0ff720e4-6f49-839a-97a5-018054ac8f34" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">java-version</code></pre><h3 id="a9f720e4-6f49-82af-975c-818a73c7aa8f" class="" dir="auto">설명</h3><p id="d1a720e4-6f49-8212-abd3-81851b2597ac" class="" dir="auto">Jenkins는 Java 기반 애플리케이션이다.</p><p id="813720e4-6f49-83ec-a2cf-81dcf70b4a39" class="" dir="auto">즉, Java 런타임이 없으면 Jenkins 자체가 동작할 수 없다.</p><hr id="87a720e4-6f49-8390-af97-01f2e8f1314a" dir="auto"/><h3 id="86f720e4-6f49-820f-bb53-0152045ca1d3" class="" dir="auto">1-3. Jenkins 저장소 키 등록</h3><pre id="dd4720e4-6f49-8221-844c-01e9325f65f3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo wget -O /etc/apt/keyrings/jenkins-keyring.asc \
+  https://pkg.jenkins.io/debian-stable/jenkins.io-2026.key</code></pre><h3 id="686720e4-6f49-8261-ad2e-81b0404ca697" class="" dir="auto">설명</h3><p id="db9720e4-6f49-82cd-a58d-8130e860e20a" class="" dir="auto">Jenkins 공식 저장소의 서명 키를 시스템에 등록한다.</p><p id="045720e4-6f49-82bc-9dcb-817d7c2e3f78" class="" dir="auto">이 키는 이후 Jenkins 패키지를 신뢰 가능한 출처에서 받았는지 검증하는 데 사용된다.</p><hr id="7c9720e4-6f49-83de-a033-01e6df1ba304" dir="auto"/><h3 id="f2c720e4-6f49-82d1-be2a-819d42f6258a" class="" dir="auto">1-4. Jenkins 저장소 등록</h3><pre id="37e720e4-6f49-82cb-a9cd-81a3756f436c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">echo &quot;deb [signed-by=/etc/apt/keyrings/jenkins-keyring.asc]&quot; \
+  https://pkg.jenkins.io/debian-stable binary/ | sudo tee \
+  /etc/apt/sources.list.d/jenkins.list &gt; /dev/null</code></pre><p id="9a3720e4-6f49-8397-aa84-81d043cc58d8" class="" dir="auto">다시 패키지 목록을 갱신한다.</p><pre id="1b5720e4-6f49-83ec-9757-81c626bd523d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo apt update</code></pre><hr id="c9c720e4-6f49-820a-b1c1-81e1a241d95a" dir="auto"/><h3 id="8c8720e4-6f49-834e-96ae-810a1b26d581" class="" dir="auto">1-5. Jenkins 설치</h3><pre id="4cb720e4-6f49-831e-835c-81674f851214" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo apt install -y jenkins</code></pre><p id="83c720e4-6f49-83ad-8283-818f9264764c" class="" dir="auto">설치 후 서비스 상태 확인:</p><pre id="1ea720e4-6f49-827f-9efb-0199d03bbcb4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl status jenkins</code></pre><h3 id="e26720e4-6f49-8213-b9e3-81556afbe8b3" class="" dir="auto">정상 확인 포인트</h3><ul id="847720e4-6f49-8362-9770-0144430d09a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Active: active (running)</code> 이 보이면 정상 실행 상태다.</li></ul><hr id="74f720e4-6f49-83c4-a219-01e9c371cf56" dir="auto"/><h3 id="519720e4-6f49-82eb-9b97-811d3f437532" class="" dir="auto">1-6. 방화벽 및 포트 확인 </h3><pre id="b0f720e4-6f49-826b-b818-01aee37fe9ae" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo ufw status
+sudo ufw allow 8080/tcp</code></pre><ul id="031720e4-6f49-8219-8054-0117a4957b08" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon Linux 2023에 설치</li></ul><pre id="c68720e4-6f49-8364-a286-01ef61211ceb" class="code code-wrap" data-notion-code-syntax="groovy"><code class="language-groovy" style="white-space:pre-wrap;word-break:break-all">sudo wget -O /etc/yum.repos.d/jenkins.repo \
+    https://pkg.jenkins.io/rpm-stable/jenkins.repo
+sudo dnf upgrade
+# Add required dependencies for the jenkins package
+sudo dnf install java-21-amazon-corretto-devel -y
+sudo dnf install jenkins
+sudo systemctl daemon-reload</code></pre><h3 id="623720e4-6f49-83fc-a1b6-818dc994f804" class="" dir="auto">설명</h3><p id="496720e4-6f49-834a-89e3-01924dad9375" class="" dir="auto">Jenkins 기본 웹 포트는 8080이다.</p><p id="0b1720e4-6f49-835d-89a3-01ca124ad42c" class="" dir="auto">외부 브라우저에서 접속하려면 서버 방화벽과 클라우드 보안그룹 모두 8080 허용이 필요하다.</p><hr id="170720e4-6f49-8339-b7f4-01b874e04583" dir="auto"/><h3 id="d78720e4-6f49-83da-98cc-81c46e0ada46" class="" dir="auto">1-7. 초기 관리자 비밀번호 확인</h3><pre id="b2a720e4-6f49-8216-8ba9-81a6aa859f2d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo cat /var/lib/jenkins/secrets/initialAdminPassword</code></pre><p id="9f6720e4-6f49-828b-93ff-81d3ad0b5cbe" class="" dir="auto">이 값을 복사해둔다.</p><hr id="5d0720e4-6f49-8218-a739-012ff59dd192" dir="auto"/><h3 id="9b3720e4-6f49-8269-a17a-81e7f093ff84" class="" dir="auto">1-8. 브라우저 접속 및 초기 설정</h3><p id="613720e4-6f49-8319-9bfe-8130609fd35c" class="" dir="auto">브라우저에서 접속:</p><pre id="70c720e4-6f49-83e1-813c-0161506f3130" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://서버IP:8080</code></pre><p id="85a720e4-6f49-8367-8022-81f567be0469" class="" dir="auto">또는</p><pre id="0e1720e4-6f49-834d-b25e-0172e9a2cdb5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://도메인:8080</code></pre><p id="bc6720e4-6f49-8392-b9c6-81bdf12033da" class="" dir="auto">초기 설정 절차:</p><ul id="e4f720e4-6f49-8241-b852-816596a0c31e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Unlock Jenkins 화면에서 초기 비밀번호 입력</li></ul><ul id="a89720e4-6f49-83e1-98a0-017385d87e09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Install suggested plugins 선택</li></ul><ul id="5a3720e4-6f49-829a-87a4-81b45ea1b3fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리자 계정 생성</li></ul><ul id="842720e4-6f49-834b-8323-818e1b18566f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins URL 확인</li></ul><ul id="9d6720e4-6f49-82da-951a-01e021eb41e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대시보드 진입</li></ul><hr id="a44720e4-6f49-8328-90da-8129e3920bd7" dir="auto"/><h2 id="0f5720e4-6f49-83e8-ba4f-015d3ea15679" class="" dir="auto">2단계. Git 및 Docker 설치</h2><p id="7ba720e4-6f49-82d0-a9c7-814c876d6f3d" class="" dir="auto">Jenkins 서버에서 Git과 Docker가 필요하다.</p><h3 id="f54720e4-6f49-82b3-af9a-816ddbe9e965" class="" dir="auto">2-1. Git 설치</h3><pre id="beb720e4-6f49-831b-a3b0-81a49064f9f4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo apt install -y git | sudo dnf install -y git
+git --version</code></pre><h3 id="650720e4-6f49-82e5-a792-0140b7db9d89" class="" dir="auto">설명</h3><p id="f7c720e4-6f49-8323-8c71-81302314e568" class="" dir="auto">Jenkins가 GitHub 저장소를 checkout 하려면 Git CLI가 필요하다.</p><hr id="414720e4-6f49-8247-9a9a-81e777956cc3" dir="auto"/><h3 id="88b720e4-6f49-8367-9a80-81b449cd570f" class="" dir="auto">2-2. Docker 저장소 추가</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="edb720e4-6f49-821e-bcf8-018247458ab1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># Add Docker&#x27;s official GPG key:
+sudo apt update
+sudo apt install ca-certificates curl
+sudo install -m 0755 -d /etc/apt/keyrings
+sudo curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+sudo chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+sudo tee /etc/apt/sources.list.d/docker.sources &lt;&lt;EOF
+Types: deb
+URIs: https://download.docker.com/linux/ubuntu
+Suites: $(. /etc/os-release &amp;&amp; echo &quot;${UBUNTU_CODENAME:-$VERSION_CODENAME}&quot;)
+Components: stable
+Architectures: $(dpkg --print-architecture)
+Signed-By: /etc/apt/keyrings/docker.asc
+EOF
+
+sudo apt update</code></pre><h3 id="103720e4-6f49-8359-a977-01f0ef3721f9" class="" dir="auto">2-3. Docker 설치</h3><pre id="2a0720e4-6f49-83af-96d4-819541b3900c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">sudo apt install -y docker-ce docker-ce-cli containerd.io \ 
+docker-buildx-plugin docker-compose-plugin</code></pre><pre id="aa9720e4-6f49-82a2-b181-012ad4cef49c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">sudo dnf install -y docker</code></pre><p id="0cc720e4-6f49-826a-b34c-01648bb4682c" class="" dir="auto">
+</p><p id="5eb720e4-6f49-8257-a2d6-812118e0c5a6" class="" dir="auto">서비스 상태 확인:</p><pre id="127720e4-6f49-82a7-96b0-01be230981f5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl status docker</code></pre><p id="801720e4-6f49-8336-b570-0122ed193147" class="" dir="auto">버전 확인:</p><pre id="daa720e4-6f49-8308-ba78-01b974e96b23" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo docker version</code></pre><hr id="d5b720e4-6f49-82c0-a702-81304aad373f" dir="auto"/><h2 id="4b6720e4-6f49-830c-939e-018476e77a73" class="" dir="auto">3단계. Jenkins가 Docker 명령을 실행할 수 있도록 권한 설정</h2><p id="f04720e4-6f49-837d-9d66-0145d96dc8b7" class="" dir="auto">Jenkins Job 안에서 Docker build를 하려면 <code>jenkins</code> 사용자에게 Docker 접근 권한이 필요하다.</p><h3 id="35d720e4-6f49-8387-94a1-01fc4bd94a76" class="" dir="auto">3-1. jenkins 사용자를 docker 그룹에 추가</h3><pre id="b37720e4-6f49-835e-a93e-8168c17727a9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo usermod -aG docker jenkins</code></pre><h3 id="cc5720e4-6f49-8277-bb58-81084cfa9a7f" class="" dir="auto">설명</h3><ul id="4b0720e4-6f49-82e7-b912-01a852b93fbb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>usermod -aG docker jenkins</code> 는 <code>jenkins</code> 사용자를 docker 그룹에 추가한다.</li></ul><ul id="204720e4-6f49-8313-a41a-010f72cb67e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 소켓 접근 권한을 위해 필요한 설정이다.</li></ul><hr id="f13720e4-6f49-82c6-b3a9-81554b19fd51" dir="auto"/><h3 id="f73720e4-6f49-829b-ba88-816e4f498434" class="" dir="auto">3-2. Jenkins 재시작</h3><pre id="7d8720e4-6f49-8260-a218-01f154067487" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl restart jenkins</code></pre><p id="11f720e4-6f49-83b3-8905-01c4abe6f87a" class="" dir="auto">필요 시 Docker도 재시작한다.</p><pre id="971720e4-6f49-8250-abb8-016ae8ad868b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl restart docker</code></pre><p id="f95720e4-6f49-8260-9228-8149a6fc2208" class="" dir="auto">그룹 반영 확인:</p><pre id="7a8720e4-6f49-83cf-9ff1-01de31a15347" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">id jenkins</code></pre><h3 id="ba6720e4-6f49-83c0-8141-8124fec2df87" class="" dir="auto">확인 포인트</h3><p id="7d7720e4-6f49-83d0-b92a-01e0f3784ec7" class="" dir="auto">출력 결과에 <code>docker</code> 그룹이 포함되어 있어야 한다.</p><hr id="fae720e4-6f49-8315-87c3-0165609f3f88" dir="auto"/><h2 id="149720e4-6f49-82ca-b8ab-01ce3a259eb3" class="" dir="auto">4단계. Docker Hub 자격증명 준비</h2><h3 id="c4a720e4-6f49-8355-b880-8150581a0bfd" class="" dir="auto">4-1. Docker Hub 계정 확인</h3><p id="851720e4-6f49-8235-9890-817d18181fd1" class="" dir="auto">예시 사용자명:</p><pre id="613720e4-6f49-820e-9133-81550fa75894" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">mydockerid</code></pre><h3 id="e8b720e4-6f49-8216-8338-81ec0b1dce6f" class="" dir="auto">4-2. Access Token 준비</h3><p id="e75720e4-6f49-825d-bae8-0118dfa0d02a" class="" dir="auto">실습용 비밀번호 대신 Docker Hub Access Token 사용을 권장한다.</p><h3 id="ab6720e4-6f49-83d2-a172-814cebf8369e" class="" dir="auto">이유</h3><ul id="cd9720e4-6f49-8365-9dde-019b606497f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비밀번호 직접 사용보다 안전함</li></ul><ul id="d7f720e4-6f49-83e8-90f3-812f553f415f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 도구에 적합함</li></ul><ul id="5c0720e4-6f49-820d-9ba6-81cbf6c4348f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">추후 폐기와 교체가 쉬움</li></ul><hr id="f19720e4-6f49-82c0-a467-81e384cca2ff" dir="auto"/><h2 id="3f5720e4-6f49-82b1-b036-015942a72dc6" class="" dir="auto">5단계. Jenkins Credentials 등록</h2><p id="5ce720e4-6f49-82c6-a480-814d8c49aae1" class="" dir="auto">Jenkins에 레지스트리 인증정보를 안전하게 저장한다.</p><h3 id="efa720e4-6f49-82e5-a51b-81725d224823" class="" dir="auto">이동 경로</h3><ul id="0e0720e4-6f49-82b5-a292-013e1d45f66e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Manage Jenkins</strong></li></ul><ul id="347720e4-6f49-834c-af67-01df77416f67" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Credentials</strong></li></ul><p id="58e720e4-6f49-83f1-85d2-8153c8ae5815" class="" dir="auto">환경에 따라 <strong>System → Global credentials</strong> 구조가 보일 수 있다.</p><h3 id="3ff720e4-6f49-8350-b118-011a405ad9c7" class="" dir="auto">5-1. Add Credentials 클릭</h3><p id="a6f720e4-6f49-8248-9f38-018c55bfa4bd" class="" dir="auto">다음 값 입력:</p><ul id="61f720e4-6f49-8249-8b24-814dd5b51d85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kind: <code>Username with password</code></li></ul><ul id="ef2720e4-6f49-8332-9100-0190978aa3a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Username: Docker Hub 사용자명</li></ul><ul id="bea720e4-6f49-8386-942b-01d09492318b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Password: Docker Hub 토큰</li></ul><ul id="f57720e4-6f49-8253-9099-810f3423871b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ID: <code>dockerhub-creds</code></li></ul><ul id="ae5720e4-6f49-83a8-9230-01c0a0f22dcf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Description: <code>Docker Hub registry credentials</code></li></ul><p id="61d720e4-6f49-825b-a583-01628d2bccd8" class="" dir="auto">저장한다.</p><h3 id="526720e4-6f49-83aa-b272-81830b254018" class="" dir="auto">설명</h3><p id="b96720e4-6f49-8273-8df9-8109c7eedf0f" class="" dir="auto">이 Credential은 이후 Pipeline에서 참조한다.</p><p id="bdf720e4-6f49-82c4-b1f5-018710ef7277" class="" dir="auto">절대로 Jenkinsfile이나 Shell 스크립트 안에 비밀번호를 직접 적지 않는다.</p><hr id="b36720e4-6f49-8271-9074-01aed51efafe" dir="auto"/><h2 id="e7f720e4-6f49-837c-b0b4-813fac038c92" class="" dir="auto">6단계. GitHub 저장소를 Jenkins와 연동할 Pipeline Job 생성</h2><h3 id="762720e4-6f49-83fb-8452-015c7557ba0f" class="" dir="auto">6-1. New Item 생성</h3><ul id="215720e4-6f49-8233-af2c-010948b52690" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Item name: <code>jenkins-ci-pipeline</code></li></ul><ul id="3c5720e4-6f49-8298-a264-8153c2b79910" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Type: <strong>Pipeline</strong></li></ul><ul id="1bf720e4-6f49-8234-8918-01afb3aa8aa8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OK 클릭</li></ul><hr id="31e720e4-6f49-8259-978c-015dcc0aad38" dir="auto"/><h3 id="065720e4-6f49-821f-b9d0-015fbfd7cfc9" class="" dir="auto">6-2. Pipeline Job이 필요한 이유</h3><p id="c96720e4-6f49-8296-9554-815d48608686" class="" dir="auto">이번 실습 전체 CI 흐름</p><ul id="a99720e4-6f49-825a-8195-0148bd2c1366" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git checkout</li></ul><ul id="88b720e4-6f49-82ed-8472-01f99a19edab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker build</li></ul><ul id="d80720e4-6f49-8256-a698-8154af8c9c5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 지정</li></ul><ul id="16d720e4-6f49-8347-99b9-814c4501b9d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레지스트리 로그인</li></ul><ul id="225720e4-6f49-8333-90f5-81bc0a2311c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 Push</li></ul><p id="0eb720e4-6f49-82b9-b99e-815413ce1796" class="" dir="auto">이런 흐름은 Freestyle보다 Pipeline으로 관리하는 편이 훨씬 구조적이다.</p><p id="bd7720e4-6f49-821b-aaed-01fa90e7882f" class="" dir="auto">즉, Stage 단위로 나눠서 실행 흐름을 보기 쉽게 만들 수 있다.</p><hr id="6be720e4-6f49-82f6-805e-81322c89ef3d" dir="auto"/><h2 id="e6d720e4-6f49-839e-a2ef-01be530392dd" class="" dir="auto">7단계. Pipeline Script 작성</h2><p id="532720e4-6f49-824d-bcf5-01385dc7f788" class="" dir="auto">이번 실습에서는 Jenkins UI 안에 직접 Script를 넣는 방식으로 시작한다.</p><p id="4ea720e4-6f49-822f-bb3d-0173f941cbf8" class="" dir="auto">실무에서는 Git 저장소 안 <code>Jenkinsfile</code>로 분리하는 것이 일반적이지만, 지금은 흐름 이해가 우선이다.</p><p id="1af720e4-6f49-8244-bae6-8182a6199935" class="" dir="auto">Pipeline 섹션에서 <code>Pipeline script</code> 선택 후 아래 코드를 입력한다.</p><pre id="ad0720e4-6f49-82f1-84ea-0174ce01f8bf" class="code code-wrap" data-notion-code-syntax="groovy"><code class="language-groovy" style="white-space:pre-wrap;word-break:break-all">pipeline {
+    agent any
+
+    environment {
+        // Docker Hub 계정 ID와 Credential ID를 환경변수로 빼두면 관리가 편합니다.
+        DOCKERHUB_USER = &#x27;사용자명&#x27; // 실제 본인의 ID로 수정하세요
+        DOCKERHUB_CREDS = &#x27;dockerhub-creds&#x27;
+        
+        IMAGE_NAME = &#x27;sample-docker-app&#x27;
+        IMAGE_TAG  = &#x27;latest&#x27;
+        
+        // 최종 이미지 전체 경로 (변수 조합)
+        REGISTRY_IMAGE = &quot;${DOCKERHUB_USER}/${IMAGE_NAME}:${IMAGE_TAG}&quot;
+    }
+
+    stages {
+        stage(&#x27;Checkout&#x27;) {
+            steps {
+                git branch: &#x27;main&#x27;, url: &#x27;https://github.com/사용자명/jenkins-ci-lab.git&#x27;
+            }
+        }
+
+        stage(&#x27;Build &amp; Tag Image&#x27;) {
+            steps {
+                script {
+                    // docker DSL을 사용하여 객체지향적으로 빌드
+                    def myApp = docker.build(&quot;${REGISTRY_IMAGE}&quot;)
+                    
+                    // (선택 사항) 빌드된 이미지의 ID 등을 확인하고 싶을 때
+                    sh &quot;docker images | grep ${IMAGE_NAME}&quot;
+                }
+            }
+        }
+
+        stage(&#x27;Push Image&#x27;) {
+            steps {
+                script {                  
+                    // 로그인-푸시-로그아웃을 한 번에 처리합니다.
+                    docker.withRegistry(&#x27;&#x27;, DOCKERHUB_CREDS) {
+                        sh &quot;docker push ${REGISTRY_IMAGE}&quot;
+                        
+                        // 만약 빌드 번호를 태그로 추가하고 싶다면?
+                        // sh &quot;docker tag ${REGISTRY_IMAGE} ${DOCKERHUB_USER}/${IMAGE_NAME}:${env.BUILD_NUMBER}&quot;
+                        // sh &quot;docker push ${DOCKERHUB_USER}/${IMAGE_NAME}:${env.BUILD_NUMBER}&quot;
+                    }
+                }
+            }
+        }
+
+        stage(&#x27;Verify&#x27;) {
+            steps {
+                echo &quot;Successfully pushed to: ${REGISTRY_IMAGE}&quot;
+                // 빌드 후에 로컬 이미지를 정리하고 싶다면 아래 주석 해제
+                // sh &quot;docker rmi ${REGISTRY_IMAGE}&quot;
+            }
+        }
+    }
+
+    post {
+        success {
+            echo &quot;✅ Jenkins CI Pipeline 실행 성공: ${REGISTRY_IMAGE}&quot;
+        }
+        failure {
+            echo &#x27;❌ Jenkins CI Pipeline 실행 실패&#x27;
+        }
+        always {
+            echo &#x27;🏁 Pipeline 종료&#x27;
+        }
+    }
+}</code></pre><hr id="7eb720e4-6f49-8233-b5b4-01e6d3fbbf7c" dir="auto"/><p id="a58720e4-6f49-8230-922b-8143920a7bc5" class="" dir="auto">
+</p><h2 id="d53720e4-6f49-82db-a8ae-01d4aa0eeeac" class="" dir="auto">8단계. Pipeline 코드 상세 설명</h2><p id="997720e4-6f49-822c-ba6f-810f749838ee" class="" dir="auto">이 코드는 길어 보이지만, 흐름은 매우 단순하다.</p><hr id="1db720e4-6f49-8255-b23d-012588144385" dir="auto"/><h3 id="abe720e4-6f49-8311-ab01-8111a3ae6304" class="" dir="auto">8-1. 환경 변수 정의 및 사전 설정 (Environment)</h3><p id="af6720e4-6f49-8376-914c-81a87aa878fd" class="" dir="auto">본격적인 작업에 앞서, 파이프라인 전반에서 반복적으로 사용할 값들을 변수로 선언한다.</p><ul id="a65720e4-6f49-8380-8387-01a2af37e6a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code><strong>DOCKERHUB_CREDS</strong></code>: Jenkins의 &#x27;Credentials&#x27; 메뉴에 저장된 도커 허브 인증 정보의 ID를 호출한다. 이는 코드에 비밀번호를 노출하지 않으면서 안전하게 인증을 처리하기 위함이다.</li></ul><ul id="d9f720e4-6f49-8241-b585-817117aadae8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code><strong>REGISTRY_IMAGE</strong></code>: 사용자 ID와 이미지 이름, 태그를 하나의 문자열로 결합한다. 이렇게 변수화해 두면 나중에 이미지 이름이나 태그(버전)가 바뀌더라도 상단의 환경 변수만 수정하면 되므로 유지보수가 매우 편리해진다.</li></ul><h3 id="651720e4-6f49-8339-9b9e-0120fe34fcc4" class="" dir="auto">8-2. 소스 코드 가져오기 (Checkout)</h3><p id="1f9720e4-6f49-82cb-9583-01906438033d" class="" dir="auto">파이프라인의 첫 번째 단계로, 대상이 되는 소스 코드를 Jenkins 에이전트 환경으로 복사해온다.</p><ul id="536720e4-6f49-8269-a247-01990a28c737" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>git</code> 명령을 사용하여 GitHub 리포지토리의 <code>main</code> 브랜치로부터 최신 코드를 내려받는다. 이 과정이 완료되어야 이후 단계에서 <code>Dockerfile</code>을 찾고 이미지를 빌드하는 작업이 가능하다.</li></ul><h3 id="a26720e4-6f49-8214-965d-019ae6bc182c" class="" dir="auto">8-3. 도커 이미지 빌드 및 태깅 (Build &amp; Tag Image)</h3><p id="53b720e4-6f49-83ef-be72-81dc92a19427" class="" dir="auto">내려받은 소스 코드에 포함된 <code>Dockerfile</code>을 읽어 실행 가능한 컨테이너 이미지를 생성한다.</p><ul id="284720e4-6f49-833f-bbe7-81b8ade5e93e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code><strong>docker.build</strong></code>: Jenkins의 Docker 전용 플러그인 기능을 사용하여 빌드를 수행한다. 터미널에서 <code>docker build -t ...</code> 명령어를 직접 입력하는 것과 동일한 효과를 내며, 앞서 정의한 <code>REGISTRY_IMAGE</code> 명칭으로 이미지가 생성된다.</li></ul><ul id="781720e4-6f49-8329-a18e-013165ecc495" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 직후 <code>sh</code> 명령을 통해 로컬에 이미지가 정상적으로 생성되었는지 리스트를 확인하는 과정을 거친다.</li></ul><h3 id="6e2720e4-6f49-839c-a17d-0155dad16989" class="" dir="auto">8-4. 도커 레지스트리 전송 (Push Image)</h3><p id="37c720e4-6f49-8278-9e32-81349c5c68b5" class="" dir="auto">로컬에서 빌드된 이미지를 전 세계 어디서든 꺼내 쓸 수 있도록 도커 허브(Registry)로 전송한다.</p><ul id="b49720e4-6f49-8241-b12b-012d414813e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code><strong>docker.withRegistry</strong></code>: 이 구문은 해당 블록 안에서만 유효한 임시 인증 세션을 생성한다. 안전하게 로그인을 수행하고, 전송이 끝나면 자동으로 로그아웃까지 처리하므로 보안상 매우 강력한 방식이다.</li></ul><ul id="d1e720e4-6f49-82cb-9615-01f1eccee6c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전송 시 이미지 태그를 <code>latest</code> 외에 <code>env.BUILD_NUMBER</code>(Jenkins 빌드 번호)로 추가 생성하여 푸시하면, 문제 발생 시 특정 시점으로 롤백하기 쉬운 관리 체계가 구축된다.</li></ul><h3 id="c39720e4-6f49-838c-a6ab-81d9250d9dfd" class="" dir="auto">8-5. 검증 및 사후 처리 (Verify &amp; Post)</h3><p id="eb6720e4-6f49-8235-94c2-8172013c1536" class="" dir="auto">모든 작업이 끝난 후의 결과물 확인과 알림 과정을 수행한다.</p><ul id="59a720e4-6f49-8315-b930-811a96bcb724" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Verify</strong>: 푸시된 최종 이미지 경로를 콘솔에 출력하여 작업이 성공했음을 명시적으로 알린다. 필요에 따라 빌드에 사용된 로컬 이미지를 삭제하여 서버의 디스크 용량을 관리하는 작업을 추가하기도 한다.</li></ul><ul id="75a720e4-6f49-83dc-b285-018b2aa2b2f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Post Actions</strong>: 파이프라인 전체의 성공과 실패 여부를 감지한다. <code>success</code> 시에는 축하 메시지를, <code>failure</code> 시에는 에러 로그를 출력하며, 실무에서는 이 단계에서 담당자에게 슬랙(Slack) 메시지를 보내 실시간으로 장애를 인지할 수 있도록 구성한다.</li></ul><hr id="f03720e4-6f49-8308-9ba1-8185c91d4b48" dir="auto"/><h2 id="fdc720e4-6f49-8235-9c34-019977f6dffa" class="" dir="auto">9단계. 수동 실행으로 1차 검증</h2><p id="25f720e4-6f49-830f-9308-81ffb732ffc1" class="" dir="auto">먼저 Webhook 없이 수동으로 한 번 실행해본다.</p><h3 id="4f6720e4-6f49-8215-b51a-01c45a849c71" class="" dir="auto">실행 방법</h3><ul id="5b6720e4-6f49-82d2-9354-014bed102d7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Job 화면</li></ul><ul id="7d5720e4-6f49-83a6-8499-01e4421e6b1a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Build Now</strong> 클릭</li></ul><h3 id="e56720e4-6f49-82ea-9f78-8192fd8d40df" class="" dir="auto">기대 결과</h3><p id="a98720e4-6f49-8288-a9aa-8152f1e2aef1" class="" dir="auto">Stage가 순서대로 실행된다.</p><pre id="339720e4-6f49-83af-af4e-01804099e0e3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Checkout
+→ Prepare
+→ Build Image
+→ Push Image
+→ Verify</code></pre><hr id="673720e4-6f49-8344-84fc-0129f67b9f73" dir="auto"/><h2 id="5a6720e4-6f49-8203-9367-014d433c9cf0" class="" dir="auto">10단계. Console Output 확인</h2><p id="335720e4-6f49-8353-84ed-81bc1da6a827" class="" dir="auto">성공 시 로그에서 다음을 확인한다.</p><h3 id="496720e4-6f49-8229-bd11-812392175a40" class="" dir="auto">10-1. checkout 성공</h3><ul id="ba5720e4-6f49-824a-b9d7-01230957b584" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git clone/fetch 로그</li></ul><ul id="a1f720e4-6f49-82d0-92d9-81b488a64ebe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Workspace 경로 확인</li></ul><h3 id="9e6720e4-6f49-8390-ba62-81ba9cc3de3c" class="" dir="auto">10-2. docker version 정상 출력</h3><ul id="0c8720e4-6f49-82a6-84d9-01971dec0060" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Client/Server 정보 보임</li></ul><h3 id="640720e4-6f49-8307-997e-81a20d790352" class="" dir="auto">10-3. docker build 성공</h3><ul id="556720e4-6f49-8332-9127-819348f5ddc6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>load build definition from Dockerfile</code></li></ul><ul id="d55720e4-6f49-83ac-89df-0153ec6adcd3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>COPY index.html ...</code></li></ul><ul id="944720e4-6f49-839c-9bea-01f7cd388c09" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>naming to ... sample-docker-app:latest</code></li></ul><h3 id="4cd720e4-6f49-8327-b2e3-01d3c7737c41" class="" dir="auto">10-4. docker login 성공</h3><ul id="64a720e4-6f49-821b-bd7c-012a455325b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Login Succeeded</code></li></ul><h3 id="615720e4-6f49-83c5-adcc-810f3f8b7ae4" class="" dir="auto">10-5. docker push 성공</h3><ul id="205720e4-6f49-82a1-90f1-01649fc255eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>The push refers to repository ...</code></li></ul><ul id="663720e4-6f49-83ef-a8de-01b5993158fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>digest: sha256: ...</code></li></ul><h3 id="f47720e4-6f49-83e1-8708-014b7a67c6b6" class="" dir="auto">10-6. Finished: SUCCESS</h3><p id="0a5720e4-6f49-820e-8305-018fd8a28611" class="" dir="auto">최종 성공 상태 확인</p><hr id="a0d720e4-6f49-8365-ac76-01d50e5c775b" dir="auto"/><h2 id="e3e720e4-6f49-83e1-969b-816b0d18ba4c" class="" dir="auto">11단계. Docker Hub 업로드 결과 확인</h2><p id="107720e4-6f49-8262-98c0-01320894281d" class="" dir="auto">Docker Hub 웹사이트에서 다음을 확인한다.</p><ul id="553720e4-6f49-83e9-b3a0-81aa5e3dc473" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Repository 생성 여부</li></ul><ul id="c81720e4-6f49-83b8-968a-01b43e6dba0d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>sample-docker-app</code> 저장 여부</li></ul><ul id="d39720e4-6f49-82e9-ac1c-8151c2a74674" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>latest</code> 태그 존재 여부</li></ul><ul id="4be720e4-6f49-83f6-9276-8199a1bfd3ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최근 push 시간</li></ul><p id="37f720e4-6f49-83fd-9b56-816250b8bc1d" class="" dir="auto">이 단계는 매우 중요하다.</p><p id="1c8720e4-6f49-83fe-ad32-81bf9e6675a4" class="" dir="auto">Jenkins 콘솔 로그만으로 끝내지 않고, <strong>실제 레지스트리에 결과물이 올라갔는지 외부 시점에서 확인</strong>해야 한다.</p><hr id="d8b720e4-6f49-828a-81bf-01f4a66be7b3" dir="auto"/><h2 id="d05720e4-6f49-82b4-bf0a-01dbc5ae7ef3" class="" dir="auto">12단계. GitHub Webhook 연동</h2><p id="747720e4-6f49-8302-b59d-016cb183b55b" class="" dir="auto">이제 코드 push 시 Jenkins가 자동 실행되도록 연결한다.</p><hr id="26a720e4-6f49-8365-9599-018acf01c2cd" dir="auto"/><h3 id="fc8720e4-6f49-826c-b830-8154c39327d5" class="" dir="auto">12-1. Jenkins Job Trigger 설정</h3><p id="f04720e4-6f49-8214-9b7f-01c187926a4c" class="" dir="auto">Job 설정으로 들어간다.</p><p id="a08720e4-6f49-828d-acae-8129cce76dd8" class="" dir="auto"><strong>Build Triggers</strong> 섹션에서 아래 항목 체크:</p><pre id="330720e4-6f49-83a5-8410-81c71c2c1993" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">GitHub hook trigger for GITScm polling</code></pre><p id="63a720e4-6f49-83e9-9be8-0135c613c9ba" class="" dir="auto">저장한다.</p><hr id="7fb720e4-6f49-82fb-8933-01fc463af6ea" dir="auto"/><h3 id="60b720e4-6f49-8388-ab0e-81fb125d43a2" class="" dir="auto">12-2. GitHub Webhook 등록</h3><p id="63e720e4-6f49-828a-bd78-01727cbfdac2" class="" dir="auto">GitHub 저장소로 이동:</p><ul id="4fa720e4-6f49-83c3-b587-811e06b9b545" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Settings</strong></li></ul><ul id="668720e4-6f49-832e-9355-817759b3af69" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Webhooks</strong></li></ul><ul id="f08720e4-6f49-8330-af5a-81c9df4e8df3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Add webhook</strong></li></ul><p id="d42720e4-6f49-826b-87ef-01c9eb384051" class="" dir="auto">입력값:</p><h3 id="c1c720e4-6f49-82c1-b591-81e1760306b1" class="" dir="auto">Payload URL</h3><pre id="e30720e4-6f49-82d8-a00d-810a73ea5877" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://JENKINS주소/github-webhook/</code></pre><p id="ecb720e4-6f49-831d-99c8-812220bb5ae9" class="" dir="auto">예:</p><pre id="a0b720e4-6f49-8288-ba81-81e4aff8d8ba" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://203.0.113.10:8080/github-webhook/</code></pre><h3 id="c6b720e4-6f49-8336-b282-8181633295e7" class="" dir="auto">Content type</h3><pre id="40f720e4-6f49-8371-9737-819e76554a60" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">application/json</code></pre><h3 id="8cd720e4-6f49-823d-a9c8-01134d57bb59" class="" dir="auto">Events</h3><pre id="5a9720e4-6f49-82aa-ab9c-01391ebe1ff6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Just the push event</code></pre><h3 id="907720e4-6f49-826d-8949-01758f1e18d5" class="" dir="auto">Active</h3><p id="a90720e4-6f49-8384-9600-01f8f503e5ff" class="" dir="auto">체크 상태 유지</p><p id="7c1720e4-6f49-8231-a377-813414e455d1" class="" dir="auto">저장한다.</p><hr id="21b720e4-6f49-82cd-bb8c-01bd1f22875a" dir="auto"/><h2 id="eb1720e4-6f49-82db-8352-812667b36113" class="" dir="auto">13단계. Webhook 기반 자동 실행 검증</h2><p id="9c1720e4-6f49-825c-b770-8118ed5a2741" class="" dir="auto">이제 로컬 저장소에서 파일을 하나 수정하고 push 한다.</p><p id="544720e4-6f49-834f-9ac5-017679f8b38a" class="" dir="auto">예:</p><pre id="3cc720e4-6f49-8284-b220-815becded311" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">echo&quot;&lt;p&gt;Webhook triggered build&lt;/p&gt;&quot; &gt;&gt; index.html
+git add index.html
+git commit-m&quot;test: trigger jenkins webhook build&quot;
+git push origin main</code></pre><h3 id="850720e4-6f49-82d3-bfaa-812f55fdfbd8" class="" dir="auto">기대 동작</h3><ul id="c82720e4-6f49-8284-b6a3-810e197a537f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub push 발생</li></ul><ul id="3bd720e4-6f49-828b-a6cd-8165a5d3beae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub가 Jenkins Webhook URL 호출</li></ul><ul id="a87720e4-6f49-82bd-8d14-0124fa68d204" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins Pipeline 자동 실행</li></ul><ul id="e29720e4-6f49-8377-8076-016f899b3e1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build History에 새 실행 번호 생성</li></ul><hr id="5ba720e4-6f49-827e-a754-01351873c1ea" dir="auto"/><h2 id="d76720e4-6f49-820c-b554-81191f4c365a" class="" dir="auto">14단계. 자동 실행 여부 확인</h2><p id="7c6720e4-6f49-82a6-befe-016360e73fcf" class="" dir="auto">Jenkins Build History에서 새 Build를 클릭한다.</p><h3 id="7e2720e4-6f49-8208-b025-810b0366f742" class="" dir="auto">확인 포인트</h3><ul id="75a720e4-6f49-83e1-ae00-01d20cb950cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">수동 실행이 아니라 자동 실행인가</li></ul><ul id="cbb720e4-6f49-8387-bdd1-01bce3864c43" class="bulleted-list" dir="auto"><li style="list-style-type:disc">시작 원인에 GitHub push 관련 메시지가 있는가</li></ul><ul id="bea720e4-6f49-8393-84ae-8173530743cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전체 Stage가 다시 정상 수행되는가</li></ul><p id="0b4720e4-6f49-8316-9364-0129ec84370d" class="" dir="auto">즉, 지금부터 Jenkins는 사람이 버튼을 누르는 시스템이 아니라</p><p id="bdb720e4-6f49-82ab-ad50-81100870c751" class="" dir="auto"><strong>코드 변경에 반응하는 이벤트 기반 CI 서버</strong>가 된다.</p><hr id="b9c720e4-6f49-820f-980e-813fdc2d6a0b" dir="auto"/><h2 id="8bc720e4-6f49-8314-a53e-01b523fa3726" class="" dir="auto">15단계. 최종 검증 포인트</h2><p id="8e5720e4-6f49-83e2-8b15-81a981a3772f" class="" dir="auto">이번 실습이 정상적으로 끝났다면 다음이 모두 충족되어야 한다.</p><ul id="697720e4-6f49-82b7-9751-81f73d55cfd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 웹 UI 접속 가능</li></ul><ul id="e7b720e4-6f49-8370-9a79-816fd8ec493c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pipeline Job 생성 완료</li></ul><ul id="d92720e4-6f49-829f-af9e-015da366bfec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub 저장소 checkout 성공</li></ul><ul id="2e5720e4-6f49-824d-a35e-0172ef2888c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker build 성공</li></ul><ul id="c2f720e4-6f49-826a-98eb-0169f5306fed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub Push 성공</li></ul><ul id="6e4720e4-6f49-830c-a605-8195bb79a493" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub Webhook 등록 완료</li></ul><ul id="c8e720e4-6f49-838c-b3d3-01350d2d46b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 push 시 Jenkins 자동 실행 성공</li></ul><ul id="40e720e4-6f49-8217-828a-01174a602b41" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub에 최신 이미지 반영 확인</li></ul><hr id="7b8720e4-6f49-8342-8bb3-8159f649ac21" dir="auto"/><h2 id="f08720e4-6f49-8319-8a0b-01918b68a1f6" class="" dir="auto">자주 발생하는 오류</h2><h2 id="f33720e4-6f49-82d8-9cf6-812fd25c2b06" class="" dir="auto">오류 1. Jenkins 접속 불가</h2><h3 id="ca3720e4-6f49-82a6-8f7e-810888a729d3" class="" dir="auto">원인 가능성</h3><ul id="b96720e4-6f49-831d-b8ff-016aa444cfc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 서비스 미실행</li></ul><ul id="d0a720e4-6f49-8279-a3b9-813879776fa2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">8080 포트 차단</li></ul><ul id="6d2720e4-6f49-83d9-9854-8183a3fc872d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안그룹 미허용</li></ul><ul id="bc2720e4-6f49-83fe-80c3-81615a4a4659" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방화벽 문제</li></ul><h3 id="2c3720e4-6f49-8383-b33b-01a05bde08f7" class="" dir="auto">점검 명령</h3><pre id="f86720e4-6f49-8284-833e-01e855e566a5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl status jenkins
+sudo ss-tulnp |grep8080
+sudo ufw status</code></pre><hr id="2ea720e4-6f49-831a-9caa-0134feb1e96b" dir="auto"/><h2 id="87b720e4-6f49-8203-a69a-01ce58da4497" class="" dir="auto">오류 2. Docker build 시 권한 오류</h2><p id="584720e4-6f49-828d-b0f2-8175fd6a21e8" class="" dir="auto">예:</p><pre id="7a2720e4-6f49-82eb-bd55-814ffaeff77d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">permission denied while trying to connect to the Docker daemon socket</code></pre><h3 id="174720e4-6f49-82ca-a38a-815187e75258" class="" dir="auto">원인</h3><ul id="fb9720e4-6f49-832c-800c-01d1a3e552ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>jenkins</code> 사용자가 docker 그룹에 없음</li></ul><ul id="5df720e4-6f49-83b1-8367-8182d1dddd07" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그룹 변경 후 Jenkins 재시작 안 함</li></ul><h3 id="61a720e4-6f49-82ba-9c7c-01a6e99f8224" class="" dir="auto">해결</h3><pre id="8af720e4-6f49-8396-8799-015bba9e8744" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo usermod-aG docker jenkins
+sudo systemctlrestart jenkins
+id jenkins</code></pre><hr id="b9c720e4-6f49-8258-9040-813154d7053e" dir="auto"/><h2 id="32c720e4-6f49-83aa-ac01-8132b0f5f7c4" class="" dir="auto">오류 3. Docker login 실패</h2><p id="c94720e4-6f49-83e8-8a2b-01582541efd0" class="" dir="auto">예:</p><pre id="62c720e4-6f49-82ed-b093-014455408e34" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">unauthorized: incorrect username or password</code></pre><h3 id="77a720e4-6f49-83f1-a28f-8125df87f49e" class="" dir="auto">원인</h3><ul id="910720e4-6f49-82e1-9f89-81cb7e12bc57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub 사용자명 오류</li></ul><ul id="45d720e4-6f49-8253-959f-01e5aac1d0e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">토큰 오류</li></ul><ul id="0af720e4-6f49-83a5-9a4d-81173e39d4a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Credential ID 잘못 참조</li></ul><ul id="7f4720e4-6f49-8300-a278-01b99e34a7eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Credential 값 오입력</li></ul><h3 id="6a2720e4-6f49-83a7-8fc9-81994330f8af" class="" dir="auto">해결</h3><ul id="6db720e4-6f49-8200-a11b-81460b868a61" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins Credentials 값 재확인</li></ul><ul id="7f5720e4-6f49-829e-8e62-814dbc0ebdfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub 토큰 재생성</li></ul><ul id="b4a720e4-6f49-8330-a1fc-81fba17a9c70" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>credentialsId: &#x27;dockerhub-creds&#x27;</code> 오타 확인</li></ul><hr id="5c5720e4-6f49-834c-809d-8128f5cf6a90" dir="auto"/><h2 id="ecb720e4-6f49-83a9-b6c2-014e0934dcaa" class="" dir="auto">오류 4. Push는 되는데 Docker Hub에서 안 보임</h2><h3 id="7e5720e4-6f49-82fd-ad0e-01dd10cbf8f8" class="" dir="auto">원인 가능성</h3><ul id="73e720e4-6f49-83e5-8f53-81b5b3562851" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 사용자명 namespace로 Push</li></ul><ul id="d0a720e4-6f49-837f-afe6-01d9277936bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다른 태그로 Push</li></ul><ul id="471720e4-6f49-8242-ac68-0165a1a8a4ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">private/public 혼동</li></ul><h3 id="611720e4-6f49-82be-aff7-01e2509fce06" class="" dir="auto">해결</h3><ul id="c8e720e4-6f49-8325-b759-813e246f428d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Console Output의 repository 이름 확인</li></ul><ul id="04a720e4-6f49-83a4-bb94-0107f2751caa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub에서 해당 계정 repository 목록 확인</li></ul><ul id="752720e4-6f49-83dc-b17e-817e61ee9782" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 이름 형식 재확인</li></ul><hr id="872720e4-6f49-8273-8a9b-01da46037704" dir="auto"/><h2 id="870720e4-6f49-82aa-9271-8124ded8aecd" class="" dir="auto">오류 5. GitHub Webhook이 동작하지 않음</h2><h3 id="64e720e4-6f49-83b8-afa2-81e0fcdfb50e" class="" dir="auto">원인 가능성</h3><ul id="113720e4-6f49-83a8-9515-0157c1869e00" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 주소가 외부에서 접근 불가</li></ul><ul id="6aa720e4-6f49-83c3-9e94-012cc2a505c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/github-webhook/</code> 경로 누락</li></ul><ul id="7eb720e4-6f49-8323-a3fe-81f3307fdd65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Job Trigger 미설정</li></ul><ul id="de5720e4-6f49-8349-8aaf-0144e28596b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub Delivery 실패</li></ul><h3 id="c5b720e4-6f49-822e-add8-0150bb7c824f" class="" dir="auto">확인 포인트</h3><ul id="38c720e4-6f49-8200-a7a4-8186791799fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub Webhooks 화면의 Recent Deliveries</li></ul><ul id="366720e4-6f49-8215-9573-01b1709e45c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">응답 코드 200 여부</li></ul><ul id="fca720e4-6f49-8391-938c-811d43406134" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins Job Trigger 체크 여부</li></ul><hr id="8bb720e4-6f49-8338-b6c6-812f6725eb05" dir="auto"/><h2 id="8f2720e4-6f49-82e6-b749-81cfb599a1f8" class="" dir="auto">오류 6. Checkout 실패</h2><h3 id="d77720e4-6f49-83af-b240-0192b2461749" class="" dir="auto">원인 가능성</h3><ul id="605720e4-6f49-8231-90f0-0191a76ebca1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub 저장소 URL 오타</li></ul><ul id="ccc720e4-6f49-8378-8dc2-010c52778037" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치 오타</li></ul><ul id="516720e4-6f49-838b-bb09-81ec731334c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">private 저장소 접근 권한 없음</li></ul><h3 id="6e4720e4-6f49-8273-b9c0-0141e5470402" class="" dir="auto">해결</h3><ul id="dee720e4-6f49-8296-ba70-817d0d54aefb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">저장소 URL 다시 확인</li></ul><ul id="f61720e4-6f49-827c-8f66-819598c4bbcb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브랜치명 확인</li></ul><ul id="3ef720e4-6f49-8318-a127-815299deb55d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요 시 GitHub Credential 등록 후 사용</li></ul><hr id="7f8720e4-6f49-834b-a51b-0188a0693a66" dir="auto"/><h2 id="3d1720e4-6f49-83fb-a2ee-81df4422823b" class="" dir="auto">실습 후 정리해야 할 핵심 개념</h2><h3 id="99d720e4-6f49-820c-8637-0145851d2fbc" class="" dir="auto">1) Jenkins는 설치형 CI 서버다</h3><p id="62d720e4-6f49-8292-97db-01bf2546e0bc" class="" dir="auto">즉, 직접 설치하고 운영해야 한다.</p><h3 id="f39720e4-6f49-82ec-9b02-81af6d149fb3" class="" dir="auto">2) CI 파이프라인은 단순 빌드가 아니라 전체 자동화 흐름이다</h3><p id="e19720e4-6f49-82bd-ad8c-8154a91e45ec" class="" dir="auto">이번 실습에서는 checkout, build, push까지 연결했다.</p><h3 id="963720e4-6f49-839a-9cca-816b23881eaf" class="" dir="auto">3) Docker 이미지는 CI 결과물로 매우 중요하다</h3><p id="5a3720e4-6f49-8270-8818-010ebfd01fd8" class="" dir="auto">운영에 반영 가능한 표준 배포 단위 역할을 한다.</p><h3 id="619720e4-6f49-8366-bd4b-81531893bad8" class="" dir="auto">4) 레지스트리 Push가 되어야 결과물이 다른 환경에서 사용 가능해진다</h3><p id="7f5720e4-6f49-8272-aea5-813d86e3e584" class="" dir="auto">즉, 빌드 성공과 배포 준비 완료는 다르다.</p><h3 id="fa4720e4-6f49-8336-b89f-81ec2ef3e4eb" class="" dir="auto">5) Jenkins Credentials는 필수다</h3><p id="577720e4-6f49-835f-a499-81e960694e90" class="" dir="auto">인증정보를 Job 스크립트에 하드코딩하면 안 된다.</p><h3 id="8e9720e4-6f49-83a6-9dd7-81849a43d5f5" class="" dir="auto">6) GitHub Webhook을 연결하면 Jenkins가 이벤트 기반으로 동작한다</h3><p id="227720e4-6f49-8389-98cd-81a3d345d8d8" class="" dir="auto">즉, 사람이 수동으로 빌드 버튼을 누르지 않아도 된다.</p><hr id="668720e4-6f49-83c5-9ebf-81d285c698dd" dir="auto"/><h2 id="39f720e4-6f49-8274-82d4-8151221b03b8" class="" dir="auto">실습 결과 요약</h2><p id="aad720e4-6f49-82ae-ae9a-8168efe368b6" class="" dir="auto">이번 실습을 통해 다음을 완료했음.</p><ul id="97d720e4-6f49-832b-9cd1-81f920b380c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 설치 및 초기 설정</li></ul><ul id="758720e4-6f49-83fd-af7c-818ba5ae7096" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git, Docker 설치</li></ul><ul id="386720e4-6f49-820a-9710-01dc28e49851" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins Docker 권한 구성</li></ul><ul id="57f720e4-6f49-8326-9aa7-8100172ca2d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub Credential 등록</li></ul><ul id="076720e4-6f49-82cc-b6c2-01e130d56401" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins Pipeline Job 생성</li></ul><ul id="65b720e4-6f49-83a9-b5dd-017a3b9eb12d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub 저장소 checkout</li></ul><ul id="de4720e4-6f49-828e-8b64-01a42fbda5b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 이미지 빌드</li></ul><ul id="611720e4-6f49-826d-a38e-8182b85e9dc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub Push</li></ul><ul id="5a9720e4-6f49-8280-a309-815676ac122f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub Webhook 등록</li></ul><ul id="329720e4-6f49-82f1-ad6c-81dfc30d4aad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 push 시 Jenkins 자동 실행 확인</li></ul><hr id="b9e720e4-6f49-8257-8d2c-812c55ac2f1b" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

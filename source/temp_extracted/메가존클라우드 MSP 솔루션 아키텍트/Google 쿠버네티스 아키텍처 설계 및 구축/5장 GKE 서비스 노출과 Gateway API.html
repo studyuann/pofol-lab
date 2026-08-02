@@ -1,0 +1,767 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>5장. GKE 서비스 노출과 Gateway API</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="e6e720e4-6f49-8342-9aea-01b3b98f9fdb" class="page sans"><header><h1 class="page-title" dir="auto">5장. GKE 서비스 노출과 Gateway API</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="465720e4-6f49-8364-921d-013cd7ff7fb1" class="" dir="auto">장 개요</h2><h2 id="a8f720e4-6f49-83e2-a082-8178f52e161c" class="" dir="auto">학습 목표</h2><p id="97f720e4-6f49-82d8-ba57-01a8a2c3225e" class="" dir="auto">이 장을 마치면 다음이 가능해야 한다.</p><ul id="9d2720e4-6f49-8303-86a8-013efb9645d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE에서 Service 노출 방식의 큰 그림을 설명할 수 있음</li></ul><ul id="c0b720e4-6f49-82ac-a57f-8137c88d4e91" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress와 Gateway API의 차이를 설명할 수 있음</li></ul><ul id="411720e4-6f49-82d4-81b0-012e9f162bb1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway, HTTPRoute 같은 핵심 리소스의 역할을 설명할 수 있음</li></ul><ul id="4bb720e4-6f49-828b-aace-01780d52015b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE Gateway API가 Google Cloud Load Balancer와 어떻게 연결되는지 설명할 수 있음</li></ul><ul id="752720e4-6f49-83f3-be2f-8132e5f20768" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 관점에서 왜 Gateway API가 더 나은 모델이 될 수 있는지 설명할 수 있음</li></ul><ul id="785720e4-6f49-8266-a0b9-81c5659b67ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">샘플 애플리케이션을 외부에 노출하는 기본 흐름을 따라갈 수 있음</li></ul><hr id="987720e4-6f49-823b-8dfb-81e68da7f494" dir="auto"/><h2 id="892720e4-6f49-8327-b5d3-01f21ed12c75" class="" dir="auto">핵심 키워드</h2><ul id="7d4720e4-6f49-8331-9982-01689d2b1e45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service</li></ul><ul id="846720e4-6f49-8319-923e-01e1bdb381ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">LoadBalancer Service</li></ul><ul id="225720e4-6f49-8243-88e8-814413a6bd27" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress</li></ul><ul id="ee6720e4-6f49-8322-a194-8114b6b1fb70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway API</li></ul><ul id="8d2720e4-6f49-83b9-ad29-01f9c134f160" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway</li></ul><ul id="88a720e4-6f49-82ed-b57e-81ff45d7db57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GatewayClass</li></ul><ul id="a6d720e4-6f49-8299-b1f6-010022dd2412" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPRoute</li></ul><ul id="87a720e4-6f49-83ce-b903-812a62af3495" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Listener</li></ul><ul id="6b7720e4-6f49-83df-bdcf-813256b665d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ParentRef</li></ul><ul id="23a720e4-6f49-8303-9e8a-0102ec69b9b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Traffic Policy</li></ul><ul id="2ea720e4-6f49-82bc-b4a0-019b0b3239f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Application Load Balancer</li></ul><hr id="c91720e4-6f49-83ab-bc04-0139f7d8073b" dir="auto"/><h1 id="765720e4-6f49-8387-a2af-810dd7446dd4" class="" dir="auto">1. 왜 이 장이 중요한가</h1><p id="dee720e4-6f49-8302-8c8c-011015f01795" class="" dir="auto">Kubernetes 일반적인 애플리케이션 노출 흐름</p><ul id="a37720e4-6f49-825a-bec0-81fae450a1da" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ClusterIP</li></ul><ul id="8c4720e4-6f49-8284-aefd-016df4f55b76" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NodePort</li></ul><ul id="fdb720e4-6f49-8268-ac56-0187a2ddc408" class="bulleted-list" dir="auto"><li style="list-style-type:disc">LoadBalancer</li></ul><ul id="dd4720e4-6f49-825b-84e3-010291e2540c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress</li></ul><p id="a3b720e4-6f49-82c7-a36a-01e0170202a4" class="" dir="auto">하지만 GKE를 운영 플랫폼 관점에서 보면, 단순히 “외부 IP를 붙인다”가 아니라 <strong>어떤 방식으로 외부 진입 구조를 운영할 것인가</strong>가 더 중요하다.</p><p id="066720e4-6f49-82d6-8797-814a7839b7ca" class="" dir="auto">예를 들어 이런 질문이 생긴다.</p><ul id="b8e720e4-6f49-82bc-8683-01cc2acbb2df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하나의 진입점에서 여러 서비스로 경로 기반 분기할 수 있는가</li></ul><ul id="dc9720e4-6f49-82ad-b444-8126f096ad99" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TLS 정책은 누가 관리하는가</li></ul><ul id="d97720e4-6f49-826b-86e5-0171a8ed267a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크팀과 앱팀의 역할을 분리할 수 있는가</li></ul><ul id="3a1720e4-6f49-83a8-a059-81f7ba58749e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">트래픽 정책을 더 구조적으로 분리할 수 있는가</li></ul><ul id="28e720e4-6f49-83ca-ad71-017c74617ad8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티클러스터, 운영 표준화와도 연결할 수 있는가</li></ul><p id="03a720e4-6f49-8223-a87e-81f6574e67cf" class="" dir="auto">Gateway API는 이런 문제를 더 잘 풀기 위한 모델이다.</p><p id="32b720e4-6f49-8376-b66a-01181a2122bc" class="" dir="auto"><strong>Ingress는 “애플리케이션을 외부에 노출하는 도구”로 이해하기 쉬웠다면, Gateway API는 “트래픽 진입 구조를 운영형으로 설계하는 모델”로 이해하는 편이 좋다.</strong></p><hr id="8ba720e4-6f49-82ec-bbab-013d1dea1084" dir="auto"/><h1 id="08e720e4-6f49-82a5-b014-015de95b64cc" class="" dir="auto">2. Kubernetes Service 노출 방식 </h1><h2 id="254720e4-6f49-832e-9f79-01fbae758e4f" class="" dir="auto">2.1 ClusterIP</h2><ul id="a31720e4-6f49-82ab-879f-01a8344e81cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 내부 전용</li></ul><ul id="33f720e4-6f49-8238-b604-015221b6f757" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 직접 접근 불가</li></ul><ul id="cd9720e4-6f49-82d7-9e62-81fa577e0408" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 간 내부 통신용</li></ul><h2 id="057720e4-6f49-822e-ba68-81de47e3f689" class="" dir="auto">2.2 NodePort</h2><ul id="2b3720e4-6f49-83b9-b41f-01fd47a1c575" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 노드의 특정 포트를 열어 외부 접근 가능</li></ul><ul id="8e6720e4-6f49-83ad-94ac-01c0431fa814" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영형 구조로는 다소 거칠고 직접적</li></ul><ul id="c0f720e4-6f49-8207-9294-815fa73107be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트용으로는 이해가 쉬움</li></ul><h2 id="ada720e4-6f49-8251-b59b-81235c61c2e4" class="" dir="auto">2.3 LoadBalancer Service</h2><ul id="aef720e4-6f49-82f6-b56c-019bb8238214" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클라우드 로드밸런서를 붙이는 방식</li></ul><ul id="a35720e4-6f49-834d-87a8-81fbb161df9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단일 서비스 노출에는 직관적</li></ul><ul id="8c6720e4-6f49-8277-b19e-815a03e4ffdb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하지만 복잡한 라우팅, 역할 분리, 고급 정책은 한계가 있음</li></ul><hr id="770720e4-6f49-828e-89f9-011f3c98ed7e" dir="auto"/><h1 id="3d6720e4-6f49-8251-8f4c-8178a3c7c8c6" class="" dir="auto">3. Ingress는 무엇을 해결했는가</h1><p id="f5e720e4-6f49-83a9-8f32-81c680231f86" class="" dir="auto">Ingress는 여러 서비스 앞에 하나의 HTTP(S) 진입점을 두고, 호스트/경로 기반 라우팅을 구성하는 방식으로 많이 사용됐다. Kubernetes Ingress는 표준화된 HTTP 진입 리소스지만, 구현 세부는 컨트롤러마다 다를 수 있다. </p><h2 id="325720e4-6f49-83ec-8e46-81b52a6e2c1b" class="" dir="auto">Ingress가 해결한 것</h2><ul id="a95720e4-6f49-837a-8936-81c6ccc8bb1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 서비스를 하나의 진입점 뒤로 숨김</li></ul><ul id="6ee720e4-6f49-834f-8ab4-01993bcb2d21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">경로 기반 라우팅 가능</li></ul><ul id="812720e4-6f49-825c-995b-81d01b7bb93b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TLS 설정 가능</li></ul><ul id="764720e4-6f49-82e8-a772-0173a727062a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 외부 노출 구조를 단순화</li></ul><h2 id="916720e4-6f49-8383-8560-01620e10d89c" class="" dir="auto">한계</h2><ul id="13b720e4-6f49-82a2-8741-01789595e528" class="bulleted-list" dir="auto"><li style="list-style-type:disc">역할 분리가 충분히 명확하지 않음</li></ul><ul id="208720e4-6f49-82cb-9dea-8165f28cb977" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고급 정책 확장에 제약</li></ul><ul id="a8c720e4-6f49-82c8-af21-010ea39c1863" class="bulleted-list" dir="auto"><li style="list-style-type:disc">구현이 컨트롤러별로 달라질 수 있음</li></ul><ul id="71d720e4-6f49-8282-ad21-01c2691a0538" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크팀/플랫폼팀/앱팀의 책임을 분리해 표현하기 어려움</li></ul><hr id="0da720e4-6f49-82d9-be82-815db073b8b8" dir="auto"/><h1 id="dc1720e4-6f49-83ef-8f49-810679a6b4a8" class="" dir="auto">4. Gateway API란 무엇인가</h1><p id="026720e4-6f49-82ba-94a3-01b422ed8997" class="" dir="auto">Gateway API는 Kubernetes에서 서비스 노출과 트래픽 진입을 더 구조적으로 다루기 위한 API 세트다.</p><h2 id="349720e4-6f49-83f2-8703-011802059320" class="" dir="auto">쉽게 이해하면</h2><ul id="649720e4-6f49-82ab-a3b5-8194dde31a10" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress보다 더 구조적이고 역할 분리가 가능한 API</li></ul><ul id="ba5720e4-6f49-83ab-a016-81fce7a9e639" class="bulleted-list" dir="auto"><li style="list-style-type:disc">진입점(Gateway)과 라우팅(HTTPRoute 등)을 분리</li></ul><ul id="f69720e4-6f49-82b2-948d-01e6c968e47a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영팀과 애플리케이션팀이 각자 다룰 리소스를 나누기 쉬움</li></ul><ul id="2ac720e4-6f49-828c-aa32-01e650fbff20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE에서는 Google Cloud Load Balancer와 자연스럽게 연결됨</li></ul><hr id="692720e4-6f49-8201-89a1-81e9bc6b9061" dir="auto"/><h1 id="ee9720e4-6f49-83bf-88d6-81f16a5497b1" class="" dir="auto">6. Gateway API의 핵심 리소스</h1><ul id="6c1720e4-6f49-8270-a3e3-0172403d5436" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GatewayClass</li></ul><ul id="3be720e4-6f49-82a2-becb-01b5a5312054" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway</li></ul><ul id="35c720e4-6f49-838c-b0b7-815ebb6280ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Listener</li></ul><ul id="03c720e4-6f49-8324-b460-01e78ea942dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPRoute</li></ul><h2 id="16f720e4-6f49-83d4-b733-013e07c038ff" class="" dir="auto">6.1 GatewayClass</h2><p id="79b720e4-6f49-834a-9b52-81f3315258cc" class="" dir="auto">GatewayClass는</p><p id="da1720e4-6f49-82ff-9e90-015fddc37d49" class="" dir="auto"><strong>어떤 종류의 Gateway를 어떤 구현체가 처리할 것인가</strong>를 정의하는 클래스 개념이다.</p><h3 id="c46720e4-6f49-82ca-8da3-8102ba609eee" class="" dir="auto">쉽게 이해하면</h3><ul id="b32720e4-6f49-8366-a2a8-01c4879995a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">StorageClass, IngressClass 같은 감각</li></ul><ul id="80e720e4-6f49-8379-90e3-816cd1468080" class="bulleted-list" dir="auto"><li style="list-style-type:disc">“이 Gateway는 누가 구현하나”를 지정</li></ul><h3 id="c52720e4-6f49-8390-a81b-81c424391490" class="" dir="auto">GKE에서 의미</h3><ul id="d19720e4-6f49-8382-8fac-01bbe3fb375d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE Gateway controller가 이해하는 클래스 사용</li></ul><ul id="abf720e4-6f49-82e8-8d7b-018c11f4f7b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 / 내부 Application Load Balancer 종류와 연결되는 출발점</li></ul><hr id="d90720e4-6f49-823e-9fea-0101d5bb0bde" dir="auto"/><h2 id="f13720e4-6f49-835d-a6b6-011de6a02f65" class="" dir="auto">6.2 Gateway</h2><p id="241720e4-6f49-8320-bc16-81bd5a55e759" class="" dir="auto">Gateway는 <strong>실제 트래픽 진입점</strong>을 표현한다.</p><h3 id="45a720e4-6f49-8280-8ad3-0140b23d29de" class="" dir="auto">역할</h3><ul id="e31720e4-6f49-8306-be3a-81f114b6de67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 포트로 받을지</li></ul><ul id="4e0720e4-6f49-821c-868e-81fb1bb0c76a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 프로토콜을 받을지</li></ul><ul id="21e720e4-6f49-8306-83be-81b31e2d82fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 리스너를 가질지</li></ul><ul id="93c720e4-6f49-838b-b316-8147cb0a1475" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Route가 붙을 수 있는지</li></ul><h3 id="a34720e4-6f49-82fe-bf22-81d3dd4b1e93" class="" dir="auto">쉽게 이해하면</h3><ul id="9b6720e4-6f49-8316-8faa-814a950d46f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress보다 더 명시적인 “진입 장치”라고 보면 됨</li></ul><hr id="1f9720e4-6f49-834b-a065-81d048edd3ba" dir="auto"/><h2 id="71e720e4-6f49-82fb-987a-01d86e534977" class="" dir="auto">6.3 Listener</h2><p id="4de720e4-6f49-8212-b352-815a046816fa" class="" dir="auto">Listener는 Gateway가 어떤 방식으로 요청을 받을지를 정의한다.</p><p id="790720e4-6f49-8329-92f3-81e88dd2771a" class="" dir="auto">예시</p><ul id="d0d720e4-6f49-8335-a485-01eb42216533" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP 80</li></ul><ul id="90a720e4-6f49-836c-830b-0181e72abeae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPS 443</li></ul><ul id="e99720e4-6f49-8370-ac96-01a3e9061ead" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 hostname</li></ul><ul id="95c720e4-6f49-824c-b7c5-010640570296" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 protocol</li></ul><h3 id="78e720e4-6f49-829f-b8e0-0164804cc0b6" class="" dir="auto">의미</h3><ul id="5b0720e4-6f49-83c7-b29c-8164c1dd4b42" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부에서 들어오는 요청을 어떤 포트/프로토콜/호스트 기준으로 받을지 정함</li></ul><hr id="cd7720e4-6f49-83af-a440-01629bc55d05" dir="auto"/><h2 id="93d720e4-6f49-8230-92c4-814261fc68d3" class="" dir="auto">6.4 HTTPRoute</h2><p id="579720e4-6f49-826a-962d-01cbd44828a9" class="" dir="auto">HTTPRoute는</p><p id="e0b720e4-6f49-82ba-badc-01d94bca5f60" class="" dir="auto"><strong>들어온 HTTP 요청을 어떤 서비스로 어떻게 보낼지</strong> 정의한다.</p><h3 id="ced720e4-6f49-83c8-9264-01ddec8f9913" class="" dir="auto">역할</h3><ul id="de1720e4-6f49-836f-b146-81ab1027963f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">경로 기반 라우팅</li></ul><ul id="a9b720e4-6f49-8392-ab18-8103acee305b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">호스트 기반 라우팅</li></ul><ul id="db8720e4-6f49-8375-bcf8-81652d507e57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드 서비스 연결</li></ul><ul id="443720e4-6f49-8247-9453-01c77c9f48a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일부 정책 적용</li></ul><h3 id="7d2720e4-6f49-83de-b593-81641921d944" class="" dir="auto">쉽게 이해하면</h3><ul id="42e720e4-6f49-82e7-8283-818d337f5b58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress에서 하던 URL routing rules를 더 구조적으로 분리한 느낌</li></ul><hr id="44d720e4-6f49-8223-94a3-01677a637173" dir="auto"/><h1 id="c97720e4-6f49-8210-aa78-01fc85f3ce7e" class="" dir="auto">7. Ingress와 Gateway API 비교</h1><h2 id="3a7720e4-6f49-82fc-a157-01d33a8693e6" class="" dir="auto">Ingress의 감각</h2><ul id="521720e4-6f49-83b9-8d77-81a8527e32fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한 리소스 안에 진입과 라우팅이 같이 들어가는 느낌</li></ul><ul id="e2c720e4-6f49-83d7-9a62-011d82797007" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단순하고 익숙함</li></ul><ul id="1b3720e4-6f49-8272-83b0-01de8d00301d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">앱 중심 관점에서 보기 쉬움</li></ul><h2 id="341720e4-6f49-82cf-849b-01adae4d74ca" class="" dir="auto">Gateway API의 감각</h2><ul id="8e6720e4-6f49-820b-831a-0129239dd55b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">진입점(Gateway)과 라우팅(HTTPRoute)이 분리됨</li></ul><ul id="037720e4-6f49-82ab-b98a-811e47033b67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">역할 기반 분리가 쉬움</li></ul><ul id="a0e720e4-6f49-82d3-8822-0152a49e3504" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정책과 운영 모델이 더 명확함</li></ul><ul id="d5c720e4-6f49-83e3-8de7-8120bb1bae28" class="bulleted-list" dir="auto"><li style="list-style-type:disc">플랫폼팀/네트워크팀/앱팀 협업에 유리함</li></ul><p id="cf9720e4-6f49-833b-9d3a-010ecc38b6db" class="" dir="auto"><strong>Ingress가 “서비스를 노출하는 단순한 입구”에 가깝다면, Gateway API는 “운영 가능한 트래픽 진입 구조”에 가깝다.</strong></p><hr id="a52720e4-6f49-825a-aa6a-01f3b19ee0cb" dir="auto"/><h1 id="b23720e4-6f49-8259-9680-019008cd03a5" class="" dir="auto">8. 역할 분리 관점에서의 장점</h1><p id="379720e4-6f49-839e-ba18-01adc2fe62da" class="" dir="auto">Gateway API의 큰 장점 중 하나가 역할 분리다.</p><h2 id="e14720e4-6f49-8335-a905-8100f5187a89" class="" dir="auto">예시 구조</h2><h3 id="48d720e4-6f49-82a7-9762-018944bd3341" class="" dir="auto">플랫폼팀 / 네트워크팀</h3><ul id="405720e4-6f49-82be-aa8f-015f13c21bef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GatewayClass 정의</li></ul><ul id="32e720e4-6f49-8309-a773-01b747b3f0c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway 생성</li></ul><ul id="9ea720e4-6f49-8202-9bc4-01aa551f1dac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 진입 정책 관리</li></ul><ul id="cae720e4-6f49-8345-9a6f-8184d7dad12a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TLS와 공통 정책 관리</li></ul><h3 id="75e720e4-6f49-83f3-b5d6-01a2d0c15f76" class="" dir="auto">애플리케이션팀</h3><ul id="6ca720e4-6f49-8251-9ab7-81a3ba2999ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPRoute 작성</li></ul><ul id="ddf720e4-6f49-82a5-b147-818985d1b0b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 경로를 어떤 서비스에 연결할지 정의</li></ul><ul id="184720e4-6f49-82b0-9943-810f0394d67d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">앱 단위 라우팅 룰 제출</li></ul><h2 id="ca0720e4-6f49-8360-b9e6-81ad50492ae2" class="" dir="auto">왜 중요한가</h2><p id="795720e4-6f49-83dd-88f8-01bfe536d5f4" class="" dir="auto">운영 환경에서는 모든 팀이 하나의 Ingress 리소스를 같이 만지면 충돌이 나기 쉽다.</p><p id="e34720e4-6f49-827a-8bbf-815705576954" class="" dir="auto">Gateway API는 이런 문제를 더 잘 분리해준다. </p><hr id="406720e4-6f49-839e-9bfe-81699d64e58d" dir="auto"/><h1 id="d8e720e4-6f49-8256-b5f8-015607a6f802" class="" dir="auto">9. GKE에서의 Gateway API 동작</h1><p id="c28720e4-6f49-82c9-83a2-81005ae64bd5" class="" dir="auto">GKE에서는 Gateway API 리소스를 적용하면, GKE Gateway controller가 이를 읽고 적절한 Google Cloud Load Balancer를 생성/갱신한다. </p><ul id="a03720e4-6f49-828f-a45e-81bab992c5c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes 리소스를 작성함</li></ul><ul id="335720e4-6f49-82da-8abd-81aaf8b19449" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE가 이를 보고 Google Cloud 로드밸런서를 조정함</li></ul><ul id="6a6720e4-6f49-83cb-864b-81320dab7024" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 YAML만 보고 있어도, 실제로는 클라우드 네트워크 리소스가 뒤에서 움직임</li></ul><p id="2cd720e4-6f49-82c3-bc1a-01a7a39516a6" class="" dir="auto"><strong>Gateway API는 쿠버네티스 객체이지만, GKE에서는 클라우드 로드밸런서까지 제어하는 인터페이스다.</strong></p><hr id="a66720e4-6f49-83d0-8edb-01e5410a2ced" dir="auto"/><h1 id="675720e4-6f49-820c-ba43-81bec0bf6de8" class="" dir="auto">10. 장 요약</h1><ul id="d20720e4-6f49-82bc-a9f7-01c44b20ae32" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway API는 Kubernetes에서 서비스 노출과 트래픽 진입을 더 구조적으로 다루기 위한 API다. </li></ul><ul id="c41720e4-6f49-837b-ac72-01e533f5e82e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE에서는 Gateway API가 Google Cloud Application Load Balancer와 연결된다. </li></ul><ul id="4aa720e4-6f49-8343-8f83-81b61b2e0264" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress보다 역할 분리, 확장성, 표현력이 더 좋다.</li></ul><ul id="9fa720e4-6f49-8395-8aac-8171164d5242" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway는 외부 진입점이고, HTTPRoute는 요청을 서비스로 연결하는 규칙이다.</li></ul><ul id="92c720e4-6f49-8300-9301-81f94e2fb51a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service는 여전히 백엔드 연결의 핵심 요소다.</li></ul><ul id="d83720e4-6f49-83bb-b970-0194a2898ce5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE 운영 관점에서는 Gateway API를 “쿠버네티스 YAML”이 아니라 “로드밸런서 운영 인터페이스”로 이해하는 것이 중요하다.</li></ul><h3 id="c73720e4-6f49-8382-b48d-01cb5f3d8303" class="" dir="auto">핵심 결론</h3><p id="91f720e4-6f49-8240-a9e5-81c336ddb6a4" class="" dir="auto"><strong>GKE에서 Gateway API는 단순한 Ingress 대체재가 아니라, 운영 가능한 트래픽 진입 구조를 설계하는 핵심 도구다.</strong></p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

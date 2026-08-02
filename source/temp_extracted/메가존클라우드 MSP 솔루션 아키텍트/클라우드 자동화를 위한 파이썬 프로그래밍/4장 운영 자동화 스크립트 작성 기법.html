@@ -1,0 +1,1639 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>4장. 운영 자동화 스크립트 작성 기법</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="a7d720e4-6f49-8236-be60-0168741f95e9" class="page sans"><header><h1 class="page-title" dir="auto">4장. 운영 자동화 스크립트 작성 기법</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="903720e4-6f49-830e-b111-01db99bbb7fd" class="" dir="auto">4.1 4장의 목표</h2><p id="678720e4-6f49-82f3-b783-81b28956e039" class="" dir="auto">3장에서는 <code>boto3</code>를 이용해 AWS API를 호출하는 기본 방법을 학습했다.</p><p id="8ad720e4-6f49-827e-9aef-013d46e4756d" class="" dir="auto">예를 들어 EC2 인스턴스 목록을 조회하거나, S3 버킷 목록을 확인하거나, IAM 사용자 목록을 조회하는 식이다.</p><p id="56a720e4-6f49-837d-a738-8110186f2bcf" class="" dir="auto">하지만 실무 자동화에서는 단순히 API를 한 번 호출하는 코드만으로는 부족하다.</p><p id="d97720e4-6f49-83b4-a73c-81b656ab6b3d" class="" dir="auto">운영자가 실제로 사용하는 자동화 스크립트는 다음 조건을 갖추어야 한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="dcf720e4-6f49-8204-86ac-81270e179adc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- 여러 번 반복 실행할 수 있어야 한다.
+- 리전, 출력 파일명, 조회 조건 등을 실행 시점에 바꿀 수 있어야 한다.
+- AWS API 응답에서 필요한 정보만 보기 좋게 추출할 수 있어야 한다.
+- 오류가 발생해도 원인을 확인할 수 있어야 한다.
+- 결과를 화면에 출력하거나 파일로 저장할 수 있어야 한다.
+- 다른 자동화 코드에서 재사용하기 쉽게 함수 단위로 분리되어야 한다.</code></pre><p id="89d720e4-6f49-8346-807c-0116d9526223" class="" dir="auto">이 장에서는 단순한 boto3 예제 코드를 점진적으로 개선하여 <strong>운영 자동화 스크립트 형태</strong>로 만들어본다.</p><hr id="418720e4-6f49-8210-8084-017295fc2f28" dir="auto"/><h2 id="6aa720e4-6f49-82d4-a179-812834b15047" class="" dir="auto">4.2 4장의 전체 흐름</h2><pre id="8ae720e4-6f49-83e8-a40a-01fce1137f9d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">4.1 자동화 스크립트의 기본 구조
+4.2 main 함수와 실행 진입점 이해
+4.3 boto3 클라이언트 생성 코드 분리
+4.4 AWS API 응답 구조 다루기
+4.5 필요한 데이터만 추출하기
+4.6 반복 조회와 필터링
+4.7 예외 처리 적용
+4.8 출력 형식 정리
+4.9 JSON 파일 저장
+4.10 CSV 파일 저장
+4.11 argparse로 명령행 인자 처리
+4.12 EC2 인벤토리 자동화 스크립트 완성
+4.13 S3 버킷 목록 자동화 스크립트 작성
+4.14 실습 과제
+4.15 핵심 정리</code></pre><p id="597720e4-6f49-83a4-90eb-015a681f18dd" class="" dir="auto">처음에는 단순한 코드로 시작하고, 이후 함수화, 예외 처리, 파일 저장, 명령행 옵션 처리를 추가하면서 실무형 스크립트로 발전시킨다.</p><hr id="b70720e4-6f49-8203-8d5b-814799811d06" dir="auto"/><h1 id="53b720e4-6f49-8276-8b52-01261ce346ea" class="" dir="auto">4.3 자동화 스크립트의 기본 구조</h1><h2 id="5fa720e4-6f49-821f-ba0a-01a3c6bbbc48" class="" dir="auto">4.3.1 가장 단순한 EC2 조회 코드</h2><p id="a59720e4-6f49-82e3-bd9e-81153b675530" class="" dir="auto">먼저 EC2 인스턴스 목록을 조회하는 가장 단순한 코드를 작성한다.</p><p id="e91720e4-6f49-82a6-aedd-81c583894751" class="" dir="auto">파일명은 <code>ec2_basic.py</code>로 작성한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="f4e720e4-6f49-8258-998b-016dacafcfcf" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+ec2 = boto3.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = ec2.describe_instances()
+
+for reservation in response[&quot;Reservations&quot;]:
+    for instance in reservation[&quot;Instances&quot;]:
+        print(instance[&quot;InstanceId&quot;], instance[&quot;State&quot;][&quot;Name&quot;])</code></pre><p id="b1b720e4-6f49-83f9-897c-01819482fcff" class="" dir="auto">실행한다.</p><pre id="6b7720e4-6f49-8289-8c3a-011c14c0038d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_basic.py</code></pre><p id="a3b720e4-6f49-82f0-a795-018db519e8ef" class="" dir="auto">예상 출력 예시는 다음과 같다.</p><pre id="dfb720e4-6f49-8254-b499-81cdf19e8839" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">i-0123456789abcdef0 running
+i-0abcdef1234567890 stopped</code></pre><p id="fec720e4-6f49-8354-ba46-010a8b682251" class="" dir="auto">이 코드는 EC2 목록을 조회할 수 있다.</p><hr id="737720e4-6f49-8259-be58-8149c3ff427e" dir="auto"/><h2 id="83b720e4-6f49-8293-91f1-017db560a4d4" class="" dir="auto">4.3.2 이 코드의 문제점</h2><p id="9a2720e4-6f49-83a3-b2e3-0111900319b4" class="" dir="auto">위 코드는 실무 자동화용으로는 다음 문제가 있다.</p><pre id="027720e4-6f49-83e1-a782-81201c121372" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 리전이 코드에 고정되어 있다.
+2. API 호출 코드와 출력 코드가 섞여 있다.
+3. 예외 처리가 없다.
+4. 필요한 정보만 구조화해서 저장하지 않는다.
+5. 결과를 파일로 저장하지 않는다.
+6. 실행할 때 조건을 바꿀 수 없다.
+7. 다른 코드에서 재사용하기 어렵다.</code></pre><p id="513720e4-6f49-83d9-b2b3-81e83af8bbb3" class="" dir="auto">예를 들어 서울 리전이 아니라 도쿄 리전을 조회하려면 코드를 직접 수정해야 한다.</p><pre id="0d2720e4-6f49-8358-a630-81279e8b9324" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">ec2 = boto3.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)</code></pre><p id="0d2720e4-6f49-824d-8055-8165ccf9be05" class="" dir="auto">이 부분을 다음처럼 바꿔야 한다.</p><pre id="4e2720e4-6f49-83cb-aaa9-8180fd39e8e9" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">ec2 = boto3.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-1&quot;)</code></pre><p id="e96720e4-6f49-82ac-be43-8119194dae54" class="" dir="auto">운영 자동화에서는 실행할 때 옵션으로 리전을 지정하는 방식이 더 적절하다.</p><pre id="ca5720e4-6f49-83dd-87fd-816c1f84728c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py --region ap-northeast-2</code></pre><p id="c59720e4-6f49-82e0-a927-017abe7a7142" class="" dir="auto">
+</p><p id="985720e4-6f49-82da-bab7-0161f22daf57" class="" dir="auto">또한 현재 코드는 API 호출 중 오류가 발생하면 그대로 프로그램이 종료된다.</p><p id="d05720e4-6f49-825a-8d1e-8166b9af6c69" class="" dir="auto">권한 부족, 인증 정보 누락, 잘못된 리전, 네트워크 문제 등 다양한 상황을 고려하지 않았음.</p><p id="a27720e4-6f49-822e-8e93-0166cd2aeedd" class="" dir="auto">따라서 이 장에서는 위 코드를 다음 형태로 개선한다.</p><pre id="74d720e4-6f49-83f9-8058-0161e5821681" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">단순 boto3 호출 코드
+→ 함수화
+→ 데이터 추출
+→ 필터링
+→ 예외 처리
+→ 출력 정리
+→ 파일 저장
+→ 명령행 옵션 처리
+→ 운영 자동화 스크립트 완성</code></pre><hr id="da2720e4-6f49-837a-b305-015f32ce46ed" dir="auto"/><h1 id="106720e4-6f49-83f9-b04c-01da7eeb47ec" class="" dir="auto">4.4 main 함수와 실행 진입점 이해</h1><h2 id="e74720e4-6f49-820b-9a31-017d9f5156a9" class="" dir="auto">4.4.1 main 함수가 필요한 이유</h2><p id="404720e4-6f49-82df-8f13-0116791f411f" class="" dir="auto">파이썬 스크립트가 짧을 때는 위에서 아래로 코드를 바로 작성해도 된다.</p><pre id="a04720e4-6f49-823f-a4c1-810e9d92d42c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+ec2 = boto3.client(&quot;ec2&quot;)
+response = ec2.describe_instances()
+print(response)</code></pre><p id="390720e4-6f49-8237-88d3-0174a53e1410" class="" dir="auto">하지만 코드가 길어지면 실행 흐름을 파악하기 어렵다.</p><p id="5a5720e4-6f49-82d4-b63e-01f1c199b4d4" class="" dir="auto">그래서 일반적으로 실행 흐름을 <code>main()</code> 함수 안에 모은다.</p><pre id="d4b720e4-6f49-82d0-b0b4-81e9a8de19c0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def main():
+    print(&quot;자동화 스크립트 시작&quot;)
+
+
+main()</code></pre><p id="74e720e4-6f49-821f-80c6-01b037449930" class="" dir="auto">이 코드는 실행하면 다음처럼 출력된다.</p><pre id="19a720e4-6f49-8241-838f-817af5cee5ef" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">자동화 스크립트 시작</code></pre><p id="062720e4-6f49-8241-93ee-01b508d90c2e" class="" dir="auto">하지만 보통은 다음 구조를 사용한다.</p><pre id="b9b720e4-6f49-839f-bbe2-81d146b6529f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def main():
+    print(&quot;자동화 스크립트 시작&quot;)
+
+
+main()
+
+
+if __name__==&quot;__main__&quot;:
+		main()</code></pre><p id="fda720e4-6f49-83ad-ae36-8178da2c1436" class="" dir="auto">이 구조는 파이썬 자동화 스크립트에서 매우 자주 사용된다.</p><hr id="abb720e4-6f49-8344-809c-014c5725cb33" dir="auto"/><h2 id="41e720e4-6f49-835a-b5bf-81199542a765" class="" dir="auto">4.4.2 <code>if __name__ == &quot;__main__&quot;</code> 의미</h2><p id="1d0720e4-6f49-83ec-ad34-0128969076e0" class="" dir="auto">파이썬 파일은 두 가지 방식으로 사용될 수 있다.</p><pre id="edc720e4-6f49-8216-b7ef-8170bfd88c80" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 직접 실행
+2. 다른 파일에서 import</code></pre><p id="100720e4-6f49-8285-9d89-8191dd5b78c5" class="" dir="auto">예를 들어 다음 파일이 있다고 하자.</p><p id="4b9720e4-6f49-8391-9c3c-01b9720ddb76" class="" dir="auto">파일명: <code>sample.py</code></p><pre id="d53720e4-6f49-8236-8ab2-0159b70355df" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def hello():
+    print(&quot;hello&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    hello()</code></pre><p id="a7f720e4-6f49-837d-8854-0106024eb96f" class="" dir="auto">직접 실행하면 <code>hello()</code>가 실행된다.</p><pre id="65d720e4-6f49-8325-a5b9-01f0bb2fa59d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python sample.py</code></pre><p id="315720e4-6f49-82e4-94c6-81e7b51d04df" class="" dir="auto">출력:</p><pre id="675720e4-6f49-820e-b67b-01cea1e514cb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hello</code></pre><p id="f89720e4-6f49-8224-8a96-01e8fac752e9" class="" dir="auto">하지만 다른 파일에서 import하면 자동으로 실행되지 않는다.</p><p id="cd9720e4-6f49-8251-816c-81d436717601" class="" dir="auto">파일명: <code>test_import.py</code></p><pre id="9ac720e4-6f49-82d3-8e39-812b02104556" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import sample
+
+print(&quot;import 완료&quot;)</code></pre><p id="051720e4-6f49-8360-a7ec-018eb7f6e86f" class="" dir="auto">실행한다.</p><pre id="d15720e4-6f49-835c-8701-81e0efc2de9f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python test_import.py</code></pre><p id="a84720e4-6f49-828f-a550-81211e6255cd" class="" dir="auto">출력:</p><pre id="8b3720e4-6f49-830d-bfab-01153d750f6c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">import 완료</code></pre><p id="c1f720e4-6f49-83ea-b967-8194b16085d3" class="" dir="auto"><code>hello()</code>는 자동으로 실행되지 않는다.</p><p id="829720e4-6f49-826e-b37b-013d6923ecbc" class="" dir="auto">이 구조를 사용하는 이유는 다음과 같다.</p><pre id="9de720e4-6f49-82e3-bca0-81017c96b3ce" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- 현재 파일을 직접 실행할 때만 main()을 실행하기 위해서
+- 나중에 다른 파이썬 파일에서 함수를 재사용할 수 있게 하기 위해서
+- 자동화 스크립트의 실행 시작점을 명확하게 만들기 위해서</code></pre><p id="b58720e4-6f49-8373-985b-01bee4a0f162" class="" dir="auto">운영 자동화 스크립트에서는 다음 구조를 기본 형태로 사용한다.</p><pre id="218720e4-6f49-83a2-9e96-81556e424244" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def main():
+    # 실행 흐름 작성
+    pass
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><hr id="dd6720e4-6f49-83bf-b777-816f14592a2c" dir="auto"/><h1 id="2e9720e4-6f49-83f6-ac1a-81468538f0a0" class="" dir="auto">4.5 boto3 클라이언트 생성 코드 분리</h1><h2 id="df6720e4-6f49-8381-b6bd-016b94bd0f1a" class="" dir="auto">4.5.1 기존 코드</h2><p id="873720e4-6f49-8316-8ea4-81a32d1db133" class="" dir="auto">boto3 클라이언트를 만들 때 다음처럼 작성했다.</p><pre id="42b720e4-6f49-82c4-9938-01ddd30f1bcf" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+ec2 = boto3.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)</code></pre><p id="c1c720e4-6f49-8350-982d-81416a1fc305" class="" dir="auto">이 코드는 EC2 서비스를 호출할 수 있는 클라이언트 객체를 생성한다.</p><pre id="5c2720e4-6f49-829b-99e9-011072138171" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">boto3.client(&quot;ec2&quot;)</code></pre><p id="27d720e4-6f49-82a0-9164-81c72365f903" class="" dir="auto">의미는 다음과 같다.</p><pre id="d74720e4-6f49-8353-8ce9-015b9dca72dd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- boto3를 이용해 AWS 서비스 클라이언트를 생성한다.
+- &quot;ec2&quot;는 사용할 AWS 서비스 이름이다.
+- region_name은 API를 호출할 AWS 리전이다.</code></pre><p id="ae8720e4-6f49-82fc-8a0e-01c74cc71544" class="" dir="auto">예를 들어 서울 리전 EC2를 조회하려면 다음처럼 작성한다.</p><pre id="cf5720e4-6f49-820c-89e2-8167b7df96af" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">boto3.client(&quot;ec2&quot;,region_name=&quot;ap-northeast-2&quot;)</code></pre><p id="acd720e4-6f49-826f-ac54-0199a74d5d94" class="" dir="auto">도쿄 리전을 조회하려면 다음처럼 작성한다.</p><pre id="76d720e4-6f49-8269-b3be-8108aacc8c25" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">boto3.client(&quot;ec2&quot;,region_name=&quot;ap-northeast-1&quot;)</code></pre><hr id="8a9720e4-6f49-83ad-9d61-813c5ab68c2a" dir="auto"/><h2 id="8c6720e4-6f49-8209-90ee-819f8b7383cb" class="" dir="auto">4.5.2 클라이언트 생성 함수를 만드는 이유</h2><p id="a70720e4-6f49-8315-9eed-01af067fa741" class="" dir="auto">운영 자동화 코드에서는 boto3 클라이언트 생성 코드를 함수로 분리하는 것이 좋다.</p><pre id="804720e4-6f49-825f-b20b-01cecb970f5b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def create_ec2_client(region):
+    return boto3.client(&quot;ec2&quot;, region_name=region)</code></pre><p id="219720e4-6f49-82ba-bb49-018b2076d585" class="" dir="auto">이렇게 만들면 다음 장점이 있다.</p><pre id="508720e4-6f49-8385-9ce7-019107d38ea7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- 리전을 매개변수로 받을 수 있다.
+- 클라이언트 생성 로직을 재사용할 수 있다.
+- 나중에 profile_name, endpoint_url 같은 옵션을 추가하기 쉽다.
+- main 함수의 흐름이 간결해진다.</code></pre><p id="bbb720e4-6f49-8347-8b9c-0155d14468d4" class="" dir="auto">전체 코드는 다음과 같다.</p><pre id="22c720e4-6f49-825d-ab68-01a7b82272e3" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+
+def create_ec2_client(region):
+    return boto3.client(&quot;ec2&quot;, region_name=region)
+
+
+def main():
+    region = &quot;ap-northeast-2&quot;
+    ec2 = create_ec2_client(region)
+
+    response = ec2.describe_instances()
+
+    for reservation in response[&quot;Reservations&quot;]:
+        for instance in reservation[&quot;Instances&quot;]:
+            print(instance[&quot;InstanceId&quot;], instance[&quot;State&quot;][&quot;Name&quot;])
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><p id="b40720e4-6f49-83c1-ada2-81334e05cd66" class="" dir="auto">파일명은 <code>ec2_step1_client.py</code>로 저장한다.</p><pre id="e78720e4-6f49-8278-bbe9-819de1e2305b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_step1_client.py</code></pre><hr id="07f720e4-6f49-822c-a3ec-8144e9f2b566" dir="auto"/><h2 id="314720e4-6f49-8317-bb09-8127b8ac81ee" class="" dir="auto">4.5.3 함수 매개변수 이해</h2><p id="033720e4-6f49-8290-b07f-8169574e179d" class="" dir="auto">다음 함수에서 <code>region</code>은 매개변수다.</p><pre id="b66720e4-6f49-8358-9bb8-8179edfb9cad" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def create_ec2_client(region):
+    return boto3.client(&quot;ec2&quot;, region_name=region)</code></pre><p id="11a720e4-6f49-8388-99bd-81ee39ca5571" class="" dir="auto">실행할 때 다음처럼 값을 전달한다.</p><pre id="f2e720e4-6f49-82c5-918e-014196f5ab37" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ec2=create_ec2_client(&quot;ap-northeast-2&quot;)</code></pre><p id="065720e4-6f49-83b6-88cf-8178ef7b8144" class="" dir="auto">그러면 함수 내부에서는 다음처럼 동작한다.</p><pre id="a39720e4-6f49-8342-b5a8-0156c3a12608" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">region = &quot;ap-northeast-2&quot;
+boto3.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)</code></pre><p id="f56720e4-6f49-8356-97ea-816fed2956c8" class="" dir="auto">즉, 함수는 고정된 코드가 아니라 값을 받아서 동작을 바꿀 수 있는 코드 블록이다.</p><hr id="690720e4-6f49-836c-a44a-0130c22f19ca" dir="auto"/><h1 id="d57720e4-6f49-8221-bbb0-81707c7d6742" class="" dir="auto">4.6 AWS API 응답 구조 다루기</h1><h2 id="731720e4-6f49-8270-b3ca-813176054ac2" class="" dir="auto">4.6.1 describe_instances 응답 구조</h2><p id="269720e4-6f49-824b-ba6e-01cbafc098f0" class="" dir="auto">EC2 인스턴스를 조회할 때 사용하는 API는 다음과 같다.</p><pre id="81c720e4-6f49-82a4-a148-814be8a74f18" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ec2.describe_instances()</code></pre><p id="4a2720e4-6f49-8244-95f0-014184ca93f8" class="" dir="auto">이 API는 딕셔너리 형태의 응답을 반환한다.</p><p id="24a720e4-6f49-8260-8d58-81354efba37e" class="" dir="auto">응답 구조는 단순하지 않고, 리스트와 딕셔너리가 중첩되어 있다.</p><p id="380720e4-6f49-83a3-823a-017005a773c9" class="" dir="auto">대략적인 구조는 다음과 같다.</p><pre id="374720e4-6f49-83c7-9941-81b9873ffd7c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">response
+└── Reservations
+    └── [
+        {
+          &quot;ReservationId&quot;: &quot;...&quot;,
+          &quot;Instances&quot;: [
+              {
+                &quot;InstanceId&quot;: &quot;i-0123456789abcdef0&quot;,
+                &quot;InstanceType&quot;: &quot;t3.micro&quot;,
+                &quot;State&quot;: {
+                    &quot;Name&quot;: &quot;running&quot;
+                },
+                &quot;PrivateIpAddress&quot;: &quot;10.0.1.10&quot;,
+                &quot;PublicIpAddress&quot;: &quot;3.35.10.20&quot;,
+                &quot;Tags&quot;: [
+                    {
+                      &quot;Key&quot;: &quot;Name&quot;,
+                      &quot;Value&quot;: &quot;web-server&quot;
+                    }
+                ]
+              }
+          ]
+        }
+    ]</code></pre><p id="c85720e4-6f49-82c0-bbbc-814fc7b51c36" class="" dir="auto">여기서 실제 인스턴스 정보는 다음 위치에 있다.</p><pre id="e40720e4-6f49-826b-a90f-81a696f1f898" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">response[&quot;Reservations&quot;][0][&quot;Instances&quot;][0]</code></pre><p id="c50720e4-6f49-8305-8c17-01519e722404" class="" dir="auto">하지만 인스턴스가 여러 개일 수 있으므로 반복문을 사용해야 한다.</p><pre id="ef2720e4-6f49-838a-a498-0180bf001d5c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">for reservation in response[&quot;Reservations&quot;]:
+    for instance in reservation[&quot;Instances&quot;]:
+        print(instance[&quot;InstanceId&quot;])</code></pre><hr id="467720e4-6f49-83b3-817b-0179f6ca8a45" dir="auto"/><h2 id="a12720e4-6f49-837e-8f54-01bb85070da2" class="" dir="auto">4.6.2 중첩 반복문 이해</h2><p id="abb720e4-6f49-82f8-b444-81266dad5b0b" class="" dir="auto">다음 코드를 다시 보자.</p><pre id="6a1720e4-6f49-8315-b2d0-01c010ceb275" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">for reservation in response[&quot;Reservations&quot;]:
+    for instance in reservation[&quot;Instances&quot;]:
+        print(instance[&quot;InstanceId&quot;])</code></pre><p id="714720e4-6f49-830d-ab2a-81bbd6698a9b" class="" dir="auto">첫 번째 반복문은 <code>Reservations</code> 목록을 순회한다.</p><pre id="431720e4-6f49-82ba-9b16-81276a3f3164" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">for reservation in response[&quot;Reservations&quot;]:</code></pre><p id="1a5720e4-6f49-8240-8fce-016b6547640c" class="" dir="auto">두 번째 반복문은 각 reservation 안의 <code>Instances</code> 목록을 순회한다.</p><pre id="fb8720e4-6f49-83e4-91f8-01ffe67bdb29" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">for instance in reservation[&quot;Instances&quot;]:</code></pre><p id="027720e4-6f49-8206-aae4-01ea640f983e" class="" dir="auto">이 구조가 필요한 이유는 AWS EC2의 응답 구조가 다음처럼 되어 있기 때문이다.</p><pre id="f0d720e4-6f49-82dc-8ced-81b398f1b1bf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Reservations는 리스트
+각 Reservation 안에 Instances 리스트가 있음
+각 Instance 안에 InstanceId, State, InstanceType 같은 정보가 있음</code></pre><p id="a8c720e4-6f49-824a-807a-81ba552b87ea" class="" dir="auto">따라서 EC2 목록 조회 코드는 보통 중첩 반복문을 사용한다.</p><hr id="9f2720e4-6f49-83f0-ac9f-01462d0b96b8" dir="auto"/><h2 id="4e4720e4-6f49-830f-b755-8140620bc0f6" class="" dir="auto">4.6.3 응답 구조를 확인하는 방법</h2><p id="112720e4-6f49-8386-837f-81fa5fc29c19" class="" dir="auto">API 응답 구조가 헷갈릴 때는 전체 응답을 출력해보는 것이 좋다.</p><pre id="533720e4-6f49-8243-84d5-011addbcee1c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+import json
+
+ec2 = boto3.client(&quot;ec2&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = ec2.describe_instances()
+
+print(json.dumps(response, indent=2, default=str))</code></pre><p id="ad0720e4-6f49-8225-97d9-81b8d79de2f5" class="" dir="auto">여기서 <code>json.dumps()</code>는 파이썬 데이터를 JSON 문자열로 변환한다.</p><pre id="574720e4-6f49-837b-9dc7-8139c651fd98" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">json.dumps(response,indent=2,default=str)</code></pre><p id="9bd720e4-6f49-83a6-89ed-81cd1f7ae33e" class="" dir="auto">옵션의 의미는 다음과 같다.</p><pre id="820720e4-6f49-8255-817f-01b75bc821be" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">response
+- 출력할 파이썬 딕셔너리 데이터
+
+indent=2
+- 들여쓰기를 적용해서 보기 좋게 출력
+
+default=str
+- datetime 같은 JSON으로 바로 변환되지 않는 값을 문자열로 변환</code></pre><p id="109720e4-6f49-8385-b555-0125d3cee468" class="" dir="auto">AWS 응답에는 날짜 데이터가 포함되는 경우가 많다.</p><p id="514720e4-6f49-83fc-a943-012f761fbc03" class="" dir="auto">날짜 데이터는 그대로 JSON으로 변환되지 않을 수 있으므로 <code>default=str</code>을 사용한다.</p><hr id="ff2720e4-6f49-82fe-9709-813b5f16acbf" dir="auto"/><h1 id="4c8720e4-6f49-83d4-a7b5-81840a60c6f9" class="" dir="auto">4.7 필요한 데이터만 추출하기</h1><h2 id="65e720e4-6f49-8277-bbe8-01760e661b7f" class="" dir="auto">4.7.1 원본 응답을 그대로 사용하지 않는 이유</h2><p id="286720e4-6f49-82b4-9483-816dcddaf42a" class="" dir="auto">AWS API 응답에는 많은 정보가 들어 있다.</p><p id="075720e4-6f49-826c-8137-01b0bee67691" class="" dir="auto">하지만 운영자가 매번 모든 정보를 확인할 필요는 없다.</p><p id="a93720e4-6f49-83a1-acc7-01aa01a5c137" class="" dir="auto">EC2 인스턴스 목록 점검에서는 보통 다음 정보 정도를 우선 확인한다.</p><pre id="8a4720e4-6f49-8226-9b08-0107668eff27" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- 인스턴스 ID
+- 인스턴스 타입
+- 상태
+- 프라이빗 IP
+- 퍼블릭 IP
+- Name 태그</code></pre><p id="d2d720e4-6f49-82c0-b2c6-01895ab78c89" class="" dir="auto">따라서 원본 응답에서 필요한 값만 추출하여 새로운 딕셔너리로 정리하는 것이 좋다.</p><hr id="f68720e4-6f49-8280-9e90-01365648d0b0" dir="auto"/><h2 id="3c6720e4-6f49-83af-b020-01e44ae7b096" class="" dir="auto">4.7.2 인스턴스 정보 추출 함수 작성</h2><p id="161720e4-6f49-83dd-8ee8-81aec7177399" class="" dir="auto">다음 함수를 작성한다.</p><pre id="3c8720e4-6f49-82eb-a19b-81bf01be550b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def extract_instance_info(reservations):
+    instance_list = []
+
+    for reservation in reservations:
+        for instance in reservation[&quot;Instances&quot;]:
+            instance_info = {
+                &quot;InstanceId&quot;: instance.get(&quot;InstanceId&quot;),
+                &quot;InstanceType&quot;: instance.get(&quot;InstanceType&quot;),
+                &quot;State&quot;: instance.get(&quot;State&quot;, {}).get(&quot;Name&quot;),
+                &quot;PrivateIpAddress&quot;: instance.get(&quot;PrivateIpAddress&quot;, &quot;-&quot;),
+                &quot;PublicIpAddress&quot;: instance.get(&quot;PublicIpAddress&quot;, &quot;-&quot;),
+            }
+
+            instance_list.append(instance_info)
+
+    return instance_list</code></pre><p id="060720e4-6f49-82b3-a6c1-81fcbe54e64e" class="" dir="auto">이 함수의 역할은 다음과 같다.</p><pre id="659720e4-6f49-834f-9c62-81f9dad5063e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">입력:
+- describe_instances() 응답의 Reservations 목록
+
+처리:
+- 각 EC2 인스턴스에서 필요한 정보만 추출
+- 새 딕셔너리로 정리
+- 리스트에 추가
+
+출력:
+- 인스턴스 정보 딕셔너리 리스트</code></pre><p id="cb8720e4-6f49-82f1-a126-0184e67eb2d3" class="" dir="auto">출력 데이터 예시는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="de4720e4-6f49-82c7-903b-810e5750870a" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">[
+    {
+        &quot;InstanceId&quot;: &quot;i-0123456789abcdef0&quot;,
+        &quot;InstanceType&quot;: &quot;t3.micro&quot;,
+        &quot;State&quot;: &quot;running&quot;,
+        &quot;PrivateIpAddress&quot;: &quot;10.0.1.10&quot;,
+        &quot;PublicIpAddress&quot;: &quot;3.35.10.20&quot;
+    },
+    {
+        &quot;InstanceId&quot;: &quot;i-0abcdef1234567890&quot;,
+        &quot;InstanceType&quot;: &quot;t3.micro&quot;,
+        &quot;State&quot;: &quot;stopped&quot;,
+        &quot;PrivateIpAddress&quot;: &quot;10.0.1.20&quot;,
+        &quot;PublicIpAddress&quot;: &quot;-&quot;
+    }
+]</code></pre><hr id="697720e4-6f49-82a9-aa40-01ede9070947" dir="auto"/><h2 id="146720e4-6f49-8338-af6b-01a5e23cbb06" class="" dir="auto">4.7.3 <code>get()</code> 메서드 사용 이유</h2><p id="a2f720e4-6f49-826f-943f-015a33322a07" class="" dir="auto">다음 코드를 보자.</p><pre id="8a9720e4-6f49-82fd-bda5-011429740019" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">instance.get(&quot;PublicIpAddress&quot;,&quot;-&quot;)</code></pre><p id="ae8720e4-6f49-83d9-a937-8119b4ea2f4f" class="" dir="auto">딕셔너리에서 값을 가져올 때는 보통 다음처럼 작성할 수도 있다.</p><pre id="823720e4-6f49-8321-8a09-01dc3c2bafd9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">instance[&quot;PublicIpAddress&quot;]</code></pre><p id="dea720e4-6f49-82f1-9af0-015969bb6821" class="" dir="auto">하지만 이 방식은 해당 키가 없으면 오류가 발생한다.</p><pre id="afe720e4-6f49-8389-b174-81c18173256a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">KeyError: &#x27;PublicIpAddress&#x27;</code></pre><p id="fe2720e4-6f49-82c7-9b4d-81ae16fcacda" class="" dir="auto">EC2 인스턴스는 퍼블릭 IP가 없을 수 있다.</p><p id="543720e4-6f49-82ff-a154-816c1083d58f" class="" dir="auto">예를 들어 프라이빗 서브넷에 있는 인스턴스는 <code>PublicIpAddress</code> 키 자체가 없을 수 있음.</p><p id="36c720e4-6f49-8212-8b33-81c54aa495b8" class="" dir="auto">따라서 안전하게 값을 꺼내려면 <code>get()</code>을 사용한다.</p><pre id="b21720e4-6f49-83c6-89ba-81c8019c40e3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">instance.get(&quot;PublicIpAddress&quot;,&quot;-&quot;)</code></pre><p id="e20720e4-6f49-8276-8edc-01ba9a05f03a" class="" dir="auto">의미는 다음과 같다.</p><pre id="c01720e4-6f49-8350-95d2-0129ef58af07" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- PublicIpAddress 키가 있으면 해당 값을 반환
+- 없으면 &quot;-&quot; 반환</code></pre><hr id="8d7720e4-6f49-8352-ac60-81efb702bd28" dir="auto"/><h2 id="f4c720e4-6f49-8211-a3d9-0168052ee7e2" class="" dir="auto">4.7.4 중첩 딕셔너리에서 값 가져오기</h2><p id="21c720e4-6f49-8339-932c-81c7423a8739" class="" dir="auto">인스턴스 상태는 다음 구조로 들어 있다.</p><pre id="1ce720e4-6f49-83e6-8753-813ff6a456f8" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">&quot;State&quot;: {
+    &quot;Code&quot;: 16,
+    &quot;Name&quot;: &quot;running&quot;
+}</code></pre><p id="745720e4-6f49-8386-818e-814a6561ffda" class="" dir="auto">상태 이름만 가져오려면 다음처럼 작성한다.</p><pre id="95a720e4-6f49-8215-af17-01a23096e3a7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">instance[&quot;State&quot;][&quot;Name&quot;]</code></pre><p id="c3c720e4-6f49-830e-a153-0104d882ba65" class="" dir="auto">하지만 안전하게 작성하려면 다음처럼 작성한다.</p><pre id="6fa720e4-6f49-8290-9549-8192247af547" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">instance.get(&quot;State&quot;, {}).get(&quot;Name&quot;)</code></pre><p id="839720e4-6f49-829b-9870-81487fe6769c" class="" dir="auto">이 코드의 의미는 다음과 같다.</p><pre id="1d0720e4-6f49-831b-b4a1-81407a551a7d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. instance에서 State 값을 가져온다.
+2. State 키가 없으면 빈 딕셔너리 {}를 사용한다.
+3. 그 결과에서 Name 값을 가져온다.</code></pre><p id="a48720e4-6f49-8384-b543-012b4d196ba0" class="" dir="auto">즉, <code>State</code> 키가 없더라도 프로그램이 바로 종료되지 않게 만든다.</p><hr id="b31720e4-6f49-8381-a10e-818edc9522ea" dir="auto"/><h2 id="b0c720e4-6f49-8256-b199-01d22a898dab" class="" dir="auto">4.7.5 Name 태그 추출하기</h2><p id="6bc720e4-6f49-82e3-aab7-81f8ea6699d1" class="" dir="auto">EC2 인스턴스 이름은 보통 <code>Name</code> 태그에 저장된다.</p><p id="b79720e4-6f49-837e-b86c-015c3239462d" class="" dir="auto">태그 구조는 다음과 같다.</p><pre id="357720e4-6f49-82ae-9e04-81fce1a27c92" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">&quot;Tags&quot;: [
+    {
+        &quot;Key&quot;: &quot;Name&quot;,
+        &quot;Value&quot;: &quot;web-server&quot;
+    },
+    {
+        &quot;Key&quot;: &quot;Env&quot;,
+        &quot;Value&quot;: &quot;dev&quot;
+    }
+]</code></pre><p id="000720e4-6f49-8327-b02e-011f99c2821d" class="" dir="auto"><code>Name</code> 태그만 추출하는 함수를 작성한다.</p><pre id="620720e4-6f49-8320-8d32-019b673de1a7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def get_name_tag(instance):
+    tags = instance.get(&quot;Tags&quot;, [])
+
+    for tag in tags:
+        if tag.get(&quot;Key&quot;) == &quot;Name&quot;:
+            return tag.get(&quot;Value&quot;)
+
+    return &quot;-&quot;</code></pre><p id="f13720e4-6f49-82b7-bd71-814ae2ca05b4" class="" dir="auto">이 함수는 다음 순서로 동작한다.</p><pre id="226720e4-6f49-82c4-a1e5-01020956b794" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. instance에서 Tags 값을 가져온다.
+2. Tags가 없으면 빈 리스트를 사용한다.
+3. 태그 목록을 반복한다.
+4. Key 값이 Name인 태그를 찾는다.
+5. 찾으면 Value 값을 반환한다.
+6. 끝까지 못 찾으면 &quot;-&quot;를 반환한다.</code></pre><p id="502720e4-6f49-8368-bba6-8152cdd4d474" class="" dir="auto">이제 인스턴스 정보 추출 함수에 Name 태그도 포함한다.</p><pre id="189720e4-6f49-8339-9058-81f98e5b7174" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def extract_instance_info(reservations):
+    instance_list = []
+
+    for reservation in reservations:
+        for instance in reservation[&quot;Instances&quot;]:
+            instance_info = {
+                &quot;Name&quot;: get_name_tag(instance),
+                &quot;InstanceId&quot;: instance.get(&quot;InstanceId&quot;),
+                &quot;InstanceType&quot;: instance.get(&quot;InstanceType&quot;),
+                &quot;State&quot;: instance.get(&quot;State&quot;, {}).get(&quot;Name&quot;),
+                &quot;PrivateIpAddress&quot;: instance.get(&quot;PrivateIpAddress&quot;, &quot;-&quot;),
+                &quot;PublicIpAddress&quot;: instance.get(&quot;PublicIpAddress&quot;, &quot;-&quot;),
+            }
+
+            instance_list.append(instance_info)
+
+    return instance_list</code></pre><hr id="bb1720e4-6f49-8372-9c0a-81c434ee666a" dir="auto"/><h1 id="754720e4-6f49-83ce-9ecc-818a7c06e1b7" class="" dir="auto">4.8 반복 조회와 필터링</h1><h2 id="962720e4-6f49-82f2-86b4-81bfcece340b" class="" dir="auto">4.8.1 필터링이 필요한 이유</h2><p id="5ec720e4-6f49-83ed-bf5a-01633c8a30f7" class="" dir="auto">운영 자동화에서는 전체 리소스를 조회한 뒤 필요한 조건만 골라내는 경우가 많다.</p><p id="e68720e4-6f49-824e-8bd5-018e12182918" class="" dir="auto">예를 들어 다음과 같은 요구사항이 있을 수 있다.</p><pre id="44b720e4-6f49-823a-83e4-816da05862dd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- running 상태의 EC2만 출력
+- stopped 상태의 EC2만 출력
+- 특정 태그가 붙은 인스턴스만 출력
+- 퍼블릭 IP를 가진 인스턴스만 출력
+- 특정 인스턴스 타입만 출력</code></pre><p id="27e720e4-6f49-8302-b32c-812af0c7dfe1" class="" dir="auto">이런 작업을 필터링이라고 한다.</p><hr id="f40720e4-6f49-83c5-b6a5-01ebe20e88ba" dir="auto"/><h2 id="99b720e4-6f49-8320-9c50-813fe3569bb2" class="" dir="auto">4.8.2 상태 기준 필터링</h2><p id="f51720e4-6f49-82a7-b872-01c16e8538ed" class="" dir="auto">인스턴스 목록에서 특정 상태만 남기는 함수를 작성한다.</p><pre id="47b720e4-6f49-83ee-9f8f-01f7699dd0b1" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def filter_instances_by_state(instances, state):
+    if state == &quot;all&quot;:
+        return instances
+
+    filtered_instances = []
+
+    for instance in instances:
+        if instance[&quot;State&quot;] == state:
+            filtered_instances.append(instance)
+
+    return filtered_instances</code></pre><p id="cea720e4-6f49-836c-8e0c-811327335d99" class="" dir="auto">이 함수의 동작은 다음과 같다.</p><pre id="1e9720e4-6f49-82fa-a685-81b1a8ec193c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- state 값이 &quot;all&quot;이면 전체 목록 반환
+- 그렇지 않으면 인스턴스 상태를 비교
+- 일치하는 인스턴스만 새 리스트에 추가
+- 필터링된 리스트 반환</code></pre><p id="65b720e4-6f49-83cf-9630-0159a8ecad89" class="" dir="auto">예를 들어 다음 데이터가 있다고 하자.</p><pre id="a40720e4-6f49-822a-ae33-013aa7f26888" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">instances= [
+    {&quot;InstanceId&quot;:&quot;i-001&quot;,&quot;State&quot;:&quot;running&quot;},
+    {&quot;InstanceId&quot;:&quot;i-002&quot;,&quot;State&quot;:&quot;stopped&quot;},
+    {&quot;InstanceId&quot;:&quot;i-003&quot;,&quot;State&quot;:&quot;running&quot;},
+]</code></pre><p id="17a720e4-6f49-8306-b7ae-8187f3db6008" class="" dir="auto">다음처럼 호출하면,</p><pre id="092720e4-6f49-8328-bd71-81db792c7489" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">running_instances = filter_instances_by_state(instances, &quot;running&quot;)</code></pre><p id="349720e4-6f49-8385-b067-812c6edc47bf" class="" dir="auto">결과는 다음과 같다.</p><pre id="806720e4-6f49-83c8-8cbc-01acdafb1457" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">[
+    {&quot;InstanceId&quot;:&quot;i-001&quot;,&quot;State&quot;:&quot;running&quot;},
+    {&quot;InstanceId&quot;:&quot;i-003&quot;,&quot;State&quot;:&quot;running&quot;},
+]</code></pre><hr id="276720e4-6f49-8290-a74b-014a12f466c3" dir="auto"/><h2 id="fe0720e4-6f49-83a1-96d6-8177f6970800" class="" dir="auto">4.8.3 리스트 컴프리헨션 방식</h2><p id="8ea720e4-6f49-821e-b43f-0176e6b80f78" class="" dir="auto">위 코드는 리스트 컴프리헨션으로 더 짧게 작성할 수 있다.</p><pre id="066720e4-6f49-838d-a8be-018c4a947405" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def filter_instances_by_state(instances, state):
+    if state == &quot;all&quot;:
+        return instances
+
+    return [
+        instance
+        for instance in instances
+        if instance[&quot;State&quot;] == state
+    ]</code></pre><p id="be2720e4-6f49-8223-8d8e-816219abd0ef" class="" dir="auto">리스트 컴프리헨션은 다음 구조를 가진다.</p><pre id="f03720e4-6f49-83e9-97b9-014993b6c58e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[ 표현식 for 변수 in 반복대상 if 조건 ]</code></pre><p id="90c720e4-6f49-8371-a078-81c1a62688db" class="" dir="auto">예를 들어 다음 코드는,</p><pre id="76c720e4-6f49-823a-94d8-016357915293" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">[
+    instance
+    for instance in instances
+    if instance[&quot;State&quot;] == state
+]</code></pre><p id="68b720e4-6f49-82bb-9f58-015dbe83f371" class="" dir="auto">다음 반복문과 같은 의미다.</p><pre id="8b9720e4-6f49-8270-9589-016aab56de70" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">filtered_instances = []
+
+for instance in instances:
+    if instance[&quot;State&quot;] == state:
+        filtered_instances.append(instance)</code></pre><p id="b3e720e4-6f49-82b9-953b-81bf212923b8" class="" dir="auto">초보자에게는 일반 <code>for</code>문 방식이 이해하기 쉽고,</p><p id="096720e4-6f49-83e5-9245-0186defdb23e" class="" dir="auto">익숙해지면 리스트 컴프리헨션 방식도 사용할 수 있다.</p><hr id="8fd720e4-6f49-83ad-bc2b-01163fbcf320" dir="auto"/><h2 id="078720e4-6f49-8358-817c-01cb064d855e" class="" dir="auto">4.8.4 퍼블릭 IP 보유 인스턴스 필터링</h2><p id="a86720e4-6f49-837f-b5fd-01230edf3e63" class="" dir="auto">퍼블릭 IP를 가진 인스턴스만 찾는 함수도 작성해볼 수 있다.</p><pre id="101720e4-6f49-83dc-837b-81ff85326469" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def filter_instances_with_public_ip(instances):
+    filtered_instances = []
+
+    for instance in instances:
+        if instance[&quot;PublicIpAddress&quot;] != &quot;-&quot;:
+            filtered_instances.append(instance)
+
+    return filtered_instances</code></pre><p id="38d720e4-6f49-83ca-a7bf-81e71104e023" class="" dir="auto">리스트 컴프리헨션 방식은 다음과 같다.</p><pre id="d6c720e4-6f49-83ec-b804-01c6dfb9fc65" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def filter_instances_with_public_ip(instances):
+    return [
+        instance
+        for instance in instances
+        if instance[&quot;PublicIpAddress&quot;] != &quot;-&quot;
+    ]</code></pre><p id="058720e4-6f49-8338-ad54-811eb5dd6d12" class="" dir="auto">이런 필터링은 보안 점검에서 자주 사용된다.</p><p id="9d7720e4-6f49-8333-8934-816296def332" class="" dir="auto">예를 들어 퍼블릭 IP를 가진 인스턴스 목록을 뽑아 외부 노출 여부를 점검할 수 있다.</p><hr id="5f1720e4-6f49-83e9-8bc8-81f73f1b0452" dir="auto"/><h1 id="e19720e4-6f49-839c-855f-01b8828c18bf" class="" dir="auto">4.9 예외 처리 적용</h1><h2 id="615720e4-6f49-8200-bb74-81a1b370f1ae" class="" dir="auto">4.9.1 예외 처리가 필요한 이유</h2><p id="dd3720e4-6f49-82a9-b507-81ce9cecfc9c" class="" dir="auto">자동화 스크립트는 항상 정상 상황에서만 실행되지 않는다.</p><p id="41a720e4-6f49-831f-b5ce-810cb1fec228" class="" dir="auto">AWS API 호출 중 다음 문제가 발생할 수 있다.</p><pre id="6bf720e4-6f49-824f-a2a0-01c41b78a32f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- AWS 자격 증명이 설정되어 있지 않음
+- IAM 권한이 부족함
+- 잘못된 리전명을 사용함
+- 네트워크 연결이 불안정함
+- API 호출 제한이 발생함
+- 존재하지 않는 리소스를 조회함</code></pre><p id="5b7720e4-6f49-82e2-a8a7-01f2f751fe2f" class="" dir="auto">예외 처리를 하지 않으면 오류 발생 시 프로그램이 바로 종료된다.</p><p id="d94720e4-6f49-8317-9755-81a207cd978e" class="" dir="auto">운영 자동화에서는 오류를 사용자에게 명확히 알려주고, 필요한 경우 다음 작업으로 넘어갈 수 있어야 한다.</p><hr id="068720e4-6f49-8271-bca0-016971115927" dir="auto"/><h2 id="0e8720e4-6f49-8320-888e-01bb9f584c09" class="" dir="auto">4.9.2 try except 기본 구조</h2><p id="2de720e4-6f49-833e-9328-81cd0cb4a1ca" class="" dir="auto">파이썬의 예외 처리는 <code>try except</code> 구조를 사용한다.</p><pre id="db1720e4-6f49-82b0-b036-8105d56eaa2b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">try:
+    # 오류가 발생할 수 있는 코드
+    pass
+except:
+    # 오류가 발생했을 때 실행할 코드
+    pass</code></pre><p id="3f9720e4-6f49-82d9-a0cb-016d4b86cc4f" class="" dir="auto">예를 들어 다음 코드는 0으로 나누기 오류가 발생한다.</p><pre id="f74720e4-6f49-83fa-b595-01f2594d9a72" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">number=10/0</code></pre><p id="c19720e4-6f49-825f-8b81-817cf1ee8d71" class="" dir="auto">실행하면 다음 오류가 발생한다.</p><pre id="13a720e4-6f49-8393-b1fe-0191babd04bd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ZeroDivisionError: division by zero</code></pre><p id="e20720e4-6f49-833a-90fe-0170b085fe36" class="" dir="auto">예외 처리를 적용하면 다음처럼 작성할 수 있다.</p><pre id="f3f720e4-6f49-82af-aabf-81ac895a7ecd" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">try:
+    number = 10 / 0
+except ZeroDivisionError:
+    print(&quot;0으로 나눌 수 없음&quot;)</code></pre><p id="97b720e4-6f49-8263-98a9-01372a507be6" class="" dir="auto">출력:</p><pre id="a0d720e4-6f49-83ce-91bb-818cd43354a7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">0으로 나눌 수 없음</code></pre><hr id="c38720e4-6f49-8213-adb1-818b9bdb5894" dir="auto"/><h2 id="f44720e4-6f49-8289-a593-81c9c3ae4301" class="" dir="auto">4.9.3 boto3 예외 처리</h2><p id="b14720e4-6f49-832b-9732-011b0d3098e7" class="" dir="auto">boto3 관련 예외 처리를 위해 다음 모듈을 가져온다.</p><pre id="7f2720e4-6f49-82d9-b3b9-0170fc1f28b7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from botocore.exceptions import ClientError, NoCredentialsError</code></pre><p id="e32720e4-6f49-833e-9690-81650e7927f5" class="" dir="auto">대표적인 예외는 다음과 같다.</p><pre id="3aa720e4-6f49-822d-a16f-81d79ffed8c6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ClientError
+- AWS API 호출 중 발생하는 일반적인 오류
+- 권한 부족, 잘못된 요청, 리소스 없음 등의 상황에서 발생
+
+NoCredentialsError
+- AWS 자격 증명을 찾을 수 없을 때 발생</code></pre><p id="3d6720e4-6f49-839f-a2a6-0142bd170c24" class="" dir="auto">EC2 조회 함수에 예외 처리를 추가한다.</p><pre id="73d720e4-6f49-8354-8ab4-011cb3989faa" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from botocore.exceptions import ClientError, NoCredentialsError
+
+
+def get_instances(ec2):
+    try:
+        response = ec2.describe_instances()
+        return response[&quot;Reservations&quot;]
+
+    except NoCredentialsError:
+        print(&quot;[오류] AWS 자격 증명을 찾을 수 없음&quot;)
+        return []
+
+    except ClientError as error:
+        print(&quot;[오류] AWS API 호출 중 문제가 발생함&quot;)
+        print(error)
+        return []</code></pre><p id="d96720e4-6f49-8254-9bc6-0148c17859d4" class="" dir="auto">이 함수는 오류가 발생하면 빈 리스트를 반환한다.</p><pre id="4d3720e4-6f49-8332-a75e-81d1941668fd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">return []</code></pre><p id="42f720e4-6f49-83b7-9f18-8122a6372ba3" class="" dir="auto">빈 리스트를 반환하는 이유는 이후 코드가 반복문을 실행하더라도 오류 없이 끝나게 하기 위해서다.</p><pre id="88b720e4-6f49-8236-929a-81b6ceba1231" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">for reservation in reservations:
+    ...</code></pre><p id="006720e4-6f49-835d-bc26-81b03c55aa57" class="" dir="auto"><code>reservations</code>가 빈 리스트이면 반복문은 아무 작업도 하지 않고 종료된다.</p><hr id="299720e4-6f49-832a-bc64-01c69c104383" dir="auto"/><h2 id="bc8720e4-6f49-826a-b807-811f4fdf4110" class="" dir="auto">4.9.4 ClientError에서 오류 코드 확인하기</h2><p id="d6c720e4-6f49-83c7-96a0-016b0d8d47a5" class="" dir="auto"><code>ClientError</code>는 내부에 AWS 오류 정보를 가지고 있다.</p><p id="edb720e4-6f49-822b-a1fc-8135e4eb30a1" class="" dir="auto">오류 코드는 다음처럼 확인할 수 있다.</p><pre id="d1a720e4-6f49-8376-a7d3-81358cfb6323" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">error.response[&quot;Error&quot;][&quot;Code&quot;]</code></pre><p id="8c2720e4-6f49-82c9-b1dd-815bdd6abc57" class="" dir="auto">오류 메시지는 다음처럼 확인할 수 있다.</p><pre id="878720e4-6f49-833a-8032-81b724588d8c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">error.response[&quot;Error&quot;][&quot;Message&quot;]</code></pre><p id="124720e4-6f49-8286-b2f3-012aeff1085d" class="" dir="auto">조금 더 정리된 예외 처리는 다음과 같다.</p><pre id="abf720e4-6f49-831f-b476-815af530ba27" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def get_instances(ec2):
+    try:
+        response = ec2.describe_instances()
+        return response[&quot;Reservations&quot;]
+
+    except NoCredentialsError:
+        print(&quot;[오류] AWS 자격 증명을 찾을 수 없음&quot;)
+        return []
+
+    except ClientError as error:
+        error_code = error.response[&quot;Error&quot;][&quot;Code&quot;]
+        error_message = error.response[&quot;Error&quot;][&quot;Message&quot;]
+
+        print(f&quot;[오류] AWS API 호출 실패: {error_code}&quot;)
+        print(f&quot;[메시지] {error_message}&quot;)
+
+        return []</code></pre><p id="397720e4-6f49-83e1-906d-817cd486a995" class="" dir="auto">예를 들어 권한이 부족하면 다음과 비슷한 메시지가 출력될 수 있다.</p><pre id="eec720e4-6f49-8243-963e-816591191058" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[오류] AWS API 호출 실패: UnauthorizedOperation
+[메시지] You are not authorized to perform this operation.</code></pre><p id="190720e4-6f49-832e-8d43-01441da7e407" class="" dir="auto">이런 방식은 운영자가 원인을 파악하는 데 도움이 된다.</p><hr id="976720e4-6f49-8230-85df-01e73381790a" dir="auto"/><h1 id="5ac720e4-6f49-827f-8eee-818bff8d9406" class="" dir="auto">4.10 출력 형식 정리</h1><h2 id="20e720e4-6f49-83b8-851e-0125d8bfaee1" class="" dir="auto">4.10.1 단순 출력의 한계</h2><p id="55c720e4-6f49-830f-bede-01aa857096d1" class="" dir="auto">처음에는 다음처럼 출력할 수 있다.</p><pre id="333720e4-6f49-8267-93a6-0173552a18fc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">print(instance)</code></pre><p id="c65720e4-6f49-834c-9dee-8114c565b14b" class="" dir="auto">하지만 딕셔너리 전체를 출력하면 보기 어렵다.</p><pre id="d48720e4-6f49-8345-b339-019fcdee85a1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{&#x27;Name&#x27;: &#x27;web-server&#x27;, &#x27;InstanceId&#x27;: &#x27;i-0123456789abcdef0&#x27;, &#x27;InstanceType&#x27;: &#x27;t3.micro&#x27;, &#x27;State&#x27;: &#x27;running&#x27;, &#x27;PrivateIpAddress&#x27;: &#x27;10.0.1.10&#x27;, &#x27;PublicIpAddress&#x27;: &#x27;3.35.10.20&#x27;}</code></pre><p id="9ac720e4-6f49-83d7-a9ba-011890b73d2d" class="" dir="auto">운영자가 빠르게 확인하려면 표 형태로 출력하는 것이 좋다.</p><hr id="aed720e4-6f49-8210-ac0d-01443c86af51" dir="auto"/><h2 id="339720e4-6f49-8384-80ee-019d11147c1e" class="" dir="auto">4.10.2 f-string 정렬</h2><p id="7ca720e4-6f49-82f7-821e-81d91007248f" class="" dir="auto">파이썬의 f-string을 사용하면 출력 폭과 정렬 방식을 지정할 수 있다.</p><pre id="889720e4-6f49-8201-abe5-81b848236220" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">name=&quot;web-server&quot;
+print(f&quot;{name:&lt;20}&quot;)</code></pre><p id="aa3720e4-6f49-8246-9802-812369d09f49" class="" dir="auto">여기서 <code>&lt;20</code>의 의미는 다음과 같다.</p><pre id="60e720e4-6f49-83bd-b756-01a178ba3ae8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&lt;  : 왼쪽 정렬
+20 : 전체 출력 폭을 20칸으로 설정</code></pre><p id="488720e4-6f49-83c4-9579-01293f4070f0" class="" dir="auto">오른쪽 정렬은 <code>&gt;</code>를 사용한다.</p><pre id="4de720e4-6f49-832d-ba93-814973f4c2bb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">print(f&quot;{name:&gt;20}&quot;)</code></pre><p id="56a720e4-6f49-8324-a270-0160555edd8a" class="" dir="auto">가운데 정렬은 <code>^</code>를 사용한다.</p><pre id="b62720e4-6f49-8368-9c69-81221434fa23" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">print(f&quot;{name:^20}&quot;)</code></pre><p id="c97720e4-6f49-828b-9fd3-81ea22983c05" class="" dir="auto">자동화 출력에서는 보통 왼쪽 정렬을 많이 사용한다.</p><hr id="ebd720e4-6f49-8223-98f1-813ca614cc9c" dir="auto"/><h2 id="526720e4-6f49-821e-b83c-81e6937bb705" class="" dir="auto">4.10.3 EC2 목록 표 출력 함수</h2><p id="113720e4-6f49-83e1-98bc-8144d3bbfd43" class="" dir="auto">다음 함수를 작성한다.</p><pre id="b80720e4-6f49-833e-8730-01d119f5889e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def print_instance_table(instances):
+    print(
+        f&quot;{&#x27;Name&#x27;:&lt;20} &quot;
+        f&quot;{&#x27;InstanceId&#x27;:&lt;22} &quot;
+        f&quot;{&#x27;Type&#x27;:&lt;12} &quot;
+        f&quot;{&#x27;State&#x27;:&lt;12} &quot;
+        f&quot;{&#x27;PrivateIP&#x27;:&lt;15} &quot;
+        f&quot;{&#x27;PublicIP&#x27;:&lt;15}&quot;
+    )
+    print(&quot;-&quot; * 100)
+
+    for instance in instances:
+        print(
+            f&quot;{instance[&#x27;Name&#x27;]:&lt;20} &quot;
+            f&quot;{instance[&#x27;InstanceId&#x27;]:&lt;22} &quot;
+            f&quot;{instance[&#x27;InstanceType&#x27;]:&lt;12} &quot;
+            f&quot;{instance[&#x27;State&#x27;]:&lt;12} &quot;
+            f&quot;{instance[&#x27;PrivateIpAddress&#x27;]:&lt;15} &quot;
+            f&quot;{instance[&#x27;PublicIpAddress&#x27;]:&lt;15}&quot;
+        )</code></pre><p id="15d720e4-6f49-828a-bc8d-0149d9bf18ae" class="" dir="auto">이 함수는 인스턴스 목록을 표 형태로 출력한다.</p><p id="8fb720e4-6f49-8315-a680-018630236b1d" class="" dir="auto">예상 출력:</p><pre id="755720e4-6f49-82cc-ae82-01292aea10c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name                 InstanceId             Type         State        PrivateIP       PublicIP
+----------------------------------------------------------------------------------------------------
+web-server           i-0123456789abcdef0     t3.micro     running      10.0.1.10       3.35.10.20
+db-server            i-0abcdef1234567890     t3.micro     stopped      10.0.1.20       -</code></pre><hr id="a91720e4-6f49-82d9-bc46-815ba88cb6db" dir="auto"/><h2 id="5c0720e4-6f49-8345-8aaa-015c96655bac" class="" dir="auto">4.10.4 데이터가 없을 때 처리</h2><p id="a94720e4-6f49-836f-964e-01d5c0935456" class="" dir="auto">조회 결과가 없을 때는 아무것도 출력하지 않는 것보다 메시지를 보여주는 것이 좋다.</p><pre id="4d2720e4-6f49-8273-a507-814ade9d0399" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def print_instance_table(instances):
+    if not instances:
+        print(&quot;조회된 인스턴스가 없음&quot;)
+        return
+
+    print(
+        f&quot;{&#x27;Name&#x27;:&lt;20} &quot;
+        f&quot;{&#x27;InstanceId&#x27;:&lt;22} &quot;
+        f&quot;{&#x27;Type&#x27;:&lt;12} &quot;
+        f&quot;{&#x27;State&#x27;:&lt;12} &quot;
+        f&quot;{&#x27;PrivateIP&#x27;:&lt;15} &quot;
+        f&quot;{&#x27;PublicIP&#x27;:&lt;15}&quot;
+    )
+    print(&quot;-&quot; * 100)
+
+    for instance in instances:
+        print(
+            f&quot;{instance[&#x27;Name&#x27;]:&lt;20} &quot;
+            f&quot;{instance[&#x27;InstanceId&#x27;]:&lt;22} &quot;
+            f&quot;{instance[&#x27;InstanceType&#x27;]:&lt;12} &quot;
+            f&quot;{instance[&#x27;State&#x27;]:&lt;12} &quot;
+            f&quot;{instance[&#x27;PrivateIpAddress&#x27;]:&lt;15} &quot;
+            f&quot;{instance[&#x27;PublicIpAddress&#x27;]:&lt;15}&quot;
+        )</code></pre><p id="ceb720e4-6f49-82bd-938e-811c4ed83534" class="" dir="auto"><code>if not instances:</code>는 리스트가 비어 있는지 확인하는 코드다.</p><p id="7b8720e4-6f49-82f2-b705-013545130a5e" class="" dir="auto">다음 값들은 조건문에서 False로 평가된다.</p><pre id="a3d720e4-6f49-83a9-8781-014d2ce27d6c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- 빈 리스트 []
+- 빈 문자열 &quot;&quot;
+- 숫자 0
+- None</code></pre><p id="da4720e4-6f49-83c4-b23e-814d6ee67b69" class="" dir="auto">따라서 <code>instances</code>가 빈 리스트이면 메시지를 출력하고 함수를 종료한다.</p><pre id="850720e4-6f49-82be-8075-01bdc7071e19" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">return</code></pre><h1 id="57c720e4-6f49-829b-8353-01782c749a8c" class="" dir="auto">4.11 JSON 파일 저장</h1><h2 id="05a720e4-6f49-83cb-be29-812ea59fdfc6" class="" dir="auto">4.11.1 JSON을 사용하는 이유</h2><p id="0e3720e4-6f49-82cd-87ff-01a7855c0d04" class="" dir="auto">JSON은 자동화 결과를 저장하거나 다른 시스템과 연계할 때 많이 사용된다.</p><p id="b14720e4-6f49-82b0-9ffa-813aba928de8" class="" dir="auto">JSON의 장점은 다음과 같다.</p><pre id="f42720e4-6f49-838b-8a3f-817752ec6768" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">- 사람이 읽을 수 있다.
+- 프로그램에서 다시 읽기 쉽다.
+- API 응답 형식과 잘 맞는다.
+- 딕셔너리와 리스트 구조를 그대로 표현하기 좋다.</code></pre><p id="252720e4-6f49-83d9-a412-8123e9e56cd3" class="" dir="auto">파이썬 딕셔너리 리스트는 JSON과 잘 맞는다.</p><p id="3b1720e4-6f49-8333-abae-811bbf3a13dc" class="" dir="auto">파이썬 데이터:</p><pre id="8b4720e4-6f49-83c0-8649-011d9de502b4" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">[
+    {
+        &quot;Name&quot;: &quot;web-server&quot;,
+        &quot;InstanceId&quot;: &quot;i-0123456789abcdef0&quot;,
+        &quot;State&quot;: &quot;running&quot;
+    }
+]</code></pre><p id="af2720e4-6f49-8216-b675-01fbea3524b8" class="" dir="auto">JSON 파일:</p><pre id="327720e4-6f49-82a3-a840-81836ffff011" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">[
+  {
+    &quot;Name&quot;: &quot;web-server&quot;,
+    &quot;InstanceId&quot;: &quot;i-0123456789abcdef0&quot;,
+    &quot;State&quot;: &quot;running&quot;
+  }
+]</code></pre><hr id="0b7720e4-6f49-829c-abb0-816428af0c7e" dir="auto"/><h2 id="a1a720e4-6f49-832c-9986-811c186f4b2d" class="" dir="auto">4.11.2 JSON 저장 함수</h2><p id="644720e4-6f49-8305-aa87-81d52d00baf4" class="" dir="auto">JSON 저장을 위해 <code>json</code> 모듈을 사용한다.</p><pre id="0ba720e4-6f49-8232-9df3-81784ec6fba5" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json</code></pre><p id="7e2720e4-6f49-8223-bcb2-01638f077fa2" class="" dir="auto">저장 함수는 다음과 같다.</p><pre id="ab2720e4-6f49-820a-a363-81bf7b97f866" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def save_to_json(data, filename):
+    with open(filename, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+
+    print(f&quot;JSON 파일 저장 완료: {filename}&quot;)</code></pre><p id="9f0720e4-6f49-8374-b9ee-815b8adfe64c" class="" dir="auto">각 코드의 의미는 다음과 같다.</p><pre id="4bf720e4-6f49-8398-91ff-011e2a3cc13a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(filename, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:</code></pre><pre id="0e5720e4-6f49-822d-8288-816a55bd5735" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">filename
+- 저장할 파일 이름
+
+&quot;w&quot;
+- 쓰기 모드
+- 파일이 없으면 새로 생성
+- 파일이 있으면 기존 내용을 덮어씀
+
+encoding=&quot;utf-8&quot;
+- 파일 인코딩을 UTF-8로 지정
+
+with
+- 파일을 사용한 뒤 자동으로 닫아줌</code></pre><p id="5bf720e4-6f49-8234-8c98-81719b46f115" class="" dir="auto">다음 코드가 실제 JSON 저장을 수행한다.</p><pre id="59a720e4-6f49-828d-be5f-81bab8318640" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">json.dump(data, file, indent=2, ensure_ascii=False)</code></pre><p id="f07720e4-6f49-83eb-8ded-81d78a96642f" class="" dir="auto">옵션의 의미는 다음과 같다.</p><pre id="758720e4-6f49-8272-a69c-819323c4bb56" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">data
+- 저장할 파이썬 데이터
+
+file
+- 파일 객체
+
+indent=2
+- 들여쓰기 2칸 적용
+
+ensure_ascii=False
+- 한글이 깨지지 않게 저장</code></pre><hr id="7c8720e4-6f49-82e8-b67f-819f9ddcbe67" dir="auto"/><h2 id="0f2720e4-6f49-831e-a422-81fb8b65620d" class="" dir="auto">4.11.3 JSON 저장 테스트</h2><p id="d11720e4-6f49-82d9-b87f-0117914ed748" class="" dir="auto">다음 테스트 코드를 작성한다.</p><p id="2b2720e4-6f49-821b-9d4f-81f825b59aeb" class="" dir="auto">파일명: <code>json_save_test.py</code></p><pre id="d87720e4-6f49-83b5-a05d-814088ac8a93" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+
+def save_to_json(data, filename):
+    with open(filename, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+        json.dump(data, file, indent=2, ensure_ascii=False)
+
+    print(f&quot;JSON 파일 저장 완료: {filename}&quot;)
+
+
+def main():
+    instances = [
+        {
+            &quot;Name&quot;: &quot;web-server&quot;,
+            &quot;InstanceId&quot;: &quot;i-0123456789abcdef0&quot;,
+            &quot;State&quot;: &quot;running&quot;
+        },
+        {
+            &quot;Name&quot;: &quot;db-server&quot;,
+            &quot;InstanceId&quot;: &quot;i-0abcdef1234567890&quot;,
+            &quot;State&quot;: &quot;stopped&quot;
+        }
+    ]
+
+    save_to_json(instances, &quot;instances.json&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><p id="7fb720e4-6f49-8311-aa1d-8176dfe4728a" class="" dir="auto">실행한다.</p><pre id="7c0720e4-6f49-8317-9ae6-0143613ba120" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python json_save_test.py</code></pre><p id="dfc720e4-6f49-8385-944e-81436f73dd8f" class="" dir="auto">파일 내용을 확인한다.</p><pre id="7a5720e4-6f49-838b-976c-81fc1109b064" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cat instances.json</code></pre><p id="c42720e4-6f49-8291-b46b-819ce7fd4320" class="" dir="auto">출력 예시:</p><pre id="16e720e4-6f49-83fe-9edf-015726011be0" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">[
+  {
+    &quot;Name&quot;:&quot;web-server&quot;,
+    &quot;InstanceId&quot;:&quot;i-0123456789abcdef0&quot;,
+    &quot;State&quot;:&quot;running&quot;
+  },
+  {
+    &quot;Name&quot;:&quot;db-server&quot;,
+    &quot;InstanceId&quot;:&quot;i-0abcdef1234567890&quot;,
+    &quot;State&quot;:&quot;stopped&quot;
+  }
+]</code></pre><hr id="d3b720e4-6f49-82f7-90f9-8107d46d0f0e" dir="auto"/><h1 id="99a720e4-6f49-83ec-b418-8164576c5953" class="" dir="auto">4.12 CSV 파일 저장</h1><h2 id="a0c720e4-6f49-8280-9141-819010789e2f" class="" dir="auto">4.12.1 CSV를 사용하는 이유</h2><p id="2b6720e4-6f49-8331-a625-01bbdea0f3bd" class="" dir="auto">CSV는 운영 점검 결과를 저장할 때 매우 자주 사용된다.</p><p id="7ce720e4-6f49-82f5-a72f-014fba5c81fa" class="" dir="auto">CSV의 장점은 다음과 같다.</p><pre id="1f9720e4-6f49-82aa-b3e0-01988dd5ed13" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- 엑셀에서 열기 쉽다.
+- 스프레드시트로 공유하기 좋다.
+- 표 형태 데이터 저장에 적합하다.
+- 리포트 작성용으로 사용하기 쉽다.</code></pre><p id="6e5720e4-6f49-83ca-809d-01d4f1526e3e" class="" dir="auto">EC2 인벤토리 같은 데이터는 CSV와 잘 맞는다.</p><pre id="f0f720e4-6f49-83fa-80f2-01dbbbd7d851" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name,InstanceId,InstanceType,State,PrivateIpAddress,PublicIpAddress
+web-server,i-0123456789abcdef0,t3.micro,running,10.0.1.10,3.35.10.20
+db-server,i-0abcdef1234567890,t3.micro,stopped,10.0.1.20,-</code></pre><hr id="1b7720e4-6f49-839c-b03c-017718316d66" dir="auto"/><h2 id="17f720e4-6f49-8221-8fcb-81375934b4ef" class="" dir="auto">4.12.2 csv 모듈 사용</h2><p id="854720e4-6f49-8277-8145-81e841196fea" class="" dir="auto">파이썬에서는 CSV 파일을 다루기 위해 <code>csv</code> 모듈을 사용한다.</p><pre id="20c720e4-6f49-8345-9707-81705708e29f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import csv</code></pre><p id="760720e4-6f49-83e8-80d5-81254c64d6d4" class="" dir="auto">딕셔너리 리스트를 CSV로 저장할 때는 <code>csv.DictWriter</code>가 편리하다.</p><pre id="fe8720e4-6f49-8370-9115-019cc9e813f1" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">writer = csv.DictWriter(file,fieldnames=fieldnames)</code></pre><p id="958720e4-6f49-8239-96e1-81ffd767f05b" class="" dir="auto"><code>DictWriter</code>는 딕셔너리의 키를 컬럼 이름으로 사용한다.</p><hr id="4c5720e4-6f49-8254-bbd6-01171e14c3e4" dir="auto"/><h2 id="7f4720e4-6f49-8205-a5bd-0186441d0596" class="" dir="auto">4.12.3 CSV 저장 함수</h2><p id="e27720e4-6f49-82bb-b5c2-810d0b48c9b2" class="" dir="auto">다음 함수를 작성한다.</p><pre id="3cc720e4-6f49-829c-9ca0-01a4affe29f4" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import csv
+
+
+def save_to_csv(data, filename):
+    if not data:
+        print(&quot;저장할 데이터가 없음&quot;)
+        return
+
+    fieldnames = data[0].keys()
+
+    with open(filename, &quot;w&quot;, newline=&quot;&quot;, encoding=&quot;utf-8-sig&quot;) as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerows(data)
+
+    print(f&quot;CSV 파일 저장 완료: {filename}&quot;)</code></pre><p id="6e2720e4-6f49-8391-9f19-0149c8d00014" class="" dir="auto">각 코드의 의미를 확인한다.</p><pre id="25e720e4-6f49-83e1-9408-81f75468db59" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if not data:
+    print(&quot;저장할 데이터가 없음&quot;)
+    return</code></pre><p id="682720e4-6f49-82f7-a788-81d326e97bad" class="" dir="auto">저장할 데이터가 없으면 CSV 파일을 만들지 않고 함수를 종료한다.</p><pre id="96a720e4-6f49-83ff-958d-814289682bf0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">fieldnames = data[0].keys()</code></pre><p id="03e720e4-6f49-82a7-a249-011a35ff0644" class="" dir="auto">첫 번째 딕셔너리의 키를 CSV 컬럼명으로 사용한다.</p><p id="d7c720e4-6f49-8249-b548-01eaebdb235f" class="" dir="auto">예를 들어 데이터가 다음과 같다면,</p><pre id="0e9720e4-6f49-8216-95b2-81e38d29ec42" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+	&quot;Name&quot;:&quot;web-server&quot;,
+	&quot;InstanceId&quot;:&quot;i-0123456789abcdef0&quot;,
+	&quot;State&quot;:&quot;running&quot;
+}</code></pre><p id="7f8720e4-6f49-82b9-80d7-013c96f63d64" class="" dir="auto">컬럼명은 다음과 같다.</p><pre id="d79720e4-6f49-8292-9982-8127f9af4f6c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name, InstanceId, State</code></pre><p id="f7b720e4-6f49-8254-a047-01c3433ac5a2" class="" dir="auto">다음 코드는 파일을 쓰기 모드로 연다.</p><pre id="ba8720e4-6f49-82b4-8a24-81cfb4da4e5b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(filename,&quot;w&quot;,newline=&quot;&quot;,encoding=&quot;utf-8-sig&quot;) as file:</code></pre><p id="93b720e4-6f49-82a3-ac41-015c7a587d29" class="" dir="auto">여기서 <code>newline=&quot;&quot;</code>을 사용하는 이유는 CSV 저장 시 빈 줄이 추가되는 문제를 방지하기 위해서다.</p><p id="d4f720e4-6f49-82e2-b538-813598201da5" class="" dir="auto"><code>encoding=&quot;utf-8-sig&quot;</code>는 엑셀에서 한글이 깨지지 않도록 하기 위해 사용한다.</p><p id="9c7720e4-6f49-83fc-b033-817cfc91b3b6" class="" dir="auto">다음 코드는 헤더를 작성한다.</p><pre id="4fc720e4-6f49-82f9-9e77-01553533dd4a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">writer.writeheader()</code></pre><p id="602720e4-6f49-82ad-8d63-8121ce246c14" class="" dir="auto">다음 코드는 실제 데이터를 여러 줄로 작성한다.</p><pre id="f4c720e4-6f49-8355-8658-813e7e16e9c4" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">writer.writerows(data)</code></pre><hr id="66e720e4-6f49-8304-993c-0140163a5cd5" dir="auto"/><h2 id="2b1720e4-6f49-8365-bbb8-816839ba1521" class="" dir="auto">4.12.4 CSV 저장 테스트</h2><p id="552720e4-6f49-83ca-83d0-81550247b177" class="" dir="auto">파일명: <code>csv_save_test.py</code></p><pre id="bee720e4-6f49-83b6-8248-811f5ed407a9" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import csv
+
+
+def save_to_csv(data, filename):
+    if not data:
+        print(&quot;저장할 데이터가 없음&quot;)
+        return
+
+    fieldnames = data[0].keys()
+
+    with open(filename, &quot;w&quot;, newline=&quot;&quot;, encoding=&quot;utf-8-sig&quot;) as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerows(data)
+
+    print(f&quot;CSV 파일 저장 완료: {filename}&quot;)
+
+
+def main():
+    instances = [
+        {
+            &quot;Name&quot;: &quot;web-server&quot;,
+            &quot;InstanceId&quot;: &quot;i-0123456789abcdef0&quot;,
+            &quot;InstanceType&quot;: &quot;t3.micro&quot;,
+            &quot;State&quot;: &quot;running&quot;
+        },
+        {
+            &quot;Name&quot;: &quot;db-server&quot;,
+            &quot;InstanceId&quot;: &quot;i-0abcdef1234567890&quot;,
+            &quot;InstanceType&quot;: &quot;t3.micro&quot;,
+            &quot;State&quot;: &quot;stopped&quot;
+        }
+    ]
+
+    save_to_csv(instances, &quot;instances.csv&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><p id="b65720e4-6f49-8285-887b-81ac71c6a625" class="" dir="auto">실행한다.</p><pre id="d3d720e4-6f49-8328-98ad-81e5deb981e2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python csv_save_test.py</code></pre><p id="802720e4-6f49-826b-92dd-81673203fd13" class="" dir="auto">파일 확인:</p><pre id="39b720e4-6f49-821d-bb0b-811607906a6f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cat instances.csv</code></pre><p id="c2a720e4-6f49-82a4-aea8-8177c174dc49" class="" dir="auto">출력 예시:</p><pre id="c27720e4-6f49-822f-accb-811ffec964d0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name,InstanceId,InstanceType,State
+web-server,i-0123456789abcdef0,t3.micro,running
+db-server,i-0abcdef1234567890,t3.micro,stopped</code></pre><hr id="06c720e4-6f49-836c-b152-01d573f18bb2" dir="auto"/><h1 id="cc9720e4-6f49-83a6-aeed-01d4a748fc52" class="" dir="auto">4.13 argparse로 명령행 인자 처리</h1><h2 id="00a720e4-6f49-8385-bf5a-01e5357ed3c6" class="" dir="auto">4.13.1 명령행 인자가 필요한 이유</h2><p id="f37720e4-6f49-8226-b1e3-01e162f2d829" class="" dir="auto">현재까지 작성한 코드는 리전, 출력 파일명, 필터 조건 등이 코드에 고정되어 있다.</p><p id="a58720e4-6f49-8313-9cb8-8152f90ea75f" class="" dir="auto">예를 들어 리전이 코드에 직접 들어 있다.</p><pre id="2dd720e4-6f49-83a6-b179-01559e51ccb6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">region=&quot;ap-northeast-2&quot;</code></pre><p id="26a720e4-6f49-836f-a3f0-81771c8e8692" class="" dir="auto">파일명도 코드에 들어 있다.</p><pre id="2b0720e4-6f49-82df-8602-81830dd65792" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">save_to_csv(instances,&quot;instances.csv&quot;)</code></pre><p id="436720e4-6f49-83e6-a732-016905a9d585" class="" dir="auto">이 방식은 실무에서 불편하다.</p><p id="21e720e4-6f49-8246-bc5b-016952f7aa57" class="" dir="auto">운영자는 실행 시점에 다음처럼 옵션을 바꾸고 싶어한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="6b5720e4-6f49-820d-8fa1-01301d160081" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py --region ap-northeast-2 --state running --output running-ec2.csv</code></pre><p id="9a4720e4-6f49-82ad-ac75-8100a19cac66" class="" dir="auto">또는 도쿄 리전을 조회할 수도 있다.</p><pre id="14e720e4-6f49-82ad-8a94-81ad2260a416" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py --region ap-northeast-1 --state stopped --output tokyo-stopped.csv</code></pre><p id="16b720e4-6f49-82d9-bf67-8195b18f97d4" class="" dir="auto">이렇게 명령어에서 옵션을 받기 위해 <code>argparse</code>를 사용한다.</p><hr id="3c7720e4-6f49-82a2-a1cf-815f3aacb90f" dir="auto"/><h2 id="c5b720e4-6f49-8272-bfe9-8182eeaf900d" class="" dir="auto">4.13.2 argparse 기본 구조</h2><p id="3ac720e4-6f49-82c1-9a0a-01aa7c4fd818" class="" dir="auto"><code>argparse</code>는 파이썬 표준 라이브러리다.</p><p id="eb4720e4-6f49-82c5-b419-01ca433a8405" class="" dir="auto">별도로 설치하지 않아도 사용할 수 있다.</p><pre id="d17720e4-6f49-827d-8edc-01ed9ed7da4e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import argparse</code></pre><p id="05f720e4-6f49-836a-8f5a-0102b0b74845" class="" dir="auto">기본 구조는 다음과 같다.</p><pre id="a97720e4-6f49-8339-8442-81b0812e3742" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import argparse
+
+parser = argparse.ArgumentParser(description=&quot;스크립트 설명&quot;)
+parser.add_argument(&quot;--region&quot;, default=&quot;ap-northeast-2&quot;, help=&quot;조회할 AWS 리전&quot;)
+
+args = parser.parse_args()
+
+print(args.region)</code></pre><p id="b34720e4-6f49-8264-aee5-01428f770a59" class="" dir="auto">파일명: <code>argparse_basic.py</code></p><pre id="4ce720e4-6f49-83b2-b463-811cdb5690f3" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import argparse
+
+
+def main():
+    parser = argparse.ArgumentParser(description=&quot;argparse 기본 예제&quot;)
+
+    parser.add_argument(
+        &quot;--region&quot;,
+        default=&quot;ap-northeast-2&quot;,
+        help=&quot;조회할 AWS 리전&quot;
+    )
+
+    args = parser.parse_args()
+
+    print(f&quot;선택한 리전: {args.region}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><p id="8ca720e4-6f49-8285-99fa-01f34a04740f" class="" dir="auto">실행한다.</p><pre id="4b1720e4-6f49-8242-9aa6-0102cda9e736" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python argparse_basic.py</code></pre><p id="c34720e4-6f49-832e-9a4a-81fb3b445771" class="" dir="auto">출력:</p><pre id="dc8720e4-6f49-82ac-9ba7-81d3799ba0a5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">선택한 리전: ap-northeast-2</code></pre><p id="e28720e4-6f49-82e4-bbfd-817f1b370ab4" class="" dir="auto">옵션을 지정해서 실행한다.</p><pre id="967720e4-6f49-8274-8990-01cd7fe70aa7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python argparse_basic.py --region ap-northeast-1</code></pre><p id="44c720e4-6f49-8223-9411-017769fa236a" class="" dir="auto">출력:</p><pre id="e78720e4-6f49-82e1-848b-81bfa322d67e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">선택한 리전: ap-northeast-1</code></pre><hr id="984720e4-6f49-83aa-8c2d-8123b73c3837" dir="auto"/><h2 id="df9720e4-6f49-83ae-b044-81772c001349" class="" dir="auto">4.13.3 <code>add_argument()</code> 옵션 설명</h2><p id="dc9720e4-6f49-82e8-90ce-811dfae9b813" class="" dir="auto">다음 코드를 자세히 보자.</p><pre id="ac3720e4-6f49-82e2-972f-01ad3742dbdf" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">parser.add_argument(
+    &quot;--region&quot;,
+    default=&quot;ap-northeast-2&quot;,
+    help=&quot;조회할 AWS 리전&quot;
+)</code></pre><p id="d4a720e4-6f49-82c1-aff7-01316dfce172" class="" dir="auto">각 항목의 의미는 다음과 같다.</p><pre id="ab3720e4-6f49-83d2-ba90-812ac05f3078" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&quot;--region&quot;
+- 명령행에서 사용할 옵션 이름
+
+default=&quot;ap-northeast-2&quot;
+- 사용자가 값을 입력하지 않았을 때 사용할 기본값
+
+help=&quot;조회할 AWS 리전&quot;
+- 도움말에 표시할 설명</code></pre><p id="8da720e4-6f49-8374-bfe3-81a36370401b" class="" dir="auto">도움말은 <code>--help</code> 옵션으로 확인할 수 있다.</p><pre id="58a720e4-6f49-826e-8159-81ce5f73eb4c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python argparse_basic.py --help</code></pre><p id="0b6720e4-6f49-8368-99cc-811af715dd2f" class="" dir="auto">출력 예시:</p><pre id="fc0720e4-6f49-83fd-87df-81725eaa81e8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">usage: argparse_basic.py [-h] [--region REGION]
+
+argparse 기본 예제
+
+options:
+  -h, --help       show this help message and exit
+  --region REGION  조회할 AWS 리전</code></pre><p id="8fd720e4-6f49-8392-b917-0173220fde48" class="" dir="auto">이 기능은 실무 스크립트에서 매우 유용하다.</p><p id="36b720e4-6f49-8361-bc62-81622dc36d8f" class="" dir="auto">사용자가 스크립트 사용법을 명령어로 확인할 수 있기 때문이다.</p><hr id="0e9720e4-6f49-829e-957c-81b1a43e39e9" dir="auto"/><h2 id="8ef720e4-6f49-82af-ba0e-014699940220" class="" dir="auto">4.13.4 choices 옵션 사용</h2><p id="28b720e4-6f49-83ce-9966-8169f19a8353" class="" dir="auto">사용자가 입력할 수 있는 값을 제한할 수도 있다.</p><p id="915720e4-6f49-83b8-920e-01f13aae9f18" class="" dir="auto">예를 들어 EC2 상태는 다음 값 중 하나만 받도록 제한할 수 있다.</p><pre id="5df720e4-6f49-828e-8604-81d5596127a4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">all
+running
+stopped
+terminated</code></pre><p id="c4b720e4-6f49-83cf-acc2-81cc99900945" class="" dir="auto">코드는 다음과 같다.</p><pre id="be9720e4-6f49-831e-aadd-01b091edb82c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">parser.add_argument(
+&quot;--state&quot;,
+default=&quot;all&quot;,
+choices=[&quot;all&quot;,&quot;running&quot;,&quot;stopped&quot;,&quot;terminated&quot;],
+help=&quot;조회할 인스턴스 상태&quot;
+)</code></pre><p id="d50720e4-6f49-8395-bff7-81ba2053b0b6" class="" dir="auto">전체 예제:</p><pre id="7da720e4-6f49-83f5-a1c3-0164597f5d67" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import argparse
+
+
+def main():
+    parser = argparse.ArgumentParser(description=&quot;EC2 상태 필터 예제&quot;)
+
+    parser.add_argument(
+        &quot;--state&quot;,
+        default=&quot;all&quot;,
+        choices=[&quot;all&quot;, &quot;running&quot;, &quot;stopped&quot;, &quot;terminated&quot;],
+        help=&quot;조회할 인스턴스 상태&quot;
+    )
+
+    args = parser.parse_args()
+
+    print(f&quot;조회 상태: {args.state}&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><p id="028720e4-6f49-82bc-a749-0134d48902dd" class="" dir="auto">정상 실행:</p><pre id="f75720e4-6f49-83bf-915f-01c068178f43" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python argparse_state.py --state running</code></pre><p id="a3b720e4-6f49-8358-b23c-018f2016a20c" class="" dir="auto">출력:</p><pre id="303720e4-6f49-83ab-b9ee-010051a28588" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">조회 상태: running</code></pre><p id="4ec720e4-6f49-82fc-85e2-813523455a2d" class="" dir="auto">잘못된 값 입력:</p><pre id="2e8720e4-6f49-822e-90fd-81e5a64ce513" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python argparse_state.py --state start</code></pre><p id="73e720e4-6f49-825b-9490-81a2835ed18e" class="" dir="auto">출력 예시:</p><pre id="904720e4-6f49-831d-a2df-01faf49cf41a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">error: argument --state: invalid choice: &#x27;start&#x27; (choose from &#x27;all&#x27;, &#x27;running&#x27;, &#x27;stopped&#x27;, &#x27;terminated&#x27;)</code></pre><p id="7e4720e4-6f49-82ff-bc6a-01e3306293c0" class="" dir="auto"><code>choices</code>를 사용하면 잘못된 입력을 사전에 막을 수 있다.</p><hr id="d5d720e4-6f49-8358-8e64-01ee80a9412e" dir="auto"/><h2 id="ebd720e4-6f49-82d1-9124-01064cc733a0" class="" dir="auto">4.13.5 parse_args 함수로 분리</h2><p id="774720e4-6f49-836a-9206-018bb167d478" class="" dir="auto">자동화 스크립트에서는 명령행 인자 처리도 함수로 분리하는 것이 좋다.</p><pre id="7fa720e4-6f49-8366-adc5-817e058f33c2" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def parse_args():
+    parser = argparse.ArgumentParser(
+        description=&quot;EC2 인스턴스 목록 조회 자동화 스크립트&quot;
+    )
+
+    parser.add_argument(
+        &quot;--region&quot;,
+        default=&quot;ap-northeast-2&quot;,
+        help=&quot;조회할 AWS 리전&quot;
+    )
+
+    parser.add_argument(
+        &quot;--state&quot;,
+        default=&quot;all&quot;,
+        choices=[&quot;all&quot;, &quot;running&quot;, &quot;stopped&quot;, &quot;terminated&quot;],
+        help=&quot;조회할 인스턴스 상태&quot;
+    )
+
+    parser.add_argument(
+        &quot;--output&quot;,
+        default=&quot;ec2-instances.csv&quot;,
+        help=&quot;CSV 출력 파일명&quot;
+    )
+
+    return parser.parse_args()</code></pre><p id="3d6720e4-6f49-83cd-8c99-8192889640a5" class="" dir="auto">이렇게 하면 <code>main()</code> 함수는 더 깔끔해진다.</p><pre id="ac5720e4-6f49-835f-b901-8111a3b72313" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def main():
+		args=parse_args()
+
+		print(args.region)
+		print(args.state)
+		print(args.output)</code></pre><hr id="fd8720e4-6f49-82b9-8554-01dabb0cdc65" dir="auto"/><h1 id="7a5720e4-6f49-8229-8b3b-01f116462e30" class="" dir="auto">4.14 EC2 인벤토리 자동화 스크립트 완성</h1><p id="6d7720e4-6f49-831d-a8fb-01d1434983ef" class="" dir="auto">이제 지금까지 학습한 내용을 모두 합쳐 EC2 인벤토리 자동화 스크립트를 완성한다.</p><h2 id="1af720e4-6f49-83de-8547-81d063e930e4" class="" dir="auto">4.14.1 최종 요구사항</h2><p id="0a0720e4-6f49-8386-b18d-813bf9e61273" class="" dir="auto">스크립트 요구사항은 다음과 같다.</p><pre id="24b720e4-6f49-826b-8d9b-01b947c2fc15" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">- EC2 인스턴스 목록을 조회한다.
+- Name, InstanceId, InstanceType, State, PrivateIpAddress, PublicIpAddress를 출력한다.
+- --region 옵션으로 조회 리전을 지정할 수 있다.
+- --state 옵션으로 all, running, stopped, terminated 중 하나를 선택할 수 있다.
+- 결과를 표 형태로 출력한다.
+- 결과를 CSV 파일로 저장한다.
+- AWS API 호출 오류를 처리한다.</code></pre><hr id="f14720e4-6f49-83b9-946e-813549d457a9" dir="auto"/><h2 id="8de720e4-6f49-8249-aefc-01d68f2b95e5" class="" dir="auto">4.14.2 최종 코드</h2><p id="c2c720e4-6f49-83f3-97f0-01f43401adeb" class="" dir="auto">파일명: <code>ec2_inventory.py</code></p><pre id="7f2720e4-6f49-8344-9b0e-01f6a12187f8" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">
+import argparse
+import csv
+import boto3
+from botocore.exceptions import ClientError, NoCredentialsError
+
+
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description=&quot;EC2 인스턴스 목록 조회 자동화 스크립트&quot;
+    )
+
+    parser.add_argument(
+        &quot;--region&quot;,
+        default=&quot;ap-northeast-2&quot;,
+        help=&quot;조회할 AWS 리전&quot;
+    )
+
+    parser.add_argument(
+        &quot;--state&quot;,
+        default=&quot;all&quot;,
+        choices=[&quot;all&quot;, &quot;running&quot;, &quot;stopped&quot;, &quot;terminated&quot;],
+        help=&quot;조회할 인스턴스 상태&quot;
+    )
+
+    parser.add_argument(
+        &quot;--output&quot;,
+        default=&quot;ec2-instances.csv&quot;,
+        help=&quot;CSV 출력 파일명&quot;
+    )
+
+    return parser.parse_args()
+
+
+def create_ec2_client(region):
+    return boto3.client(&quot;ec2&quot;, region_name=region)
+
+
+def get_instances(ec2):
+    try:
+        response = ec2.describe_instances()
+        return response[&quot;Reservations&quot;]
+
+    except NoCredentialsError:
+        print(&quot;[오류] AWS 자격 증명을 찾을 수 없음&quot;)
+        return []
+
+    except ClientError as error:
+        error_code = error.response[&quot;Error&quot;][&quot;Code&quot;]
+        error_message = error.response[&quot;Error&quot;][&quot;Message&quot;]
+
+        print(f&quot;[오류] AWS API 호출 실패: {error_code}&quot;)
+        print(f&quot;[메시지] {error_message}&quot;)
+
+        return []
+
+
+def get_name_tag(instance):
+    tags = instance.get(&quot;Tags&quot;, [])
+
+    for tag in tags:
+        if tag.get(&quot;Key&quot;) == &quot;Name&quot;:
+            return tag.get(&quot;Value&quot;)
+
+    return &quot;-&quot;
+
+
+def extract_instance_info(reservations):
+    instance_list = []
+
+    for reservation in reservations:
+        for instance in reservation[&quot;Instances&quot;]:
+            instance_info = {
+                &quot;Name&quot;: get_name_tag(instance),
+                &quot;InstanceId&quot;: instance.get(&quot;InstanceId&quot;),
+                &quot;InstanceType&quot;: instance.get(&quot;InstanceType&quot;),
+                &quot;State&quot;: instance.get(&quot;State&quot;, {}).get(&quot;Name&quot;),
+                &quot;PrivateIpAddress&quot;: instance.get(&quot;PrivateIpAddress&quot;, &quot;-&quot;),
+                &quot;PublicIpAddress&quot;: instance.get(&quot;PublicIpAddress&quot;, &quot;-&quot;),
+            }
+
+            instance_list.append(instance_info)
+
+    return instance_list
+
+
+def filter_instances_by_state(instances, state):
+    if state == &quot;all&quot;:
+        return instances
+
+    return [
+        instance
+        for instance in instances
+        if instance[&quot;State&quot;] == state
+    ]
+
+
+def print_instance_table(instances):
+    if not instances:
+        print(&quot;조회된 인스턴스가 없음&quot;)
+        return
+
+    print(
+        f&quot;{&#x27;Name&#x27;:&lt;20} &quot;
+        f&quot;{&#x27;InstanceId&#x27;:&lt;22} &quot;
+        f&quot;{&#x27;Type&#x27;:&lt;12} &quot;
+        f&quot;{&#x27;State&#x27;:&lt;12} &quot;
+        f&quot;{&#x27;PrivateIP&#x27;:&lt;15} &quot;
+        f&quot;{&#x27;PublicIP&#x27;:&lt;15}&quot;
+    )
+    print(&quot;-&quot; * 100)
+
+    for instance in instances:
+        print(
+            f&quot;{instance[&#x27;Name&#x27;]:&lt;20} &quot;
+            f&quot;{instance[&#x27;InstanceId&#x27;]:&lt;22} &quot;
+            f&quot;{instance[&#x27;InstanceType&#x27;]:&lt;12} &quot;
+            f&quot;{instance[&#x27;State&#x27;]:&lt;12} &quot;
+            f&quot;{instance[&#x27;PrivateIpAddress&#x27;]:&lt;15} &quot;
+            f&quot;{instance[&#x27;PublicIpAddress&#x27;]:&lt;15}&quot;
+        )
+
+
+def save_to_csv(data, filename):
+    if not data:
+        print(&quot;저장할 데이터가 없음&quot;)
+        return
+
+    fieldnames = data[0].keys()
+
+    with open(filename, &quot;w&quot;, newline=&quot;&quot;, encoding=&quot;utf-8-sig&quot;) as file:
+        writer = csv.DictWriter(file, fieldnames=fieldnames)
+
+        writer.writeheader()
+        writer.writerows(data)
+
+    print(f&quot;CSV 파일 저장 완료: {filename}&quot;)
+
+
+def main():
+    args = parse_args()
+
+    ec2 = create_ec2_client(args.region)
+
+    reservations = get_instances(ec2)
+    instances = extract_instance_info(reservations)
+    filtered_instances = filter_instances_by_state(instances, args.state)
+
+    print_instance_table(filtered_instances)
+    save_to_csv(filtered_instances, args.output)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><hr id="c30720e4-6f49-8351-937c-01696db098cf" dir="auto"/><h2 id="199720e4-6f49-8301-a3b9-0123eaf3b4ce" class="" dir="auto">4.14.3 코드 실행</h2><p id="b6b720e4-6f49-8352-8f10-81237cbf395b" class="" dir="auto">기본 실행:</p><pre id="bd0720e4-6f49-82e1-968d-81cbd4106454" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py</code></pre><p id="1b2720e4-6f49-836a-a45a-818280b03091" class="" dir="auto">서울 리전 조회:</p><pre id="6cc720e4-6f49-82e1-aafc-81a48f0a61e7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py --region ap-northeast-2</code></pre><p id="877720e4-6f49-82f0-be81-0155b0958321" class="" dir="auto">실행 중인 인스턴스만 조회:</p><pre id="155720e4-6f49-82a7-b4cb-815bd2a496d6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py --state running</code></pre><p id="f9e720e4-6f49-83e5-b7b3-813f74cbd7d1" class="" dir="auto">중지된 인스턴스만 조회:</p><pre id="c81720e4-6f49-82a4-a3e8-01f83968130c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py --state stopped</code></pre><p id="6fa720e4-6f49-82ff-bc08-01774051f647" class="" dir="auto">출력 파일명 지정:</p><pre id="9a7720e4-6f49-83e7-a20b-81f5adc77027" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py --state running --output running-ec2.csv</code></pre><p id="414720e4-6f49-8201-896b-81cf6fce1faa" class="" dir="auto">리전, 상태, 출력 파일명 모두 지정:</p><pre id="4db720e4-6f49-83c8-a81b-0147f4973590" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py \
+--region ap-northeast-2 \
+--state running \
+--output seoul-running-ec2.csv</code></pre><p id="4a5720e4-6f49-83f1-a765-0160861d4ba6" class="" dir="auto">Windows PowerShell에서는 줄바꿈 문자를 백틱으로 작성할 수 있다.</p><pre id="3f9720e4-6f49-820a-8173-819b48074e64" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pythonec2_inventory.py `
+--regionap-northeast-2 `
+--staterunning `
+--outputseoul-running-ec2.csv</code></pre><hr id="10a720e4-6f49-8203-acce-81665686fd99" dir="auto"/><h2 id="4b2720e4-6f49-8221-8f08-812779820bed" class="" dir="auto">4.14.4 실행 결과 예시</h2><p id="40d720e4-6f49-8332-90aa-81e67f6d2542" class="" dir="auto">화면 출력 예시:</p><pre id="ca8720e4-6f49-8327-b8c4-01129a60d63f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name                 InstanceId             Type         State        PrivateIP       PublicIP
+----------------------------------------------------------------------------------------------------
+web-server           i-0123456789abcdef0     t3.micro     running      10.0.1.10       3.35.10.20
+db-server            i-0abcdef1234567890     t3.micro     stopped      10.0.1.20       -
+CSV 파일 저장 완료: ec2-instances.csv</code></pre><p id="921720e4-6f49-82f7-a4d1-017b3c515d55" class="" dir="auto">CSV 파일 내용 예시:</p><pre id="8e3720e4-6f49-8331-a282-810186a6330e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name,InstanceId,InstanceType,State,PrivateIpAddress,PublicIpAddress
+web-server,i-0123456789abcdef0,t3.micro,running,10.0.1.10,3.35.10.20
+db-server,i-0abcdef1234567890,t3.micro,stopped,10.0.1.20,-</code></pre><hr id="aca720e4-6f49-823c-86f6-01ed0874dbfc" dir="auto"/><h2 id="124720e4-6f49-831d-bd3d-818e3a35532e" class="" dir="auto">4.14.5 코드 흐름 정리</h2><p id="04e720e4-6f49-82cc-9ed3-814245fd4dda" class="" dir="auto">최종 스크립트의 실행 흐름은 다음과 같다.</p><pre id="c3e720e4-6f49-8333-8348-818f645219ce" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. parse_args()
+   - 명령행 인자 처리
+   - region, state, output 값을 가져옴
+
+2. create_ec2_client()
+   - boto3 EC2 클라이언트 생성
+
+3. get_instances()
+   - describe_instances() 호출
+   - Reservations 목록 반환
+   - 오류 발생 시 빈 리스트 반환
+
+4. extract_instance_info()
+   - AWS 응답에서 필요한 정보만 추출
+   - 딕셔너리 리스트로 정리
+
+5. filter_instances_by_state()
+   - 상태 기준으로 인스턴스 필터링
+
+6. print_instance_table()
+   - 화면에 표 형태로 출력
+
+7. save_to_csv()
+   - CSV 파일로 저장</code></pre><p id="e91720e4-6f49-83c1-9d5f-816b58eee68f" class="" dir="auto">이 구조는 앞으로 다른 AWS 서비스 자동화에도 거의 그대로 사용할 수 있다.</p><p id="7f5720e4-6f49-82a7-9e84-8135686e5f10" class="" dir="auto">예를 들어 S3, IAM, Security Group 점검 스크립트도 다음 구조를 가진다.</p><pre id="dcd720e4-6f49-836d-844d-81f521084e2f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">명령행 인자 처리
+→ boto3 클라이언트 생성
+→ AWS API 호출
+→ 필요한 데이터 추출
+→ 필터링 또는 점검
+→ 결과 출력
+→ 파일 저장</code></pre><hr id="570720e4-6f49-83d9-a4f5-81177226dc3d" dir="auto"/><h1 id="dce720e4-6f49-8309-982a-01e10cb193bf" class="" dir="auto">4.15 S3 버킷 목록 자동화 스크립트 작성</h1><figure id="73e720e4-6f49-8221-80c7-816c5d1d4c5d" class="link-to-page"><a href="4%EC%9E%A5%20%EC%9A%B4%EC%98%81%20%EC%9E%90%EB%8F%99%ED%99%94%20%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8%20%EC%9E%91%EC%84%B1%20%EA%B8%B0%EB%B2%95/S3%20%EC%9E%90%EB%8F%99%ED%99%94%20%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8%20%EC%8B%A4%EC%8A%B5%2073e720e46f49822180c7816c5d1d4c5d.html" data-notion-page-id="73e720e4-6f49-8221-80c7-816c5d1d4c5d" data-notion-space-id="56e9dfa9-059a-473f-a2ad-357c52ceb825">S3 자동화 스크립트 실습</a></figure><p id="c59720e4-6f49-8340-af47-01aa04ecdc43" class="" dir="auto">
+</p><h1 id="492720e4-6f49-8263-9e0a-81de1396f374" class="" dir="auto">4.16 실습 과제</h1><h2 id="6e6720e4-6f49-8270-889d-01acef710e02" class="" dir="auto">과제 1. EC2 인벤토리 스크립트 개선</h2><p id="049720e4-6f49-82f1-8c49-81ba0db64ad6" class="" dir="auto">다음 요구사항을 만족하도록 <code>ec2_inventory.py</code>를 개선한다.</p><pre id="40c720e4-6f49-8305-9fde-81cd845c5541" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 기존 출력 항목에 AvailabilityZone을 추가한다.
+2. 기존 출력 항목에 VpcId를 추가한다.
+3. --public-only 옵션을 추가한다.
+4. --public-only 옵션을 사용하면 퍼블릭 IP가 있는 인스턴스만 출력한다.
+5. 결과는 CSV 파일로 저장한다.</code></pre><p id="3e4720e4-6f49-82da-a2df-81cf473ab5a7" class="" dir="auto">실행 예시는 다음과 같다.</p><pre id="16f720e4-6f49-834f-b74c-81e1771bdfa0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py --region ap-northeast-2 --public-only --output public-ec2.csv</code></pre><p id="a47720e4-6f49-8313-86d0-01bf19dc7b6c" class="" dir="auto">힌트:</p><pre id="d97720e4-6f49-8207-9af7-81be0072c091" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">parser.add_argument(
+&quot;--public-only&quot;,
+action=&quot;store_true&quot;,
+help=&quot;퍼블릭 IP가 있는 인스턴스만 조회&quot;
+)</code></pre><p id="feb720e4-6f49-82af-ba4a-8170a68138ec" class="" dir="auto"><code>action=&quot;store_true&quot;</code>는 옵션을 입력하면 값이 <code>True</code>가 되고, 입력하지 않으면 <code>False</code>가 되는 방식이다.</p><p id="e0c720e4-6f49-831d-b6b4-81ba0b9d87d7" class="" dir="auto">예를 들어 다음 명령은 <code>args.public_only</code>가 <code>True</code>가 된다.</p><pre id="210720e4-6f49-83fe-8a71-81b25f99904b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py --public-only</code></pre><p id="87d720e4-6f49-8324-b964-81c6ea81786e" class="" dir="auto">다음 명령은 <code>args.public_only</code>가 <code>False</code>가 된다.</p><pre id="888720e4-6f49-8310-a6ce-816954ac38b2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python ec2_inventory.py</code></pre><hr id="ef0720e4-6f49-8201-b3cd-81f52c4f6acb" dir="auto"/><h2 id="a90720e4-6f49-8226-b450-0168efda9117" class="" dir="auto">과제 2. S3 버킷 목록 CSV 저장 기능 추가</h2><p id="eef720e4-6f49-826e-bc1b-81e39d9ddd08" class="" dir="auto"><code>s3_bucket_inventory.py</code>에 CSV 저장 기능을 추가한다.</p><p id="60a720e4-6f49-8349-b4d6-811ca55be62a" class="" dir="auto">요구사항은 다음과 같다.</p><pre id="aa8720e4-6f49-838e-9924-8122a21e5a1f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. S3 버킷 목록을 조회한다.
+2. 버킷 이름과 생성일을 출력한다.
+3. --format 옵션을 추가한다.
+4. --format json이면 JSON으로 저장한다.
+5. --format csv이면 CSV로 저장한다.
+6. --output 옵션으로 파일명을 지정한다.</code></pre><p id="70b720e4-6f49-8247-830d-818785fdb9e9" class="" dir="auto">실행 예시:</p><pre id="4ea720e4-6f49-8296-95a9-816ac0cae6b0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python s3_bucket_inventory.py --format json--output buckets.json</code></pre><pre id="8b2720e4-6f49-82a2-992f-01550d9603f8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python s3_bucket_inventory.py --format csv--output buckets.csv</code></pre><p id="1dd720e4-6f49-8280-a891-818a29886233" class="" dir="auto">힌트:</p><pre id="0d7720e4-6f49-838c-bb06-01fb82c3fa56" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">parser.add_argument(
+    &quot;--format&quot;,
+    default=&quot;json&quot;,
+    choices=[&quot;json&quot;, &quot;csv&quot;],
+    help=&quot;출력 파일 형식&quot;
+)</code></pre><hr id="062720e4-6f49-8346-83b7-01c3f020e377" dir="auto"/><h1 id="235720e4-6f49-8293-8918-81df22ecdd41" class="" dir="auto">4.17 실습 중 자주 발생하는 오류</h1><h2 id="322720e4-6f49-82be-bb83-81b0b09365ac" class="" dir="auto">4.17.1 NoCredentialsError</h2><p id="867720e4-6f49-8261-9d01-8195efdaf415" class="" dir="auto">오류 예시:</p><pre id="67b720e4-6f49-83ba-8ef1-812ed9d9c9b1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">botocore.exceptions.NoCredentialsError: Unable to locate credentials</code></pre><p id="018720e4-6f49-82b3-b881-01bbe9b8e465" class="" dir="auto">원인:</p><pre id="861720e4-6f49-82ec-953a-01cbcb0e487b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS 자격 증명이 설정되어 있지 않음</code></pre><p id="d65720e4-6f49-8290-8096-81951141135b" class="" dir="auto">확인 명령:</p><pre id="b6b720e4-6f49-83d3-87e8-01a1f2a45ea7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws configure list</code></pre><p id="a98720e4-6f49-8335-9f3f-81bd20939b53" class="" dir="auto">해결 방법:</p><pre id="eb3720e4-6f49-829b-b071-01275c13c7ef" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws configure</code></pre><p id="f01720e4-6f49-82b7-bfe3-81f6114d8080" class="" dir="auto">또는 환경 변수를 사용하는 경우 다음 값을 확인한다.</p><pre id="ad4720e4-6f49-825a-8bb4-01f2779ef046" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">echo$AWS_ACCESS_KEY_ID
+echo$AWS_SECRET_ACCESS_KEY</code></pre><p id="c8e720e4-6f49-82cc-8f3b-810b9f7e4812" class="" dir="auto">Windows PowerShell:</p><pre id="c97720e4-6f49-8311-a927-014b1a879700" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">echo$env:AWS_ACCESS_KEY_ID
+echo$env:AWS_SECRET_ACCESS_KEY</code></pre><hr id="94b720e4-6f49-83a0-9f13-01ebe1bb41a0" dir="auto"/><h2 id="6db720e4-6f49-82ee-8683-8188109c594b" class="" dir="auto">4.17.2 UnauthorizedOperation</h2><p id="7d8720e4-6f49-8319-8386-01203c00c9d6" class="" dir="auto">오류 예시:</p><pre id="81e720e4-6f49-828c-9774-012a54a4b8f2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">An error occurred (UnauthorizedOperation) when calling the DescribeInstances operation</code></pre><p id="0b0720e4-6f49-8325-90ed-818abf47950b" class="" dir="auto">원인:</p><pre id="d50720e4-6f49-8297-925f-0181638bde60" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">현재 IAM 사용자 또는 역할에 EC2 조회 권한이 없음</code></pre><p id="2a0720e4-6f49-8316-91b2-81d6ab7994e7" class="" dir="auto">필요 권한 예시:</p><pre id="f05720e4-6f49-8247-a9d3-0100b4f6a835" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ec2:DescribeInstances</code></pre><p id="fb0720e4-6f49-8309-821f-019c1886e2f0" class="" dir="auto">실습 환경에서는 읽기 전용 권한을 부여하는 것이 좋다.</p><p id="d33720e4-6f49-8307-9e21-019276d8caa2" class="" dir="auto">예:</p><pre id="bbd720e4-6f49-824f-a2b7-01ae74837b92" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AmazonEC2ReadOnlyAccess</code></pre><hr id="40e720e4-6f49-8212-87b9-0174412a70d9" dir="auto"/><h2 id="cf0720e4-6f49-825d-b4c3-014acbf1dc47" class="" dir="auto">4.17.3 AccessDenied</h2><p id="485720e4-6f49-83f3-aeb0-01d77848b770" class="" dir="auto">오류 예시:</p><pre id="14e720e4-6f49-8249-968a-018b5ee8f1ea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">An error occurred (AccessDenied) when calling the ListBuckets operation</code></pre><p id="74a720e4-6f49-82c3-b942-81632504ec75" class="" dir="auto">원인:</p><pre id="92e720e4-6f49-83c5-95aa-81cbf73e148d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3 목록 조회 권한이 없음</code></pre><p id="bd2720e4-6f49-8244-b31a-813b1476eb44" class="" dir="auto">필요 권한 예시:</p><pre id="ed9720e4-6f49-82f8-ac13-81c907106938" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3:ListAllMyBuckets</code></pre><p id="384720e4-6f49-824b-ae80-81ecf2cb7ea2" class="" dir="auto">실습용 관리형 정책 예:</p><pre id="184720e4-6f49-82fd-852b-816694052c5c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AmazonS3ReadOnlyAccess</code></pre><hr id="5e0720e4-6f49-8398-8450-81ceac7535f3" dir="auto"/><h2 id="7fb720e4-6f49-828d-8d41-81e3cae1eb9e" class="" dir="auto">4.17.4 잘못된 리전명</h2><p id="6cf720e4-6f49-83b3-93aa-81840cc23af2" class="" dir="auto">오류 예시:</p><pre id="7e6720e4-6f49-8203-9744-0185d661c2d8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Could not connect to the endpoint URL</code></pre><p id="1ae720e4-6f49-8347-ae4f-813551c00862" class="" dir="auto">원인 예시:</p><pre id="0ac720e4-6f49-8336-80c9-81da0692869a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">리전명을 잘못 입력했음
+ap-northeast-2가 아니라 ap-northeast2처럼 입력했음</code></pre><p id="e21720e4-6f49-836e-b755-81ff505dca00" class="" dir="auto">올바른 서울 리전명:</p><pre id="606720e4-6f49-83c9-af55-81baa472f48c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-2</code></pre><p id="331720e4-6f49-820b-a575-812b3829f10c" class="" dir="auto">도쿄 리전명:</p><pre id="496720e4-6f49-8399-8c11-81c343f3d9d5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-1</code></pre><hr id="e56720e4-6f49-83c9-8d6c-81586bc07076" dir="auto"/><h2 id="c52720e4-6f49-8270-8b6b-0181dc5669a7" class="" dir="auto">4.17.5 CSV 파일 한글 깨짐</h2><p id="259720e4-6f49-8222-b990-01347b11448e" class="" dir="auto">엑셀에서 CSV 파일을 열었을 때 한글이 깨질 수 있다.</p><p id="de9720e4-6f49-837e-be47-01793e57eda9" class="" dir="auto">이 경우 파일 저장 시 다음 인코딩을 사용한다.</p><pre id="909720e4-6f49-821f-879f-819380d19fb7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">encoding=&quot;utf-8-sig&quot;</code></pre><p id="0b1720e4-6f49-8342-a603-011f612942f6" class="" dir="auto">예:</p><pre id="c00720e4-6f49-8383-b01c-8116fd560913" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(filename, &quot;w&quot;, newline=&quot;&quot;, encoding=&quot;utf-8-sig&quot;) as file:
+    writer = csv.DictWriter(file, fieldnames=fieldnames)</code></pre><hr id="35d720e4-6f49-82a4-9ea4-01562624cf38" dir="auto"/><h1 id="a8f720e4-6f49-8233-abfc-816b0e2fa18e" class="" dir="auto">4.18 정리</h1><pre id="3d3720e4-6f49-8383-a076-81300e587eae" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 자동화 스크립트는 main 함수 중심으로 구성하면 실행 흐름이 명확해진다.
+
+2. boto3 클라이언트 생성, API 호출, 데이터 추출, 출력, 저장 기능은 함수로 분리하는 것이 좋다.
+
+3. AWS API 응답은 중첩된 딕셔너리와 리스트 구조가 많으므로 필요한 데이터만 추출해야 한다.
+
+4. get() 메서드를 사용하면 없는 키에 대한 오류를 줄일 수 있다.
+
+5. 운영 자동화에서는 필터링 기능이 중요하다.
+
+6. try except를 사용해 AWS API 호출 오류를 처리해야 한다.
+
+7. 결과는 화면 출력뿐 아니라 CSV 또는 JSON 파일로 저장할 수 있어야 한다.
+
+8. argparse를 사용하면 리전, 상태, 출력 파일명 같은 옵션을 실행 시점에 지정할 수 있다.
+
+9. EC2 인벤토리 스크립트 구조는 S3, IAM, 보안 그룹, CloudWatch 등 다른 AWS 서비스 자동화에도 재사용할 수 있다.</code></pre><figure id="6c4720e4-6f49-8343-856c-81b27af27796" class="link-to-page"><a href="4%EC%9E%A5%20%EC%9A%B4%EC%98%81%20%EC%9E%90%EB%8F%99%ED%99%94%20%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8%20%EC%9E%91%EC%84%B1%20%EA%B8%B0%EB%B2%95/%EC%8B%A4%EC%8A%B5%EA%B3%BC%EC%A0%9C%20ec2_func%20%ED%8C%A8%ED%82%A4%EC%A7%80%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20EC2%20%EC%9A%B4%EC%98%81%20%EC%9E%90%EB%8F%99%ED%99%94%20%EC%8A%A4%ED%81%AC%EB%A6%BD%ED%8A%B8%20%EC%9E%91%EC%84%B1%206c4720e46f498343856c81b27af27796.html" data-notion-page-id="6c4720e4-6f49-8343-856c-81b27af27796" data-notion-space-id="56e9dfa9-059a-473f-a2ad-357c52ceb825">실습과제: ec2_func 패키지를 이용한 EC2 운영 자동화 스크립트 작성</a></figure></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

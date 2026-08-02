@@ -1,0 +1,767 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>1장 AWS 아키텍처 설계 기본</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="99b720e4-6f49-8345-bd0c-812e756f9c28" class="page sans"><header><h1 class="page-title" dir="auto">1장 AWS 아키텍처 설계 기본</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="1dd720e4-6f49-83b9-86ff-81914c886f28" class="" dir="auto">1.1 AWS 아키텍처 설계 개요</h2><p id="54e720e4-6f49-820b-aeeb-81dc94b86be7" class="" dir="auto">AWS에서 아키텍처를 설계할 때는 단순히 서버를 만드는 것이 아니라 <strong>확장성, 가용성, 보안, 비용</strong>을 고려한 구조를 설계해야 함.</p><p id="bda720e4-6f49-830a-bea6-01166fc392c6" class="" dir="auto">AWS에서는 이러한 설계를 위해 <strong>Well-Architected Framework</strong>라는 설계 기준을 제공함.</p><p id="89a720e4-6f49-8376-ab1c-013395125f5e" class="" dir="auto">AWS 아키텍처 설계의 핵심 특징</p><ul id="b8f720e4-6f49-837e-9d79-01cc5674a799" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장 가능한 구조 (Scalable Architecture)</li></ul><ul id="b15720e4-6f49-83de-951e-01a75f6328e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애에 강한 구조 (Highly Available Architecture)</li></ul><ul id="6b6720e4-6f49-8266-b9d2-0185cc94672d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 기반 인프라 (Infrastructure as Code)</li></ul><ul id="256720e4-6f49-828a-997d-816a2facbf1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용 효율적인 구조 (Cost Optimized Architecture)</li></ul><p id="6e9720e4-6f49-837d-baac-81dd0ca690d7" class="" dir="auto">온프레미스와 AWS 설계 방식 차이</p><table id="111720e4-6f49-82e8-b6df-01d6caee99fe" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="84f720e4-6f49-827e-af7b-015089390b0e" dir="ltr"><th id="k~]m" class="simple-table-header-color simple-table-header">구분</th><th id="WGZf" class="simple-table-header-color simple-table-header">온프레미스</th><th id="q~B;" class="simple-table-header-color simple-table-header">AWS</th></tr></thead><tbody><tr id="dd5720e4-6f49-8218-828a-81879e9f5871" dir="ltr"><td id="k~]m" class="">서버 확장</td><td id="WGZf" class="">장비 구매 필요</td><td id="q~B;" class="">Auto Scaling</td></tr><tr id="48a720e4-6f49-83ae-a127-0124a111cbdb" dir="ltr"><td id="k~]m" class="">가용성</td><td id="WGZf" class="">장비 이중화 필요</td><td id="q~B;" class="">Multi AZ</td></tr><tr id="9b6720e4-6f49-83fd-9cf2-012a34b1e4c2" dir="ltr"><td id="k~]m" class="">네트워크</td><td id="WGZf" class="">물리 네트워크</td><td id="q~B;" class="">VPC</td></tr><tr id="233720e4-6f49-832f-b491-8175a9937446" dir="ltr"><td id="k~]m" class="">스토리지</td><td id="WGZf" class="">NAS / SAN</td><td id="q~B;" class="">S3 / EBS</td></tr></tbody></table><hr id="928720e4-6f49-8287-9e93-016d4daaa449" dir="auto"/><h1 id="aea720e4-6f49-8305-8dde-0126b7c8aa4b" class="" dir="auto">1.2 AWS Well-Architected Framework</h1><p id="51e720e4-6f49-8396-8260-01d3bc7acdc4" class="" dir="auto">AWS에서 권장하는 아키텍처 설계 기준</p><p id="069720e4-6f49-823f-986e-81067903af0f" class="" dir="auto">총 <strong>6개의 Pillar</strong>로 구성됨.</p><h2 id="020720e4-6f49-8315-b627-81bde614bc45" class="" dir="auto">1. Operational Excellence (운영 우수성)</h2><p id="350720e4-6f49-8380-b2c2-817ea3023056" class="" dir="auto">시스템을 효율적으로 운영하고 지속적으로 개선하는 능력.</p><p id="74a720e4-6f49-82d5-9609-010516ae44af" class="" dir="auto">주요 내용</p><ul id="b0b720e4-6f49-83b2-ab4d-81d0adf5f6d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Infrastructure as Code</li></ul><ul id="038720e4-6f49-83ef-a0ea-01222a343cd5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화</li></ul><ul id="fc5720e4-6f49-8362-b4fa-018f3c7c2505" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 모니터링</li></ul><ul id="155720e4-6f49-82b3-b20a-015c0260637c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 절차 관리</li></ul><p id="bda720e4-6f49-82da-9b22-017d2d9b698c" class="" dir="auto">사용 서비스 예</p><ul id="0b7720e4-6f49-8221-94d5-81a601a2e81e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFormation</li></ul><ul id="b0d720e4-6f49-829a-9753-019d7aebbfa8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch</li></ul><ul id="87e720e4-6f49-82ec-ab63-815fac8aa899" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Systems Manager</li></ul><hr id="9c3720e4-6f49-8301-87cf-017dfaf47843" dir="auto"/><h2 id="610720e4-6f49-826f-b0af-017cb9fed1fb" class="" dir="auto">2. Security (보안)</h2><p id="27f720e4-6f49-8221-9e16-8123e0fb11c1" class="" dir="auto">데이터와 시스템을 보호하는 능력.</p><p id="bd4720e4-6f49-82b2-9c3b-0181d9bd9166" class="" dir="auto">주요 내용</p><ul id="c0f720e4-6f49-8384-8a4d-813edc7059b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최소 권한 원칙</li></ul><ul id="3e8720e4-6f49-8372-84cf-811ce56bb6bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 암호화</li></ul><ul id="684720e4-6f49-82db-9424-018b32a49d42" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 보안</li></ul><ul id="386720e4-6f49-830b-b96f-8173bd3c3edb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 감사</li></ul><p id="ba3720e4-6f49-8345-859e-0109579d1c5a" class="" dir="auto">사용 서비스 예</p><ul id="eed720e4-6f49-8325-b490-81a431a3726f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM</li></ul><ul id="f38720e4-6f49-83f6-8bfd-81c48ec8ecf3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">KMS</li></ul><ul id="2a5720e4-6f49-830e-b653-01227cb5ecdc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF</li></ul><ul id="ca2720e4-6f49-834f-a6bc-0100311e6be9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GuardDuty</li></ul><hr id="68e720e4-6f49-82aa-bfce-81633f329375" dir="auto"/><h2 id="c57720e4-6f49-8362-a9c6-81617c37435d" class="" dir="auto">3. Reliability (신뢰성)</h2><p id="424720e4-6f49-830d-9d0c-81801050f88b" class="" dir="auto">시스템이 장애 상황에서도 계속 동작하도록 설계하는 것.</p><p id="c7a720e4-6f49-834c-a0ee-810cc24f24e4" class="" dir="auto">주요 내용</p><ul id="591720e4-6f49-836d-9f12-01e27402460e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 자동 복구</li></ul><ul id="8b1720e4-6f49-82df-9684-013f10f2ede0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Multi AZ</li></ul><ul id="7a0720e4-6f49-832f-be8e-01338f70f97f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 확장</li></ul><ul id="d64720e4-6f49-82c7-9bab-81e6ceb8c4c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 및 복구</li></ul><p id="852720e4-6f49-837d-8d29-01c973b50d26" class="" dir="auto">사용 서비스 예</p><ul id="2c1720e4-6f49-8202-af2a-8157a7b8070e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling</li></ul><ul id="013720e4-6f49-8366-aa0a-0171b51eb864" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Elastic Load Balancer</li></ul><ul id="aa8720e4-6f49-824c-9a91-015ca1eea6dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route53</li></ul><ul id="e13720e4-6f49-8333-a62e-81839958ec75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Backup</li></ul><hr id="cc7720e4-6f49-8366-ba50-01d9f49183b4" dir="auto"/><h2 id="b1e720e4-6f49-823a-a6db-819a916f7d94" class="" dir="auto">4. Performance Efficiency (성능 효율성)</h2><p id="5a8720e4-6f49-831d-b3dc-8115a39fcadf" class="" dir="auto">필요한 성능을 효율적으로 제공하는 능력.</p><p id="945720e4-6f49-821a-81e7-019d5f5e5d16" class="" dir="auto">주요 내용</p><ul id="5e0720e4-6f49-82b0-a6af-01d53388b4d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">적절한 인스턴스 선택</li></ul><ul id="d73720e4-6f49-8361-b2a9-812db28a8ea2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">캐싱 활용</li></ul><ul id="50b720e4-6f49-83d1-ad43-81babf7b7fc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CDN 사용</li></ul><p id="345720e4-6f49-8309-9a68-01854524cb69" class="" dir="auto">사용 서비스 예</p><ul id="b0b720e4-6f49-8274-9c69-012a3d1558a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront</li></ul><ul id="eb7720e4-6f49-8311-b1c0-0166d213ab54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ElastiCache</li></ul><ul id="0c7720e4-6f49-828c-8d04-01e9d6f39c3d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB</li></ul><hr id="f9a720e4-6f49-8211-b1be-81caae540efe" dir="auto"/><h2 id="d9a720e4-6f49-83d4-b204-015fc21f7936" class="" dir="auto">5. Cost Optimization (비용 최적화)</h2><p id="5e9720e4-6f49-82fb-a02d-01e0585e1d7e" class="" dir="auto">불필요한 비용을 줄이는 설계.</p><p id="29d720e4-6f49-831d-ac7b-8122d7a52ea1" class="" dir="auto">주요 내용</p><ul id="c8b720e4-6f49-8318-a032-01d588c9892f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling</li></ul><ul id="49b720e4-6f49-820d-959c-8156b712d935" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Spot Instance</li></ul><ul id="e98720e4-6f49-8243-a094-81cedaa49801" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Storage Lifecycle</li></ul><p id="a22720e4-6f49-8282-8b1b-8119e8903ed9" class="" dir="auto">사용 서비스 예</p><ul id="0d6720e4-6f49-8273-ae33-811da117527d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cost Explorer</li></ul><ul id="59c720e4-6f49-839e-bfe4-814094151d97" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Savings Plan</li></ul><ul id="cb1720e4-6f49-82df-b227-8116ac528d9b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 Lifecycle</li></ul><hr id="094720e4-6f49-839a-ab7a-01499dda316d" dir="auto"/><h2 id="44e720e4-6f49-82ec-a560-81f8f045a888" class="" dir="auto">6. Sustainability (지속 가능성)</h2><p id="b47720e4-6f49-82e6-a33e-81707fcbf982" class="" dir="auto">환경 친화적인 아키텍처 설계.</p><p id="5f5720e4-6f49-830e-acec-012ea8c93fb6" class="" dir="auto">주요 내용</p><ul id="ed0720e4-6f49-82ec-9999-01a962ab46a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스 효율적 사용</li></ul><ul id="7dd720e4-6f49-8272-9dc2-01d67a6e4e43" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 확장</li></ul><ul id="955720e4-6f49-8346-a908-8172fdd7f497" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버리스 활용</li></ul><hr id="08a720e4-6f49-8219-9a5f-017320f297af" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

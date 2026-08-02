@@ -1,0 +1,812 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>2장 AWS 계정 보안 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="199720e4-6f49-836d-84da-81a937e7e883" class="page sans"><header><h1 class="page-title" dir="auto">2장 AWS 계정 보안 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="415720e4-6f49-82b9-a3e2-8136c822c1ae" class="" dir="auto">2.1 AWS 계정 보안 개요</h2><p id="8e3720e4-6f49-832d-bd86-816a6a465b58" class="" dir="auto">AWS에서 가장 중요한 보안 요소는 <strong>계정(Account)</strong>임.</p><p id="b9e720e4-6f49-8280-ba93-013aa491075a" class="" dir="auto">AWS의 모든 리소스는 <strong>계정 단위로 소유됨.</strong></p><p id="364720e4-6f49-828f-b56f-01c89ac6cee6" class="" dir="auto">예</p><ul id="ec2720e4-6f49-829f-91c9-0137e41dc1a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2</li></ul><ul id="af0720e4-6f49-8329-bb4b-810c263fb5ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="8d1720e4-6f49-839b-bdf3-01f8d09a4832" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS</li></ul><ul id="2a5720e4-6f49-822e-b30c-817809c9c8f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM</li></ul><p id="b95720e4-6f49-823d-ad71-8198fb34e018" class="" dir="auto">모든 리소스는 <strong>특정 AWS 계정에 속함.</strong></p><p id="19e720e4-6f49-83dd-bcc3-81838e3edc0b" class="" dir="auto">따라서 AWS 보안의 시작은 다음과 같음.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="51a720e4-6f49-82ee-9051-01899554f7e7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">계정 보호 → 권한 관리 → 자격증명 보호</code></pre><p id="109720e4-6f49-83d1-9894-0103dfeb020c" class="" dir="auto">AWS에서는 이를 위해 <strong>IAM (Identity and Access Management)</strong> 서비스를 제공함.</p><hr id="179720e4-6f49-8232-ac07-81b1aea82280" dir="auto"/><h1 id="fb4720e4-6f49-8295-9ecf-01c55c2acbd7" class="" dir="auto">2.2 AWS 보안 주체 (Security Principal)</h1><p id="c9d720e4-6f49-8220-ab3e-01e2864fa8e7" class="" dir="auto">보안 주체는 <strong>AWS 리소스에 접근할 수 있는 대상</strong>을 의미함.</p><p id="97c720e4-6f49-8296-b33d-814453ba8db3" class="" dir="auto">AWS에서 대표적인 보안 주체</p><table id="1f2720e4-6f49-83ff-a64f-01d8b780ee8b" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="01a720e4-6f49-8287-905a-812a5b809899" dir="ltr"><th id="EaeR" class="simple-table-header-color simple-table-header">보안 주체</th><th id="^TlA" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="a19720e4-6f49-82d9-a857-81f834521de0" dir="ltr"><td id="EaeR" class="">Root Account</td><td id="^TlA" class="">AWS 계정 생성 시 생성되는 최고 권한 계정</td></tr><tr id="b5a720e4-6f49-8334-9fc6-8116ed17fa15" dir="ltr"><td id="EaeR" class="">IAM User</td><td id="^TlA" class="">사람 또는 애플리케이션 사용자</td></tr><tr id="d48720e4-6f49-834a-8a6d-817e743c11d7" dir="ltr"><td id="EaeR" class="">IAM Role</td><td id="^TlA" class="">AWS 서비스 또는 사용자에게 임시 권한 제공</td></tr><tr id="baa720e4-6f49-8293-a5aa-014933feafbc" dir="ltr"><td id="EaeR" class="">Federated User</td><td id="^TlA" class="">외부 인증 시스템 사용자</td></tr></tbody></table><hr id="019720e4-6f49-8223-b5da-01ddef5735f8" dir="auto"/><h1 id="03d720e4-6f49-8271-85c3-81db9f5d2ef2" class="" dir="auto">2.3 Root 계정</h1><p id="a69720e4-6f49-8219-812a-013462e17d34" class="" dir="auto">AWS 계정을 생성하면 <strong>Root 사용자</strong>가 자동으로 생성됨.</p><p id="f78720e4-6f49-8272-98d3-81f68788d363" class="" dir="auto">특징</p><ul id="474720e4-6f49-8210-9a4f-816e6bd9e97e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 권한 보유</li></ul><ul id="f4f720e4-6f49-8318-b97e-0102d5d8a43a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">제한 없음</li></ul><ul id="605720e4-6f49-82dd-a07d-81e46f45e000" class="bulleted-list" dir="auto"><li style="list-style-type:disc">삭제 불가능</li></ul><p id="634720e4-6f49-83d3-9f30-01e5d429150c" class="" dir="auto">Root 계정은 <strong>일상적인 작업에 사용하면 안됨.</strong></p><p id="81c720e4-6f49-8224-83a8-81c3566fe4b0" class="" dir="auto">Root 계정 사용이 필요한 경우</p><ul id="488720e4-6f49-8244-8d8a-01d8672364fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 계정 생성</li></ul><ul id="91e720e4-6f49-8259-a2c1-81e0d1d838af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결제 설정 변경</li></ul><ul id="194720e4-6f49-8327-9535-813ecffc936a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Support Plan 변경</li></ul><ul id="73b720e4-6f49-835a-becc-81093ad604bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 권한 복구</li></ul><hr id="395720e4-6f49-8236-b28e-81245cb899e6" dir="auto"/><h2 id="f07720e4-6f49-83cc-850f-816126e9b06b" class="" dir="auto">Root 계정 보안 권장사항</h2><p id="1da720e4-6f49-8220-b8ca-81350ae71ca1" class="" dir="auto">AWS Best Practice</p><p id="50e720e4-6f49-833e-8d82-81de0a1a4fb1" class="" dir="auto">1 Root 계정 MFA 활성화</p><p id="610720e4-6f49-822c-b351-013e1e1ad632" class="" dir="auto">2 Access Key 생성 금지</p><p id="fca720e4-6f49-8272-88cc-812fdef74564" class="" dir="auto">3 일상 작업에 사용하지 않음</p><p id="cfd720e4-6f49-831b-95c2-810279bfe793" class="" dir="auto">4 Root 로그인 알림 설정</p><hr id="9e8720e4-6f49-82b0-a0d1-81f754af1bac" dir="auto"/><h1 id="b6e720e4-6f49-83fc-a9b0-8188ab4acd0a" class="" dir="auto">2.4 IAM 개념</h1><p id="813720e4-6f49-82db-8c68-015b0a7423f1" class="" dir="auto">IAM은 <strong>AWS 리소스 접근 권한을 관리하는 서비스</strong>임.</p><p id="192720e4-6f49-83bd-a3d5-813b65595ae8" class="" dir="auto">IAM 구성 요소</p><pre id="f4a720e4-6f49-825e-98c9-81b2ec2f58c1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+Group
+Policy
+Role</code></pre><hr id="36a720e4-6f49-83ee-8b2e-81869a858043" dir="auto"/><h2 id="f28720e4-6f49-8299-b5a2-81331bcd561a" class="" dir="auto">IAM 구성요소 구조</h2><pre id="d9e720e4-6f49-8353-8297-01321138a005" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IAM User
+   │
+IAM Group
+   │
+IAM Policy</code></pre><p id="227720e4-6f49-83e9-9716-01131dc1cffe" class="" dir="auto">또는</p><pre id="4bc720e4-6f49-827e-9e9d-01d49a44de03" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS Service
+    │
+ IAM Role
+    │
+ IAM Policy</code></pre><hr id="b33720e4-6f49-83c7-8e2c-819414f51eff" dir="auto"/><h1 id="ba0720e4-6f49-82f1-b82d-8143b530177e" class="" dir="auto">2.5 IAM User</h1><p id="bb8720e4-6f49-834e-89d5-01c7ee2b1e7f" class="" dir="auto">IAM User는 AWS 계정을 사용하는 <strong>개별 사용자</strong>임.</p><p id="243720e4-6f49-835a-9803-81361686722e" class="" dir="auto">예</p><ul id="7c0720e4-6f49-83f5-876c-812df259dd7b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발자</li></ul><ul id="03f720e4-6f49-826e-bc80-015d82eedcfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영자</li></ul><ul id="c1d720e4-6f49-821e-b1ef-81b8e0d96328" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리자</li></ul><p id="2e7720e4-6f49-82a4-b34f-81b60939d289" class="" dir="auto">특징</p><ul id="dba720e4-6f49-8296-b064-01dc4ceb2eea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고유한 로그인 정보</li></ul><ul id="1c7720e4-6f49-8344-8776-01f8a0fda9ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Access Key 발급 가능</li></ul><p id="48d720e4-6f49-825c-81c5-01d016dacf48" class="" dir="auto">IAM User 인증 방식</p><table id="9ca720e4-6f49-82a3-bc5a-01e829d3a2b8" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="3b1720e4-6f49-8382-80d7-0141edb8a0cc" dir="ltr"><th id="sjR~" class="simple-table-header-color simple-table-header">인증 방식</th><th id="mY=y" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="d63720e4-6f49-8234-a739-01e28c6c34c5" dir="ltr"><td id="sjR~" class="">Password</td><td id="mY=y" class="">Console 로그인</td></tr><tr id="bba720e4-6f49-82f0-a13f-818681fb8d42" dir="ltr"><td id="sjR~" class="">Access Key</td><td id="mY=y" class="">CLI / API</td></tr></tbody></table><hr id="58a720e4-6f49-8290-9a4d-01446d57bc9e" dir="auto"/><h1 id="2bf720e4-6f49-8217-821c-81417e7f55dc" class="" dir="auto">2.6 IAM Group</h1><p id="a45720e4-6f49-824a-bc57-810694b596e0" class="" dir="auto">Group은 여러 IAM User를 묶는 기능임.</p><p id="b52720e4-6f49-836a-9193-81485b63a148" class="" dir="auto">예</p><pre id="90a720e4-6f49-82da-9674-018c7056b87a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Developers
+Admins
+Operators</code></pre><p id="bab720e4-6f49-82b4-a9ae-016222e05a63" class="" dir="auto">구조</p><pre id="48d720e4-6f49-82cb-9761-817fe5161322" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Group
+ ├ User1
+ ├ User2
+ └ User3</code></pre><p id="2ac720e4-6f49-8326-b2b3-81ec4172004d" class="" dir="auto">권한은 <strong>User가 아니라 Group에 부여하는 것이 권장됨.</strong></p><hr id="7ba720e4-6f49-8387-a719-015fd0d4755a" dir="auto"/><h1 id="f9e720e4-6f49-82d5-89e5-811821d55cf2" class="" dir="auto">2.7 IAM Policy</h1><p id="edd720e4-6f49-8323-b0b4-8187a4d74e86" class="" dir="auto">Policy는 <strong>권한 정의 문서</strong>임.</p><p id="909720e4-6f49-8225-b20d-816ca0c37874" class="" dir="auto">JSON 형식으로 작성됨.</p><p id="efd720e4-6f49-8314-9290-8141a48b92ff" class="" dir="auto">예</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="b69720e4-6f49-8345-a173-017dcf8fbba2" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+ &quot;Version&quot;: &quot;2012-10-17&quot;,
+ &quot;Statement&quot;: [
+   {
+     &quot;Effect&quot;: &quot;Allow&quot;,
+     &quot;Action&quot;: &quot;s3:*&quot;,
+     &quot;Resource&quot;: &quot;*&quot;
+   }
+ ]
+}</code></pre><p id="bfd720e4-6f49-8376-bfc0-018771383cdf" class="" dir="auto">Policy 구성 요소</p><table id="e4c720e4-6f49-824b-9f2f-81f1c48e68f7" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="15b720e4-6f49-823b-a8b8-81145099f634" dir="ltr"><th id="^xw:" class="simple-table-header-color simple-table-header">요소</th><th id="E=WA" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="f08720e4-6f49-820d-8291-81bf7f807c1b" dir="ltr"><td id="^xw:" class="">Effect</td><td id="E=WA" class="">Allow / Deny</td></tr><tr id="a43720e4-6f49-82ac-b318-01626fc31dce" dir="ltr"><td id="^xw:" class="">Action</td><td id="E=WA" class="">수행 가능한 API</td></tr><tr id="28c720e4-6f49-83b9-a086-016a6e15599f" dir="ltr"><td id="^xw:" class="">Resource</td><td id="E=WA" class="">대상 리소스</td></tr></tbody></table><hr id="61b720e4-6f49-8399-9af6-01f52b5ef875" dir="auto"/><h1 id="4cd720e4-6f49-8298-baa8-01051f745b59" class="" dir="auto">2.8 IAM Role</h1><p id="f0e720e4-6f49-8266-b94a-81548813027a" class="" dir="auto">Role은 <strong>임시 권한을 제공하는 IAM 객체</strong>임.</p><p id="ea6720e4-6f49-8203-966e-815cdfd6461f" class="" dir="auto">특징</p><ul id="137720e4-6f49-8291-872f-01224209a5a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Access Key 없음</li></ul><ul id="230720e4-6f49-830e-b516-816fc17028dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">임시 자격증명 사용</li></ul><ul id="444720e4-6f49-8374-9858-81242bd2ec1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Assume Role 방식</li></ul><p id="a97720e4-6f49-835a-b42d-0192d8956ad5" class="" dir="auto">주요 사용 사례</p><table id="61b720e4-6f49-8257-8d37-8185dbdc96a7" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="bc1720e4-6f49-83f6-85d3-817048925b80" dir="ltr"><th id="_h^U" class="simple-table-header-color simple-table-header">사용 사례</th><th id=";xdc" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="bbf720e4-6f49-82b8-bfb3-8180fc8321cb" dir="ltr"><td id="_h^U" class="">EC2 → S3 접근</td><td id=";xdc" class="">EC2 Role</td></tr><tr id="80e720e4-6f49-823d-a77d-019e4839cecc" dir="ltr"><td id="_h^U" class="">Lambda → DynamoDB</td><td id=";xdc" class="">Service Role</td></tr><tr id="159720e4-6f49-82cb-bd2f-014e0b8e901d" dir="ltr"><td id="_h^U" class="">Cross Account Access</td><td id=";xdc" class="">다른 계정 접근</td></tr></tbody></table><hr id="f89720e4-6f49-82c1-8441-81c8731a1a38" dir="auto"/><h2 id="4f6720e4-6f49-82a3-bbbb-01940af1828a" class="" dir="auto">EC2 Role 구조</h2><pre id="306720e4-6f49-8326-a720-816fb1f15847" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 Instance
+     │
+Assume Role
+     │
+IAM Role
+     │
+IAM Policy
+     │
+AWS Resource</code></pre><hr id="fd9720e4-6f49-8341-b4bd-81d1efaf743d" dir="auto"/><h1 id="55b720e4-6f49-83c1-87da-01bccef7bebc" class="" dir="auto">2.9 IAM 권한 정책 종류</h1><p id="d9e720e4-6f49-82a0-ae70-012ce90de6d9" class="" dir="auto">IAM Policy는 2가지 종류가 있음.</p><table id="fd0720e4-6f49-837f-b5ed-81fdfe74d5b1" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="38a720e4-6f49-831b-86f7-017330dc8753" dir="ltr"><th id="|]rb" class="simple-table-header-color simple-table-header">정책</th><th id="\Vfz" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="15b720e4-6f49-83a8-9e6e-81da6278311a" dir="ltr"><td id="|]rb" class="">Managed Policy</td><td id="\Vfz" class="">AWS 또는 사용자가 관리</td></tr><tr id="357720e4-6f49-83bc-9ce7-0164eb06e0f9" dir="ltr"><td id="|]rb" class="">Inline Policy</td><td id="\Vfz" class="">특정 User 또는 Role에 직접 연결</td></tr></tbody></table><hr id="391720e4-6f49-83ea-9037-81d5412bfc61" dir="auto"/><h2 id="dd3720e4-6f49-8228-a5c8-81acc2ce5d5e" class="" dir="auto">AWS Managed Policy 예</h2><ul id="c2f720e4-6f49-8310-9c2c-01e11b2a4e5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AmazonS3FullAccess</li></ul><ul id="cbf720e4-6f49-8285-aaa7-811062854db1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AmazonEC2FullAccess</li></ul><ul id="47a720e4-6f49-8278-badf-819c7064b5c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AdministratorAccess</li></ul><hr id="ab1720e4-6f49-8387-854d-8146b88eaa63" dir="auto"/><h1 id="a1a720e4-6f49-8224-9a1f-8165c005e66e" class="" dir="auto">2.10 AWS 자격증명 (Credential)</h1><p id="a90720e4-6f49-8360-9a2f-01e470f2b6fd" class="" dir="auto">AWS 인증에는 다음 정보가 사용됨.</p><pre id="c60720e4-6f49-8289-bb27-8110c3c42b32" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Access Key ID
+Secret Access Key</code></pre><p id="f51720e4-6f49-827a-bb17-017d12d8880d" class="" dir="auto">CLI / SDK 사용 시 필요함.</p><hr id="186720e4-6f49-82c2-b107-0197dc946ebe" dir="auto"/><h1 id="be9720e4-6f49-838f-abb8-0107703332e9" class="" dir="auto">2.11 AWS CLI 인증 설정 실습</h1><p id="158720e4-6f49-83b4-98ce-010ee2689477" class="" dir="auto">IAM 사용자 Access Key를 이용해 CLI 인증 설정을 수행함.</p><hr id="d1b720e4-6f49-83a6-b868-0121cc940f25" dir="auto"/><h2 id="90b720e4-6f49-823d-af3a-81b7a3f7dfba" class="" dir="auto">Access Key 생성</h2><p id="c23720e4-6f49-82b0-9317-01cfa56ce7f9" class="" dir="auto">IAM 콘솔</p><pre id="250720e4-6f49-8342-927b-819b68bca62c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IAM → Users → 사용자 선택</code></pre><p id="066720e4-6f49-820e-b80c-81abdd0c9f7a" class="" dir="auto">Security credentials 탭 선택</p><pre id="a16720e4-6f49-8297-a978-01aaf941e1ff" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Create access key</code></pre><hr id="27f720e4-6f49-83ef-b002-01325278edea" dir="auto"/><h2 id="d5a720e4-6f49-8322-a25a-012f60f01bea" class="" dir="auto">CLI 인증 설정</h2><p id="06a720e4-6f49-83f9-a187-01ad590ad773" class="" dir="auto">터미널에서 실행</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="6f9720e4-6f49-8280-a040-811cdbfaa8bf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws configure</code></pre><p id="efd720e4-6f49-83d3-b9d5-81b38ae2b649" class="" dir="auto">입력 항목</p><pre id="1bf720e4-6f49-8255-a28a-81f914a357d1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS Access Key ID
+AWS Secret Access Key
+Region
+Output format</code></pre><p id="5be720e4-6f49-83d9-b402-8119a08f5931" class="" dir="auto">예</p><pre id="475720e4-6f49-82e8-bb29-0119ea9c624c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">AWS Access Key ID: AKIAxxxx
+AWS Secret Access Key: xxxxxxxx
+Default region name: ap-northeast-2
+Default output format: json</code></pre><hr id="126720e4-6f49-8392-bef7-81942b106145" dir="auto"/><h1 id="863720e4-6f49-8371-98bf-01c808defa01" class="" dir="auto">2.12 CLI 인증 확인 실습</h1><p id="917720e4-6f49-8320-bbe1-010c6bfee188" class="" dir="auto">현재 로그인한 AWS 계정 확인</p><pre id="f81720e4-6f49-8392-8895-01655d848298" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws sts get-caller-identity</code></pre><p id="04d720e4-6f49-83d2-b425-019816662245" class="" dir="auto">출력 예</p><pre id="bf9720e4-6f49-82e2-8151-8198e3fa3060" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+ &quot;UserId&quot;: &quot;AIDA...&quot;,
+ &quot;Account&quot;: &quot;123456789012&quot;,
+ &quot;Arn&quot;: &quot;arn:aws:iam::123456789012:user/student&quot;
+}</code></pre><p id="98b720e4-6f49-83f7-9d4c-015903af2e99" class="" dir="auto">설명</p><p id="705720e4-6f49-8281-a6b8-811d6e194ea5" class="" dir="auto">현재 CLI 인증이 정상적으로 설정되었는지 확인하는 명령임.</p><hr id="ee3720e4-6f49-8381-a426-014939ff55a0" dir="auto"/><h1 id="297720e4-6f49-83c4-9f4b-01ba6b44e125" class="" dir="auto">2.13 IAM 실습</h1><h2 id="4be720e4-6f49-82b6-b3c0-01be13d19119" class="" dir="auto">실습 목표</h2><p id="fa7720e4-6f49-8376-ad0f-8160390fe07f" class="" dir="auto">IAM 사용자 생성 후 CLI로 AWS 접근.</p><hr id="2f7720e4-6f49-82c9-9a7b-81244810167c" dir="auto"/><h2 id="f16720e4-6f49-82c6-9f8a-01b58e5a04df" class="" dir="auto">1 IAM User 생성</h2><p id="c62720e4-6f49-831d-a125-81cc618a01ea" class="" dir="auto">AWS Console</p><pre id="bc9720e4-6f49-82ff-8ac5-81ed490e6207" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IAM → Users → Create user</code></pre><p id="698720e4-6f49-824d-b5b2-81a9f4a3c21f" class="" dir="auto">설정</p><pre id="eff720e4-6f49-8266-8b1c-8114ad1d74d2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User name: student1
+Access type: Console + Programmatic</code></pre><hr id="e01720e4-6f49-82a4-b7ff-011ad9f24e92" dir="auto"/><h2 id="132720e4-6f49-825e-a312-01d998338ad2" class="" dir="auto">2 권한 부여</h2><pre id="bd3720e4-6f49-830a-a4d5-81aa1bd03b45" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Attach policies directly</code></pre><p id="2cc720e4-6f49-8243-bcb9-019ffdbd117e" class="" dir="auto">선택</p><pre id="5c5720e4-6f49-8266-8649-0102050cba80" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AdministratorAccess</code></pre><hr id="27b720e4-6f49-8340-a84f-0123587b60a6" dir="auto"/><h2 id="860720e4-6f49-82a1-9439-01aeb052bdd0" class="" dir="auto">3 Access Key 생성</h2><pre id="3d7720e4-6f49-82d9-a08c-818e3629ea21" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Security credentials → Create access key</code></pre><hr id="594720e4-6f49-83b7-bce9-01256be0e27e" dir="auto"/><h2 id="053720e4-6f49-83f9-b740-8162dc9ffd64" class="" dir="auto">4 CLI 인증 설정</h2><pre id="28b720e4-6f49-83e0-931d-816ef7c9e991" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws configure</code></pre><hr id="d4a720e4-6f49-82b8-9bc6-0156548b414f" dir="auto"/><h2 id="64d720e4-6f49-8397-bfa8-013bceab459c" class="" dir="auto">5 인증 테스트</h2><pre id="76f720e4-6f49-835c-83ec-015111dc6b77" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws s3 ls</code></pre><p id="f13720e4-6f49-82cf-9085-01f70939fbc6" class="" dir="auto">설명</p><p id="2e2720e4-6f49-82d0-acc8-815164a255b0" class="" dir="auto">현재 계정의 S3 버킷 목록을 조회함.</p><hr id="fd2720e4-6f49-8347-9fbf-0197851f9142" dir="auto"/><h1 id="833720e4-6f49-834b-8a5d-0112228b135b" class="" dir="auto">2.14 IAM Best Practice</h1><p id="096720e4-6f49-8381-b242-81fd70b1bcf3" class="" dir="auto">AWS 권장 보안 방식</p><p id="11d720e4-6f49-82ee-9f73-8142e97e48a8" class="" dir="auto">1 Root 계정 사용 금지</p><p id="66d720e4-6f49-82f4-b366-013a66378b10" class="" dir="auto">2 MFA 사용</p><p id="84c720e4-6f49-827b-b945-01fb78705452" class="" dir="auto">3 최소 권한 원칙</p><p id="c57720e4-6f49-8384-bb9d-81eefab3caa8" class="" dir="auto">4 Role 사용</p><p id="d9b720e4-6f49-8316-b7d8-013a12d87334" class="" dir="auto">5 Access Key 주기적 변경</p><hr id="3b5720e4-6f49-82d4-87e5-81ecc8438121" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

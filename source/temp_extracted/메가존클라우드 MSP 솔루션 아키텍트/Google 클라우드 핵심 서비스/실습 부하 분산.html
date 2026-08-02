@@ -1,0 +1,836 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. 부하 분산</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="c1c720e4-6f49-8369-8107-81a3dd347975" class="page sans"><header><h1 class="page-title" dir="auto">실습. 부하 분산</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="03f720e4-6f49-825e-b3f5-01b34253db68" class="" dir="auto">주제</h2><p id="b9c720e4-6f49-8245-ad56-81a83f6ebc2f" class="" dir="auto">Managed Instance Group(MIG)과 Autoscaler를 이용한 HTTP Load Balancer 구축</p><hr id="fc4720e4-6f49-828f-a933-8134cf578c8a" dir="auto"/><h2 id="ba9720e4-6f49-8231-b582-011f6ff91c3f" class="" dir="auto">1. 실습 개요</h2><p id="564720e4-6f49-8252-96e1-81bf65f138af" class="" dir="auto">이 실습은 여러 VM 인스턴스에 웹 서비스를 배포하고, GCP의 HTTP Load Balancer를 이용해 트래픽을 분산하는 과정으로 구성함.</p><p id="6d1720e4-6f49-8201-ac34-01f39b82722a" class="" dir="auto">또한 Managed Instance Group과 Autoscaler를 함께 사용하여, 트래픽 증가 시 인스턴스 수가 자동으로 확장되고 감소 시 자동으로 축소되는 구조를 확인함.</p><p id="078720e4-6f49-8357-a012-01f538e8bcb6" class="" dir="auto">이 실습을 통해 다음 내용을 익히는 것을 목표로 함.</p><ul id="0f0720e4-6f49-8327-aa24-01292a7e93bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 템플릿 생성 방법 이해</li></ul><ul id="37f720e4-6f49-831c-a868-817850f35970" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Managed Instance Group 생성 방법 이해</li></ul><ul id="0bb720e4-6f49-82a8-81c3-81cf588bfe83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autoscaler 설정 방법 이해</li></ul><ul id="9a1720e4-6f49-8392-a34d-81258ab5f05b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check 생성 및 연결 방법 이해</li></ul><ul id="368720e4-6f49-825f-9a28-011508ab50cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP Load Balancer 생성 방법 이해</li></ul><ul id="38c720e4-6f49-8338-a9aa-01c3fb270233" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부하 발생 시 인스턴스 수가 자동으로 증가하는 동작 확인</li></ul><ul id="990720e4-6f49-83f7-93db-01b308e814e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부하 감소 시 인스턴스 수가 자동으로 감소하는 동작 확인</li></ul><hr id="218720e4-6f49-8262-bdf7-0160bfe3e72f" dir="auto"/><h2 id="cde720e4-6f49-82ba-a7ab-01e20fa28fa8" class="" dir="auto">2. 실습 목표</h2><p id="3f5720e4-6f49-83d0-8145-011faa49a505" class="" dir="auto">실습 완료 후 학습자는 다음을 수행할 수 있어야 함.</p><ul id="042720e4-6f49-83f9-a4e5-0144f179be0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동일한 설정의 웹 서버 인스턴스를 템플릿 기반으로 배포할 수 있음</li></ul><ul id="409720e4-6f49-83cf-aa15-819660be3aef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MIG를 이용하여 최소 2대, 최대 4대의 인스턴스를 자동 관리할 수 있음</li></ul><ul id="5e5720e4-6f49-83f4-9f34-014d7e064cd3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check를 이용하여 정상 동작 중인 백엔드만 서비스에 포함시킬 수 있음</li></ul><ul id="6ed720e4-6f49-82a0-89ce-01d568f0c3bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP Load Balancer를 이용하여 클라이언트 요청을 여러 인스턴스로 분산할 수 있음</li></ul><ul id="399720e4-6f49-8220-a3da-81aa9dcc7413" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autoscaler가 CPU 사용률 기준으로 스케일 아웃/스케일 인하는 과정을 확인할 수 있음</li></ul><hr id="7d4720e4-6f49-82a8-9b06-0137f1f7db07" dir="auto"/><h2 id="ed1720e4-6f49-8204-9227-81e08b8fb184" class="" dir="auto">3. 실습 환경</h2><h3 id="236720e4-6f49-83fd-9832-81383f124258" class="" dir="auto">사용 서비스</h3><ul id="137720e4-6f49-83d1-9f5e-014043a0ad84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Google Compute Engine</li></ul><ul id="20c720e4-6f49-829b-bb9c-817413b487f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Instance Template</li></ul><ul id="b36720e4-6f49-824c-b11a-014484dfd66b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Managed Instance Group</li></ul><ul id="b8b720e4-6f49-82c7-ad12-81de94c20fa5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autoscaler</li></ul><ul id="016720e4-6f49-829f-ae60-014d8b4186aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check</li></ul><ul id="28e720e4-6f49-835b-b155-0181b7ea0468" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP Load Balancer</li></ul><ul id="c37720e4-6f49-830c-ad47-018fc765b5e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule</li></ul><h3 id="5e1720e4-6f49-83d1-aa20-819e7e6f028c" class="" dir="auto">실습 조건</h3><ul id="8cf720e4-6f49-83bb-ae8b-811dd8abd01c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최소 인스턴스 수: <strong>2</strong></li></ul><ul id="1e9720e4-6f49-8226-94b2-81c9d758f520" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최대 인스턴스 수: <strong>4</strong></li></ul><ul id="ecc720e4-6f49-82f1-986a-0127c4fb7382" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버 포트: <strong>80</strong></li></ul><ul id="622720e4-6f49-82e8-963a-819d670030c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check 방식: <strong>HTTP</strong></li></ul><ul id="7b3720e4-6f49-8349-b575-8122b26e068c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autoscaling 기준: <strong>CPU 사용률 60%</strong></li></ul><h3 id="2ad720e4-6f49-83bb-a8fa-010350f862c9" class="" dir="auto">권장 리전</h3><ul id="ee5720e4-6f49-826c-9060-013468ef4b22" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>asia-northeast3</code>(서울) 또는 수업 환경에 맞는 리전 사용</li></ul><hr id="774720e4-6f49-834e-aee7-818c9aa2b78f" dir="auto"/><h2 id="d25720e4-6f49-822f-9a0f-0150cc6f7da7" class="" dir="auto">4. 실습 아키텍처</h2><p id="467720e4-6f49-83e6-9ce3-01cb6ecef2af" class="" dir="auto">구성은 아래와 같음.</p><ol type="1" id="319720e4-6f49-83c1-9379-0195b3bd9c86" class="numbered-list" start="1" dir="auto"><li>인스턴스 템플릿을 생성함</li></ol><ol type="1" id="793720e4-6f49-825f-b1d0-81626c5a6235" class="numbered-list" start="2" dir="auto"><li>템플릿을 기반으로 Managed Instance Group을 생성함</li></ol><ol type="1" id="48e720e4-6f49-820e-b3e0-81f116a2d441" class="numbered-list" start="3" dir="auto"><li>그룹의 초기 인스턴스 수를 2대로 설정함</li></ol><ol type="1" id="a9f720e4-6f49-8276-9563-81d8bd511666" class="numbered-list" start="4" dir="auto"><li>Autoscaler를 설정하여 최소 2대, 최대 4대로 자동 확장 가능하도록 구성함</li></ol><ol type="1" id="8b5720e4-6f49-82d1-aac3-011fd0dece51" class="numbered-list" start="5" dir="auto"><li>Health Check를 생성하여 백엔드 상태를 점검함</li></ol><ol type="1" id="c1d720e4-6f49-829e-8029-8148fb1665d8" class="numbered-list" start="6" dir="auto"><li>HTTP Load Balancer를 생성하고 백엔드로 MIG를 연결함</li></ol><ol type="1" id="524720e4-6f49-83f3-997f-81d74a164437" class="numbered-list" start="7" dir="auto"><li>외부에서 접속하여 요청이 여러 VM으로 분산되는지 확인함</li></ol><ol type="1" id="5e0720e4-6f49-8202-a483-01fbc87fbba2" class="numbered-list" start="8" dir="auto"><li>부하 도구를 사용해 CPU 사용률을 높이고 인스턴스 수가 늘어나는지 확인함</li></ol><hr id="ecb720e4-6f49-8278-aa1d-01eac2c8d583" dir="auto"/><h2 id="8ae720e4-6f49-83f0-b611-018e84e41d62" class="" dir="auto">5. 사전 준비</h2><p id="5df720e4-6f49-8334-aa01-01df1452fa4b" class="" dir="auto">실습 전에 아래 사항을 확인해야 함.</p><ul id="941720e4-6f49-83db-a38d-818294100e9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로젝트가 생성되어 있어야 함</li></ul><ul id="7e3720e4-6f49-83a2-b987-0163f7a32eae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Compute Engine API가 활성화되어 있어야 함</li></ul><ul id="97b720e4-6f49-8328-a401-812389f7d957" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결제가 연결되어 있어야 함</li></ul><ul id="246720e4-6f49-83cc-b891-01b934f3ccd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습 계정에 다음 권한이 있어야 함<ul id="e6f720e4-6f49-83a8-a98a-8106038cdd5a" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Compute Admin</li></ul><ul id="6d7720e4-6f49-8257-a943-81aee87a2194" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Network Admin</li></ul><ul id="ed2720e4-6f49-82be-9537-01952433faec" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Load Balancer Admin 정도가 있으면 실습이 수월함</li></ul></li></ul><hr id="08b720e4-6f49-839d-9b1e-812033f43059" dir="auto"/><h2 id="fa3720e4-6f49-82ea-b3a5-81bdf70738bd" class="" dir="auto">6. 핵심 개념 설명</h2><h3 id="27c720e4-6f49-8391-ac42-819696ba088b" class="" dir="auto">6.1 Managed Instance Group(MIG)</h3><p id="574720e4-6f49-82fc-91b4-011f6d9ac558" class="" dir="auto">MIG는 동일한 설정을 가진 VM 인스턴스를 여러 대 묶어서 관리하는 기능임.</p><p id="fc1720e4-6f49-82a7-84d7-010fb2b18a7e" class="" dir="auto">한 대씩 수동으로 서버를 만들지 않고, 템플릿을 기준으로 같은 사양의 VM을 자동으로 여러 대 생성함.</p><p id="c3d720e4-6f49-82cf-9aa3-019f6cc39d95" class="" dir="auto">MIG의 장점은 다음과 같음.</p><ul id="eeb720e4-6f49-8308-a5d2-01e1c860b72d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동일한 웹 서버를 여러 대 쉽게 생성 가능</li></ul><ul id="78a720e4-6f49-83d5-a8a9-8117674e684c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애가 발생한 인스턴스를 자동으로 복구 가능</li></ul><ul id="644720e4-6f49-82af-9fd1-014916291f03" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로드밸런서 백엔드로 쉽게 연결 가능</li></ul><ul id="00a720e4-6f49-8212-aa29-81806bbadaf5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autoscaler와 결합하여 자동 확장 가능</li></ul><h3 id="6cb720e4-6f49-82bb-9b13-018865f7243a" class="" dir="auto">6.2 Autoscaler</h3><p id="02b720e4-6f49-8209-8794-8171d051a36c" class="" dir="auto">Autoscaler는 인스턴스 수를 자동으로 조절하는 기능임.</p><p id="21e720e4-6f49-8291-b3bc-01d44e88d85b" class="" dir="auto">예를 들어 CPU 사용률이 높아지면 서버를 늘리고, 낮아지면 서버 수를 줄임.</p><p id="e36720e4-6f49-82b0-8087-012eaa23044f" class="" dir="auto">이번 실습에서는 다음 기준을 사용함.</p><ul id="2ca720e4-6f49-8220-916f-8129f7088902" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최소: 2대</li></ul><ul id="f82720e4-6f49-8308-a1db-0159324b94f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최대: 4대</li></ul><ul id="84b720e4-6f49-8384-aca7-01f92818174d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU 사용률 목표: 60%</li></ul><p id="508720e4-6f49-824a-b647-818de94851d0" class="" dir="auto">즉, 서버 2대로 시작하지만 트래픽이 증가하여 CPU가 기준치를 넘으면 3대, 4대까지 자동으로 늘어날 수 있음.</p><h3 id="0c5720e4-6f49-837b-a8ec-8174b2d240a3" class="" dir="auto">6.3 Health Check</h3><p id="742720e4-6f49-820f-90fc-8133e408e715" class="" dir="auto">Health Check는 백엔드 인스턴스가 정상 동작 중인지 검사하는 기능임.</p><p id="43a720e4-6f49-82a4-8474-01ce8a1152fc" class="" dir="auto">웹 서버가 살아 있는지, 특정 포트가 응답하는지, 특정 URL이 정상 응답하는지 확인함.</p><p id="7f7720e4-6f49-8272-82a6-8149f0fef54d" class="" dir="auto">로드밸런서는 Health Check 결과를 바탕으로 정상 인스턴스에만 트래픽을 전달함.</p><h3 id="23c720e4-6f49-8384-aa05-810fdf7899ae" class="" dir="auto">6.4 Load Balancer</h3><p id="620720e4-6f49-823a-bf7f-81104ea08227" class="" dir="auto">Load Balancer는 클라이언트 요청을 여러 서버에 나누어 전달하는 장치임.</p><p id="7fb720e4-6f49-826d-8f04-01eb5a6589a5" class="" dir="auto">하나의 서버에만 요청이 집중되지 않도록 분산하여 서비스 안정성과 확장성을 높임.</p><hr id="dc5720e4-6f49-824b-9cd2-01eddb2d47a0" dir="auto"/><h2 id="9d5720e4-6f49-8240-959b-8189f143b2fa" class="" dir="auto">7. 실습 절차</h2><hr id="65a720e4-6f49-833d-9d1e-8105526730d7" dir="auto"/><h2 id="566720e4-6f49-83f0-8b71-815a69bbe933" class="" dir="auto">7-1. VPC 방화벽 규칙 생성</h2><p id="6c8720e4-6f49-82b2-8f5e-81f9f129dd52" class="" dir="auto">웹 접속과 Health Check가 가능하도록 방화벽을 허용해야 함.</p><h3 id="38d720e4-6f49-8327-be16-01776e62ab60" class="" dir="auto">콘솔에서 수행</h3><ul id="89f720e4-6f49-8208-9aab-810882c5b9b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 네트워크 → 방화벽 → 방화벽 규칙 만들기</li></ul><ul id="198720e4-6f49-8324-a65f-013d6b8f733c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름: <code>allow-http</code></li></ul><ul id="df8720e4-6f49-836f-ad4b-8116820b2291" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상: 네트워크의 모든 인스턴스 또는 태그 지정</li></ul><ul id="1f2720e4-6f49-8208-ac28-8118db8fc741" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소스 IPv4 범위: <code>0.0.0.0/0</code></li></ul><ul id="a47720e4-6f49-8318-b3ba-01bdef00d76d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로토콜/포트: <code>tcp:80</code></li></ul><p id="32a720e4-6f49-83b6-a826-8108cd043385" class="" dir="auto">Health Check용도 별도로 허용하는 것이 좋음.</p><p id="5a3720e4-6f49-82fd-8460-01c20b4e24c6" class="" dir="auto">Google Load Balancer Health Check는 Google이 사용하는 점검 IP 대역에서 들어옴.</p><p id="24a720e4-6f49-8264-9d85-01aba5557d58" class="" dir="auto">실습 단순화를 위해 웹 태그에 대해 허용 규칙을 하나 더 만드는 방식이 좋음.</p><p id="163720e4-6f49-8248-9f9e-81953c4c6f84" class="" dir="auto">예시:</p><ul id="493720e4-6f49-83b9-986c-81433eafe54a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름: <code>allow-health-check</code></li></ul><ul id="a44720e4-6f49-82ec-9676-014c4f00cbb9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소스 IPv4 범위: <code>130.211.0.0/22</code>, <code>35.191.0.0/16</code></li></ul><ul id="979720e4-6f49-8206-8c5f-015f6195a53a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로토콜/포트: <code>tcp:80</code></li></ul><h3 id="45c720e4-6f49-8334-867e-01f26f713e10" class="" dir="auto">gcloud 명령</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="f97720e4-6f49-83ca-a574-81f1a4c35b7e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules create allow-http \
+  --allow tcp:80 \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=http-server
+
+gcloud compute firewall-rules create allow-health-check \
+  --allow tcp:80 \
+  --source-ranges=130.211.0.0/22,35.191.0.0/16 \
+  --target-tags=http-server</code></pre><h3 id="f8b720e4-6f49-83ff-8a54-0189900cdac7" class="" dir="auto">명령 설명</h3><ul id="ade720e4-6f49-8204-8941-01789185f346" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>firewall-rules create</code><p id="b34720e4-6f49-8210-86ca-8103253ac74e" class="" dir="auto">새로운 방화벽 규칙을 생성하는 명령임</p></li></ul><ul id="01d720e4-6f49-83bb-b6e0-812d93b29dff" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-allow tcp:80</code><p id="ef1720e4-6f49-8263-8b56-81dd91712ee9" class="" dir="auto">TCP 80번 포트를 허용함. 즉 HTTP 접속을 허용함</p></li></ul><ul id="8f7720e4-6f49-8252-8b9d-81864ac35291" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-source-ranges</code><p id="5cb720e4-6f49-82e9-ae1c-8196844d4ff5" class="" dir="auto">접속을 허용할 출발지 IP 대역을 지정함</p></li></ul><ul id="4e6720e4-6f49-8259-b346-81b75f6ea615" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-target-tags=http-server</code><p id="513720e4-6f49-830b-9efa-81d1b39a37e1" class="" dir="auto"><code>http-server</code> 네트워크 태그가 붙은 인스턴스에만 규칙이 적용됨</p></li></ul><hr id="ef2720e4-6f49-825a-844b-81e132ab1dba" dir="auto"/><h2 id="527720e4-6f49-8355-bdc8-812e27404f93" class="" dir="auto">7-2. 인스턴스 템플릿 생성</h2><p id="582720e4-6f49-827b-b602-01f49a598565" class="" dir="auto">웹 서버가 자동 설치되도록 시작 스크립트를 포함한 템플릿을 생성함.</p><h3 id="c46720e4-6f49-83ea-ba0a-01557efe72ad" class="" dir="auto">시작 스크립트 예시</h3><p id="3aa720e4-6f49-8224-8ecb-81f2938412d9" class="" dir="auto">이 스크립트는 Apache 웹 서버를 설치하고, 현재 호스트 이름을 웹 페이지에 출력함.</p><p id="fa9720e4-6f49-838d-a32b-0138cf09459c" class="" dir="auto">로드밸런싱 결과를 확인할 때 어떤 인스턴스가 응답했는지 쉽게 볼 수 있음.</p><pre id="206720e4-6f49-82bb-924f-812ba4472600" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+apt-get update
+apt-get install -y apache2
+
+HOSTNAME=$(hostname)
+
+cat &lt;&lt;EOF &gt; /var/www/html/index.html
+&lt;html&gt;
+  &lt;head&gt;&lt;title&gt;GCP Load Balancing Lab&lt;/title&gt;&lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Load Balancing Test&lt;/h1&gt;
+    &lt;p&gt;Served by: ${HOSTNAME}&lt;/p&gt;
+  &lt;/body&gt;
+&lt;/html&gt;
+EOF
+
+systemctl enable apache2
+systemctl restart apache2</code></pre><h3 id="69a720e4-6f49-83e6-b0c1-81d82adbfdef" class="" dir="auto">gcloud 명령</h3><pre id="86b720e4-6f49-8371-98f9-01a2e4b7976c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instance-templates create web-template \
+  --machine-type=e2-micro \
+  --image-family=debian-12 \
+  --image-project=debian-cloud \
+  --tags=http-server \
+  --metadata-from-file startup-script=startup.sh</code></pre><h3 id="f27720e4-6f49-83ab-a35b-814df2526030" class="" dir="auto">명령 설명</h3><ul id="77e720e4-6f49-8364-a72b-01951509800b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>instance-templates create web-template</code><p id="d02720e4-6f49-83d5-bc90-0100a712d7c6" class="" dir="auto"><code>web-template</code>이라는 이름의 인스턴스 템플릿을 생성함</p></li></ul><ul id="79f720e4-6f49-8322-944e-81707eaab32a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-machine-type=e2-micro</code><p id="487720e4-6f49-83e9-aec4-8108c5f2d097" class="" dir="auto">VM 사양을 지정함. 실습용으로 비용이 적은 타입임</p></li></ul><ul id="c41720e4-6f49-8370-94ad-819b4da27d3c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-image-family=debian-12</code><p id="b18720e4-6f49-83da-ba04-810753ac2526" class="" dir="auto">Debian 12 계열 이미지를 사용함</p></li></ul><ul id="430720e4-6f49-82ab-a276-013eb3805d77" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-image-project=debian-cloud</code><p id="2cd720e4-6f49-82e4-8cac-8137187f113d" class="" dir="auto">이미지를 제공하는 프로젝트를 지정함</p></li></ul><ul id="ed8720e4-6f49-82b1-9433-817dabd5917e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-tags=http-server</code><p id="b36720e4-6f49-8219-b72c-015ddc32d498" class="" dir="auto">앞에서 만든 방화벽 규칙이 적용되도록 태그를 지정함</p></li></ul><ul id="ecb720e4-6f49-83e8-9ac7-81e285aa2158" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-metadata-from-file startup-script=startup.sh</code><p id="e6e720e4-6f49-83a3-a6da-0194ac073525" class="" dir="auto">VM이 처음 부팅될 때 실행할 스크립트 파일을 연결함</p></li></ul><hr id="6ff720e4-6f49-83e6-8465-81bcd8e43c0f" dir="auto"/><h2 id="0af720e4-6f49-8378-994d-814fa9e2a7de" class="" dir="auto">7-3. Managed Instance Group 생성</h2><p id="5a9720e4-6f49-834d-b027-819cb3c5d047" class="" dir="auto">초기 인스턴스 수를 2대로 생성함.</p><h3 id="b9d720e4-6f49-8304-8719-01011f9c1669" class="" dir="auto">gcloud 명령</h3><pre id="38e720e4-6f49-8212-8a4d-019e19cb7e17" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instance-groups managed create web-mig \
+  --base-instance-name=web \
+  --size=2 \
+  --template=web-template \
+  --zone=asia-northeast3-a</code></pre><h3 id="905720e4-6f49-8266-9ef8-81504cb19718" class="" dir="auto">명령 설명</h3><ul id="cb0720e4-6f49-82f9-9d57-816cb0667bc6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>instance-groups managed create web-mig</code><p id="e12720e4-6f49-8387-8613-8162de13e254" class="" dir="auto">관리형 인스턴스 그룹을 생성함</p></li></ul><ul id="d94720e4-6f49-823f-8f2e-0132b939fbd4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-base-instance-name=web</code><p id="ef1720e4-6f49-839a-a59e-012377ea9737" class="" dir="auto">생성되는 VM 이름의 기본 접두사를 지정함</p><p id="329720e4-6f49-83f6-94d9-8121b6530c3e" class="" dir="auto">예를 들어 <code>web-xxxx</code> 형태의 이름이 생성됨</p></li></ul><ul id="b88720e4-6f49-8298-b996-813c63230bee" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-size=2</code><p id="20f720e4-6f49-820a-86e7-816a5074ae2c" class="" dir="auto">초기 인스턴스 수를 2대로 설정함</p></li></ul><ul id="c01720e4-6f49-832f-95f0-8175a79fa5dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-template=web-template</code><p id="05a720e4-6f49-8355-ae32-8115f15b38ce" class="" dir="auto">앞에서 만든 템플릿을 기반으로 인스턴스를 생성함</p></li></ul><ul id="0e5720e4-6f49-82e0-bfda-01c6f3387c28" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-zone=asia-northeast3-a</code><p id="9ca720e4-6f49-8241-b0e0-018622612ce2" class="" dir="auto">그룹이 생성될 존을 지정함</p></li></ul><h3 id="b69720e4-6f49-8366-a54a-0104f98c54b9" class="" dir="auto">확인 명령</h3><pre id="529720e4-6f49-83c6-9054-8154665c0cba" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instance-groups managed list-instances web-mig \
+  --zone=asia-northeast3-a</code></pre><p id="59f720e4-6f49-834b-9c00-019763bcb43c" class="" dir="auto">이 명령은 MIG 안에 실제로 어떤 인스턴스가 생성되었는지 확인할 때 사용함.</p><hr id="3d6720e4-6f49-82d7-a376-01efdaa58a68" dir="auto"/><h2 id="733720e4-6f49-83f3-bb7d-01e9ebbf8e31" class="" dir="auto">7-4. Health Check 생성</h2><p id="307720e4-6f49-821a-a889-8191c4066b60" class="" dir="auto">로드밸런서가 백엔드 웹 서버 상태를 점검할 수 있도록 HTTP Health Check를 생성함.</p><h3 id="742720e4-6f49-8334-afa5-016c55f91827" class="" dir="auto">gcloud 명령</h3><pre id="fc3720e4-6f49-8254-896d-81e39636dbdc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute health-checks create http web-hc \
+  --port 80 \
+  --request-path /</code></pre><h3 id="758720e4-6f49-836b-ae7f-017cc8776c62" class="" dir="auto">명령 설명</h3><ul id="bf2720e4-6f49-83ff-91ce-01717312d148" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>health-checks create http web-hc</code><p id="69c720e4-6f49-82ce-a3ae-01e3992eadaf" class="" dir="auto">HTTP 타입의 Health Check를 생성함</p></li></ul><ul id="8c4720e4-6f49-83a1-abba-0102c36497ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-port 80</code><p id="50e720e4-6f49-8232-bf64-01ac2d0c6dd5" class="" dir="auto">80번 포트로 접속하여 상태를 확인함</p></li></ul><ul id="0d9720e4-6f49-832d-a098-81cc58790633" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-request-path /</code><p id="bdf720e4-6f49-8208-a676-819d37ec1ec8" class="" dir="auto">루트 경로 <code>/</code>에 요청을 보내 정상 응답 여부를 점검함</p></li></ul><p id="da3720e4-6f49-8225-9ebd-01a6a57217d1" class="" dir="auto">이 설정은 웹 서버가 HTTP 80 포트에서 동작하고, <code>/</code> 요청에 정상 응답할 때 healthy 상태로 판단하도록 함.</p><hr id="c98720e4-6f49-8327-8293-814db4ec9186" dir="auto"/><h2 id="da2720e4-6f49-8338-8de3-014270ada99c" class="" dir="auto">7-5. Autoscaler 설정</h2><p id="709720e4-6f49-825c-bb20-81fec74fb85d" class="" dir="auto">최소 2대, 최대 4대 범위에서 CPU 사용률을 기준으로 자동 확장하도록 설정함.</p><h3 id="678720e4-6f49-82d9-85e0-815fcd9aadec" class="" dir="auto">gcloud 명령</h3><pre id="2a3720e4-6f49-8341-9f56-010b2f267db0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instance-groups managed set-autoscaling web-mig \
+  --zone=asia-northeast3-a \
+  --min-num-replicas=2 \
+  --max-num-replicas=4 \
+  --target-cpu-utilization=0.6 \
+  --cool-down-period=90</code></pre><h3 id="2ee720e4-6f49-829f-8799-010e46a883bf" class="" dir="auto">명령 설명</h3><ul id="144720e4-6f49-82fa-b89c-01ffc0d4b659" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>set-autoscaling</code><p id="410720e4-6f49-83ef-bfaa-01d41580d3d0" class="" dir="auto">MIG에 Autoscaler 정책을 연결함</p></li></ul><ul id="595720e4-6f49-825b-8266-01c1030b52a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-min-num-replicas=2</code><p id="6fb720e4-6f49-834a-9758-815d852dcb7f" class="" dir="auto">인스턴스 수가 2대 아래로 내려가지 않도록 설정함</p></li></ul><ul id="297720e4-6f49-82f6-b234-8105a3cdabdb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-max-num-replicas=4</code><p id="001720e4-6f49-83e3-aa9f-818754c4aaa6" class="" dir="auto">인스턴스 수가 최대 4대까지만 증가하도록 제한함</p></li></ul><ul id="f15720e4-6f49-825a-9a94-011de42c27f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-target-cpu-utilization=0.6</code><p id="253720e4-6f49-83c6-a88a-01d9a7169f59" class="" dir="auto">평균 CPU 사용률 목표를 60%로 설정함</p><p id="e01720e4-6f49-83db-bac1-013e512b9ce2" class="" dir="auto">이 값을 넘는 상태가 계속되면 스케일 아웃 가능성이 높아짐</p></li></ul><ul id="207720e4-6f49-831d-8c77-01e865047927" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-cool-down-period=90</code><p id="91c720e4-6f49-833a-9468-810ddbcbf120" class="" dir="auto">새 인스턴스가 생성된 뒤 안정화될 시간을 90초로 둠</p><p id="9f3720e4-6f49-832c-be3d-81b770ab96b8" class="" dir="auto">너무 빠르게 확장/축소 판단하지 않도록 완충 역할을 함</p></li></ul><hr id="b39720e4-6f49-82ec-892d-81540bed92c0" dir="auto"/><h2 id="5fd720e4-6f49-8271-a278-019b377b575c" class="" dir="auto">7-6. 백엔드 서비스 생성</h2><p id="163720e4-6f49-83c1-a479-01bf09d9a198" class="" dir="auto">Load Balancer가 실제 트래픽을 전달할 백엔드 서비스를 생성함.</p><pre id="d97720e4-6f49-83b0-a352-0115d53c6cb3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute backend-services create web-backend-service \
+  --protocol=HTTP \
+  --port-name=http \
+  --health-checks=web-hc \
+  --global</code></pre><h3 id="79a720e4-6f49-83b7-9dda-81e415955c5f" class="" dir="auto">명령 설명</h3><ul id="7f9720e4-6f49-82ca-864a-816362be0bc3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>backend-services create</code><p id="46f720e4-6f49-8279-9fa2-013cd07f4745" class="" dir="auto">로드밸런서용 백엔드 서비스를 생성함</p></li></ul><ul id="311720e4-6f49-839f-8f01-81814244482f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-protocol=HTTP</code><p id="78c720e4-6f49-829a-9f56-0181b92e63c3" class="" dir="auto">백엔드와 HTTP 방식으로 통신함</p></li></ul><ul id="531720e4-6f49-826b-bb4d-81a211f40a32" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-port-name=http</code><p id="44a720e4-6f49-8298-963c-016e84724fe9" class="" dir="auto">MIG의 named port와 일치시켜야 함</p></li></ul><ul id="4dc720e4-6f49-8208-bdd8-01346237a6c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-health-checks=web-hc</code><p id="e69720e4-6f49-838a-bc21-010d14be826b" class="" dir="auto">어떤 Health Check를 사용할지 지정함</p></li></ul><ul id="f89720e4-6f49-8396-88ed-8195149a4fd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-global</code><p id="0d6720e4-6f49-83d9-881b-8156083a1fe7" class="" dir="auto">글로벌 HTTP(S) 로드밸런서용 리소스로 생성함</p></li></ul><hr id="4da720e4-6f49-8350-b9fb-81c1c9339426" dir="auto"/><h2 id="a5c720e4-6f49-82a6-8ded-01a3fef12437" class="" dir="auto">7-7. MIG에 named port 설정</h2><p id="f9f720e4-6f49-8206-933b-012da7857029" class="" dir="auto">백엔드 서비스가 MIG의 어느 포트를 사용할지 알 수 있도록 named port를 지정함.</p><pre id="f62720e4-6f49-8294-8693-81edf381bec5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instance-groups managed set-named-ports web-mig \
+  --named-ports=http:80 \
+  --zone=asia-northeast3-a</code></pre><h3 id="31f720e4-6f49-82c8-b172-0146602844bb" class="" dir="auto">명령 설명</h3><ul id="f0d720e4-6f49-8315-8941-81b10f7c96b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>set-named-ports</code><p id="d73720e4-6f49-83bc-ba8c-019d6a517263" class="" dir="auto">인스턴스 그룹 포트에 이름을 붙이는 기능임</p></li></ul><ul id="9dd720e4-6f49-835a-9746-8198bc3922ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>http:80</code><p id="a63720e4-6f49-8209-a406-013e01f0b82c" class="" dir="auto"><code>http</code>라는 이름이 실제 80번 포트를 가리키도록 설정함</p></li></ul><p id="b83720e4-6f49-8309-9d5f-01fc593c551c" class="" dir="auto">이 설정은 백엔드 서비스 생성 시 지정했던 <code>--port-name=http</code> 와 연결됨.</p><hr id="d41720e4-6f49-8322-bd5e-01608c26e299" dir="auto"/><h2 id="89e720e4-6f49-82fc-ae66-0165aaf50500" class="" dir="auto">7-8. 백엔드 서비스에 MIG 추가</h2><pre id="1d5720e4-6f49-8260-bf6d-01875e3964dd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute backend-services add-backend web-backend-service \
+  --instance-group=web-mig \
+  --instance-group-zone=asia-northeast3-a \
+  --global</code></pre><h3 id="cab720e4-6f49-82d0-a37f-816867d8906c" class="" dir="auto">명령 설명</h3><ul id="7b5720e4-6f49-83c1-9a82-018cf8f92c6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>add-backend</code><p id="f4e720e4-6f49-820e-8dc7-0190deb18046" class="" dir="auto">백엔드 서비스에 실제 인스턴스 그룹을 연결함</p></li></ul><ul id="804720e4-6f49-82a9-8ebf-813fb769ca1f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-instance-group=web-mig</code><p id="cfb720e4-6f49-82c4-9926-8172f24b59d6" class="" dir="auto">연결할 MIG 이름을 지정함</p></li></ul><ul id="a0f720e4-6f49-82ff-a774-81e20a9d2bfd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-instance-group-zone=asia-northeast3-a</code><p id="5cd720e4-6f49-8329-b753-814b569e41c0" class="" dir="auto">MIG가 위치한 존을 지정함</p></li></ul><hr id="396720e4-6f49-8353-9938-81ecac451e10" dir="auto"/><h2 id="070720e4-6f49-834e-afc9-811350e9cbde" class="" dir="auto">7-9. URL 맵 생성</h2><p id="56b720e4-6f49-821e-bbd3-8145098f38e3" class="" dir="auto">클라이언트 요청 URL을 어떤 백엔드 서비스로 보낼지 정의함.</p><pre id="fc9720e4-6f49-82c7-88b4-018e2cf474a2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute url-maps create web-map \
+  --default-service=web-backend-service</code></pre><h3 id="32e720e4-6f49-8368-99c0-81e63e844e3d" class="" dir="auto">명령 설명</h3><ul id="957720e4-6f49-838d-8764-013e7cfeb71e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>url-maps create web-map</code><p id="942720e4-6f49-82e5-96d4-01a8ad3d6236" class="" dir="auto">URL 맵을 생성함</p></li></ul><ul id="e06720e4-6f49-821b-82e0-81e5bb2b59a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-default-service=web-backend-service</code><p id="3e3720e4-6f49-8343-a98b-01797f8c6a63" class="" dir="auto">기본 요청은 모두 이 백엔드 서비스로 전달되도록 설정함</p></li></ul><hr id="16d720e4-6f49-83b7-9745-0109e0ea7eef" dir="auto"/><h2 id="4b0720e4-6f49-82cc-a6f2-81c69ad702a5" class="" dir="auto">7-10. HTTP 프록시 생성</h2><pre id="0f0720e4-6f49-8388-a93b-81498c3e3599" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute target-http-proxies create web-proxy \
+  --url-map=web-map</code></pre><h3 id="848720e4-6f49-83c6-973c-81eb3863aab7" class="" dir="auto">명령 설명</h3><ul id="e3f720e4-6f49-827d-9912-0166e928b33d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>target-http-proxies create</code><p id="3f3720e4-6f49-83ac-85af-81c7c4f16eb0" class="" dir="auto">HTTP 요청을 받아 URL 맵 규칙에 따라 전달하는 프록시를 생성함</p></li></ul><ul id="7a4720e4-6f49-82ea-9e1b-01d4a3e7dc78" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-url-map=web-map</code><p id="724720e4-6f49-83ba-8cc2-0129e3bf1ee0" class="" dir="auto">앞에서 만든 URL 맵을 연결함</p></li></ul><hr id="4d1720e4-6f49-825c-aaf4-018cfaa82a50" dir="auto"/><h2 id="5a4720e4-6f49-83fe-9b56-01758e88ce21" class="" dir="auto">7-11. 글로벌 포워딩 룰 생성</h2><p id="fcf720e4-6f49-82e6-95fb-81130ffb58cd" class="" dir="auto">외부 IP를 할당하고 80번 포트 요청을 HTTP 프록시로 전달함.</p><pre id="2c2720e4-6f49-82bc-9938-01d665f0699b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute forwarding-rules create web-forwarding-rule \
+  --global \
+  --target-http-proxy=web-proxy \
+  --ports=80</code></pre><h3 id="519720e4-6f49-83d6-bba5-81f8dcf76575" class="" dir="auto">명령 설명</h3><ul id="205720e4-6f49-82f3-91b4-811027fd2c8e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>forwarding-rules create</code><p id="c1f720e4-6f49-8237-82d1-0152b294164d" class="" dir="auto">외부에서 들어오는 요청을 어떤 대상에게 보낼지 지정하는 규칙임</p></li></ul><ul id="d2c720e4-6f49-82f4-9e96-81277516b5a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-global</code><p id="1d7720e4-6f49-839c-9c1d-81bf0109d8e7" class="" dir="auto">글로벌 HTTP 로드밸런서로 설정함</p></li></ul><ul id="980720e4-6f49-83d3-981c-01c40225d58a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-target-http-proxy=web-proxy</code><p id="c09720e4-6f49-83f5-8a07-01463b4f64b7" class="" dir="auto">요청을 HTTP 프록시로 전달함</p></li></ul><ul id="f0a720e4-6f49-82c2-b883-8122906d7bfa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-ports=80</code><p id="4ae720e4-6f49-8301-88ca-01ad3fa00fd0" class="" dir="auto">80번 포트 요청을 받음</p></li></ul><hr id="cc3720e4-6f49-83d7-a53e-017202208ef5" dir="auto"/><h2 id="4c7720e4-6f49-8238-b6d9-81173aa36636" class="" dir="auto">7-12. 외부 IP 확인</h2><pre id="849720e4-6f49-8318-bac3-013c210da45d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute forwarding-rules list</code></pre><p id="5be720e4-6f49-82e2-8ed5-813f02d79e57" class="" dir="auto">또는 특정 규칙 조회:</p><pre id="fe2720e4-6f49-83bb-9f49-01866ec3fe45" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute forwarding-rules describe web-forwarding-rule \
+  --global</code></pre><p id="0f8720e4-6f49-82d6-8d95-817308247900" class="" dir="auto">여기서 외부 IP를 확인한 뒤 브라우저에서 접속함.</p><p id="0ec720e4-6f49-838d-8c25-01e9b2bd0881" class="" dir="auto">예:</p><pre id="c63720e4-6f49-8293-a84d-0196af509c62" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">http://EXTERNAL_IP</code></pre><p id="16a720e4-6f49-8381-be22-817f8a2ee313" class="" dir="auto">페이지를 여러 번 새로고침하면 응답 인스턴스 이름이 바뀌는 것을 볼 수 있음.</p><p id="b31720e4-6f49-836b-96db-0185931dfd9e" class="" dir="auto">다만 세션 유지나 캐시 영향으로 계속 같은 인스턴스처럼 보일 수도 있으므로, 시크릿 창이나 여러 요청 도구를 함께 사용하면 확인이 쉬움.</p><hr id="666720e4-6f49-82f4-b6cf-0176982b750e" dir="auto"/><h2 id="b06720e4-6f49-83ee-8782-012e165097ef" class="" dir="auto">8. 부하 테스트</h2><p id="07e720e4-6f49-83ac-b450-81064114589d" class="" dir="auto">Autoscaler가 동작하는지 확인하려면 CPU 부하를 발생시켜야 함.</p><p id="cba720e4-6f49-823f-98ff-81988c58eaae" class="" dir="auto">가장 단순한 방법은 MIG에 속한 인스턴스 중 하나에 접속하여 CPU를 사용하는 프로세스를 실행하는 것임.</p><p id="d38720e4-6f49-8343-bda5-017638628472" class="" dir="auto">다만 실제 수업에서는 여러 클라이언트 요청만으로는 CPU가 충분히 오르지 않을 수 있으므로, CPU stress 도구를 사용하는 것이 더 확실함.</p><h3 id="6b0720e4-6f49-82ad-a7e6-01cdb463f474" class="" dir="auto">인스턴스 접속</h3><pre id="712720e4-6f49-8207-8b2a-0154e5de4b74" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute ssh INSTANCE_NAME --zone=asia-northeast3-a</code></pre><h3 id="f9f720e4-6f49-8398-ac11-81eb3a128b22" class="" dir="auto">stress 설치 및 실행</h3><pre id="6e2720e4-6f49-8213-97e8-812ae80bec8f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">sudo apt-get update
+sudo apt-get install -y stress
+stress --cpu 2 --timeout 300</code></pre><h3 id="9c6720e4-6f49-82fd-ae28-8153646f5135" class="" dir="auto">명령 설명</h3><ul id="10e720e4-6f49-83eb-9d6e-0103eb505028" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>stress --cpu 2 --timeout 300</code><p id="cae720e4-6f49-83d9-9224-017a1019e1a6" class="" dir="auto">CPU 2개를 300초 동안 강하게 사용하도록 부하를 발생시킴</p></li></ul><p id="d1b720e4-6f49-838b-ad03-81f09863171b" class="" dir="auto">이 작업을 여러 인스턴스에서 수행하거나, 애플리케이션 요청량을 증가시키면 MIG 평균 CPU가 올라갈 수 있음.</p><h3 id="5b3720e4-6f49-8306-9650-016351703f0d" class="" dir="auto">인스턴스 수 확인</h3><pre id="784720e4-6f49-82c8-bd88-812514d6fde5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instance-groups managed list-instances web-mig \
+  --zone=asia-northeast3-a</code></pre><p id="4bf720e4-6f49-8249-b8d1-01381646fc27" class="" dir="auto">또는 Autoscaler 상태 조회:</p><pre id="b0e720e4-6f49-82b1-822c-816ec3818b9f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instance-groups managed describe web-mig \
+  --zone=asia-northeast3-a</code></pre><p id="c20720e4-6f49-8317-8735-01194d6c288a" class="" dir="auto">CPU 사용률이 목표치를 일정 시간 초과하면 인스턴스 수가 3대, 4대로 증가할 수 있음.</p><hr id="e52720e4-6f49-83dd-b462-81905c861595" dir="auto"/><h2 id="899720e4-6f49-8376-88c0-81aea8fa7f0a" class="" dir="auto">9. 예상 결과</h2><p id="ccc720e4-6f49-83ea-9a29-81fdb52d9605" class="" dir="auto">정상적으로 구성되었다면 다음 결과가 보여야 함.</p><ul id="94a720e4-6f49-8318-a2ed-81a53989d67d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">처음에는 인스턴스가 2대 생성되어 있음</li></ul><ul id="352720e4-6f49-83af-a6c1-0172fdd76511" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브라우저에서 Load Balancer IP로 접속 가능함</li></ul><ul id="724720e4-6f49-8385-9f30-814e654fb652" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 페이지에 인스턴스 이름이 표시됨</li></ul><ul id="ff1720e4-6f49-838f-925d-0178209b301f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 요청 시 서로 다른 인스턴스가 응답할 수 있음</li></ul><ul id="322720e4-6f49-8249-9ce7-81510e47d752" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU 부하를 높이면 Autoscaler가 인스턴스를 추가 생성함</li></ul><ul id="a3b720e4-6f49-822d-9d07-0138a9201766" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최대 4대까지만 증가함</li></ul><ul id="058720e4-6f49-8398-b4be-815b1ef99723" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부하가 감소하면 일정 시간 후 다시 2대 수준으로 줄어듦</li></ul><hr id="5f0720e4-6f49-8273-bc83-8114051e4282" dir="auto"/><h2 id="9d2720e4-6f49-8358-b383-0152d0d7dd53" class="" dir="auto">10. 정리 명령</h2><p id="9f7720e4-6f49-8210-b035-8135054e1a4c" class="" dir="auto">실습이 끝난 뒤 비용 방지를 위해 리소스를 삭제해야 함.</p><pre id="a2f720e4-6f49-82f0-9a83-816c6b5b87a1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute forwarding-rules delete web-forwarding-rule --global
+gcloud compute target-http-proxies delete web-proxy
+gcloud compute url-maps delete web-map
+gcloud compute backend-services delete web-backend-service --global
+gcloud compute health-checks delete web-hc
+gcloud compute instance-groups managed delete web-mig --zone=asia-northeast3-a
+gcloud compute instance-templates delete web-template
+gcloud compute firewall-rules delete allow-http
+gcloud compute firewall-rules delete allow-health-check</code></pre><h3 id="0d2720e4-6f49-8359-9b72-816720b60183" class="" dir="auto">삭제 순서 설명</h3><p id="3ad720e4-6f49-83b4-aff3-818edf94350d" class="" dir="auto">로드밸런서 리소스는 서로 참조 관계가 있음.</p><p id="edc720e4-6f49-838f-a85e-01436f89a4fd" class="" dir="auto">그래서 아래처럼 바깥쪽부터 지우는 것이 좋음.</p><ol type="1" id="1c0720e4-6f49-830d-acb1-013359caa4ad" class="numbered-list" start="1" dir="auto"><li>forwarding rule 삭제</li></ol><ol type="1" id="bb9720e4-6f49-83ee-89bc-81fcb210428f" class="numbered-list" start="2" dir="auto"><li>proxy 삭제</li></ol><ol type="1" id="664720e4-6f49-830c-934d-01af8e6d14f7" class="numbered-list" start="3" dir="auto"><li>url map 삭제</li></ol><ol type="1" id="616720e4-6f49-83b8-be6f-811cd5244b14" class="numbered-list" start="4" dir="auto"><li>backend service 삭제</li></ol><ol type="1" id="882720e4-6f49-82b9-b1e3-017224172470" class="numbered-list" start="5" dir="auto"><li>health check 삭제</li></ol><ol type="1" id="92b720e4-6f49-82eb-98ab-81b1e8190475" class="numbered-list" start="6" dir="auto"><li>MIG 삭제</li></ol><ol type="1" id="896720e4-6f49-82dd-b77b-011ee8fc281b" class="numbered-list" start="7" dir="auto"><li>template 삭제</li></ol><ol type="1" id="985720e4-6f49-837a-9d20-81e823067177" class="numbered-list" start="8" dir="auto"><li>firewall rule 삭제</li></ol><p id="896720e4-6f49-8263-bf45-01cf11bfc123" class="" dir="auto">참조 중인 리소스를 먼저 지우려고 하면 삭제가 실패할 수 있음.</p><hr id="49c720e4-6f49-829b-b45c-01439f5b30a8" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

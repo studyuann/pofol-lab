@@ -1,0 +1,869 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Cross Region VPC Peering 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="fa7720e4-6f49-82dd-a6a6-01d0b2d78838" class="page sans"><header><h1 class="page-title" dir="auto">Cross Region VPC Peering 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h1 id="487720e4-6f49-82c6-ae43-018997f60f8b" class="" dir="auto">1. 실습 목표</h1><p id="67f720e4-6f49-8204-a3ed-81093ee1279a" class="" dir="auto">이번 실습에서는 <strong>서로 다른 AWS Region의 VPC를 연결하는 Cross Region VPC Peering</strong>을 구성한다.</p><p id="38e720e4-6f49-83ce-9a2b-81917caacce6" class="" dir="auto">이 실습을 통해 다음 내용을 이해한다.</p><ul id="be4720e4-6f49-8366-8912-810c03046595" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cross Region VPC Peering 개념</li></ul><ul id="0be720e4-6f49-83cd-bf16-81af49417655" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Region 간 AWS Backbone Network 통신</li></ul><ul id="c78720e4-6f49-83ed-8bd6-81004515eee9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table 설정 방식</li></ul><ul id="fdc720e4-6f49-8396-85ad-810a8cc7a66a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private IP 기반 Region 간 통신</li></ul><hr id="475720e4-6f49-8210-86f1-8188550264c8" dir="auto"/><h1 id="f44720e4-6f49-83af-b074-011ccbc9fd4c" class="" dir="auto">2. Cross Region VPC Peering 개념</h1><p id="d8b720e4-6f49-8234-85c4-810cf2319ff6" class="" dir="auto">VPC Peering은 기본적으로 <strong>같은 Region 뿐 아니라 다른 Region 간에도 연결 가능</strong>하다.</p><p id="b40720e4-6f49-8288-bba8-81db78a2d428" class="" dir="auto">이를 <strong>Cross Region VPC Peering</strong>이라고 한다.</p><p id="589720e4-6f49-8357-879a-81d2bb828c9d" class="" dir="auto">특징</p><ul id="555720e4-6f49-832c-b31a-81ad4092cb04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Global Backbone 사용</li></ul><ul id="7e4720e4-6f49-8302-aaa4-81587475bb9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public Internet 사용하지 않음</li></ul><ul id="9b6720e4-6f49-82cf-8844-81330c3fa76e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private IP 통신 가능</li></ul><ul id="f4f720e4-6f49-821c-87e2-8178733bc643" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Latency 낮음</li></ul><ul id="f9a720e4-6f49-826a-8256-01ffa0d34319" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Encryption 적용됨 (AWS 내부)</li></ul><p id="a5e720e4-6f49-8200-bbfc-8167cef0e64f" class="" dir="auto">구조</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="d11720e4-6f49-839a-963c-818d261ca4e5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-2 (Seoul)
+
+VPC-A
+10.10.0.0/16
+      │
+      │  VPC Peering
+      │
+VPC-B
+10.20.0.0/16
+
+us-east-1 (N. Virginia)</code></pre><hr id="8da720e4-6f49-83e7-959b-0174173c9085" dir="auto"/><h1 id="4fb720e4-6f49-83ec-b30e-01ab8f3d10d2" class="" dir="auto">3. 실습 아키텍처</h1><pre id="9a1720e4-6f49-82ab-a642-01d477c7545e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Region 1 : ap-northeast-2 (Seoul)
+
+ VPC-A
+ 10.10.0.0/16
+
+ Subnet
+ 10.10.1.0/24
+
+ EC2-A
+
+
+                Cross Region
+                VPC Peering
+
+
+Region 2 : us-east-1 (N. Virginia)
+
+ VPC-B
+ 10.20.0.0/16
+
+ Subnet
+ 10.20.1.0/24
+
+ EC2-B</code></pre><p id="a9a720e4-6f49-83db-8ecb-81c6757ff1b0" class="" dir="auto">실습 목표</p><pre id="9e7720e4-6f49-8350-aad0-014815ed18b9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2-A → EC2-B Private IP Ping</code></pre><hr id="8a6720e4-6f49-8218-b23f-81780a51b0f0" dir="auto"/><h1 id="b09720e4-6f49-82a8-b76c-818790452b68" class="" dir="auto">4. 실습 순서</h1><pre id="466720e4-6f49-82a0-bc53-01d9ffb371fd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1 VPC 생성
+2 Subnet 생성
+3 EC2 생성
+4 Cross Region Peering 생성
+5 Peering Accept
+6 Route Table 설정
+7 Security Group 설정
+8 Ping 테스트</code></pre><hr id="1e9720e4-6f49-82e9-aff0-0158cdf3086f" dir="auto"/><h1 id="e8a720e4-6f49-83b1-b83a-012b53004464" class="" dir="auto">5. Region 1 VPC 생성 (Seoul)</h1><p id="473720e4-6f49-8328-9724-01852c9a2f0f" class="" dir="auto">Region 변경</p><pre id="ef4720e4-6f49-82e5-ad7c-0151b63fd96c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-2</code></pre><p id="42f720e4-6f49-82a6-ba49-81ab4f17b9c7" class="" dir="auto">VPC 생성</p><pre id="a4e720e4-6f49-828b-8e61-81644ee107b7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name : 이니셜-vpc-seoul
+CIDR : 10.10.0.0/16</code></pre><hr id="aa6720e4-6f49-8286-ac6e-011c368add82" dir="auto"/><h1 id="26d720e4-6f49-8374-bfbd-818e23608e54" class="" dir="auto">6. Subnet 생성</h1><pre id="023720e4-6f49-8249-8290-81d7550b8135" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name : 이니셜-subnet-seoul
+CIDR : 10.10.1.0/24
+AZ : ap-northeast-2a</code></pre><hr id="9c2720e4-6f49-8309-8d24-814b339dc2ac" dir="auto"/><h1 id="084720e4-6f49-8275-93e3-8179f29cd9d0" class="" dir="auto">7. Internet Gateway 생성</h1><pre id="c2f720e4-6f49-8275-b69d-019806d001f5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name : 이니셜-igw-seoul
+Attach : 이니셜-vpc-seoul</code></pre><p id="658720e4-6f49-83a6-a8ad-01859477b38e" class="" dir="auto">Route Table</p><pre id="06f720e4-6f49-83ce-85e9-81bab4252ff7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Destination      Target
+0.0.0.0/0        IGW</code></pre><hr id="01d720e4-6f49-8358-9a08-813ea34a7b56" dir="auto"/><h1 id="eb2720e4-6f49-8344-8397-811b3590926a" class="" dir="auto">8. EC2 생성 (Seoul)</h1><pre id="b18720e4-6f49-83c3-a126-8131e82d342f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name : 이니셜-ec2-seoul
+AMI : Amazon Linux
+VPC : 이니셜-vpc-seoul
+Subnet : 이니셜-subnet-seoul
+Public IP : Enable</code></pre><p id="e8c720e4-6f49-8286-9b57-01f23a7c940b" class="" dir="auto">Security Group</p><pre id="67d720e4-6f49-82a6-87a3-8132a0b89bf9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SSH     22        MyIP
+ICMP    ALL       10.20.0.0/16</code></pre><hr id="4f6720e4-6f49-8348-8c07-816cbd9cba7a" dir="auto"/><h1 id="276720e4-6f49-825f-afad-01badab40622" class="" dir="auto">9. Region 변경</h1><p id="529720e4-6f49-8282-b5c0-016c9dc18faf" class="" dir="auto">AWS Console에서 Region 변경</p><pre id="f5c720e4-6f49-8212-8950-818d32dc665d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">us-east-1 (N. Virginia)</code></pre><hr id="d74720e4-6f49-82e4-8761-01b0dfa522d0" dir="auto"/><h1 id="687720e4-6f49-83b0-817f-811fa40c8517" class="" dir="auto">10. VPC 생성 (Virginia)</h1><pre id="c52720e4-6f49-82cf-abcc-01471446c1f6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name : 이니셜-vpc-virginia
+CIDR : 10.20.0.0/16</code></pre><hr id="fd8720e4-6f49-83fb-b8f2-818343cfbb58" dir="auto"/><h1 id="609720e4-6f49-83cb-8d9f-01785431d60c" class="" dir="auto">11. Subnet 생성</h1><pre id="667720e4-6f49-837f-afda-0128d4457726" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name : 이니셜-subnet-virginia
+CIDR : 10.20.1.0/24
+AZ : us-east-1a</code></pre><hr id="5dc720e4-6f49-82bf-9555-010d882ab8df" dir="auto"/><h1 id="59a720e4-6f49-82ca-8224-0156db98ae7a" class="" dir="auto">12. Internet Gateway 생성</h1><pre id="225720e4-6f49-8271-8bc6-0113af8cac1e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name : 이니셜-igw-virginia
+Attach : 이니셜-vpc-virginia</code></pre><p id="3a5720e4-6f49-835f-b31b-8175659cc26b" class="" dir="auto">Route Table</p><pre id="771720e4-6f49-82c0-ae22-010e08fea1cf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Destination      Target
+0.0.0.0/0        IGW</code></pre><hr id="623720e4-6f49-830d-a2ed-01bdb24d55b5" dir="auto"/><h1 id="ddb720e4-6f49-823a-b6de-0185c597707b" class="" dir="auto">13. EC2 생성 (Virginia)</h1><pre id="86b720e4-6f49-828d-8b6f-01ae3a81b035" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name : 이니셜-ec2-virginia
+AMI : Amazon Linux
+VPC : 이니셜-vpc-virginia
+Subnet : 이니셜-subnet-virginia
+Public IP : Enable</code></pre><p id="7ca720e4-6f49-8254-8743-01ae21417af2" class="" dir="auto">Security Group</p><pre id="08b720e4-6f49-820a-b49e-0188ff1ed776" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SSH     22        MyIP
+ICMP    ALL       10.10.0.0/16</code></pre><hr id="f07720e4-6f49-8220-9b3b-8167e9b78785" dir="auto"/><h1 id="2bf720e4-6f49-83bd-9782-81787b7eaa11" class="" dir="auto">14. Cross Region VPC Peering 생성</h1><p id="5c8720e4-6f49-83cf-91fb-817a60d31c5e" class="" dir="auto">Region</p><pre id="107720e4-6f49-83e2-869c-01ed71b70eb4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-2</code></pre><p id="f71720e4-6f49-826d-91d2-8159eb8189df" class="" dir="auto">VPC Console</p><pre id="dea720e4-6f49-825a-a3fb-81a00e54da42" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Peering Connections
+Create Peering</code></pre><p id="e5b720e4-6f49-836f-a682-01f5f0af4b1b" class="" dir="auto">설정</p><pre id="212720e4-6f49-829b-b113-81f3d11c5940" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name : 이니셜-cross-peering
+
+Requester VPC
+이니셜-vpc-seoul
+
+Accepter VPC
+Another Region
+
+Region
+us-east-1
+
+VPC
+이니셜-vpc-virginia</code></pre><p id="2cf720e4-6f49-82c7-a714-019a850ceafb" class="" dir="auto">Create</p><hr id="078720e4-6f49-82fc-976e-01c00e20703c" dir="auto"/><h1 id="db7720e4-6f49-83b4-b9c4-819775a96146" class="" dir="auto">15. Peering Accept</h1><p id="a0a720e4-6f49-827e-b8ef-81731f635e58" class="" dir="auto">Region 변경</p><pre id="2f8720e4-6f49-82c6-bf23-0114de6b18db" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">us-east-1</code></pre><p id="c5d720e4-6f49-82a5-9b8b-018c5f41cba7" class="" dir="auto">VPC → Peering Connections</p><pre id="a06720e4-6f49-8305-a31c-8154dee15774" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Actions
+Accept Request</code></pre><p id="27c720e4-6f49-8348-acea-810df4253b5f" class="" dir="auto">상태</p><pre id="a92720e4-6f49-8265-9dd3-01ac8ee50606" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Active</code></pre><hr id="8d5720e4-6f49-82b4-8709-01f53854e5a1" dir="auto"/><h1 id="e47720e4-6f49-83cf-9b5d-01a0ad35de12" class="" dir="auto">16. Route Table 설정</h1><h2 id="9b5720e4-6f49-822b-b6ab-8142f85e64e7" class="" dir="auto">Seoul Route Table</h2><p id="fa2720e4-6f49-835c-9c50-013de1eec351" class="" dir="auto">추가</p><pre id="99f720e4-6f49-8210-a9a5-815ba104e715" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Destination : 10.20.0.0/16
+Target : VPC Peering</code></pre><hr id="52f720e4-6f49-8346-8ff3-816a3822b28f" dir="auto"/><h2 id="291720e4-6f49-823c-80c2-813263ae808b" class="" dir="auto">Virginia Route Table</h2><p id="01c720e4-6f49-836c-b709-8197489df2fe" class="" dir="auto">추가</p><pre id="084720e4-6f49-8296-9643-818ccf8fa159" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Destination : 10.10.0.0/16
+Target : VPC Peering</code></pre><hr id="05b720e4-6f49-83e0-a552-01cc2b1ae540" dir="auto"/><h1 id="00f720e4-6f49-83e0-bd77-017afe438fdc" class="" dir="auto">17. 통신 테스트</h1><p id="b4d720e4-6f49-83aa-822c-8182fa9f0164" class="" dir="auto">EC2-Seoul 접속</p><pre id="58b720e4-6f49-83da-9169-810fa88fa2bd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh ec2-user@EC2-Seoul-PublicIP</code></pre><hr id="fee720e4-6f49-8390-aaaf-8136bba2044a" dir="auto"/><p id="213720e4-6f49-83fd-b061-8105a8b350bd" class="" dir="auto">Virginia Private IP 확인</p><p id="a41720e4-6f49-8399-80fb-81bf9cdb4be0" class="" dir="auto">예</p><pre id="66d720e4-6f49-8225-a7e3-0192dc8df9e6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.20.1.10</code></pre><hr id="542720e4-6f49-82a1-9056-01dfe0dac2b7" dir="auto"/><p id="c78720e4-6f49-835e-9ea1-01380d1619df" class="" dir="auto">Ping 테스트</p><pre id="e49720e4-6f49-83a5-acc2-013d8f52a0fb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ping 10.20.1.10</code></pre><p id="6ea720e4-6f49-82cc-b3f5-01eafa318bdf" class="" dir="auto">정상 결과</p><pre id="61b720e4-6f49-834d-ae21-01d3f3c29b64" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">64 bytes from 10.20.1.10</code></pre><hr id="d33720e4-6f49-83b1-a1fb-81d4f5f80b5f" dir="auto"/><h1 id="fa2720e4-6f49-82a0-8954-01a686362854" class="" dir="auto">18. 네트워크 흐름</h1><pre id="c88720e4-6f49-837e-b13c-81318fe2c923" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2-Seoul
+10.10.1.10
+     │
+Route Table
+10.20.0.0/16 → Peering
+     │
+AWS Global Backbone
+     │
+EC2-Virginia
+10.20.1.10</code></pre><p id="a09720e4-6f49-82f4-a106-81f007b5eb6b" class="" dir="auto">특징</p><ul id="cd4720e4-6f49-837a-9775-81c813d8e204" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public Internet 사용하지 않음</li></ul><ul id="449720e4-6f49-8328-b5ae-81d06cff687a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Backbone Network 사용</li></ul><ul id="9f7720e4-6f49-820f-8598-015f835af17b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private IP 통신</li></ul><hr id="22a720e4-6f49-824e-ae62-014ce3cc8570" dir="auto"/><h1 id="a17720e4-6f49-82a8-9197-81027a500df1" class="" dir="auto">19. 비용 특징</h1><p id="649720e4-6f49-82be-959c-01d034300c7e" class="" dir="auto">Cross Region Peering은 <strong>데이터 전송 비용 발생</strong></p><p id="7d6720e4-6f49-83d9-9e01-01018cd8fe75" class="" dir="auto">예</p><pre id="23c720e4-6f49-82d5-bc91-8129ed5a31a9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Region 간 데이터 전송
+약 $0.01 ~ $0.02 / GB</code></pre><p id="056720e4-6f49-834f-93ae-811db3fa18dd" class="" dir="auto">같은 Region Peering은 대부분 무료에 가깝다.</p><hr id="f15720e4-6f49-8369-82f4-0174616dee92" dir="auto"/><h1 id="0ab720e4-6f49-831d-b39f-0175a0661538" class="" dir="auto">20. Cross Region Peering 제한</h1><h3 id="d38720e4-6f49-83ab-81a5-01b1dfa43fb1" class="" dir="auto">Transitive Routing 불가</h3><pre id="bd6720e4-6f49-8332-828e-0145ea2366eb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC-A ↔ VPC-B
+VPC-B ↔ VPC-C
+
+A → C 통신 불가</code></pre><hr id="c85720e4-6f49-8343-8c75-01c2972899fc" dir="auto"/><h3 id="b3e720e4-6f49-83c1-9d24-014a1babb202" class="" dir="auto">CIDR 중복 불가</h3><pre id="52d720e4-6f49-83b8-8dfc-81591d5b5025" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.10.0.0/16
+10.10.0.0/16</code></pre><p id="b45720e4-6f49-8364-95ab-81aa1a222733" class="" dir="auto">Peering 불가능</p><hr id="50f720e4-6f49-83b8-9fcd-8195f5cdd645" dir="auto"/><h1 id="ce7720e4-6f49-8214-b24e-01cf45ddeeac" class="" dir="auto">21. CLI 확인</h1><p id="2a5720e4-6f49-83d3-8339-817a640aab38" class="" dir="auto">Peering 확인</p><pre id="4e0720e4-6f49-8399-9940-01c55c9d16b0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws ec2 describe-vpc-peering-connections</code></pre><hr id="72d720e4-6f49-8364-afd2-0182ef25e514" dir="auto"/><p id="3a3720e4-6f49-8347-8aa5-818872039995" class="" dir="auto">Route 확인</p><pre id="5cc720e4-6f49-83b8-94e8-01db4a19643a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws ec2 describe-route-tables</code></pre><hr id="063720e4-6f49-82c5-9e3a-01aa0f224297" dir="auto"/><h1 id="542720e4-6f49-83a8-8826-01fecfb0557c" class="" dir="auto">22. 실습 정리</h1><p id="369720e4-6f49-82c3-957b-8177ee39982b" class="" dir="auto">이번 실습에서 수행한 내용</p><pre id="182720e4-6f49-8375-b417-81fb02a004b3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Seoul VPC 생성
+Virginia VPC 생성
+EC2 생성
+Cross Region VPC Peering 생성
+Route Table 설정
+Security Group 설정
+Private IP Ping 테스트</code></pre><hr id="e78720e4-6f49-8250-b79a-818645aed291" dir="auto"/><h2 id="79f720e4-6f49-830e-83dc-8152eeea38d2" class="" dir="auto">강의에서 추가로 설명하면 좋은 내용</h2><p id="186720e4-6f49-8354-bbe9-01d3accb49bc" class="" dir="auto">Peering 다음에는 보통 이걸 같이 설명한다.</p><h3 id="c88720e4-6f49-839e-85d3-81ded9514847" class="" dir="auto">VPC 연결 방식 비교</h3><pre id="4f4720e4-6f49-8274-bbf0-81391760f83c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC Peering
+Transit Gateway
+PrivateLink
+VPN</code></pre><p id="61a720e4-6f49-82d9-922a-8121f0647f9f" class="" dir="auto">간단한 구조</p><pre id="cd2720e4-6f49-8281-8cca-81f2ee9908e7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Small Architecture → Peering
+Large Multi VPC → Transit Gateway
+Service Access → PrivateLink
+On-prem → VPN</code></pre></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

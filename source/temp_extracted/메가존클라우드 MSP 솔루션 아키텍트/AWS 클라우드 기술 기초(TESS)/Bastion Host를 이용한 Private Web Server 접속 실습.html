@@ -1,0 +1,968 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Bastion Host를 이용한 Private Web Server 접속 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="641720e4-6f49-834e-a404-81210688a5d1" class="page sans"><header><h1 class="page-title" dir="auto">Bastion Host를 이용한 Private Web Server 접속 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="3a7720e4-6f49-83e5-98c1-0164a77d164b" dir="auto"/><h1 id="b25720e4-6f49-8211-8a18-016177921b97" class="" dir="auto">실습 목표</h1><p id="4f2720e4-6f49-8331-a3ea-8131becd9757" class="" dir="auto">이번 실습에서는 AWS 네트워크 환경에서 <strong>Public Subnet과 Private Subnet을 활용한 보안 아키텍처</strong>를 구축한다.</p><p id="ca6720e4-6f49-82f4-b1c8-016756ab69d4" class="" dir="auto">다음 환경을 구성한다.</p><ol type="1" id="cf6720e4-6f49-82a8-96c0-011fe4cde8c0" class="numbered-list" start="1" dir="auto"><li>Public Subnet에 <strong>Bastion Host 구축</strong></li></ol><ol type="1" id="5c1720e4-6f49-8213-82d0-01da3941501e" class="numbered-list" start="2" dir="auto"><li>Private Subnet에 <strong>Web Server 구축</strong></li></ol><ol type="1" id="c18720e4-6f49-8369-9a92-81b19cc7bc0a" class="numbered-list" start="3" dir="auto"><li>Bastion Host를 통해 Private Web Server SSH 접속</li></ol><ol type="1" id="9de720e4-6f49-822f-a339-01efe7ab778e" class="numbered-list" start="4" dir="auto"><li>Bastion Host를 <strong>Reverse Proxy 서버로 구성</strong></li></ol><ol type="1" id="ae6720e4-6f49-8279-9d0d-010933f89745" class="numbered-list" start="5" dir="auto"><li>Bastion Public IP를 통해 Web 서비스 접속</li></ol><p id="c6b720e4-6f49-8213-82c4-818e04c82c8d" class="" dir="auto">이 실습을 통해 다음 개념을 이해한다.</p><ul id="74d720e4-6f49-8389-a09b-81d48a2929f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bastion Host 역할</li></ul><ul id="ea4720e4-6f49-83ac-ae2f-810ce3af1080" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Subnet 보안 구조</li></ul><ul id="59a720e4-6f49-8335-88ce-811934895c14" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH Jump Host</li></ul><ul id="540720e4-6f49-8216-9f0d-81f5109ef7d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Reverse Proxy 구조</li></ul><ul id="844720e4-6f49-830b-9477-0141a4a7abc4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS CLI를 이용한 EC2 정보 조회</li></ul><hr id="2c8720e4-6f49-8382-87e0-015ff19d45ae" dir="auto"/><h1 id="8ef720e4-6f49-833e-b5ce-01d7d893607f" class="" dir="auto">실습 아키텍처</h1><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="128720e4-6f49-8399-8649-01edc9db1c79" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+   │
+   │
+Public Subnet
+   │
+   │
+이니셜-ec2-bastion
+   │
+   │ SSH
+   │
+Private Subnet
+   │
+   │
+이니셜-ec2-web</code></pre><p id="615720e4-6f49-829d-97de-0150ab6a7d1e" class="" dir="auto">Reverse Proxy 적용 후</p><pre id="0f0720e4-6f49-82d4-9319-81335494661a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+   │
+   │ HTTP
+   │
+이니셜-ec2-bastion (Nginx)
+   │
+   │ Reverse Proxy
+   │
+이니셜-ec2-web</code></pre><figure id="d6c720e4-6f49-824e-b5a2-8116d3bb418f" class="image" data-notion-image="Bastion%20Host%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20Private%20Web%20Server%20%EC%A0%91%EC%86%8D%20%EC%8B%A4%EC%8A%B5/image.png" dir="ltr"><a href="Bastion%20Host%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20Private%20Web%20Server%20%EC%A0%91%EC%86%8D%20%EC%8B%A4%EC%8A%B5/image.png"><img style="width:704.0000610351562px" src="Bastion%20Host%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20Private%20Web%20Server%20%EC%A0%91%EC%86%8D%20%EC%8B%A4%EC%8A%B5/image.png"/></a></figure><hr id="5bd720e4-6f49-833b-80dd-01ca2037c4a9" dir="auto"/><h1 id="eb9720e4-6f49-82f6-980a-011eb6117cac" class="" dir="auto">1 Bastion Server 생성</h1><h2 id="def720e4-6f49-838d-a888-01b2873b3134" class="" dir="auto">EC2 콘솔 이동</h2><pre id="8fd720e4-6f49-834f-bb09-01774eb99043" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2
+ → 인스턴스
+ → 인스턴스 시작</code></pre><hr id="ce6720e4-6f49-82ba-b6b0-813a51763638" dir="auto"/><h2 id="9a3720e4-6f49-8326-81ef-81ec6f56acb5" class="" dir="auto">Bastion 인스턴스 설정</h2><table id="411720e4-6f49-821f-a4ab-01f9fd3bf099" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="1d1720e4-6f49-8221-82c9-0180e88b68e6" dir="ltr"><th id="I=[=" class="simple-table-header-color simple-table-header">항목</th><th id="unMb" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="f20720e4-6f49-82ce-9088-01a42c6bc72b" dir="ltr"><td id="I=[=" class="">이름</td><td id="unMb" class="">이니셜-ec2-bastion</td></tr><tr id="762720e4-6f49-83c5-828e-01d815a69ee6" dir="ltr"><td id="I=[=" class="">AMI</td><td id="unMb" class="">Amazon Linux 2023</td></tr><tr id="946720e4-6f49-8372-a4fa-01fdd6e1b08b" dir="ltr"><td id="I=[=" class="">Instance Type</td><td id="unMb" class="">t3.micro</td></tr><tr id="ac3720e4-6f49-82df-8e23-018076614776" dir="ltr"><td id="I=[=" class="">Key Pair</td><td id="unMb" class="">이니셜-key-ec2</td></tr></tbody></table><hr id="ed2720e4-6f49-8230-9698-81e932b382e7" dir="auto"/><h2 id="aa1720e4-6f49-8364-aa74-81c034536655" class="" dir="auto">네트워크 설정</h2><table id="c47720e4-6f49-82fe-ba58-0179b85881f3" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="1ac720e4-6f49-82c2-b650-8164ad4b4656" dir="ltr"><th id="xFd|" class="simple-table-header-color simple-table-header">항목</th><th id="]u[z" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="89b720e4-6f49-8360-a828-01bf312f84cd" dir="ltr"><td id="xFd|" class="">VPC</td><td id="]u[z" class="">이니셜-vpc-01</td></tr><tr id="594720e4-6f49-8230-8176-814751d3f73b" dir="ltr"><td id="xFd|" class="">Subnet</td><td id="]u[z" class="">이니셜-sub-pub-01</td></tr><tr id="485720e4-6f49-8285-bbd2-01f423c2db8b" dir="ltr"><td id="xFd|" class="">Public IP</td><td id="]u[z" class="">활성화</td></tr></tbody></table><hr id="689720e4-6f49-8323-bc69-81e0b525e2fd" dir="auto"/><h2 id="3f1720e4-6f49-8292-9295-810be7a8fc91" class="" dir="auto">보안 그룹</h2><table id="c8d720e4-6f49-83b2-9eee-01ed91a6b3dc" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="d3a720e4-6f49-82f8-bb7f-01403345ad07" dir="ltr"><th id="O?KE" class="simple-table-header-color simple-table-header">Type</th><th id="wjAz" class="simple-table-header-color simple-table-header">Source</th></tr></thead><tbody><tr id="ea2720e4-6f49-82f5-948b-810d7da8f915" dir="ltr"><td id="O?KE" class="">SSH</td><td id="wjAz" class="">내 IP</td></tr><tr id="cac720e4-6f49-822c-a5b8-013ba003f175" dir="ltr"><td id="O?KE" class="">HTTP</td><td id="wjAz" class="">내 IP</td></tr></tbody></table><hr id="08b720e4-6f49-821c-be24-814940444de1" dir="auto"/><h1 id="156720e4-6f49-8219-96af-81eeae06bcd1" class="" dir="auto">Bastion 서버 접속</h1><pre id="bb9720e4-6f49-823a-ab97-01f17c4ac885" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh -i 이니셜-key-ec2.pem ec2-user@BASTION_PUBLIC_IP
+</code></pre><ul id="37c720e4-6f49-8231-bffd-01dc5525bbee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">aws cli 설치 : Amazon Linux 2023에는 설치되어 있음.</li></ul><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="feb720e4-6f49-835b-9fd1-0109b292f245" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># Install AWS CLI
+curl -fsSL https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip -o /tmp/aws-cli.zip
+unzip -q -d /tmp /tmp/aws-cli.zip
+sudo /tmp/aws/install
+rm -rf /tmp/aws
+aws --version</code></pre><ul id="2bb720e4-6f49-825f-a3de-81056019208a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">aws configure :  access key와 secret key 저장.</li></ul><p id="f71720e4-6f49-831a-b819-0147af040207" class="" dir="auto">
+</p><hr id="d51720e4-6f49-8315-8199-01a8100c8fe2" dir="auto"/><h1 id="415720e4-6f49-8300-b089-01c815c7ca3d" class="" dir="auto">2 Web Server 생성 (Private Subnet)</h1><h2 id="313720e4-6f49-8270-9e2e-81d41ae85ac6" class="" dir="auto">EC2 생성</h2><table id="65c720e4-6f49-82ca-b582-018f87f07103" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="8ec720e4-6f49-82ae-8460-8154a66aad5c" dir="ltr"><th id="C[gZ" class="simple-table-header-color simple-table-header">항목</th><th id="C[&lt;d" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="86d720e4-6f49-8229-a2ce-0170595da600" dir="ltr"><td id="C[gZ" class="">이름</td><td id="C[&lt;d" class="">이니셜-ec2-web</td></tr><tr id="beb720e4-6f49-8399-922a-01ddadd92e17" dir="ltr"><td id="C[gZ" class="">AMI</td><td id="C[&lt;d" class="">Amazon Linux 2023</td></tr><tr id="6ac720e4-6f49-831e-adfd-0107a7cbb200" dir="ltr"><td id="C[gZ" class="">Instance Type</td><td id="C[&lt;d" class="">t3.micro</td></tr><tr id="5a2720e4-6f49-8289-ba6c-01030b061189" dir="ltr"><td id="C[gZ" class="">Key Pair</td><td id="C[&lt;d" class="">이니셜-key-ec2</td></tr></tbody></table><hr id="188720e4-6f49-8219-be98-817df937f211" dir="auto"/><h2 id="565720e4-6f49-8221-ae6c-01892424abd3" class="" dir="auto">네트워크 설정</h2><table id="282720e4-6f49-82f3-809d-0161845dbd33" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="a2c720e4-6f49-82ee-b8b5-01d6f2472e90" dir="ltr"><th id="WA[h" class="simple-table-header-color simple-table-header">항목</th><th id="RbZy" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="9b1720e4-6f49-83f1-a45a-013079c64ac7" dir="ltr"><td id="WA[h" class="">VPC</td><td id="RbZy" class="">이니셜-vpc-01</td></tr><tr id="964720e4-6f49-8250-8f8f-01a88da05694" dir="ltr"><td id="WA[h" class="">Subnet</td><td id="RbZy" class="">이니셜-sub-pri-01</td></tr><tr id="bce720e4-6f49-823c-bb44-81ffd37b29ce" dir="ltr"><td id="WA[h" class="">Public IP</td><td id="RbZy" class="">비활성</td></tr></tbody></table><hr id="a74720e4-6f49-83d3-813e-81369acd8084" dir="auto"/><h2 id="9a3720e4-6f49-83a1-8267-01863440c0f6" class="" dir="auto">보안 그룹</h2><table id="92a720e4-6f49-8381-a2b7-81a08c734ea7" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="844720e4-6f49-8308-8b91-81f12e9ae0f2" dir="ltr"><th id="KKGo" class="simple-table-header-color simple-table-header">Type</th><th id="C~[N" class="simple-table-header-color simple-table-header">Source</th></tr></thead><tbody><tr id="127720e4-6f49-839b-8180-018a0b0d4d14" dir="ltr"><td id="KKGo" class="">SSH</td><td id="C~[N" class="">VPC CIDR</td></tr><tr id="246720e4-6f49-83ad-9520-81da3cd4467d" dir="ltr"><td id="KKGo" class="">HTTP</td><td id="C~[N" class="">VPC CIDR</td></tr></tbody></table><p id="5d8720e4-6f49-82bf-b9db-8149ecb1934f" class="" dir="auto">즉</p><pre id="497720e4-6f49-83ab-8a34-019796d86b9a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC 내부에서만 접근 가능</code></pre><hr id="dce720e4-6f49-8299-8597-8115ee0901dc" dir="auto"/><h1 id="bce720e4-6f49-823a-90c5-815a5aa89be0" class="" dir="auto">3 Web Server 자동 설치</h1><p id="e84720e4-6f49-8363-b810-8123d6e10fea" class="" dir="auto">EC2 생성 시 <strong>User Data에 아래 스크립트 입력</strong></p><h3 id="5d1720e4-6f49-8339-8735-8115ea14ff3d" class="" dir="auto">install_python.sh</h3><pre id="a29720e4-6f49-8366-8e9e-01ca51732117" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+
+# 1. Python 3.12 및 필수 개발 도구 설치
+echo &quot;#####################&quot;
+echo &quot;Python 3.12 설치 시작&quot;
+echo &quot;#####################&quot;
+sudo dnf install python3.12 python3.12-pip python3.12-devel -y
+
+# 2. Alternatives 설정 (기존 3.9와 새 3.12 관리)
+echo &quot;##############################&quot;
+echo &quot;Python Default Version Setting&quot;
+echo &quot;##############################&quot;
+# 기존 시스템 파이썬(3.9)을 1순위, 3.12를 2순위로 등록
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.9 1
+sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.12 2
+
+# 자동 선택 (2번: python3.12)
+sudo update-alternatives --set python3 /usr/bin/python3.12
+
+# 3. Symbolic link 설정 (python 명령어가 3.12를 가리키도록)
+echo &quot;##############################&quot;
+echo &quot;Python3 → Python Symbolic link&quot;
+echo &quot;##############################&quot;
+sudo ln -fs /usr/bin/python3.12 /usr/bin/python
+
+# 4. 시스템 도구(dnf/yum) 하드코딩 보호
+# dnf/yum은 시스템 파이썬(3.9)에 의존하므로, 첫 줄(Shebang)을 명시적으로 고정합니다.
+echo &quot;#####################################&quot;
+echo &quot;dnf/yum 안정성 확보 (Python 3.9 고정)&quot;
+echo &quot;#####################################&quot;
+sudo sed -i &#x27;1s|#!/usr/bin/python3|#!/usr/bin/python3.9|&#x27; /usr/bin/dnf
+sudo sed -i &#x27;1s|#!/usr/bin/python3|#!/usr/bin/python3.9|&#x27; /usr/bin/yum
+
+# 5. PIP 업그레이드
+echo &quot;################&quot;
+echo &quot;PIP Upgrade 설치&quot;
+echo &quot;################&quot;
+python3 -m pip install --upgrade pip
+
+# 6. 기타 도구 및 소스코드 클론
+echo &quot;#######################&quot;
+echo &quot;Stress, Git &amp; Code Install&quot;
+echo &quot;#######################&quot;
+sudo dnf install stress git -y
+cd /root/
+# 기존 디렉토리가 있다면 삭제 후 다시 클론 (재실행 대비)
+sudo rm -rf streamlit-project
+sudo git clone https://github.com/sunnykid7/streamlit-project.git
+cd streamlit-project
+
+# 7. Python 패키지 설치
+echo &quot;######################&quot;
+echo &quot;Python Package Install&quot;
+echo &quot;######################&quot;
+# 3.12에서는 일부 패키지 설치 시 --user를 권장하거나 venv를 권장할 수 있음
+pip install --no-cache-dir -r requirements.txt
+
+# 8. AWS CLI 업그레이드
+echo &quot;##############&quot;
+echo &quot;Upgrade AWSCLI&quot;
+echo &quot;##############&quot;
+if [ -f &quot;scripts/upgrade_aws_cli_v2.sh&quot; ]; then
+    sudo sh scripts/upgrade_aws_cli_v2.sh
+fi
+
+# 9. 애플리케이션 실행 (80포트 사용 시 sudo 권한 필요할 수 있음)
+echo &quot;#################&quot;
+echo &quot;Application Start&quot;
+echo &quot;#################&quot;
+# Streamlit을 백그라운드에서 실행하려면 앞에 &#x27;nohup&#x27;과 끝에 &#x27;&amp;&#x27;를 붙이는 것이 좋습니다.
+# 포트 80은 Well-known 포트이므로 일반 사용자는 권한이 없을 수 있습니다.
+python3 -m streamlit run main.py --server.port 8501 --server.enableCORS false --server.enableXsrfProtection false</code></pre><p id="643720e4-6f49-835b-8229-013c8b755e9a" class="" dir="auto">스크립트 동작</p><ol type="1" id="bc0720e4-6f49-8324-996b-81877c758ba6" class="numbered-list" start="1" dir="auto"><li>Python 3.11 설치</li></ol><ol type="1" id="e13720e4-6f49-82c5-b6a8-010a24196d1b" class="numbered-list" start="2" dir="auto"><li>Python 기본 버전 변경</li></ol><ol type="1" id="932720e4-6f49-838b-95d6-01252182db92" class="numbered-list" start="3" dir="auto"><li>pip 업그레이드</li></ol><ol type="1" id="f07720e4-6f49-836f-b055-018b0915e5d0" class="numbered-list" start="4" dir="auto"><li>Git 프로젝트 다운로드</li></ol><ol type="1" id="92c720e4-6f49-82e9-9816-0161bbc39098" class="numbered-list" start="5" dir="auto"><li>Streamlit 웹 서버 실행</li></ol><hr id="ed9720e4-6f49-83f0-aa89-81004fbfa7ce" dir="auto"/><h1 id="7df720e4-6f49-82ab-9aef-011c82a7af9c" class="" dir="auto">4 Bastion → Web Server 접속</h1><p id="ad9720e4-6f49-83f8-a8b6-0141e0213487" class="" dir="auto">먼저 Bastion 서버에 접속한다.</p><pre id="bcf720e4-6f49-8245-8d4a-81a295c14bf1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh -i 이니셜-key-ec2.pem ec2-user@BASTION_PUBLIC_IP</code></pre><hr id="685720e4-6f49-8349-bab3-012bd68a2e1b" dir="auto"/><h2 id="5d3720e4-6f49-82eb-ab6a-01066fc89dc1" class="" dir="auto">Bastion 서버에 Key 저장</h2><pre id="e8c720e4-6f49-8340-9dc1-810cf5a7c368" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">vim 이니셜-key-ec2.pem</code></pre><p id="8ef720e4-6f49-8274-9547-0150a5aab35e" class="" dir="auto">권한 설정</p><pre id="2f6720e4-6f49-8201-b228-01f24f13f79a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">chmod 600 이니셜-key-ec2.pem</code></pre><hr id="269720e4-6f49-82e7-8757-81584d302d4e" dir="auto"/><h2 id="db1720e4-6f49-83f1-96f3-01b6a00988d2" class="" dir="auto">Web Server 접속</h2><p id="8ab720e4-6f49-82dc-a874-01a51d3fa6a9" class="" dir="auto">Web Server Private IP 확인</p><pre id="bc8720e4-6f49-830b-b797-8118d1773f07" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.x.x.x</code></pre><p id="85b720e4-6f49-83ce-ab1a-816cf988260f" class="" dir="auto">접속</p><pre id="64b720e4-6f49-82af-b884-819598809274" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh -i 이니셜-key-ec2.pem ec2-user@WEB_PRIVATE_IP</code></pre><p id="cdd720e4-6f49-82e2-b388-812ee0d0adfa" class="" dir="auto">접속 흐름</p><pre id="099720e4-6f49-8222-ba1d-01a36fcd1846" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+ → Bastion
+ → Private Web Server</code></pre><ul id="bd4720e4-6f49-83a2-89e3-81872e45569c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MobaXterm의 Jumphost 기능을 이용해 접속할 수 있다.</li></ul><p id="a02720e4-6f49-82d0-ad22-81b5df5f3f4c" class="" dir="auto">
+</p><hr id="301720e4-6f49-820a-b3bc-812f632c89b2" dir="auto"/><h1 id="33a720e4-6f49-83e8-b0a0-818c12eec9a2" class="" dir="auto">5 Bastion Reverse Proxy 구성</h1><p id="6f3720e4-6f49-8263-bb78-0184268dd8c1" class="" dir="auto">Private Web Server는 외부에서 직접 접근할 수 없다.</p><p id="b9e720e4-6f49-8394-9ff1-01a07d2b747f" class="" dir="auto">따라서 Bastion 서버에 <strong>Nginx Reverse Proxy</strong>를 구성한다.</p><hr id="f12720e4-6f49-82ef-9b82-81661a45350a" dir="auto"/><h1 id="099720e4-6f49-82e4-a5a8-81197d17eeda" class="" dir="auto">Proxy 설정 스크립트 생성</h1><pre id="3eb720e4-6f49-83a4-a800-81506c01cf47" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">vim setting_bastion.sh</code></pre><hr id="3b0720e4-6f49-8282-b479-016e7bf31c1f" dir="auto"/><h1 id="d1c720e4-6f49-83a2-8939-011fccc6bea5" class="" dir="auto">setting_bastion.sh </h1><ul id="c18720e4-6f49-82a3-8399-01e17f053d49" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>이니셜-ec2-web을 실제 서버의 Tag이름으로 변경한다.</strong></li></ul><pre id="4c6720e4-6f49-8348-b324-81a9d16886cd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+
+echo &quot;WEB EC2 Private IP 주소를 조회 중입니다...&quot;
+WEB_PRIVATE_IP=$(aws ec2 describe-instances \
+  --filters &quot;Name=tag:Name,Values=이니셜-ec2-web&quot; \
+  --query &quot;Reservations[*].Instances[*].PrivateIpAddress&quot; \
+  --output text)
+
+if [ $? -ne 0 ]; then
+    echo &quot;[Error] 인스턴스 정보를 가져오는데 실패했습니다.&quot;
+    exit 1
+fi
+
+if [ -z &quot;$WEB_PRIVATE_IP&quot; ]; then
+    echo &quot;WEB EC2 인스턴스 IP 정보를 가져오는데 실패했습니다.&quot;
+    exit 1
+fi
+
+echo &quot;WEB EC2 Private IP 주소 조회 완료: $WEB_PRIVATE_IP&quot;
+
+sudo yum install nginx -y
+
+echo &quot;user nginx;
+worker_processes auto;
+
+events {
+    worker_connections 1024;
+}
+
+http {
+    server {
+        listen 80;
+        server_name _;
+
+        location / {
+            proxy_pass http://$WEB_PRIVATE_IP:8501/;
+            proxy_http_version 1.1;
+
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto $scheme;
+
+            proxy_set_header Upgrade $http_upgrade;
+            proxy_set_header Connection &quot;upgrade&quot;;
+
+            proxy_read_timeout 86400;
+            proxy_send_timeout 86400;
+            proxy_buffering off;
+        }
+    }
+}&quot; | sudo tee /etc/nginx/nginx.conf &gt; /dev/null
+
+sudo nginx -t
+
+sudo systemctl start nginx
+sudo systemctl enable nginx</code></pre><hr id="6b7720e4-6f49-8297-a270-817fbd2f60a2" dir="auto"/><h1 id="3a7720e4-6f49-83c9-a59b-817b6876f48d" class="" dir="auto">스크립트 실행</h1><pre id="0b7720e4-6f49-83a9-ac63-01669466e571" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">chmod +x setting_bastion.sh</code></pre><pre id="3c7720e4-6f49-828e-811c-01d114e74ef3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">./setting_bastion.sh</code></pre><hr id="977720e4-6f49-8307-ba37-01d25cd7c72b" dir="auto"/><h1 id="120720e4-6f49-83a0-947e-8198eef73a20" class="" dir="auto">Web 접속 테스트</h1><p id="eb6720e4-6f49-8384-9ae5-01a6dbff7b6a" class="" dir="auto">브라우저 접속</p><pre id="ddc720e4-6f49-8280-9f69-8165ebc604d1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://BASTION_PUBLIC_IP</code></pre><p id="b40720e4-6f49-839a-a68f-81c3b99146de" class="" dir="auto">접속 흐름</p><pre id="247720e4-6f49-83e2-8e00-01c00a706c87" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Client
+ → Bastion Host
+ → Reverse Proxy
+ → Private Web Server</code></pre><hr id="63b720e4-6f49-8316-a23b-01aeb2639250" dir="auto"/><h1 id="c53720e4-6f49-82f4-a77a-811216a2e507" class="" dir="auto">최종 아키텍처</h1><pre id="000720e4-6f49-83e5-ad4e-01cd884ae8f5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+   │
+   │
+이니셜-ec2-bastion
+   │
+   │ Reverse Proxy
+   │
+이니셜-ec2-web</code></pre><hr id="e8f720e4-6f49-83aa-8de6-0170f4aa46de" dir="auto"/><h1 id="c22720e4-6f49-8304-b2ed-011783be9072" class="" dir="auto">실습 핵심 개념</h1><table id="274720e4-6f49-83ea-aa84-81e312461c6f" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="af2720e4-6f49-83a3-8bf3-81f8ce6ab2fd" dir="ltr"><th id="p=q|" class="simple-table-header-color simple-table-header">구성</th><th id="sCxE" class="simple-table-header-color simple-table-header">역할</th></tr></thead><tbody><tr id="a3e720e4-6f49-8370-b460-81b364a3a4a7" dir="ltr"><td id="p=q|" class="">Bastion Host</td><td id="sCxE" class="">관리용 서버</td></tr><tr id="64c720e4-6f49-82e0-b6c1-01a1709bd150" dir="ltr"><td id="p=q|" class="">Private Subnet</td><td id="sCxE" class="">내부 서버 보호</td></tr><tr id="cbe720e4-6f49-8214-abb7-8115457986e8" dir="ltr"><td id="p=q|" class="">Reverse Proxy</td><td id="sCxE" class="">외부 접근 제어</td></tr><tr id="7f0720e4-6f49-83ce-85f8-815348022280" dir="ltr"><td id="p=q|" class="">Security Group</td><td id="sCxE" class="">네트워크 접근 제어</td></tr><tr id="e3a720e4-6f49-8324-a322-01919a03196d" dir="ltr"><td id="p=q|" class="">AWS CLI</td><td id="sCxE" class="">EC2 정보 조회</td></tr></tbody></table><hr id="a67720e4-6f49-83dd-8ec2-813bd25c637f" dir="auto"/><h1 id="d3c720e4-6f49-8361-bea8-01793b1572c7" class="" dir="auto">6 Instance Profile(IAM Role)을 이용한 EC2 권한 할당</h1><p id="972720e4-6f49-8393-ac1e-811e53c5bd51" class="" dir="auto">현재 Web Server는 AWS API를 호출할 수 있는 권한이 없다.</p><p id="15b720e4-6f49-8242-8741-019681d1bc66" class="" dir="auto">따라서 Web 애플리케이션에서 <strong>EC2 정보를 조회하려고 하면 오류가 발생한다.</strong></p><p id="115720e4-6f49-8280-9977-81245a11b9ba" class="" dir="auto">이를 해결하기 위해 <strong>EC2 인스턴스에 IAM Role을 할당</strong>한다.</p><p id="224720e4-6f49-8387-8ea3-815dfa428193" class="" dir="auto">이 방식은 <strong>Instance Profile</strong>이라고 한다.</p><p id="e53720e4-6f49-8386-9ab0-8186c26985ab" class="" dir="auto">즉</p><pre id="c95720e4-6f49-838c-9162-0119a5c841b4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 → IAM Role → AWS API 접근</code></pre><p id="436720e4-6f49-82ae-b91a-01f62858ba7d" class="" dir="auto">구조로 동작한다.</p><hr id="547720e4-6f49-837b-8edb-01c6e26ec828" dir="auto"/><h1 id="b5a720e4-6f49-8368-932a-013ead662af2" class="" dir="auto">6.1 IAM Role 생성</h1><p id="db2720e4-6f49-8277-8e2e-81fc3f241f96" class="" dir="auto">IAM 콘솔로 이동</p><pre id="f69720e4-6f49-82fa-a659-815cddb8b9b5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IAM
+ → 역할
+ → 역할 생성</code></pre><hr id="5c0720e4-6f49-8303-850c-8174c8c79931" dir="auto"/><h2 id="ee3720e4-6f49-8293-b443-8199f45b6d36" class="" dir="auto">역할 생성 설정</h2><table id="18c720e4-6f49-82a8-8404-815986cc9ff6" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="f8b720e4-6f49-8367-b449-81d6230eb51a" dir="ltr"><th id="&gt;D?l" class="simple-table-header-color simple-table-header">항목</th><th id="Z^Fs" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="8a3720e4-6f49-8325-888f-018aabe834e6" dir="ltr"><td id="&gt;D?l" class="">신뢰할 수 있는 엔터티 유형</td><td id="Z^Fs" class="">AWS 서비스</td></tr><tr id="fbd720e4-6f49-82ec-8b95-81e698e27381" dir="ltr"><td id="&gt;D?l" class="">사용 사례</td><td id="Z^Fs" class="">EC2</td></tr></tbody></table><p id="85b720e4-6f49-833b-8129-81ed5f1a4074" class="" dir="auto">다음 클릭</p><hr id="e2e720e4-6f49-82d8-acec-01d1f204d050" dir="auto"/><h2 id="561720e4-6f49-83b2-af23-81b276796562" class="" dir="auto">권한 정책 추가</h2><p id="9b6720e4-6f49-838d-94a8-017d69a0ed32" class="" dir="auto">검색창에서 다음 정책 검색</p><pre id="20d720e4-6f49-8212-bd34-019765ffb112" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AmazonEC2ReadOnlyAccess</code></pre><p id="789720e4-6f49-82a5-8e5b-818ce1aa4760" class="" dir="auto">체크 후</p><pre id="b70720e4-6f49-8370-b793-01c67b0e8a54" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">다음</code></pre><hr id="c69720e4-6f49-8322-901f-01f8452ff732" dir="auto"/><h2 id="936720e4-6f49-8201-b2a7-8104aaa319e2" class="" dir="auto">역할 생성</h2><table id="dee720e4-6f49-82ae-b78a-81fd6282c9ec" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="b10720e4-6f49-82e6-bbe3-01007d36d2d7" dir="ltr"><th id="?[Fy" class="simple-table-header-color simple-table-header">항목</th><th id="ZcIX" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="b15720e4-6f49-8265-b74d-81ab108d925f" dir="ltr"><td id="?[Fy" class="">역할 이름</td><td id="ZcIX" class="">ec2-describe-role</td></tr></tbody></table><pre id="f51720e4-6f49-82d2-813f-811646d354c0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">역할 생성</code></pre><hr id="ac9720e4-6f49-82a1-92a8-0137cd189d00" dir="auto"/><h1 id="7b8720e4-6f49-8247-be6f-01a0a28a8a7d" class="" dir="auto">6.2 EC2 Instance Profile 할당</h1><p id="43b720e4-6f49-831f-a2aa-8165a10f70a3" class="" dir="auto">EC2 콘솔 이동</p><pre id="5cd720e4-6f49-83f9-a030-8187be7f3084" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2
+ → 인스턴스</code></pre><hr id="4a5720e4-6f49-83b1-977f-01afb137861a" dir="auto"/><h2 id="a5f720e4-6f49-82bc-b864-8101c72f5825" class="" dir="auto">Web Server 선택</h2><pre id="218720e4-6f49-8363-a79c-0183669450f6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-ec2-web</code></pre><p id="15c720e4-6f49-8382-b28a-81f9429c4b1b" class="" dir="auto">선택 후</p><pre id="e96720e4-6f49-8294-89f7-01e5b9849e7f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">작업
+ → 보안
+ → IAM 역할 수정</code></pre><hr id="586720e4-6f49-83b4-aa82-0162b8b957a9" dir="auto"/><h2 id="018720e4-6f49-82a0-9fe0-0178b8f5b13d" class="" dir="auto">IAM Role 설정</h2><table id="8eb720e4-6f49-836e-bf39-01fea1f7b082" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="abf720e4-6f49-836b-9b2a-01bbd8dc90d7" dir="ltr"><th id="cfkU" class="simple-table-header-color simple-table-header">항목</th><th id="P{r}" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="8a2720e4-6f49-8211-8b8a-0189319c5503" dir="ltr"><td id="cfkU" class="">IAM 역할</td><td id="P{r}" class="">ec2-describe-role</td></tr></tbody></table><pre id="20d720e4-6f49-8307-9159-815f64e4f5d9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IAM 역할 업데이트</code></pre><hr id="ea8720e4-6f49-82f0-b9ab-0137a1216c33" dir="auto"/><h1 id="ec8720e4-6f49-82fb-b8b1-018288d5730e" class="" dir="auto">7 Web 서비스 접속 테스트</h1><p id="b9d720e4-6f49-8264-9715-8185b6a57d8a" class="" dir="auto">브라우저에서 접속</p><pre id="5e3720e4-6f49-82e4-9c33-01108c2b4238" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://BASTION_PUBLIC_IP</code></pre><p id="37a720e4-6f49-830d-9ade-01b509bec221" class="" dir="auto">접속 흐름</p><pre id="5d4720e4-6f49-823d-b372-0163a01b5745" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Client
+ → Bastion Host
+ → Nginx Reverse Proxy
+ → Private Web Server</code></pre><hr id="e04720e4-6f49-83fa-882c-8191f2e1482d" dir="auto"/><h1 id="bb3720e4-6f49-8385-98da-01aa887e5a39" class="" dir="auto">정상 동작 확인</h1><p id="331720e4-6f49-8382-88a8-016578e498be" class="" dir="auto">IAM Role이 정상적으로 적용되면</p><p id="c39720e4-6f49-83c7-8afb-017cb7637ba3" class="" dir="auto">웹 페이지에서 <strong>EC2 인스턴스 정보가 정상적으로 조회된다.</strong></p><p id="351720e4-6f49-83ff-8154-017c6ce3446c" class="" dir="auto">예</p><pre id="cac720e4-6f49-822e-acae-015363a293db" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Instance ID
+Instance Type
+Region
+Availability Zone</code></pre><hr id="4f4720e4-6f49-8285-aeed-8146e00de2d8" dir="auto"/><h1 id="48d720e4-6f49-8278-be3c-819548062134" class="" dir="auto">최종 아키텍처</h1><pre id="d10720e4-6f49-83a6-a86b-815add0288c7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+   │
+   │
+Public Subnet
+   │
+   │
+Bastion Host
+(Nginx Reverse Proxy)
+   │
+   │
+Private Subnet
+   │
+   │
+Web Server
+(Streamlit Application)
+   │
+   │
+IAM Role
+   │
+   │
+AWS API</code></pre><hr id="3d4720e4-6f49-8320-8c1a-01908033d496" dir="auto"/><h1 id="02f720e4-6f49-8367-9ae0-810b7ac674e8" class="" dir="auto">실습 핵심 개념</h1><table id="9c8720e4-6f49-83bc-ac8b-81699d9b5b3d" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="f46720e4-6f49-8335-9fd3-81e8f8c8e5e7" dir="ltr"><th id="h}@u" class="simple-table-header-color simple-table-header">구성</th><th id="{JQ|" class="simple-table-header-color simple-table-header">역할</th></tr></thead><tbody><tr id="d09720e4-6f49-83a4-843f-81a89e646294" dir="ltr"><td id="h}@u" class="">Bastion Host</td><td id="{JQ|" class="">관리 서버</td></tr><tr id="3a8720e4-6f49-837d-899c-819775c6fac1" dir="ltr"><td id="h}@u" class="">Private Subnet</td><td id="{JQ|" class="">내부 서버 보호</td></tr><tr id="167720e4-6f49-83ab-afb0-01acb18cf9ea" dir="ltr"><td id="h}@u" class="">Reverse Proxy</td><td id="{JQ|" class="">외부 접근 제어</td></tr><tr id="905720e4-6f49-82fa-9a47-01c73218844f" dir="ltr"><td id="h}@u" class="">Instance Profile</td><td id="{JQ|" class="">EC2 권한 관리</td></tr><tr id="e24720e4-6f49-82a2-96f6-8110eb4da778" dir="ltr"><td id="h}@u" class="">IAM Role</td><td id="{JQ|" class="">AWS API 접근 권한</td></tr><tr id="8e1720e4-6f49-8369-ba25-813889ea0387" dir="ltr"><td id="h}@u" class="">Security Group</td><td id="{JQ|" class="">네트워크 접근 제어</td></tr></tbody></table></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

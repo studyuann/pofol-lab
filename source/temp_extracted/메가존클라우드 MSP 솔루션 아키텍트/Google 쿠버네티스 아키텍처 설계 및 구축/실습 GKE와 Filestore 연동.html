@@ -1,0 +1,919 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. GKE와 Filestore 연동</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="599720e4-6f49-82fc-8602-81117d4ca306" class="page sans"><header><h1 class="page-title" dir="auto">실습. GKE와 Filestore 연동</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="490720e4-6f49-82bc-bb38-010bd86e3cca" class="" dir="auto">정적 프로비저닝 + 동적 프로비저닝 통합 실습</h2><hr id="66f720e4-6f49-8254-ab84-812bd8fe4aa4" dir="auto"/><h1 id="dcc720e4-6f49-83b8-a4e5-81f0673cd33e" class="" dir="auto">1. 실습 목표</h1><ol type="1" id="185720e4-6f49-837a-ac0e-813d158834c9" class="numbered-list" start="1" dir="auto"><li>클러스터에서 Filestore CSI 드라이버 활성화</li></ol><ol type="1" id="0c1720e4-6f49-8369-9d7f-0101432f8a9a" class="numbered-list" start="2" dir="auto"><li>Google Cloud 콘솔에서 Filestore 인스턴스 생성</li></ol><ol type="1" id="e04720e4-6f49-82be-b089-017702492125" class="numbered-list" start="3" dir="auto"><li><strong>정적 프로비저닝</strong> 방식으로 기존 Filestore 인스턴스를 PV/PVC에 연결</li></ol><ol type="1" id="90a720e4-6f49-8334-9b90-81fb7fcd553d" class="numbered-list" start="4" dir="auto"><li><strong>동적 프로비저닝</strong> 방식으로 StorageClass와 PVC만으로 Filestore 볼륨 자동 생성</li></ol><ol type="1" id="b03720e4-6f49-825c-bff5-01aa64ffc23b" class="numbered-list" start="5" dir="auto"><li>Deployment를 통해 여러 Pod가 같은 공유 스토리지를 사용하는 구조 확인</li></ol><ol type="1" id="4a4720e4-6f49-82bd-8dff-81cad5f5ae2c" class="numbered-list" start="6" dir="auto"><li>파일 생성, 조회, 공유 동작 검증</li></ol><hr id="594720e4-6f49-828d-ab6f-81f5129b5e10" dir="auto"/><h1 id="d43720e4-6f49-8227-89ff-01f63b5caa1b" class="" dir="auto">2. 실습 개념 정리</h1><h2 id="8a4720e4-6f49-8254-a56a-81d8f6f0ba90" class="" dir="auto">2-1. Filestore란 무엇인가</h2><p id="156720e4-6f49-835f-b89e-01c2da3b83df" class="" dir="auto">Filestore는 Google Cloud의 <strong>관리형 NFS 파일 스토리지 서비스</strong>임.</p><p id="c21720e4-6f49-8225-af0b-81e5a0074125" class="" dir="auto">즉, 리눅스 환경에서 흔히 쓰는 NFS(Network File System)를 Google Cloud가 관리형으로 제공하는 서비스라고 보면 됨.</p><p id="28a720e4-6f49-8295-9083-01b613c779ae" class="" dir="auto">애플리케이션 입장에서는 디렉터리처럼 마운트해서 사용 가능함.</p><p id="47b720e4-6f49-829b-bc44-01e36bae7e18" class="" dir="auto">예를 들면 아래 같은 용도로 많이 씀.</p><ul id="b20720e4-6f49-835b-bdac-8186a8d34558" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 Pod가 같은 파일을 공유해야 할 때</li></ul><ul id="42e720e4-6f49-82a8-b8b0-81fe9c6d0f2e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버 여러 대가 공통 정적 파일을 읽어야 할 때</li></ul><ul id="7c5720e4-6f49-8302-bfa6-01b772e522b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업로드 파일을 공용 저장소에 저장해야 할 때</li></ul><ul id="83d720e4-6f49-837c-a9ce-0145bbd758ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태 저장형 애플리케이션에서 공유 파일 시스템이 필요할 때</li></ul><hr id="e40720e4-6f49-838f-bca4-810b111bc4d6" dir="auto"/><h2 id="92c720e4-6f49-83e1-9559-0141a516faf9" class="" dir="auto">2-2. 정적 프로비저닝이란 무엇인가</h2><p id="a87720e4-6f49-8261-8334-81ce32919c84" class="" dir="auto">정적 프로비저닝은 <strong>스토리지를 미리 만들어 두고</strong>, Kubernetes 쪽에서 그 스토리지를 <strong>직접 PV로 연결하는 방식</strong>임.</p><p id="980720e4-6f49-837a-aef4-017370e50bdd" class="" dir="auto">즉 순서는 아래와 같음.</p><ol type="1" id="f25720e4-6f49-827e-b9a9-0177237973cc" class="numbered-list" start="1" dir="auto"><li>관리자가 Google Cloud에서 Filestore 인스턴스를 먼저 만듦</li></ol><ol type="1" id="fe4720e4-6f49-82b7-ac35-013bae834d62" class="numbered-list" start="2" dir="auto"><li>Kubernetes에서 그 인스턴스를 가리키는 PV를 작성</li></ol><ol type="1" id="30e720e4-6f49-8210-b246-81de75d4d551" class="numbered-list" start="3" dir="auto"><li>PVC가 그 PV를 바인딩</li></ol><ol type="1" id="4fe720e4-6f49-83ba-836f-01ffdd7e8a1a" class="numbered-list" start="4" dir="auto"><li>Pod가 PVC를 마운트</li></ol><h3 id="f42720e4-6f49-8392-bffd-818ac6942987" class="" dir="auto">장점</h3><ul id="dcf720e4-6f49-8333-b976-81d7b6b37d5c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Filestore를 연결하는지 명확함</li></ul><ul id="75e720e4-6f49-83bf-bc3f-01449f1ec4ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 인프라를 재사용하기 좋음</li></ul><ul id="19a720e4-6f49-8352-8262-01c6a11cab5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영자가 스토리지를 직접 통제 가능함</li></ul><h3 id="beb720e4-6f49-829f-a55a-01dbf1528c75" class="" dir="auto">단점</h3><ul id="783720e4-6f49-837c-a0cc-81eb7371fea6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">수작업이 많음</li></ul><ul id="29c720e4-6f49-83b3-acfc-81e84d76afb1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 수준이 낮음</li></ul><ul id="e89720e4-6f49-82e4-a8c8-81310a72c8e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC를 만들 때마다 관리 개입이 필요할 수 있음</li></ul><hr id="61a720e4-6f49-83e8-ae2d-019d7ae9b5d9" dir="auto"/><h2 id="c99720e4-6f49-833b-bbfa-01c849f516db" class="" dir="auto">2-3. 동적 프로비저닝이란 무엇인가</h2><p id="ed9720e4-6f49-8265-8262-0137fcc676eb" class="" dir="auto">동적 프로비저닝은 <strong>StorageClass를 기반으로 PVC를 만들면, CSI 드라이버가 자동으로 스토리지를 생성하는 방식</strong>임.</p><p id="61b720e4-6f49-835b-b0c8-8183a13bcc45" class="" dir="auto">즉 순서는 아래와 같음.</p><ol type="1" id="546720e4-6f49-83fb-816a-81d6fd510690" class="numbered-list" start="1" dir="auto"><li>StorageClass 생성 또는 GKE 기본 StorageClass 사용</li></ol><ol type="1" id="9f4720e4-6f49-82b3-82a4-01784874b89c" class="numbered-list" start="2" dir="auto"><li>사용자가 PVC 생성</li></ol><ol type="1" id="2db720e4-6f49-83ea-9e30-01819286461b" class="numbered-list" start="3" dir="auto"><li>CSI 드라이버가 Filestore 인스턴스 또는 share를 자동으로 프로비저닝</li></ol><ol type="1" id="ead720e4-6f49-8329-a737-8131d02f83d1" class="numbered-list" start="4" dir="auto"><li>Pod가 PVC를 사용</li></ol><h3 id="abb720e4-6f49-8255-afc4-01bdaae6a040" class="" dir="auto">장점</h3><ul id="e00720e4-6f49-83d6-8bb4-016d2ec4ac19" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화가 쉬움</li></ul><ul id="fef720e4-6f49-82ce-9d79-01e5a0a0ebeb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DevOps/플랫폼 운영에 적합함</li></ul><ul id="30c720e4-6f49-8297-bdf5-819d3a4345cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 입장에서 PVC만 만들면 됨</li></ul><h3 id="26c720e4-6f49-838d-a2f5-011e808d4976" class="" dir="auto">단점</h3><ul id="34f720e4-6f49-82fd-93a7-814ca4673a0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부적으로 어떤 Filestore가 생성됐는지 구조를 모르면 추적이 어려울 수 있음</li></ul><ul id="301720e4-6f49-83a1-bf14-0129a130502c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크/클래스/티어 설계를 잘 해야 함</li></ul><hr id="29d720e4-6f49-822b-9505-01b94b8622cc" dir="auto"/><h1 id="0e3720e4-6f49-8302-a21b-0141ee0af66c" class="" dir="auto">3. 실습 환경</h1><p id="59b720e4-6f49-8231-a249-81521165eb48" class="" dir="auto">예시 환경은 아래처럼 잡음.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="d54720e4-6f49-8351-acaa-0141a75d6541" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export PROJECT_ID=my-gcp-project
+export REGION=asia-northeast3
+export ZONE=asia-northeast3-c
+export CLUSTER_NAME=이니셜-std-cluster-1
+
+export NAMESPACE_STATIC=filestore-static
+export NAMESPACE_DYNAMIC=filestore-dynamic
+
+export FILESTORE_INSTANCE=fs-static-demo
+export FILESTORE_SHARE=vol1
+export FILESTORE_TIER=BASIC_HDD</code></pre><p id="40f720e4-6f49-827d-bffb-011c84171e30" class="" dir="auto">프로젝트 기본값도 맞춰둠.</p><pre id="e3d720e4-6f49-8271-a77d-812bfdf9c19f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config set project $PROJECT_ID</code></pre><hr id="2f4720e4-6f49-831e-9d9b-01923a3d4971" dir="auto"/><h1 id="3bc720e4-6f49-82ce-9d79-012e21fda5d6" class="" dir="auto">4. Filestore CSI 드라이버 활성화</h1><p id="0f4720e4-6f49-833e-bc15-019284dd9c44" class="" dir="auto">GKE Standard 클러스터에서는 Filestore CSI 드라이버를 활성화해야 함. Autopilot은 기본 활성화지만, Standard는 별도 활성화가 필요함. </p><h2 id="9a8720e4-6f49-8335-a836-012a1fad5a26" class="" dir="auto">4-1. 콘솔에서 설정하는 방법</h2><ol type="1" id="919720e4-6f49-833c-8801-8161fd72a91d" class="numbered-list" start="1" dir="auto"><li>Google Cloud 콘솔 접속</li></ol><ol type="1" id="031720e4-6f49-8290-8639-01cea0a82e0a" class="numbered-list" start="2" dir="auto"><li><strong>Kubernetes Engine &gt; Clusters</strong> 이동</li></ol><ol type="1" id="6d9720e4-6f49-82c3-a032-812f365b3b82" class="numbered-list" start="3" dir="auto"><li>대상 Standard 클러스터 클릭</li></ol><ol type="1" id="d3c720e4-6f49-8207-95fc-8176ecc603e5" class="numbered-list" start="4" dir="auto"><li><strong>Features</strong> 항목 확인</li></ol><ol type="1" id="c3f720e4-6f49-8246-9120-81a4f84fbad8" class="numbered-list" start="5" dir="auto"><li><strong>Filestore CSI driver</strong> 옆의 수정 버튼 클릭</li></ol><ol type="1" id="f63720e4-6f49-833b-b212-8119917bfda6" class="numbered-list" start="6" dir="auto"><li><strong>Enable Filestore CSI driver</strong> 체크</li></ol><ol type="1" id="77d720e4-6f49-82cd-b032-01bb383ebc6b" class="numbered-list" start="7" dir="auto"><li>저장</li></ol><h2 id="392720e4-6f49-830e-a0bf-8192be2258d3" class="" dir="auto">4-2. CLI로 설정하는 방법</h2><pre id="0dd720e4-6f49-83c9-a734-8148eb855977" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters update $CLUSTER_NAME \
+  --zone $ZONE \
+  --update-addons=GcpFilestoreCsiDriver=ENABLED</code></pre><h3 id="81d720e4-6f49-82ea-a68e-81223aba9184" class="" dir="auto">명령 설명</h3><ul id="6ef720e4-6f49-8335-a6fe-01f69f99a30c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud container clusters update</code><p id="7c5720e4-6f49-83de-b16d-010b7502b402" class="" dir="auto">기존 GKE 클러스터 설정 변경 명령</p></li></ul><ul id="254720e4-6f49-827f-8384-81c1273a4bc6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--update-addons=GcpFilestoreCsiDriver=ENABLED</code><p id="e10720e4-6f49-82ac-81d9-010df9150c9f" class="" dir="auto">Filestore CSI 드라이버 활성화</p></li></ul><h3 id="1ce720e4-6f49-835c-91d9-0183ba060901" class="" dir="auto">확인</h3><pre id="847720e4-6f49-8372-a8cf-01b893387ade" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get sc</code></pre><p id="740720e4-6f49-82c3-a5b8-018405c92542" class="" dir="auto">드라이버가 활성화되면 GKE에서 Filestore용 StorageClass들이 자동 설치됨. 예를 들면 <code>zonal-rwx</code>, <code>enterprise-rwx</code>, <code>enterprise-multishare-rwx</code>, <code>standard-rwx</code>, <code>premium-rwx</code> 등이 생성될 수 있음. </p><hr id="c75720e4-6f49-823c-9462-81de6809f769" dir="auto"/><h1 id="8c8720e4-6f49-82fa-9463-81038171b75f" class="" dir="auto">5. 정적 프로비저닝 실습</h1><p id="618720e4-6f49-826f-a47a-81135311a4cd" class="" dir="auto">정적 프로비저닝은 <strong>미리 만든 Filestore 인스턴스를 Kubernetes PV로 직접 연결</strong>하는 방식임.</p><ul id="535720e4-6f49-8397-bdd1-0100ceaf92de" class="bulleted-list" dir="auto"><li style="list-style-type:disc"> FileStore API 활성화</li></ul><hr id="a2d720e4-6f49-827c-b0e1-011177a92770" dir="auto"/><pre id="cc9720e4-6f49-833f-bbef-818cd92c24b3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services enable file.googleapis.com</code></pre><h2 id="74a720e4-6f49-8324-bc50-0173f1df082d" class="" dir="auto">5-1. Filestore 인스턴스 생성</h2><h3 id="536720e4-6f49-8365-bc3d-811ed49a3ed6" class="" dir="auto">콘솔에서 생성</h3><ol type="1" id="2c5720e4-6f49-8255-bcd6-8186934755b8" class="numbered-list" start="1" dir="auto"><li>Google Cloud 콘솔에서 <strong>Filestore</strong> 검색 후 이동</li></ol><ol type="1" id="507720e4-6f49-83fc-9833-8120421ebf42" class="numbered-list" start="2" dir="auto"><li><strong>Create instance</strong> 클릭</li></ol><ol type="1" id="cd3720e4-6f49-83c8-b118-81a9b1458a68" class="numbered-list" start="3" dir="auto"><li>인스턴스 이름: <code>fs-static-demo</code></li></ol><ol type="1" id="e46720e4-6f49-8296-ada2-81ead30dfe6e" class="numbered-list" start="4" dir="auto"><li>리전: GKE 클러스터와 같은 리전 선택</li></ol><ol type="1" id="c2d720e4-6f49-8308-a541-010031ea3122" class="numbered-list" start="5" dir="auto"><li>존: 클러스터 노드가 접근 가능한 위치 선택</li></ol><ol type="1" id="b15720e4-6f49-8377-8146-81c72a3a3d59" class="numbered-list" start="6" dir="auto"><li>서비스 티어: 실습이라면 <code>Basic HDD</code> 또는 <code>Zonal</code> 중 하나 선택</li></ol><ol type="1" id="5e5720e4-6f49-8358-859d-819620633104" class="numbered-list" start="7" dir="auto"><li>파일 공유 이름: <code>vol1</code></li></ol><ol type="1" id="728720e4-6f49-8292-9e34-010333deae7d" class="numbered-list" start="8" dir="auto"><li>용량 설정</li></ol><ol type="1" id="2a7720e4-6f49-8256-be85-0136c1a5227f" class="numbered-list" start="9" dir="auto"><li>VPC 네트워크는 GKE 클러스터와 같은 네트워크 선택</li></ol><ol type="1" id="739720e4-6f49-8283-bde1-81978d48103d" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>생성</li></ol><h3 id="eda720e4-6f49-823c-9045-015d242ff90f" class="" dir="auto">중요</h3><p id="9e2720e4-6f49-8362-a414-0146f194e71d" class="" dir="auto">Filestore는 <strong>NFS 서버</strong> 역할을 하는 관리형 스토리지임.</p><p id="216720e4-6f49-82c9-9061-01b5539b928b" class="" dir="auto">따라서 Pod가 마운트하려면 <strong>같은 VPC 네트워크 및 접근 가능한 IP 대역</strong>에 있어야 함.</p><hr id="7a2720e4-6f49-83f5-a5ca-814808f01190" dir="auto"/><h2 id="995720e4-6f49-8270-ad3a-01cd96fde224" class="" dir="auto">5-2. CLI로 Filestore 인스턴스 생성</h2><p id="95c720e4-6f49-828f-b7e4-01729cb78065" class="" dir="auto">예시로 Basic HDD 1TiB 생성:</p><pre id="499720e4-6f49-83bc-ae04-01f46be2ca38" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud filestore instances create $FILESTORE_INSTANCE \
+  --zone=$ZONE \
+  --tier=$FILESTORE_TIER \
+  --file-share=name=$FILESTORE_SHARE,capacity=10GB \
+  --network=name=default</code></pre><h3 id="a94720e4-6f49-8241-9bcf-0123d20aaa76" class="" dir="auto">명령 설명</h3><ul id="b7f720e4-6f49-829e-8abc-813e5e22e367" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud filestore instances create</code><p id="b56720e4-6f49-8236-82aa-81039164d5a9" class="" dir="auto">Filestore 인스턴스 생성</p></li></ul><ul id="f93720e4-6f49-8318-9054-0140f37211bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--zone=$ZONE</code><p id="6cb720e4-6f49-82c7-aeef-8109a5634a3e" class="" dir="auto">Filestore 인스턴스 생성 위치</p></li></ul><ul id="5a0720e4-6f49-834f-8bf0-019dd2bc1a96" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--tier=$FILESTORE_TIER</code><p id="677720e4-6f49-82d8-970f-01b1805eb2a4" class="" dir="auto">서비스 티어 지정</p></li></ul><ul id="d8b720e4-6f49-8382-bf38-814c3c40079a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--file-share=name=$FILESTORE_SHARE,capacity=1GB</code><p id="15d720e4-6f49-8395-8cff-81c422ffe39a" class="" dir="auto">생성할 파일 공유 이름과 용량 지정</p></li></ul><ul id="b3f720e4-6f49-83d8-9200-013b88e77273" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--network=name=kdtmsp-vpc</code><p id="62b720e4-6f49-8217-a146-81d0bb0280ab" class="" dir="auto">연결할 VPC 네트워크 지정</p></li></ul><h3 id="602720e4-6f49-8363-86e8-8125359967d2" class="" dir="auto">인스턴스 IP 확인</h3><pre id="782720e4-6f49-8383-9bc3-81f554879f49" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud filestore instances describe $FILESTORE_INSTANCE \
+  --zone=$ZONE</code></pre><p id="624720e4-6f49-8338-b6eb-018bed5671f6" class="" dir="auto">출력에서 <code>networks.ipAddresses</code> 값을 확인함.</p><p id="31a720e4-6f49-8289-a789-811c418eaa18" class="" dir="auto">이 값을 아래 변수에 저장해둠.</p><pre id="d47720e4-6f49-83bd-8be3-81adc6725079" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export FILESTORE_IP=10.10.20.2</code></pre><hr id="1d7720e4-6f49-8382-b445-8121bad597d2" dir="auto"/><h2 id="97b720e4-6f49-82aa-b0b8-8112564c7702" class="" dir="auto">5-3. 네임스페이스 생성</h2><pre id="750720e4-6f49-8383-9a78-01ba41023d7c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create namespace $NAMESPACE_STATIC</code></pre><hr id="3b7720e4-6f49-82e4-b4a3-01f5667f243d" dir="auto"/><h2 id="1b6720e4-6f49-837b-8177-81e08f5343a5" class="" dir="auto">5-4. 정적 프로비저닝용 PV/PVC 작성</h2><p id="41a720e4-6f49-8233-aec6-81ceb28799d9" class="" dir="auto"> <code>PersistentVolume</code>의 <code>csi.driver</code>를 <code>filestore.csi.storage.gke.io</code>로 지정하고, <code>volumeHandle</code>에 <code>modeInstance/LOCATION/INSTANCE/SHARE</code> 형식을 사용하며, <code>volumeAttributes</code>에 Filestore IP와 share 이름 등을 넣는 구조임. 또한 NFSv4.1을 사용하려면 <code>protocol: NFS_V4_1</code>을 설정하고, 기본은 NFSv3임. </p><h3 id="540720e4-6f49-832b-a6ed-81ebc1ffd41e" class="" dir="auto"><code>preprov-filestore.yaml</code></h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="9fe720e4-6f49-836d-8b20-81d580f5e027" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: filestore-static-pv
+spec:
+  storageClassName: &quot;&quot;
+  capacity:
+    storage: 1Ti
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  volumeMode: Filesystem
+  csi:
+    driver: filestore.csi.storage.gke.io
+    volumeHandle: &quot;modeInstance/asia-northeast3-a/fs-static-demo/vol1&quot;
+    volumeAttributes:
+      ip: &quot;x.x.x.x&quot;
+      volume: &quot;vol1&quot;
+      protocol: &quot;NFS_V3&quot;
+  claimRef:
+    name: filestore-static-pvc
+    namespace: filestore-static
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filestore-static-pvc
+  namespace: filestore-static
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: &quot;&quot;
+  resources:
+    requests:
+      storage: 1Gi</code></pre><h3 id="41d720e4-6f49-8236-916b-019ed39a3b96" class="" dir="auto">항목 설명</h3><h3 id="359720e4-6f49-83e0-94ce-015323a41251" class="" dir="auto"><code>storageClassName: &quot;&quot;</code></h3><p id="6fc720e4-6f49-8384-a987-810b1ce1f820" class="" dir="auto">이 값이 중요함.</p><p id="28d720e4-6f49-8205-aa40-014a4533e676" class="" dir="auto">동적 프로비저닝을 쓰지 않고 <strong>수동 바인딩</strong>하겠다는 의미.</p><h3 id="382720e4-6f49-839c-8c02-0113dc3d0b34" class="" dir="auto"><code>accessModes: ReadWriteMany</code></h3><p id="395720e4-6f49-83b8-a470-010ff33a80a4" class="" dir="auto">여러 Pod가 동시에 읽기/쓰기 가능함.</p><p id="636720e4-6f49-83e4-aac3-81a5e5b19ffa" class="" dir="auto">NFS 계열 공유 스토리지를 쓰는 핵심 이유 중 하나가 이 모드임.</p><h3 id="840720e4-6f49-8205-9e7f-8181bd79efb4" class="" dir="auto"><code>persistentVolumeReclaimPolicy: Retain</code></h3><p id="ec1720e4-6f49-8314-a6ac-813be4dbc3e1" class="" dir="auto">PVC 삭제 후에도 Filestore 데이터를 유지하려는 설정임.</p><h3 id="82c720e4-6f49-8331-b4e9-8122c596251a" class="" dir="auto"><code>volumeHandle</code></h3><p id="fa3720e4-6f49-830d-b103-8158afd6ae26" class="" dir="auto">형식은 다음과 같음.</p><pre id="c52720e4-6f49-8273-8eda-0154bf7ddd95" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">modeInstance/FILESTORE_INSTANCE_LOCATION/FILESTORE_INSTANCE_NAME/FILESTORE_SHARE_NAME</code></pre><p id="f41720e4-6f49-83e5-9317-81672aca750d" class="" dir="auto">예시에서는:</p><pre id="571720e4-6f49-82dc-a860-813dc346f853" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">modeInstance/asia-northeast3-a/fs-static-demo/vol1</code></pre><h3 id="598720e4-6f49-8380-bc43-81d46f97d86a" class="" dir="auto"><code>volumeAttributes.ip</code></h3><p id="4f0720e4-6f49-8330-b35c-819babea914f" class="" dir="auto">Filestore 인스턴스의 내부 IP 주소</p><h3 id="02c720e4-6f49-82b0-b728-81a683a21a24" class="" dir="auto"><code>volumeAttributes.volume</code></h3><p id="c83720e4-6f49-83b2-9a79-01b09a90e68b" class="" dir="auto">Filestore share 이름</p><h3 id="417720e4-6f49-828d-a7a3-81cd6c401cd1" class="" dir="auto"><code>protocol</code></h3><ul id="694720e4-6f49-82f5-8de5-016afefc8303" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>NFS_V3</code> 또는 생략 시 기본 NFSv3</li></ul><ul id="165720e4-6f49-827f-8ef3-811fcb93c209" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>NFS_V4_1</code> 지정 가능</li></ul><hr id="bb3720e4-6f49-83e4-ae00-81b4438b0830" dir="auto"/><h2 id="164720e4-6f49-8256-b35e-01d48e3d0856" class="" dir="auto">5-5. 정적 PV/PVC 생성</h2><pre id="d45720e4-6f49-83e3-a295-81081c534166" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f preprov-filestore.yaml</code></pre><h3 id="79e720e4-6f49-8303-a6cb-018f137310d4" class="" dir="auto">확인</h3><pre id="b58720e4-6f49-82e4-b932-0151c8b893e0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pv
+kubectl get pvc -n $NAMESPACE_STATIC</code></pre><p id="92b720e4-6f49-8261-9863-013c23a48c77" class="" dir="auto">정상이라면 <code>Bound</code> 상태가 보여야 함.</p><hr id="1b8720e4-6f49-83aa-be0e-81c79d15b6a8" dir="auto"/><h2 id="a95720e4-6f49-824a-b540-014ac17fac02" class="" dir="auto">5-6. 정적 프로비저닝용 Deployment 작성</h2><h3 id="7ed720e4-6f49-8320-be9a-01ab57518a3e" class="" dir="auto"><code>static-deployment.yaml</code></h3><pre id="fe0720e4-6f49-8236-b66e-019a0e71d32c" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: static-writer
+  namespace: filestore-static
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: static-writer
+  template:
+    metadata:
+      labels:
+        app: static-writer
+    spec:
+      containers:
+      - name: writer
+        image: busybox
+        command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+        args:
+          - |
+            while true; do
+              echo &quot;$(hostname) wrote at $(date)&quot; &gt;&gt; /data/static-log.txt;
+              sleep 10;
+            done
+        volumeMounts:
+        - name: filestore-vol
+          mountPath: /data
+      volumes:
+      - name: filestore-vol
+        persistentVolumeClaim:
+          claimName: filestore-static-pvc</code></pre><h3 id="d5a720e4-6f49-820f-84d9-0199debf92e4" class="" dir="auto">설명</h3><ul id="c7f720e4-6f49-8397-a149-81afa6b6d639" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>busybox</code> 컨테이너를 사용해 간단하게 파일 쓰기 테스트 수행</li></ul><ul id="b54720e4-6f49-82e0-83ec-01d0a2134a21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">2개의 Pod가 같은 <code>/data/static-log.txt</code> 파일에 내용을 계속 기록</li></ul><ul id="c1f720e4-6f49-8293-af04-01271ab21bd9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/data</code>는 실제로 Filestore에 마운트된 디렉터리임</li></ul><hr id="d9e720e4-6f49-831a-9128-81d5ceb0d877" dir="auto"/><h2 id="92d720e4-6f49-8293-8f70-0179281f4e9d" class="" dir="auto">5-7. 정적 프로비저닝 배포</h2><pre id="a4c720e4-6f49-8293-bfdf-81c7d6d0a6aa" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f static-deployment.yaml
+kubectl get pods -n $NAMESPACE_STATIC</code></pre><hr id="cb5720e4-6f49-8201-a1a7-01e6910da133" dir="auto"/><h2 id="a13720e4-6f49-83d3-a478-01be6010c203" class="" dir="auto">5-8. 정적 프로비저닝 결과 확인</h2><h3 id="2b0720e4-6f49-827f-946f-017d1bffba0e" class="" dir="auto">Pod 내부 파일 확인</h3><pre id="266720e4-6f49-8376-b40c-816cddf14e1d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it -n $NAMESPACE_STATIC deploy/static-writer -- sh</code></pre><p id="d11720e4-6f49-83b4-98f3-8130eed849c0" class="" dir="auto">컨테이너 안에서:</p><pre id="362720e4-6f49-832d-8fe5-0145404b2a56" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cat /data/static-log.txt
+ls -l /data</code></pre><p id="236720e4-6f49-831c-96a1-819e0f7beb3e" class="" dir="auto">또는 바로 확인:</p><pre id="133720e4-6f49-82de-8d5e-01d223ca6f15" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it -n $NAMESPACE_STATIC deploy/static-writer -- cat /data/static-log.txt</code></pre><h3 id="a59720e4-6f49-8373-b21b-81f90e5ff6d8" class="" dir="auto">기대 결과</h3><ul id="5b0720e4-6f49-8216-9192-01e1076e5823" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 Pod가 같은 파일을 공유해서 기록한 내용이 보임</li></ul><ul id="816720e4-6f49-8364-959f-813b3b55c784" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod를 재시작해도 파일이 유지됨</li></ul><ul id="200720e4-6f49-82b6-9ecb-8104ef95b8e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이는 Pod 내부 로컬 디스크가 아니라 Filestore 공유 스토리지를 쓰고 있기 때문임</li></ul><hr id="c6e720e4-6f49-82fd-832d-811cd46fb2dc" dir="auto"/><h1 id="bd4720e4-6f49-833d-8877-01d18bf12ea7" class="" dir="auto">6. 동적 프로비저닝 실습</h1><p id="fc2720e4-6f49-8242-ba4a-8135c8b2e9f5" class="" dir="auto">동적 프로비저닝은 Kubernetes가 StorageClass를 참고해서 Filestore 리소스를 <strong>자동으로 생성</strong>하는 방식임.</p><p id="b98720e4-6f49-83de-81fa-01ab20b655fa" class="" dir="auto">Filestore CSI 드라이버를 활성화하면 GKE가 여러 Filestore용 StorageClass를 자동 설치함. 또한 이 기본 StorageClass들은 <code>volumeBindingMode: WaitForFirstConsumer</code>를 사용하므로 PVC를 만든 직후가 아니라, PVC를 사용하는 Pod가 스케줄될 때 실제 Filestore 인스턴스 생성이 진행됨. </p><hr id="47d720e4-6f49-821b-85a8-81753dfdb9cb" dir="auto"/><h2 id="c18720e4-6f49-8381-9892-817d37fa1f98" class="" dir="auto">6-1. 기본 StorageClass 확인</h2><pre id="5b1720e4-6f49-8247-91ab-81564d030b9c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get sc</code></pre><ul id="74a720e4-6f49-83e3-a0d8-018cd81e043a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>standard-rwx</code></li></ul><ul id="e51720e4-6f49-8253-bfaa-817438eb77d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>premium-rwx</code></li></ul><ul id="006720e4-6f49-8222-8fe3-01e991f7cef6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>zonal-rwx</code></li></ul><ul id="a08720e4-6f49-82da-a141-81d0ad535aec" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>enterprise-rwx</code></li></ul><ul id="27f720e4-6f49-836f-b40e-0119cd43eb59" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>enterprise-multishare-rwx</code></li></ul><h3 id="0b1720e4-6f49-820d-99ff-01665f9af7d0" class="" dir="auto">1. standard-rwx (StorageClass)</h3><ul id="42a720e4-6f49-8262-9109-014505193e47" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>용도:</strong> 개발 및 테스트 환경 또는 성능 요구치가 낮은 공유 저장소로 사용한다.</li></ul><ul id="ec6720e4-6f49-8214-a504-81799cefca4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>GKE 설정:</strong> <code>serviceLevel: standard</code> 파라미터를 가진 StorageClass로 정의한다.</li></ul><ul id="ca3720e4-6f49-836d-b620-8176829b4338" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>특징:</strong> 비용이 가장 저렴하며, 여러 파드(Pod)가 동시에 읽기/쓰기를 수행하는 RWX(ReadWriteMany) 모드를 지원한다.</li></ul><h3 id="911720e4-6f49-822e-8b57-81d2a0e4ac11" class="" dir="auto">2. premium-rwx (StorageClass)</h3><ul id="878720e4-6f49-8345-93ab-012c739e2197" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>용도:</strong> 일반적인 프로덕션 웹 애플리케이션 및 엔터프라이즈 서비스용이다.</li></ul><ul id="694720e4-6f49-8331-bb8a-018e3bd64936" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>설명:</strong> standard보다 높은 스루풋(Throughput)을 보장하며, GKE 클러스터 내에서 안정적인 파일 공유 성능을 제공한다.</li></ul><h3 id="121720e4-6f49-82bf-be62-0122fabea338" class="" dir="auto">3. zonal-rwx (StorageClass)</h3><ul id="1b7720e4-6f49-82c3-8f22-81e11c9c9255" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>용도:</strong> 특정 데이터 센터(Zone) 내의 컴퓨팅 리소스와 가깝게 배치하여 지연 시간을 줄여야 할 때 사용한다.</li></ul><ul id="6a8720e4-6f49-829f-8c95-8196a4af09f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>특징:</strong> 고성능 처리가 필요한 스테이트풀셋(StatefulSet) 워크로드에 적합하며, 해당 영역 내에서 최적의 IOPS를 구현한다.</li></ul><h3 id="eb4720e4-6f49-8336-8d0a-81e612486309" class="" dir="auto">4. enterprise-rwx (StorageClass)</h3><ul id="494720e4-6f49-8211-aec0-815eada33361" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>용도:</strong> 고성능 데이터베이스(DBMS)나 금융권 시스템 등 미션 크리티컬한 워크로드용이다.</li></ul><ul id="7b4720e4-6f49-834b-9629-0175b948565f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>설명:</strong> 가장 높은 수준의 가용성과 성능을 보장하는 StorageClass로, 무중단 운영이 필수적인 GKE 서비스에 할당한다.</li></ul><h3 id="c9b720e4-6f49-82dd-aebf-0194352c4ee6" class="" dir="auto">5. enterprise-multishare-rwx (StorageClass)</h3><ul id="ddc720e4-6f49-8236-8528-0143aeb1d5d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>용도:</strong> 하나의 대규모 스토리지 풀을 여러 개의 PersistentVolume(PV)이 나누어 사용해야 하는 복합 환경에 적합하다.</li></ul><ul id="3ba720e4-6f49-82e3-b589-01b1d3737c62" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>특징:</strong> 스토리지 효율성을 극대화할 수 있으며, 다수의 마이크로서비스(MSA)가 복합적으로 저장소를 공유할 때 관리 이점을 제공한다.</li></ul><hr id="532720e4-6f49-83ab-add6-818af866f9d1" dir="auto"/><h2 id="50a720e4-6f49-82ee-a408-01bf50fe6bf6" class="" dir="auto">6-2. 동적 프로비저닝 방식 이해</h2><h3 id="638720e4-6f49-825c-b208-81b4fdb6ec4d" class="" dir="auto">방식 A. GKE가 기본 제공하는 StorageClass 사용</h3><p id="952720e4-6f49-83aa-90f8-0105a9a27c07" class="" dir="auto">예: <code>standard-rwx</code>, <code>premium-rwx</code>, <code>enterprise-rwx</code></p><ul id="c27720e4-6f49-8234-a842-01669abfd51e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC를 생성</li></ul><ul id="35f720e4-6f49-83a5-8dec-81cef45f29b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod가 해당 PVC를 참조</li></ul><ul id="305720e4-6f49-834d-99cf-81912622517b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Filestore 인스턴스가 자동 생성됨</li></ul><h3 id="df5720e4-6f49-83a8-abdd-81ffa54470f1" class="" dir="auto">방식 B. multishare 기반 StorageClass 사용</h3><p id="899720e4-6f49-82ea-8d16-8122528f25ee" class="" dir="auto">예: <code>enterprise-multishare-rwx</code></p><ul id="617720e4-6f49-83ac-abd9-8157219e33db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 PVC가 하나 이상의 Filestore 인스턴스 내 share로 배치됨</li></ul><ul id="97c720e4-6f49-839d-b9c0-01122bac5763" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Enterprise multishare 기반 공유 구조</li></ul><ul id="61f720e4-6f49-83b8-9d6b-81a563d224bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">더 효율적인 공유/자동 확장 모델을 제공</li></ul><p id="866720e4-6f49-8243-9d1d-01937962f18d" class="" dir="auto"> <code>enterprise-multishare-rwx</code>는 <strong>동적 프로비저닝</strong>을 통해 share lifecycle을 자동 관리함. </p><hr id="701720e4-6f49-8265-8f6e-819ec0b15dcb" dir="auto"/><h2 id="31d720e4-6f49-82c4-b963-01dc9a5bc453" class="" dir="auto">6-3. 사용자 정의 StorageClass 작성</h2><p id="115720e4-6f49-82b2-8d84-8129aed06acb" class="" dir="auto"> <code>filestore.csi.storage.gke.io</code>를 provisioner로 갖는 커스텀 StorageClass 를 생성할 수 있으며  <code>tier</code>, <code>network</code>, <code>protocol</code>, <code>volumeBindingMode</code> 등을 지정할 수 있음.</p><h3 id="6e3720e4-6f49-8293-a816-819c6843c7b0" class="" dir="auto"><code>filestore-example-class.yaml</code></h3><pre id="fb2720e4-6f49-831b-bf37-81a057ee85a3" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: filestore-standard-custom
+provisioner: filestore.csi.storage.gke.io
+volumeBindingMode: Immediate
+allowVolumeExpansion: true
+parameters:
+  tier: standard
+  network: kdtmsp-vpc
+  protocol: NFS_V3</code></pre><h3 id="a69720e4-6f49-83ce-b80c-0129c4874810" class="" dir="auto">항목 설명</h3><h3 id="ca9720e4-6f49-8373-9742-81da66d50e78" class="" dir="auto"><code>provisioner: filestore.csi.storage.gke.io</code></h3><p id="6be720e4-6f49-8375-9915-81d8f8b5d1f7" class="" dir="auto">Filestore CSI 드라이버를 사용하겠다는 의미임.</p><h3 id="a01720e4-6f49-8217-8e44-811e82652e84" class="" dir="auto"><code>volumeBindingMode: Immediate</code></h3><p id="a8e720e4-6f49-8283-902d-01651a342423" class="" dir="auto">PVC 생성 즉시 프로비저닝 시작 가능</p><p id="e8c720e4-6f49-829c-9b3b-81d97e07e636" class="" dir="auto">GKE 기본 제공 StorageClass는 보통 <code>WaitForFirstConsumer</code>를 사용함.</p><h3 id="052720e4-6f49-83cd-a8e7-015710e8fdb2" class="" dir="auto"><code>allowVolumeExpansion: true</code></h3><p id="348720e4-6f49-8226-b095-812922e03e30" class="" dir="auto">나중에 PVC 용량 확장 가능</p><h3 id="1be720e4-6f49-82b2-82f9-0119cbbf456a" class="" dir="auto"><code>parameters.tier</code></h3><p id="0ed720e4-6f49-82e9-8bad-81cf5068a042" class="" dir="auto">서비스 티어 지정</p><h3 id="10c720e4-6f49-83fc-8701-01f1cf347cbf" class="" dir="auto"><code>parameters.network</code></h3><p id="15e720e4-6f49-8357-8271-0131a87d970b" class="" dir="auto">Filestore를 어떤 VPC에 만들지 지정</p><p id="81b720e4-6f49-8365-be1d-819290bee674" class="" dir="auto">기본 네트워크가 아니라면 맞는 VPC 이름을 넣어야 함</p><h3 id="f2b720e4-6f49-8300-bff6-819f4816d727" class="" dir="auto"><code>parameters.protocol</code></h3><p id="fc0720e4-6f49-828e-bf19-816e012e2e5f" class="" dir="auto"><code>NFS_V3</code> 또는 <code>NFS_V4_1</code></p><hr id="577720e4-6f49-82ea-bf0e-01566191593c" dir="auto"/><h2 id="e5b720e4-6f49-827f-9e97-0107ecc75647" class="" dir="auto">6-4. StorageClass 생성</h2><pre id="283720e4-6f49-836e-8505-81b6b4c63a09" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create namespace $NAMESPACE_DYNAMIC
+kubectl apply -f filestore-example-class.yaml</code></pre><hr id="49b720e4-6f49-8241-961e-81a4f2dbfd34" dir="auto"/><h2 id="4f4720e4-6f49-8388-adf6-81bcc4b57c30" class="" dir="auto">6-5. 동적 프로비저닝용 PVC 작성</h2><h3 id="452720e4-6f49-8304-b32f-81f8e631de57" class="" dir="auto"><code>dynamic-pvc.yaml</code></h3><pre id="cc1720e4-6f49-8318-9078-8196f8e057f9" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: filestore-dynamic-pvc
+  namespace: filestore-dynamic
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: filestore-standard-custom
+  resources:
+    requests:
+      storage: 1Ti</code></pre><h3 id="069720e4-6f49-8337-9e8e-81d1f5b8869d" class="" dir="auto">설명</h3><ul id="2d4720e4-6f49-8219-9aa1-8180143a5948" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 PVC만 생성함</li></ul><ul id="7eb720e4-6f49-8299-9422-8118886c12ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CSI 드라이버가 이를 보고 Filestore 리소스를 자동 생성</li></ul><ul id="7be720e4-6f49-82b2-a225-81bf82bb68bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ReadWriteMany</code> 이므로 여러 Pod가 함께 사용 가능</li></ul><pre id="f7a720e4-6f49-833f-8350-8162423bc5bd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f dynamic-pvc.yaml</code></pre><h3 id="49c720e4-6f49-83c2-842d-01f5a5f6a1fb" class="" dir="auto">확인</h3><pre id="8b1720e4-6f49-823a-94ca-01609bd2cc19" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pvc -n $NAMESPACE_DYNAMIC
+kubectl get pv</code></pre><hr id="62d720e4-6f49-830f-8fb8-81ffe1f133cc" dir="auto"/><h2 id="111720e4-6f49-82ab-998a-014a511a2302" class="" dir="auto">6-6. 동적 프로비저닝용 Deployment 작성</h2><h3 id="304720e4-6f49-825a-a331-8151f1ec98cb" class="" dir="auto"><code>dynamic-deployment.yaml</code></h3><pre id="6dc720e4-6f49-82a6-9d1f-01434bafb1cd" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: dynamic-writer
+  namespace: filestore-dynamic
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: dynamic-writer
+  template:
+    metadata:
+      labels:
+        app: dynamic-writer
+    spec:
+      containers:
+      - name: writer
+        image: busybox
+        command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+        args:
+          - |
+            while true; do
+              echo &quot;$(hostname) dynamic write $(date)&quot; &gt;&gt; /shared/dynamic-log.txt;
+              sleep 10;
+            done
+        volumeMounts:
+        - name: filestore-vol
+          mountPath: /shared
+      volumes:
+      - name: filestore-vol
+        persistentVolumeClaim:
+          claimName: filestore-dynamic-pvc</code></pre><p id="76f720e4-6f49-8392-9e5b-811f37a33a68" class="" dir="auto">배포:</p><pre id="be9720e4-6f49-839a-b615-01fedd65471d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f dynamic-deployment.yaml
+kubectl get pods -n $NAMESPACE_DYNAMIC</code></pre><hr id="4b2720e4-6f49-8294-910d-81c01802c108" dir="auto"/><h2 id="e1d720e4-6f49-832e-b746-011361f30f8b" class="" dir="auto">6-7. 동적 프로비저닝 결과 확인</h2><pre id="113720e4-6f49-8239-bad6-0149103e88f8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it -n $NAMESPACE_DYNAMIC deploy/dynamic-writer -- sh</code></pre><p id="14f720e4-6f49-82e8-a98e-0124d29674ad" class="" dir="auto">컨테이너 내부에서:</p><pre id="ff6720e4-6f49-82e5-887a-019657d431da" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cat /shared/dynamic-log.txt
+ls -l /shared</code></pre><p id="9fb720e4-6f49-8356-a17d-019f48a14104" class="" dir="auto">또는 바로 확인:</p><pre id="a3f720e4-6f49-837b-be13-81d05f0aa338" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it -n $NAMESPACE_DYNAMIC deploy/dynamic-writer -- cat /shared/dynamic-log.txt</code></pre><h3 id="bf1720e4-6f49-82ea-969b-01ed27bef0f8" class="" dir="auto">기대 결과</h3><ul id="3f2720e4-6f49-8317-8851-01d098431feb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Filestore가 자동 생성 또는 자동 매핑됨</li></ul><ul id="52d720e4-6f49-83c1-9503-01e25e88b463" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 Pod가 같은 공유 디렉터리를 사용함</li></ul><ul id="f9e720e4-6f49-8273-82fb-81baa876dde2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 내용이 여러 Pod에서 공통으로 보임</li></ul><hr id="656720e4-6f49-824d-a015-81dcf7959d1a" dir="auto"/><h1 id="3a4720e4-6f49-8227-befb-01f31bc34fc8" class="" dir="auto">7. enterprise-multishare-rwx 클래스</h1><p id="409720e4-6f49-82ae-945d-01aba307b71e" class="" dir="auto">동적 프로비저닝에서 조금 더 실무적으로 중요한 건 <code>enterprise-multishare-rwx</code>임.</p><p id="b23720e4-6f49-8235-83db-01d9aee41512" class="" dir="auto">이 클래스는 <strong>Enterprise multishares</strong> 기반으로 동작하며, 여러 PVC가 하나의 Filestore 인스턴스 share들을 나눠 쓰는 구조를 제공함. GKE Filestore CSI driver 1.23 이상이 필요하고, 1.27 이상에서는 최대 80개의 share까지 지원함. 또한 PVC 삭제 시 share가 회수되고, 모든 share가 삭제되면 Filestore 인스턴스도 삭제될 수 있음. </p><h3 id="f2e720e4-6f49-827a-a6c0-81dbea662ddc" class="" dir="auto">기본 확인</h3><pre id="e7f720e4-6f49-8386-a9df-019d5cccac45" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe sc enterprise-multishare-rwx</code></pre><p id="97c720e4-6f49-82b7-b9bb-014cf47be9b2" class="" dir="auto">이 StorageClass가 다음과 같은 특성을 가짐.</p><ul id="72b720e4-6f49-838a-978a-019b4758cba1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Provisioner: filestore.csi.storage.gke.io</code></li></ul><ul id="c74720e4-6f49-8374-8ac9-012dd6f5b6a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Parameters: instance-storageclass-label=enterprise-multishare-rwx,multishare=true,tier=enterprise</code></li></ul><ul id="edf720e4-6f49-827c-b47d-81204748f37f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>AllowVolumeExpansion: True</code> </li></ul><h3 id="9df720e4-6f49-8269-8fa8-815b8669cf75" class="" dir="auto">간단한 PVC 예시</h3><pre id="d78720e4-6f49-8299-b1d5-016a78bba27a" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: multishare-pvc
+  namespace: filestore-dynamic
+spec:
+  accessModes:
+    - ReadWriteMany
+  storageClassName: enterprise-multishare-rwx
+  resources:
+    requests:
+      storage: 100Gi</code></pre><h3 id="8e4720e4-6f49-82f2-8395-8126efde9b56" class="" dir="auto">설명</h3><ul id="e69720e4-6f49-83b4-8895-01ad624b9469" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 PVC 하나가 곧 Filestore 인스턴스 전체를 독점하는 것이 아니라</li></ul><ul id="0d6720e4-6f49-83f0-904a-016602e347e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">multishare 구조에서 하나의 share처럼 배치될 수 있음</li></ul><ul id="9ae720e4-6f49-8396-837e-01a2ad3b12d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 애플리케이션 팀이 작은 RWX 스토리지를 많이 요구하는 환경에서 효율적임</li></ul><hr id="b86720e4-6f49-82b1-9378-0126a8204087" dir="auto"/><h1 id="822720e4-6f49-827d-b6a8-0121055fc53a" class="" dir="auto">8. 정적 프로비저닝과 동적 프로비저닝 비교</h1><h2 id="b89720e4-6f49-833d-b7e8-01633d064d80" class="" dir="auto">8-1. 구조 비교</h2><h3 id="c79720e4-6f49-83a0-8ee1-81968006ccec" class="" dir="auto">정적 프로비저닝</h3><ul id="17c720e4-6f49-8247-87e6-810c16e26817" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Filestore 인스턴스를 먼저 생성</li></ul><ul id="228720e4-6f49-823d-a4a8-81b721cdfa54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영자가 PV를 직접 작성</li></ul><ul id="5f0720e4-6f49-83ed-8fa7-011231da5682" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC가 해당 PV에 바인딩</li></ul><ul id="88b720e4-6f49-8208-8f12-01c6d7af0a5f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">제어권이 크고 구조가 명확함</li></ul><h3 id="390720e4-6f49-8235-8f0b-8149a052b0c5" class="" dir="auto">동적 프로비저닝</h3><ul id="666720e4-6f49-8321-84b8-01b10e7a0a22" class="bulleted-list" dir="auto"><li style="list-style-type:disc">StorageClass만 준비</li></ul><ul id="b3c720e4-6f49-83ba-a80b-81fd80162fcb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 PVC만 생성</li></ul><ul id="3d1720e4-6f49-8242-9c07-01d70401d521" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CSI 드라이버가 Filestore를 자동 생성 또는 자동 할당</li></ul><ul id="9b1720e4-6f49-8395-bfa1-810c97b5b6ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 친화적임</li></ul><hr id="993720e4-6f49-82ec-8914-81ea81909334" dir="auto"/><h2 id="68f720e4-6f49-834b-a0cc-01648645127f" class="" dir="auto">8-2. 실습 관점 비교</h2><table id="a65720e4-6f49-83dc-ae38-81146d0c3b81" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="828720e4-6f49-8262-8d02-01fdbd32af37" dir="ltr"><th id="|G&gt;W" class="simple-table-header-color simple-table-header">항목</th><th id="CtW]" class="simple-table-header-color simple-table-header">정적 프로비저닝</th><th id="wk=c" class="simple-table-header-color simple-table-header">동적 프로비저닝</th></tr></thead><tbody><tr id="8ce720e4-6f49-8273-963f-01af546e4021" dir="ltr"><td id="|G&gt;W" class="">스토리지 생성 시점</td><td id="CtW]" class="">Kubernetes 밖에서 미리 생성</td><td id="wk=c" class="">PVC/Pod 생성 시 자동</td></tr><tr id="487720e4-6f49-83af-ad12-016dcb372039" dir="ltr"><td id="|G&gt;W" class="">관리 주체</td><td id="CtW]" class="">운영자 중심</td><td id="wk=c" class="">플랫폼/자동화 중심</td></tr><tr id="4b6720e4-6f49-837e-852c-01b751250683" dir="ltr"><td id="|G&gt;W" class="">실습 난이도</td><td id="CtW]" class="">구조 이해는 쉬움, 작업은 많음</td><td id="wk=c" class="">자동화 이해 필요</td></tr><tr id="2d5720e4-6f49-835b-8917-8196a2122db8" dir="ltr"><td id="|G&gt;W" class="">운영 적합성</td><td id="CtW]" class="">기존 자원 재사용에 적합</td><td id="wk=c" class="">신규 배포 자동화에 적합</td></tr><tr id="18f720e4-6f49-8265-824c-014cf448d49a" dir="ltr"><td id="|G&gt;W" class="">추적성</td><td id="CtW]" class="">매우 명확함</td><td id="wk=c" class="">자동 생성이라 추적 설계 필요</td></tr></tbody></table><hr id="1b7720e4-6f49-8339-b8c4-0150f0df96e0" dir="auto"/><h1 id="554720e4-6f49-832d-b740-013c1087f723" class="" dir="auto">9. 콘솔에서 확인할 항목</h1><h2 id="9d3720e4-6f49-822e-819f-8118b55ba558" class="" dir="auto">9-1. GKE 콘솔</h2><ol type="1" id="fa3720e4-6f49-8352-80a8-81a6126ae785" class="numbered-list" start="1" dir="auto"><li><strong>Kubernetes Engine &gt; Clusters</strong></li></ol><ol type="1" id="627720e4-6f49-8256-a79b-01ed5da0153b" class="numbered-list" start="2" dir="auto"><li>대상 클러스터 클릭</li></ol><ol type="1" id="57d720e4-6f49-8279-bdfd-81d478f4a23b" class="numbered-list" start="3" dir="auto"><li><strong>Features</strong>에서 Filestore CSI driver 활성화 확인</li></ol><ol type="1" id="12a720e4-6f49-82f5-ba0b-81faf9f2a84a" class="numbered-list" start="4" dir="auto"><li><strong>Workloads</strong>에서 배포된 Pod 상태 확인</li></ol><ol type="1" id="784720e4-6f49-8374-a70c-01242e205f21" class="numbered-list" start="5" dir="auto"><li><strong>Storage</strong> 관련 리소스는 <code>kubectl</code>과 함께 병행 확인</li></ol><hr id="7aa720e4-6f49-8310-ab41-01af4c7e47ec" dir="auto"/><h2 id="58e720e4-6f49-8248-b7e8-01e538add7bd" class="" dir="auto">9-2. Filestore 콘솔</h2><ol type="1" id="c51720e4-6f49-8329-929d-812ee2a46f10" class="numbered-list" start="1" dir="auto"><li><strong>Filestore</strong> 메뉴 이동</li></ol><ol type="1" id="421720e4-6f49-83d3-b863-01ede64001d2" class="numbered-list" start="2" dir="auto"><li>정적 프로비저닝용 인스턴스 확인</li></ol><ol type="1" id="fd4720e4-6f49-8366-9a21-011f2b860fc5" class="numbered-list" start="3" dir="auto"><li>동적 프로비저닝 후 자동 생성된 인스턴스 또는 share 확인</li></ol><ol type="1" id="c81720e4-6f49-83be-ba42-0194bfa01f8d" class="numbered-list" start="4" dir="auto"><li>용량, 네트워크, IP 확인</li></ol><hr id="2da720e4-6f49-82ad-a212-01207debbc8c" dir="auto"/><h1 id="dbd720e4-6f49-8356-897a-01ab4114c7da" class="" dir="auto">10. 자주 발생하는 문제</h1><h2 id="220720e4-6f49-83e0-84d6-015d67762186" class="" dir="auto">10-1. PVC가 Pending 상태로 오래 머무름</h2><p id="fa4720e4-6f49-83b6-b1b9-8118a765d5fb" class="" dir="auto">원인 후보:</p><ul id="a71720e4-6f49-83c7-a45f-8191dc4b96ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Filestore CSI 드라이버 미활성화</li></ul><ul id="735720e4-6f49-82f3-b918-81e2afb02850" class="bulleted-list" dir="auto"><li style="list-style-type:disc">StorageClass 이름 오타</li></ul><ul id="a25720e4-6f49-83a6-b7cf-81001311de47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동적 프로비저닝인데 Pod가 아직 생성되지 않음<p id="a9c720e4-6f49-82f1-90fa-8143bdc9a9f2" class="" dir="auto">기본 StorageClass는 <code>WaitForFirstConsumer</code>를 쓸 수 있음</p></li></ul><ul id="f05720e4-6f49-822c-baf5-017cd65f6e9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 용량이 선택한 티어의 최소 용량 조건과 맞지 않음</li></ul><p id="55c720e4-6f49-82b5-aa1c-011fc85b713c" class="" dir="auto">GKE 기본 StorageClass는 <code>WaitForFirstConsumer</code>를 사용하므로 PVC 생성 직후 바로 Filestore 인스턴스가 만들어지지 않을 수 있음. Pod가 PVC를 참조해야 프로비저닝이 시작될 수 있음. </p><hr id="2ca720e4-6f49-8259-86ad-0176c97446fa" dir="auto"/><h2 id="848720e4-6f49-82e9-b308-014fadfbb867" class="" dir="auto">10-2. 마운트 실패</h2><p id="8aa720e4-6f49-82a9-9749-014469d1ceaf" class="" dir="auto">원인 후보:</p><ul id="bb8720e4-6f49-82d9-90a1-016de40a212a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Filestore와 GKE가 같은 VPC 또는 접근 가능한 네트워크가 아님</li></ul><ul id="7fd720e4-6f49-8268-a5d5-812d93aa4b2b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방화벽 규칙 문제</li></ul><ul id="0f5720e4-6f49-820e-bb6d-8169700ac88d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Filestore IP 오타</li></ul><ul id="4c3720e4-6f49-83ac-93ff-01e7f95f90d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">share 이름 오타</li></ul><ul id="aa4720e4-6f49-829f-8a69-8174f9a0df64" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PV의 <code>volumeHandle</code> 형식 오류</li></ul><hr id="311720e4-6f49-8217-99e7-81b8227314b4" dir="auto"/><h2 id="606720e4-6f49-82dc-b9e1-01b5919e04fc" class="" dir="auto">10-3. 정적 프로비저닝에서 Bound가 안 됨</h2><p id="d0c720e4-6f49-8247-92ac-811414d9b05e" class="" dir="auto">원인 후보:</p><ul id="c9e720e4-6f49-8304-82b2-01868b52cebc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PV와 PVC의 <code>storageClassName</code> 값이 맞지 않음</li></ul><ul id="aa9720e4-6f49-823a-af94-81cf6d378ca9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">용량 조건 불일치</li></ul><ul id="f12720e4-6f49-8292-a882-01ff7dcfc4b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">claimRef namespace 또는 name 불일치</li></ul><ul id="885720e4-6f49-82c1-bd26-01de0cd170be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">accessModes 불일치</li></ul><hr id="ce2720e4-6f49-8293-a701-81025485035d" dir="auto"/><h1 id="7b1720e4-6f49-837b-bcce-812997e87dd4" class="" dir="auto">11. 정리</h1><h2 id="380720e4-6f49-82a1-9caf-012e668c5d32" class="" dir="auto">정적 프로비저닝 핵심</h2><ul id="79b720e4-6f49-830c-9884-814ed458d46c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Filestore를 먼저 만듦</li></ul><ul id="f8d720e4-6f49-83dd-81da-81865407d672" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PV에서 정확한 Filestore 인스턴스와 share를 지정</li></ul><ul id="95d720e4-6f49-8211-b7a0-811dc0f8066f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 자원을 Kubernetes에 연결하는 방식</li></ul><h2 id="f83720e4-6f49-839b-9b00-015053ce4bfc" class="" dir="auto">동적 프로비저닝 핵심</h2><ul id="5ce720e4-6f49-8215-8cd5-01b77e2d5e25" class="bulleted-list" dir="auto"><li style="list-style-type:disc">StorageClass와 PVC 중심</li></ul><ul id="b9a720e4-6f49-8391-ba93-8110fbee4ef3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CSI 드라이버가 Filestore를 자동 생성/관리</li></ul><ul id="563720e4-6f49-8374-b229-01150dbad80a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 자동화에 적합</li></ul><h2 id="511720e4-6f49-8329-9ed5-012154b84a54" class="" dir="auto">실무 관점에서 기억할 점</h2><ul id="fd8720e4-6f49-83b9-9682-81e791d63ef4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>기존 Filestore를 연결해야 하면 정적 프로비저닝</strong></li></ul><ul id="e19720e4-6f49-83a9-95e5-8198b319e69e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>새 서비스 배포 자동화가 중요하면 동적 프로비저닝</strong></li></ul><ul id="9a1720e4-6f49-8219-ad7a-01ff5933e790" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>작은 RWX 스토리지를 여러 개 유연하게 쓰려면 enterprise-multishare-rwx 고려</strong></li></ul><hr id="b39720e4-6f49-8231-84af-012565175a71" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

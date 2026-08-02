@@ -1,0 +1,782 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>3장 고급 네트워크 연결 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="5b7720e4-6f49-8381-a168-01ee705fec6f" class="page sans"><header><h1 class="page-title" dir="auto">3장 고급 네트워크 연결 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="390720e4-6f49-83b7-8ceb-01437c3998ec" dir="auto"/><h1 id="5b0720e4-6f49-82e3-846c-011a2a2ffa06" class="" dir="auto">3.1 고급 네트워크 연결 아키텍처의 의미</h1><p id="20d720e4-6f49-8311-a639-815ada3f45af" class="" dir="auto">AWS에서 네트워크를 설계할 때 초반에는 보통 하나의 VPC 안에서 서브넷을 나누고, 인터넷 게이트웨이와 NAT 게이트웨이를 배치하는 수준으로 시작함.</p><p id="419720e4-6f49-83a6-908b-81c969719acb" class="" dir="auto">하지만 실제 운영 환경으로 가면 네트워크 설계 범위가 단일 VPC를 넘어서기 시작함.</p><p id="33f720e4-6f49-8389-aa4d-01c5851fac05" class="" dir="auto">예를 들어 다음과 같은 요구사항이 생김.</p><ul id="f2e720e4-6f49-8304-bff8-819112a09e30" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 VPC를 서로 연결해야 함</li></ul><ul id="12f720e4-6f49-83f6-92d3-01b24aa9c94f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 계정의 VPC를 중앙에서 통합 관리해야 함</li></ul><ul id="8de720e4-6f49-8388-ba98-81de38f9ca28" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 AWS 서비스에는 인터넷을 거치지 않고 사설 경로로 접근해야 함</li></ul><ul id="735720e4-6f49-82e6-819a-81747db2e753" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 구조를 허브-앤-스포크 형태로 설계해야 함</li></ul><ul id="fbd720e4-6f49-833b-8092-01238ac52ca7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 서비스망과 워크로드망을 분리하면서도 연결해야 함</li></ul><p id="318720e4-6f49-8202-a773-81a683e46921" class="" dir="auto">즉, 고급 네트워크 연결 아키텍처는 단순히 “연결된다” 수준이 아니라</p><p id="577720e4-6f49-834b-8a9d-012c3e0c357d" class="" dir="auto"><strong>보안, 확장성, 운영성, 중앙 통제, 트래픽 흐름</strong>까지 함께 고려하는 설계 영역임.</p><hr id="dd6720e4-6f49-8303-93cd-01660226761a" dir="auto"/><h1 id="b72720e4-6f49-8300-ab9b-812dfeabb1c0" class="" dir="auto">3.2 왜 고급 네트워크 연결 구조가 필요한가</h1><p id="1de720e4-6f49-82ff-9e1d-01bf0de38580" class="" dir="auto">단일 VPC 구조는 단순하고 이해하기 쉬움.</p><p id="9b2720e4-6f49-82a7-ae64-017a33f51819" class="" dir="auto">하지만 서비스 수, 계정 수, 조직 수가 늘어나면 다음 문제가 발생함.</p><ul id="155720e4-6f49-822b-864c-81ed0a9dc891" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 간 연결 관계가 많아짐</li></ul><ul id="ed0720e4-6f49-82f7-a609-8100a85310bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 서비스와 개별 워크로드를 분리할 필요가 생김</li></ul><ul id="a4a720e4-6f49-8341-8a4e-81445334df6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 라우팅이 복잡해짐</li></ul><ul id="5b7720e4-6f49-83af-bd49-010d0e1c7fc0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 보안 통제가 필요해짐</li></ul><ul id="4ed720e4-6f49-832d-b981-018901165d21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 환경이 서로 독립적이면서도 필요한 범위만 연결되어야 함</li></ul><p id="13a720e4-6f49-8368-bd57-812906190e5f" class="" dir="auto">이런 상황에서 단순 피어링 수준의 연결만으로는 구조가 빠르게 복잡해질 수 있음.</p><p id="ab1720e4-6f49-83bc-837b-017e29adf53c" class="" dir="auto">즉, 고급 네트워크 연결 아키텍처의 목적은 다음과 같음.</p><ul id="dbc720e4-6f49-83b5-ad3d-8164032522bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결 구조 단순화</li></ul><ul id="e65720e4-6f49-820f-bb58-01c1c91f37e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅 중앙화</li></ul><ul id="40f720e4-6f49-82c8-819b-01d6678d123d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 경계 명확화</li></ul><ul id="940720e4-6f49-8377-8a59-815c221081bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 서비스 접근 통제</li></ul><ul id="c4a720e4-6f49-8388-98dc-0167b0d356f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 계정 환경의 네트워크 표준화</li></ul><hr id="86f720e4-6f49-82e5-b991-811111cd5aff" dir="auto"/><h1 id="713720e4-6f49-82cf-a512-81ec05a95d84" class="" dir="auto">3.3 네트워크 연결을 바라보는 세 가지 관점</h1><p id="1fe720e4-6f49-8380-9c6a-01d767c7cb7f" class="" dir="auto">고급 AWS 네트워크 연결은 보통 다음 세 관점에서 정리할 수 있음.</p><h3 id="184720e4-6f49-82a7-a976-81ed0fdeec4d" class="" dir="auto">1. AWS 서비스로의 사설 접근</h3><p id="dd1720e4-6f49-8210-b8d6-01841dd7e9e9" class="" dir="auto">VPC 내부 리소스가 S3 같은 AWS 서비스에 인터넷 없이 접근하는 구조임.</p><h3 id="156720e4-6f49-839c-981c-81156280145d" class="" dir="auto">2. VPC 간 연결</h3><p id="3a3720e4-6f49-837d-bdb2-81c45e0c4abd" class="" dir="auto">서로 다른 VPC 또는 서로 다른 계정의 VPC를 연결하는 구조임.</p><h3 id="8e8720e4-6f49-8323-aabf-01f997a02bff" class="" dir="auto">3. 중앙 허브 기반 연결</h3><p id="e5f720e4-6f49-8287-87e5-8171947e48c7" class="" dir="auto">여러 네트워크를 허브형 구조로 묶어 중앙에서 제어하는 구조임.</p><p id="351720e4-6f49-8251-aace-819944d98541" class="" dir="auto">이 장에서는 이 중 특히 다음에 집중함.</p><ul id="e55720e4-6f49-82cb-a441-81b7173b69f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon S3 VPC 엔드포인트 통신 보안</li></ul><ul id="123720e4-6f49-82a5-8650-0117f3c8a6ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Transit Gateway</li></ul><ul id="28d720e4-6f49-83c5-ab41-8153a0fa6033" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 계정 / 멀티 VPC 연결 구조</li></ul><ul id="cb2720e4-6f49-826a-a488-018d95d1adbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 허브형 네트워크 설계</li></ul><hr id="e21720e4-6f49-820a-8fd4-81449a6c922b" dir="auto"/><h1 id="e15720e4-6f49-83dc-bb10-010dbe156ccd" class="" dir="auto">3.4 Amazon S3 VPC 엔드포인트 개요</h1><p id="0c8720e4-6f49-827b-bd96-0147df838443" class="" dir="auto">VPC 내부의 리소스가 Amazon S3에 접근할 때, 단순히 인터넷을 통해 접근하게 둘 수도 있음.</p><p id="852720e4-6f49-8237-90fd-0150378e2923" class="" dir="auto">하지만 보안과 운영 관점에서는 인터넷 경로를 통하지 않고 AWS 내부 네트워크를 통해 접근하는 것이 더 적절한 경우가 많음.</p><p id="2e4720e4-6f49-839e-810d-816001758868" class="" dir="auto">이때 사용하는 것이 <strong>VPC 엔드포인트</strong>임.</p><p id="451720e4-6f49-836f-ad06-81b7330c72eb" class="" dir="auto">S3에 대해서는 일반적으로 <strong>Gateway Endpoint</strong>를 사용함.</p><p id="501720e4-6f49-8264-b315-01d8c5a89a70" class="" dir="auto">이 방식은 VPC 내부 라우팅 수준에서 S3로 향하는 경로를 AWS 내부 경로로 우회하게 만드는 구조임.</p><p id="a34720e4-6f49-8209-9c7a-819d59d04871" class="" dir="auto">즉, S3 VPC 엔드포인트는 다음 의미를 가짐.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="dc8720e4-6f49-8399-8f21-816844e044b4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC 내부 자원이 S3에 접근할 때
+인터넷 게이트웨이나 NAT 게이트웨이를 거치지 않고
+사설 경로처럼 접근하게 만드는 방식</code></pre><hr id="080720e4-6f49-8205-86a3-01148e0902c6" dir="auto"/><h1 id="029720e4-6f49-82d7-8186-016b451df5e1" class="" dir="auto">3.5 S3 VPC 엔드포인트가 필요한 이유</h1><p id="050720e4-6f49-8323-ac54-01694a3ffb83" class="" dir="auto">S3는 AWS의 대표적인 객체 스토리지 서비스이며, 로그 저장, 백업, 정적 파일 저장, 데이터 적재 등 다양한 목적으로 사용됨.</p><p id="391720e4-6f49-8333-9dcf-81a46fb5cde4" class="" dir="auto">이때 Private Subnet의 인스턴스가 S3에 접근해야 하는 경우가 많음.</p><p id="e12720e4-6f49-838c-91e7-01a8ee90b459" class="" dir="auto">만약 VPC 엔드포인트가 없다면 보통 다음과 같은 구조가 됨.</p><ul id="3f1720e4-6f49-83ba-b2dc-017d635e3df7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Subnet 인스턴스</li></ul><ul id="0b8720e4-6f49-8320-b9fa-01d629cac22e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAT Gateway</li></ul><ul id="a53720e4-6f49-8324-b135-01051f8e04b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인터넷 경로</li></ul><ul id="cc8720e4-6f49-8258-ab7a-014fe4413ac6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><p id="159720e4-6f49-83d5-b4cf-01fb918a4afa" class="" dir="auto">이 구조는 동작은 가능하지만 다음 관점에서 한계가 있음.</p><h3 id="927720e4-6f49-8281-85ae-01ad606074fa" class="" dir="auto">1. 인터넷 경로 의존</h3><p id="ca6720e4-6f49-82f6-9bbf-01caf02cf5e9" class="" dir="auto">실제로는 AWS 서비스에 접근하는데도 인터넷/NAT 구조를 거치게 됨.</p><h3 id="762720e4-6f49-827d-acac-013c62671242" class="" dir="auto">2. 보안 단순성 저하</h3><p id="ef3720e4-6f49-82a1-8799-01ce14ac5370" class="" dir="auto">사설 네트워크 기반 설계 관점에서 덜 깔끔함.</p><h3 id="077720e4-6f49-8364-af51-01e511157183" class="" dir="auto">3. NAT 비용 증가 가능성</h3><p id="057720e4-6f49-830f-b9de-010a8ea52a3f" class="" dir="auto">S3로 향하는 트래픽까지 NAT 처리 비용에 영향을 줄 수 있음.</p><h3 id="88f720e4-6f49-8270-b535-013f2444ab03" class="" dir="auto">4. 네트워크 통제력 약화</h3><p id="409720e4-6f49-823d-8899-815d74f26451" class="" dir="auto">어떤 S3 버킷에 어떤 방식으로 접근할 것인지 더 엄격하게 통제하고 싶을 수 있음.</p><p id="721720e4-6f49-8209-93bf-8194757854e8" class="" dir="auto">즉, S3 VPC 엔드포인트는 <strong>보안성, 비용, 구조 단순성</strong> 측면에서 의미가 큼.</p><hr id="f25720e4-6f49-8202-bc95-01d41ee20e38" dir="auto"/><h1 id="50a720e4-6f49-82bd-bbe6-019b80417c69" class="" dir="auto">3.6 Gateway Endpoint의 동작 방식</h1><p id="7e8720e4-6f49-8338-bea6-8144b0b671dc" class="" dir="auto">S3용 VPC 엔드포인트는 일반적으로 Gateway Endpoint 방식으로 제공됨.</p><p id="139720e4-6f49-8249-bf74-0199aae55a1e" class="" dir="auto">이 방식은 서브넷 내부에 새로운 ENI를 생성하는 구조가 아니라, 라우팅 테이블에 S3로 가는 특별한 경로를 추가하는 방식임.</p><p id="39e720e4-6f49-83c6-ac33-8103971a543f" class="" dir="auto">즉, 핵심은 다음과 같음.</p><ul id="f08720e4-6f49-829a-8a56-81a65513c220" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅 테이블에 S3 대상 경로가 생김</li></ul><ul id="e94720e4-6f49-8214-b13b-0117dd7c7776" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 경로는 AWS 내부 네트워크로 연결됨</li></ul><ul id="865720e4-6f49-82ee-9889-81fc8d387b0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스는 인터넷을 거치지 않고 S3에 접근함</li></ul><p id="c74720e4-6f49-8253-a41b-81e5b7dcdfda" class="" dir="auto">이 구조는 VPC 내부에서 매우 자연스럽게 동작함.</p><p id="f5e720e4-6f49-822b-ac77-0165e77b062d" class="" dir="auto">따라서 S3 통신 보안을 설명할 때 단순히 “접근된다”가 아니라, <strong>어떤 경로로 접근되는가</strong>를 같이 이해하는 것이 중요함.</p><hr id="af1720e4-6f49-8314-9054-8131a7ae01dc" dir="auto"/><h1 id="359720e4-6f49-83f3-88d4-0158b990a4c3" class="" dir="auto">3.7 S3 VPC 엔드포인트 통신 보안의 핵심</h1><p id="444720e4-6f49-8371-91a8-8141bc296017" class="" dir="auto">S3 VPC 엔드포인트를 사용한다고 해서 자동으로 보안이 완성되는 것은 아님.</p><p id="1a1720e4-6f49-8361-91d8-81d79fb96759" class="" dir="auto">실제로는 다음 요소를 함께 고려해야 함.</p><h3 id="5e3720e4-6f49-82cf-a0de-81ee977923c9" class="" dir="auto">1. 어떤 서브넷/라우트 테이블이 엔드포인트를 사용하는가</h3><p id="e26720e4-6f49-82c9-acee-8153a583d335" class="" dir="auto">필요한 네트워크 범위만 연결하는 것이 중요함.</p><h3 id="853720e4-6f49-8339-9859-010a447f000c" class="" dir="auto">2. 어떤 버킷에 접근 가능한가</h3><p id="c21720e4-6f49-839e-a230-014b2eff71b1" class="" dir="auto">모든 S3 버킷을 열어두기보다 특정 버킷만 허용할 수 있어야 함.</p><h3 id="f44720e4-6f49-83a9-b1dc-017f9a9d7239" class="" dir="auto">3. 누가 접근하는가</h3><p id="dc2720e4-6f49-82bf-be49-01e301bf1f4e" class="" dir="auto">IAM Role, 버킷 정책, 엔드포인트 정책이 함께 작동함.</p><h3 id="5c7720e4-6f49-8392-9ff4-01584f54a1f7" class="" dir="auto">4. 인터넷 경로를 막았는가</h3><p id="3c3720e4-6f49-8266-8fbf-816c329d5762" class="" dir="auto">진짜 사설 경로만 허용하려면 다른 우회 경로도 함께 검토해야 함.</p><p id="f96720e4-6f49-83fc-a544-81b22b026532" class="" dir="auto">즉, S3 VPC 엔드포인트 통신 보안은</p><p id="51c720e4-6f49-8302-baec-0134bab5db39" class="" dir="auto"><strong>경로 보안 + 정책 보안 + 접근 주체 보안</strong>을 함께 봐야 함.</p><hr id="48c720e4-6f49-8228-b45b-810b9450c95f" dir="auto"/><h1 id="5ff720e4-6f49-82c6-917e-81c27b9df0f3" class="" dir="auto">3.8 엔드포인트 정책과 버킷 정책의 관계</h1><p id="9d0720e4-6f49-829d-9c2c-81a58af4e39c" class="" dir="auto">S3 보안을 설명할 때 자주 혼동되는 것이 <strong>IAM 정책, 버킷 정책, 엔드포인트 정책</strong>의 관계임.</p><p id="460720e4-6f49-83f5-9801-015cc52404c0" class="" dir="auto">이 장에서는 구조적으로 다음처럼 이해하면 됨.</p><h3 id="a67720e4-6f49-82b9-a25f-010fd177f4f0" class="" dir="auto">IAM 정책</h3><p id="477720e4-6f49-8295-91c8-81bd3de4773c" class="" dir="auto">누가 무엇을 할 수 있는가를 정의함.</p><h3 id="ba2720e4-6f49-8331-8b88-01ffd6e685d8" class="" dir="auto">버킷 정책</h3><p id="aca720e4-6f49-8345-a3bc-81c79f68dcb3" class="" dir="auto">이 버킷이 누구에게 어떤 접근을 허용할 것인가를 정의함.</p><h3 id="ff8720e4-6f49-8248-83ac-0190eb55ee52" class="" dir="auto">엔드포인트 정책</h3><p id="736720e4-6f49-8381-b672-01c895a4166f" class="" dir="auto">이 엔드포인트를 통해 어떤 S3 작업과 어떤 리소스를 허용할 것인가를 제한함.</p><p id="3f2720e4-6f49-83dd-a70a-01a174ca5291" class="" dir="auto">즉, 엔드포인트 정책은 “이 경로를 통해서는 여기까지만 허용”이라는 추가 보안 경계 역할을 함.</p><p id="e08720e4-6f49-8326-9d02-818f3d1a343a" class="" dir="auto">이 점이 중요함.</p><p id="6aa720e4-6f49-83f5-897a-0102e169913e" class="" dir="auto">단순히 S3에 접근하게 만드는 기능이 아니라, <strong>접근 경로 자체에 정책을 거는 구조</strong>이기 때문임.</p><hr id="771720e4-6f49-8354-afb3-81da913c60c1" dir="auto"/><h1 id="a21720e4-6f49-82c8-a3ad-81cc631a90b8" class="" dir="auto">3.9 S3 VPC 엔드포인트 보안 설계 원칙</h1><p id="cf0720e4-6f49-8362-a3ac-01e35c66f2b6" class="" dir="auto">고급 설계에서는 다음 원칙이 중요함.</p><h3 id="4c1720e4-6f49-8275-ba5e-01d1b1cc129b" class="" dir="auto">1. 필요한 서브넷만 연결</h3><p id="dcb720e4-6f49-83d9-babc-81f369b8e6c3" class="" dir="auto">모든 경로를 무조건 열지 않음.</p><h3 id="15a720e4-6f49-8333-a4be-014e8d96c1e8" class="" dir="auto">2. 특정 버킷 중심 허용</h3><p id="db0720e4-6f49-820c-9873-81a1976dbe40" class="" dir="auto">모든 버킷 접근보다 필요한 버킷만 허용하는 것이 바람직함.</p><h3 id="538720e4-6f49-82cb-aa3b-01fc1b410c8f" class="" dir="auto">3. IAM Role과 함께 설계</h3><p id="108720e4-6f49-82da-b75b-017b8c9d02cc" class="" dir="auto">인스턴스 또는 워크로드 역할과 결합해서 최소 권한 원칙을 유지해야 함.</p><h3 id="a70720e4-6f49-8337-a95f-81ff56eacce7" class="" dir="auto">4. 인터넷 경로를 대체하는 구조로 사용</h3><p id="d78720e4-6f49-82b2-b84e-81ff9c4866f1" class="" dir="auto">Private 네트워크 설계를 명확하게 가져가는 것이 중요함.</p><p id="1e2720e4-6f49-835e-bfa9-8147041171fe" class="" dir="auto">즉, S3 VPC 엔드포인트는 단순한 성능 기능이 아니라</p><p id="f9e720e4-6f49-828c-a639-0183f2b54173" class="" dir="auto"><strong>사설 접근 구조를 구현하는 네트워크 보안 요소</strong>로 봐야 함.</p><hr id="bbf720e4-6f49-82b8-ad51-81de53c887ac" dir="auto"/><h1 id="d1c720e4-6f49-8213-a946-81493cafb5c3" class="" dir="auto">3.10 멀티 VPC 환경의 등장</h1><p id="ae2720e4-6f49-8294-adca-012634705fa9" class="" dir="auto">네트워크가 단일 VPC에 머무르지 않는 순간부터 설계 난이도가 크게 올라감.</p><p id="e7c720e4-6f49-83ab-a8ef-8177d9ba0a60" class="" dir="auto">여러 VPC를 사용하는 대표적인 이유는 다음과 같음.</p><ul id="220720e4-6f49-8321-90c6-015a71d01bce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영/개발 환경 분리</li></ul><ul id="d2b720e4-6f49-824e-83c7-0171593c741d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션별 네트워크 분리</li></ul><ul id="a1e720e4-6f49-83ae-804c-8134d4ecbeb1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정별 VPC 독립성 확보</li></ul><ul id="9f4720e4-6f49-8351-9f08-81561d541150" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 서비스망 분리</li></ul><ul id="c64720e4-6f49-8218-865e-817657e1d3e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 요구사항 차등 적용</li></ul><p id="772720e4-6f49-82cb-b744-81b5a6865202" class="" dir="auto">이렇게 VPC가 늘어나면 자연스럽게 질문이 생김.</p><ul id="b8f720e4-6f49-82da-8d8a-010a3be771ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 VPC들은 서로 연결해야 하는가</li></ul><ul id="397720e4-6f49-83c1-a0a5-8190f807ac88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모두 연결해야 하는가</li></ul><ul id="039720e4-6f49-82d4-bd6e-814ef99ed562" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 허브가 필요한가</li></ul><ul id="241720e4-6f49-83a5-b2e8-8166bba4ec28" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅은 어디서 통제할 것인가</li></ul><p id="bde720e4-6f49-8348-bc7d-81b5e7cc6aad" class="" dir="auto">즉, 멀티 VPC 설계는 단순 연결보다 <strong>연결 정책 설계</strong>가 더 중요함.</p><hr id="f22720e4-6f49-8266-ae64-813eac5038c5" dir="auto"/><h1 id="c6b720e4-6f49-83df-8453-8158be48daed" class="" dir="auto">3.11 단순 연결 방식의 한계</h1><p id="f20720e4-6f49-8320-9eb4-0111da0228c9" class="" dir="auto">VPC 수가 적을 때는 단순 직접 연결이 가능할 수 있음.</p><p id="ce9720e4-6f49-8215-aad4-018f134da03c" class="" dir="auto">하지만 VPC 수가 늘어나면 다음과 같은 한계가 나타남.</p><h3 id="2a4720e4-6f49-83e9-bca7-019e22a85831" class="" dir="auto">1. 연결 수 증가</h3><p id="750720e4-6f49-8229-aefd-019e80efee0b" class="" dir="auto">연결 조합 수가 많아짐.</p><h3 id="7bd720e4-6f49-836c-aec7-81e9b94c4b71" class="" dir="auto">2. 라우팅 복잡도 증가</h3><p id="da0720e4-6f49-82b4-a4c2-81a3c3b8996a" class="" dir="auto">각 연결마다 라우팅을 맞춰야 함.</p><h3 id="123720e4-6f49-8245-87f7-01b4694c0a57" class="" dir="auto">3. 운영 표준화 어려움</h3><p id="9bb720e4-6f49-823f-ac20-013faeee5c23" class="" dir="auto">팀별로 연결 방식이 달라질 수 있음.</p><h3 id="faf720e4-6f49-8261-adaf-81497c051421" class="" dir="auto">4. 중앙 통제 한계</h3><p id="e2f720e4-6f49-834a-9807-81c89a0a31e1" class="" dir="auto">네트워크를 한 곳에서 보기 어려워짐.</p><p id="663720e4-6f49-8221-b13e-01265e29e7f7" class="" dir="auto">즉, 멀티 계정 / 멀티 VPC 환경에서는</p><p id="047720e4-6f49-8209-8c65-018d2e15d9c4" class="" dir="auto"><strong>연결을 개별적으로 만드는 방식보다 중앙 구조가 더 중요해짐.</strong></p><hr id="f9f720e4-6f49-83fa-9765-0193abbaa926" dir="auto"/><h1 id="6b7720e4-6f49-828f-80ae-01357aa8db67" class="" dir="auto">3.12 Transit Gateway 개요</h1><p id="ce8720e4-6f49-82fe-aaef-8153bb17bbef" class="" dir="auto">Transit Gateway는 여러 VPC와 네트워크 연결을 중앙 허브 방식으로 연결하는 서비스임.</p><p id="818720e4-6f49-83c2-b516-81b267aeca61" class="" dir="auto">이 서비스의 핵심은 다음과 같음.</p><pre id="b30720e4-6f49-831f-b183-81b86b82bc09" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">여러 네트워크를 하나의 허브에 연결하고
+중앙에서 라우팅과 연결 구조를 단순화한다.</code></pre><p id="978720e4-6f49-8204-b174-01c5531fd276" class="" dir="auto">즉, Transit Gateway는 VPC를 단순히 하나 더 연결하는 서비스가 아니라</p><p id="027720e4-6f49-82dc-b7ef-815956377887" class="" dir="auto"><strong>네트워크 허브 역할을 하는 중앙 라우팅 계층</strong>임.</p><hr id="19b720e4-6f49-83ff-a6d2-8147bb846baa" dir="auto"/><h1 id="007720e4-6f49-826e-8e94-01001e01cf29" class="" dir="auto">3.13 Transit Gateway가 필요한 이유</h1><p id="53d720e4-6f49-83fd-b4bb-8134db377797" class="" dir="auto">멀티 VPC 구조에서는 연결을 많이 만드는 것보다</p><p id="35e720e4-6f49-825f-90ea-018fba6fdc08" class="" dir="auto"><strong>연결 구조를 단순화하는 것</strong>이 더 중요함.</p><p id="56b720e4-6f49-8297-8da7-014fb21d40bf" class="" dir="auto">Transit Gateway가 필요한 이유는 다음과 같음.</p><h3 id="aaa720e4-6f49-839f-9bc6-0170472afb06" class="" dir="auto">1. 허브-앤-스포크 구조 가능</h3><p id="af1720e4-6f49-83e5-982d-817b420b451a" class="" dir="auto">각 VPC는 서로 직접 연결하는 대신 허브에 연결함.</p><h3 id="24f720e4-6f49-837c-9546-813dccfdcda1" class="" dir="auto">2. 중앙 라우팅 관리</h3><p id="e80720e4-6f49-83c2-8852-8116f4ab0277" class="" dir="auto">네트워크 경로를 중앙에서 더 일관되게 관리할 수 있음.</p><h3 id="ada720e4-6f49-837a-8c7b-0190715daf1f" class="" dir="auto">3. 멀티 계정 환경에 적합</h3><p id="5e8720e4-6f49-8364-9711-81f0da9cedb5" class="" dir="auto">각 계정의 VPC를 공통 네트워크 허브에 연결하는 구조가 가능함.</p><h3 id="cf8720e4-6f49-8373-886c-81e2b6ab72a4" class="" dir="auto">4. 확장성 향상</h3><p id="16b720e4-6f49-8302-9b7c-01ad057736f4" class="" dir="auto">VPC 수가 많아져도 구조가 비교적 단순하게 유지됨.</p><p id="07a720e4-6f49-823f-9897-015e687b2590" class="" dir="auto">즉, Transit Gateway는 <strong>네트워크 확장성 문제를 해결하는 구조적 도구</strong>임.</p><hr id="f51720e4-6f49-82ba-afb8-81286c7ea103" dir="auto"/><h1 id="b41720e4-6f49-8307-934a-0199dd0505ff" class="" dir="auto">3.14 Transit Gateway의 기본 구조</h1><p id="ef2720e4-6f49-8217-b7ce-0113274aa584" class="" dir="auto">Transit Gateway를 사용하면 보통 다음과 같은 허브 구조가 형성됨.</p><pre id="38d720e4-6f49-82a6-93d8-012d72ad7444" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">          VPC-A
+            │
+          TGW
+       /    |    \
+   VPC-B  VPC-C  Shared Services VPC</code></pre><p id="26a720e4-6f49-83d4-ae3f-817d0bd7c699" class="" dir="auto">이 구조의 의미는 다음과 같음.</p><ul id="691720e4-6f49-8327-ad93-01f622d49d6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 VPC는 서로 전부 직접 연결하지 않음</li></ul><ul id="463720e4-6f49-822f-9e2d-013a40fd1af2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 VPC는 중앙 TGW에만 연결함</li></ul><ul id="255720e4-6f49-82c6-abbb-81697063cfa5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TGW가 라우팅 허브 역할을 수행함</li></ul><p id="267720e4-6f49-825f-ae1a-01eddc973b87" class="" dir="auto">즉, Transit Gateway는 <strong>직접 연결의 복잡성을 중앙 허브 구조로 바꾸는 방식</strong>임.</p><hr id="f83720e4-6f49-82f1-9bb0-81d2bf74d656" dir="auto"/><h1 id="abc720e4-6f49-8302-a5d8-0182bfa32247" class="" dir="auto">3.15 Transit Gateway의 핵심 개념</h1><p id="ef9720e4-6f49-8220-a4b7-014214a4d80a" class="" dir="auto">Transit Gateway를 이해할 때 중요한 개념은 다음과 같음.</p><ul id="aa7720e4-6f49-82be-a51d-014a86e7bd70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Attachment</li></ul><ul id="427720e4-6f49-826d-a9ba-814941dea49c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table</li></ul><ul id="d0d720e4-6f49-8374-a55a-81c51ad1f4e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Association</li></ul><ul id="83e720e4-6f49-8341-858c-01c0d0eaebbe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Propagation</li></ul><p id="768720e4-6f49-83c8-aa6d-01afc4713137" class="" dir="auto">이 장에서는 개념 중심으로 이해하면 됨.</p><hr id="171720e4-6f49-83d1-9858-81616231d731" dir="auto"/><h2 id="121720e4-6f49-8275-b514-819fa1a532c1" class="" dir="auto">3.15.1 Attachment</h2><p id="06f720e4-6f49-8387-a3fa-018580be83bc" class="" dir="auto">Attachment는 Transit Gateway에 연결되는 개별 연결 단위임.</p><p id="403720e4-6f49-82c6-8957-8160a3593629" class="" dir="auto">예를 들어 특정 VPC가 TGW에 연결되면 그것이 하나의 Attachment가 됨.</p><p id="c33720e4-6f49-83fa-8b35-01aa999b2fba" class="" dir="auto">즉, Attachment는 “어떤 네트워크가 이 허브에 연결되었는가”를 나타내는 단위임.</p><hr id="9be720e4-6f49-82f3-aa24-017846c771f6" dir="auto"/><h2 id="ad9720e4-6f49-8217-b28d-81d48afacfc4" class="" dir="auto">3.15.2 TGW Route Table</h2><p id="372720e4-6f49-83a5-ab45-81f146bb6b7d" class="" dir="auto">Transit Gateway도 자체 라우팅 테이블을 가짐.</p><p id="254720e4-6f49-8231-8b4f-011fd810d39c" class="" dir="auto">이 라우팅 테이블을 통해 어떤 Attachment로 어떤 트래픽을 보낼지 결정함.</p><p id="6d7720e4-6f49-8354-8a31-01d5b68d6ab4" class="" dir="auto">즉, VPC 라우팅 테이블과 별도로</p><p id="b5d720e4-6f49-837b-bfe1-01e77a212095" class="" dir="auto"><strong>허브 내부 라우팅 논리</strong>가 하나 더 존재한다고 이해하면 됨.</p><hr id="bcd720e4-6f49-835c-8bda-816be2a21600" dir="auto"/><h2 id="a9f720e4-6f49-8242-9aad-810749641ab6" class="" dir="auto">3.15.3 Association</h2><p id="b20720e4-6f49-828a-b03f-81532c07c95e" class="" dir="auto">어떤 Attachment가 어떤 TGW Route Table을 사용할지 연결하는 개념임.</p><p id="144720e4-6f49-8323-a66b-01c3bdd06464" class="" dir="auto">즉, 연결만 만든다고 끝나는 것이 아니라</p><p id="209720e4-6f49-83f4-80e4-01990bb38d1d" class="" dir="auto"><strong>그 연결이 어떤 라우팅 정책을 따를 것인지</strong>도 정해야 함.</p><hr id="37d720e4-6f49-8245-9686-814da9bfd23e" dir="auto"/><h2 id="7ff720e4-6f49-83be-92c4-81d7d72adcf7" class="" dir="auto">3.15.4 Propagation</h2><p id="90a720e4-6f49-82cc-ac95-011e1b5ed9e4" class="" dir="auto">특정 Attachment의 경로 정보를 TGW Route Table에 전파하는 개념임.</p><p id="a09720e4-6f49-8359-ab87-017f1e56195d" class="" dir="auto">즉, 연결된 네트워크의 경로를 라우팅 테이블에 자동 반영하게 만드는 구조라고 볼 수 있음.</p><p id="8bf720e4-6f49-83e7-876c-0158d54ea3e4" class="" dir="auto">이 개념을 통해 단순 연결이 아니라</p><p id="7b2720e4-6f49-83a9-b9e4-01ff096cfbf4" class="" dir="auto"><strong>정책 기반 중앙 라우팅 제어</strong>가 가능해짐.</p><hr id="1d8720e4-6f49-8216-a5b6-0184faddcf9d" dir="auto"/><h1 id="46f720e4-6f49-83ab-a29a-8136f84f499b" class="" dir="auto">3.16 허브-앤-스포크 구조의 의미</h1><p id="870720e4-6f49-83e0-8af9-0184dc46544f" class="" dir="auto">Transit Gateway를 설명할 때 가장 중요한 것은 허브-앤-스포크 구조임.</p><h3 id="ed9720e4-6f49-821a-8394-811190fc525a" class="" dir="auto">허브</h3><p id="118720e4-6f49-825c-b2fb-8169236c8423" class="" dir="auto">중앙 네트워크 제어 지점</p><h3 id="295720e4-6f49-8200-9dc3-8161032d322c" class="" dir="auto">스포크</h3><p id="9e6720e4-6f49-8294-a02b-019e5d1297a5" class="" dir="auto">허브에 연결된 개별 VPC 또는 네트워크</p><p id="4bf720e4-6f49-83d3-9740-012e66581887" class="" dir="auto">이 구조의 장점</p><ul id="ed5720e4-6f49-8292-ae84-01d7b9815f50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 통제 가능</li></ul><ul id="0c4720e4-6f49-8338-a08e-81607e266b47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결 수 감소</li></ul><ul id="43d720e4-6f49-833f-9896-01b239de45a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">표준화 쉬움</li></ul><ul id="d8e720e4-6f49-83e2-bff0-015b6fb73023" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 서비스망 구성 쉬움</li></ul><ul id="9df720e4-6f49-838f-9bf2-01fd4d08813f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정별 분리와 연결의 균형을 맞추기 쉬움</li></ul><p id="895720e4-6f49-8383-bf67-813308ec4fb9" class="" dir="auto">즉, 허브-앤-스포크 구조는 단순 연결이 아니라</p><p id="8d4720e4-6f49-82ae-b35f-01aa3a62c93a" class="" dir="auto"><strong>네트워크 운영 모델 자체를 정리하는 구조</strong>임.</p><hr id="2f1720e4-6f49-8303-b346-0186e5a9872b" dir="auto"/><h1 id="421720e4-6f49-828d-93c5-0180f911480a" class="" dir="auto">3.17 Shared Services VPC와 중앙 네트워크 설계</h1><p id="c28720e4-6f49-8282-92a1-8103c81f508b" class="" dir="auto">멀티 계정 환경에서는 공통 서비스망을 따로 두는 경우가 많음.</p><p id="122720e4-6f49-823e-8c1e-01c20bd903d8" class="" dir="auto">예를 들어 다음과 같은 리소스를 공통으로 둘 수 있음.</p><ul id="c15720e4-6f49-8340-9d18-81ff2c7c3e74" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 로깅 도구</li></ul><ul id="2f7720e4-6f49-82b1-9000-81fe7140b22e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 보안 도구</li></ul><ul id="149720e4-6f49-8211-84ad-01f8038620f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 저장소 접근 경로</li></ul><ul id="687720e4-6f49-8372-a6c4-01d1a1814025" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 네트워크 서비스</li></ul><p id="ba1720e4-6f49-8366-b9a0-0127b30f8686" class="" dir="auto">이 경우 Transit Gateway는 각 워크로드 VPC와 Shared Services VPC를 연결하는 허브 역할을 함.</p><p id="8c1720e4-6f49-8391-ad7b-81c58ac650de" class="" dir="auto">즉, 고급 네트워크 설계에서는 단순 연결보다</p><p id="aec720e4-6f49-828f-b10e-81e38586864c" class="" dir="auto"><strong>공통 서비스 접근 구조를 어떻게 만들 것인가</strong>가 중요함.</p><hr id="9b0720e4-6f49-83bc-8e83-819290a273f7" dir="auto"/><h1 id="7d6720e4-6f49-8327-b247-81661a222920" class="" dir="auto">3.18 멀티 계정 / 멀티 VPC 연결 구조</h1><p id="c8b720e4-6f49-838c-8533-0115c5108e4e" class="" dir="auto">고급 환경에서는 다음과 같은 구조를 자주 보게 됨.</p><pre id="5c0720e4-6f49-82a7-a23a-81efc80d961f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">관리 구조
+ ├ 운영 계정 VPC
+ ├ 개발 계정 VPC
+ ├ 보안 계정 VPC
+ └ 공유 서비스 계정 VPC
+          │
+        Transit Gateway</code></pre><p id="505720e4-6f49-82f7-80a9-818119fd5db5" class="" dir="auto">이 구조의 의미는 다음과 같음.</p><ul id="8e6720e4-6f49-833e-b604-018638265772" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정은 분리되어 있음</li></ul><ul id="60c720e4-6f49-83c4-a057-01190dda5a62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크도 계정 단위로 나뉨</li></ul><ul id="e13720e4-6f49-83a5-9ba6-0135c309e039" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하지만 필요한 범위 안에서 중앙 허브를 통해 연결됨</li></ul><p id="e0e720e4-6f49-83ca-8ee7-016fb1f8b45a" class="" dir="auto">즉, 멀티 계정 구조와 Transit Gateway는 서로 강하게 연결됨.</p><p id="36e720e4-6f49-824a-a8cc-0136748cde64" class="" dir="auto">계정을 분리했더라도 네트워크가 완전히 단절되어야 하는 것은 아니며,</p><p id="f9f720e4-6f49-82d5-8014-0159789733b8" class="" dir="auto"><strong>통제된 연결 구조</strong>를 설계해야 하기 때문임.</p><hr id="d9e720e4-6f49-82b1-9a7e-81d955e3e8e6" dir="auto"/><h1 id="560720e4-6f49-830a-9561-81f1e1092169" class="" dir="auto">3.19 고급 네트워크에서 중요한 설계 질문</h1><p id="ddc720e4-6f49-8395-bd7c-8148bfe00fe7" class="" dir="auto">Transit Gateway나 VPC Endpoint 같은 기술을 사용하기 전에 다음 질문이 중요함.</p><h3 id="9fd720e4-6f49-83f4-8ad4-01a92c3e0e55" class="" dir="auto">1. 무엇을 왜 연결하는가</h3><p id="914720e4-6f49-82f2-bad1-816afa4fe73e" class="" dir="auto">모든 VPC를 무조건 연결할 필요는 없음.</p><h3 id="719720e4-6f49-8381-b6a9-816c5ecd31fb" class="" dir="auto">2. 공통 서비스는 어디에 둘 것인가</h3><p id="3d4720e4-6f49-83ba-89db-018403d58f2d" class="" dir="auto">각 계정에 중복 배치할지, 공통 계정으로 중앙화할지 결정해야 함.</p><h3 id="abf720e4-6f49-8258-8b41-018c81ed87cc" class="" dir="auto">3. 라우팅 통제는 어디서 할 것인가</h3><p id="6cf720e4-6f49-8366-bfa7-019a9fb68c14" class="" dir="auto">각 VPC가 알아서 연결되게 둘 것인지, 중앙에서 통제할 것인지 결정해야 함.</p><h3 id="ab7720e4-6f49-8394-a54a-81cd3165f449" class="" dir="auto">4. 인터넷 없이 접근해야 하는 AWS 서비스는 무엇인가</h3><p id="712720e4-6f49-8344-8ad5-81c848e7f43e" class="" dir="auto">S3, Systems Manager, Secrets Manager 등은 Private 접근 요구가 있을 수 있음.</p><h3 id="0a4720e4-6f49-8256-91c2-01d443ad2a84" class="" dir="auto">5. 보안 경계는 어떻게 유지할 것인가</h3><p id="cfa720e4-6f49-823f-8607-013051978e74" class="" dir="auto">연결을 많이 만들수록 보안 경계가 흐려질 수 있음.</p><p id="ab5720e4-6f49-8346-a477-01181636a341" class="" dir="auto">즉, 고급 네트워크 설계는 연결 기술을 외우는 것이 아니라</p><p id="049720e4-6f49-831f-85ed-811b8df6ae37" class="" dir="auto"><strong>연결 정책을 먼저 정하는 것</strong>이 핵심임.</p><hr id="390720e4-6f49-8233-8721-0191aefd18d4" dir="auto"/><h1 id="579720e4-6f49-8210-8129-81efb4fbadfa" class="" dir="auto">3.20 중앙 허브형 네트워크의 장점</h1><p id="7f6720e4-6f49-8395-b130-81ecaf81c9d2" class="" dir="auto">중앙 허브형 구조는 다음과 같은 장점이 있음.</p><h3 id="73a720e4-6f49-8234-bb0c-01e123181bc9" class="" dir="auto">1. 구조 단순화</h3><p id="f8a720e4-6f49-83b3-bd1b-81e8e056bdda" class="" dir="auto">복잡한 직접 연결 관계를 줄일 수 있음.</p><h3 id="233720e4-6f49-830e-9886-81de4b067cb8" class="" dir="auto">2. 운영 표준화</h3><p id="202720e4-6f49-838f-bf71-81718ae8e440" class="" dir="auto">모든 네트워크 연결이 비슷한 패턴을 따르게 됨.</p><h3 id="f15720e4-6f49-82fd-b1e6-815699cd1e49" class="" dir="auto">3. 보안 통제 용이</h3><p id="462720e4-6f49-829b-bca7-01c5cb364f37" class="" dir="auto">중앙에서 흐름을 제어하기 쉬움.</p><h3 id="e2c720e4-6f49-83f2-8c0e-813a313a1a7a" class="" dir="auto">4. 공통 서비스 재사용</h3><p id="083720e4-6f49-83b1-87a2-0145b479b788" class="" dir="auto">공유 서비스망을 만들기 쉬움.</p><h3 id="100720e4-6f49-822c-bfd5-011ca353dbe5" class="" dir="auto">5. 계정 확장 대응</h3><p id="99b720e4-6f49-83b2-b298-81618858c301" class="" dir="auto">새 계정, 새 VPC가 추가되어도 연결 구조가 크게 흔들리지 않음.</p><p id="be0720e4-6f49-832c-bf57-812185a6a5a7" class="" dir="auto">즉, 중앙 허브형 설계는 네트워크 규모가 커질수록 장점이 더 커짐.</p><hr id="965720e4-6f49-822e-bf1e-81c0c93a7d10" dir="auto"/><h1 id="5f4720e4-6f49-8222-a5bf-81fe50381862" class="" dir="auto">3.21 중앙 허브형 네트워크의 주의점</h1><p id="433720e4-6f49-8353-9e76-0193f544b19f" class="" dir="auto">장점만 있는 것은 아님.</p><p id="fdd720e4-6f49-82b7-9b41-81c49a637135" class="" dir="auto">Transit Gateway 같은 중앙 허브 구조도 설계가 잘못되면 복잡성이 생길 수 있음.</p><p id="a6f720e4-6f49-836f-b254-0139173e09ea" class="" dir="auto">주의할 점</p><h3 id="5f3720e4-6f49-8374-b56b-813f17b3b6f0" class="" dir="auto">1. 모든 것을 연결하지 않음</h3><p id="b99720e4-6f49-83bb-9f1f-01c109b00aab" class="" dir="auto">중앙 허브가 있다고 해서 모든 VPC가 모두 통신해야 하는 것은 아님.</p><h3 id="0f1720e4-6f49-8373-a07f-8169fa157768" class="" dir="auto">2. 라우팅 분리가 중요함</h3><p id="93d720e4-6f49-82e3-a944-013c2b52bf1e" class="" dir="auto">환경별, 계정별, 용도별 라우팅 분리가 필요할 수 있음.</p><h3 id="3ac720e4-6f49-8232-945b-0131c7f6ed5f" class="" dir="auto">3. 공통 서비스 접근 범위를 제한해야 함</h3><p id="43d720e4-6f49-8363-a3db-01e0a43ccc1b" class="" dir="auto">공유 서비스가 있다고 해서 모든 계정이 무제한 접근하면 안 됨.</p><h3 id="ad0720e4-6f49-82bf-94a6-0111b6d224ec" class="" dir="auto">4. 네트워크 구조 문서화가 필요함</h3><p id="421720e4-6f49-83bc-bc3c-015cc388f0aa" class="" dir="auto">허브 구조는 시각적으로는 단순해 보여도 실제 라우팅은 복잡할 수 있음.</p><p id="fb3720e4-6f49-8335-b29b-01b7dcf12385" class="" dir="auto">즉, 허브 구조는 강력하지만</p><p id="86d720e4-6f49-834d-8075-01e8f3f90f06" class="" dir="auto"><strong>중앙 집중이 곧 무조건 단순함을 의미하지는 않음</strong>을 이해해야 함.</p><hr id="3cc720e4-6f49-8296-9372-019c80a51c59" dir="auto"/><h1 id="7f3720e4-6f49-83eb-8491-01c45e7d6e89" class="" dir="auto">3.22 S3 Endpoint와 중앙 네트워크의 연결 관점</h1><p id="013720e4-6f49-83e6-a676-81f4f62fb6a5" class="" dir="auto">S3 VPC 엔드포인트와 Transit Gateway는 성격이 다르지만 함께 이해할 필요가 있음.</p><ul id="7ac720e4-6f49-827d-a460-8150e6f01dec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 Endpoint는 AWS 서비스로의 사설 접근</li></ul><ul id="c16720e4-6f49-82bd-9a09-817a1ce16950" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Transit Gateway는 네트워크 간 중앙 연결</li></ul><p id="026720e4-6f49-822f-976d-81a873587a22" class="" dir="auto">즉, 하나는 <strong>서비스 접근 구조</strong>, 다른 하나는 <strong>네트워크 연결 구조</strong>임.</p><p id="6fc720e4-6f49-828b-a09e-01ed530cefdb" class="" dir="auto">고급 설계에서는 이 둘을 함께 조합할 수 있음.</p><p id="60a720e4-6f49-83fa-ad1c-815b533ce95f" class="" dir="auto">예를 들어</p><ul id="189720e4-6f49-8294-ab6f-013e6b2ec01e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">워크로드 VPC는 TGW로 중앙망에 연결</li></ul><ul id="137720e4-6f49-8208-a500-81637f9e9799" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 워크로드 VPC는 S3 Endpoint를 통해 인터넷 없이 S3 접근</li></ul><p id="a9e720e4-6f49-839e-8bb9-81501642597b" class="" dir="auto">이 구조는 네트워크 연결과 AWS 서비스 접근을 모두 통제된 방식으로 설계하는 예가 됨.</p><hr id="35a720e4-6f49-830c-8933-01bca05eb505" dir="auto"/><h1 id="10a720e4-6f49-83ee-bf51-8183582e953a" class="" dir="auto">3.23 운영 관점의 핵심</h1><p id="a95720e4-6f49-83a0-adfa-0137eacbe222" class="" dir="auto">고급 네트워크 아키텍처는 결국 운영성과 연결됨.</p><h3 id="ab0720e4-6f49-8200-bb6c-01f3cfcc9057" class="" dir="auto">1. 단순한 구조가 중요함</h3><p id="127720e4-6f49-8361-a1d9-011cd0f37b72" class="" dir="auto">연결 기술을 많이 쓰는 것이 아니라, 운영 가능한 구조를 만드는 것이 중요함.</p><h3 id="6f2720e4-6f49-82a8-92af-0156084dc0a7" class="" dir="auto">2. 중앙 통제와 독립성을 균형 있게 가져가야 함</h3><p id="884720e4-6f49-8293-baef-81dae99c16fa" class="" dir="auto">계정과 VPC는 분리하되 필요한 범위만 연결해야 함.</p><h3 id="3bc720e4-6f49-825a-bd07-01b32f3415e9" class="" dir="auto">3. 보안 정책과 네트워크 구조를 같이 설계해야 함</h3><p id="2ca720e4-6f49-8306-a90e-8156080ea756" class="" dir="auto">연결이 곧 허용을 의미해서는 안 됨.</p><h3 id="811720e4-6f49-839f-9ccd-81a2fc6ed961" class="" dir="auto">4. 문서화와 표준화가 필요함</h3><p id="cd7720e4-6f49-82c5-a937-01de5875d3ec" class="" dir="auto">허브 구조, 라우팅 정책, 엔드포인트 정책은 표준 형태로 가져가는 것이 좋음.</p><p id="3e1720e4-6f49-83c3-9b1d-0164306960a7" class="" dir="auto">즉, 고급 네트워크 연결 설계는 기술 조합이 아니라</p><p id="ae3720e4-6f49-82e6-aceb-81e782303838" class="" dir="auto"><strong>운영 가능한 구조를 만드는 일</strong>임.</p><hr id="61d720e4-6f49-83aa-9867-819f87f36e43" dir="auto"/><h1 id="591720e4-6f49-8323-bbd0-01488cbf80c7" class="" dir="auto">3.24 장 요약</h1><ul id="264720e4-6f49-8263-ac04-01ed7d8597e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고급 네트워크 연결 아키텍처의 의미</li></ul><ul id="57b720e4-6f49-82c7-90bb-81c633d47f95" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon S3 VPC 엔드포인트 개념</li></ul><ul id="97c720e4-6f49-83ef-812c-015a79381efb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 통신 보안에서 엔드포인트의 역할</li></ul><ul id="7ee720e4-6f49-82a9-899e-01e65138f334" class="bulleted-list" dir="auto"><li style="list-style-type:disc">엔드포인트 정책과 버킷 정책의 관계</li></ul><ul id="674720e4-6f49-83ee-9ebd-8135bdad7c24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 VPC 환경의 등장과 필요성</li></ul><ul id="cf7720e4-6f49-839e-9bbe-81daaffde6f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Transit Gateway 개요와 필요성</li></ul><ul id="01e720e4-6f49-8217-8539-012b6a536a5e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Attachment, Route Table, Association, Propagation 개념</li></ul><ul id="7a3720e4-6f49-8366-ac34-01a8698b94c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">허브-앤-스포크 구조의 의미</li></ul><ul id="c42720e4-6f49-82a4-8ab3-81ffa3e0604a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shared Services VPC와 중앙 네트워크 설계</li></ul><ul id="1bf720e4-6f49-8372-9758-818a6ff2eada" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 계정 / 멀티 VPC 연결 구조</li></ul><ul id="1e6720e4-6f49-82ce-bb8f-816a487d245b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고급 네트워크 설계 시 핵심 질문과 운영 관점</li></ul><hr id="672720e4-6f49-82a1-9187-817b7e84172a" dir="auto"/><h1 id="679720e4-6f49-835e-944a-0121c3a71eec" class="" dir="auto">3.25 한 줄 정리</h1><pre id="7c5720e4-6f49-82da-b265-015aa9238756" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">고급 네트워크 연결 아키텍처는 많이 연결하는 것이 아니라,
+AWS 서비스 접근과 VPC 간 연결을 중앙 통제 구조로 설계하여
+보안, 확장성, 운영성을 함께 확보하는 것이다.</code></pre><hr id="452720e4-6f49-820d-982b-019238c6c53b" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

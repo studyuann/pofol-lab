@@ -1,0 +1,822 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Auto Scaling과 ALB를 이용한 Web Application 확장 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="5f2720e4-6f49-82c5-9a48-817941df61ba" class="page sans"><header><h1 class="page-title" dir="auto">Auto Scaling과 ALB를 이용한 Web Application 확장 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="12c720e4-6f49-8257-9572-8155952274ae" dir="auto"/><figure id="922720e4-6f49-835c-835c-81974e7cd91d" class="image" data-notion-image="Auto%20Scaling%EA%B3%BC%20ALB%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20Web%20Application%20%ED%99%95%EC%9E%A5%20%EC%8B%A4%EC%8A%B5/image.png" dir="ltr"><a href="Auto%20Scaling%EA%B3%BC%20ALB%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20Web%20Application%20%ED%99%95%EC%9E%A5%20%EC%8B%A4%EC%8A%B5/image.png"><img style="width:704.0000610351562px" src="Auto%20Scaling%EA%B3%BC%20ALB%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20Web%20Application%20%ED%99%95%EC%9E%A5%20%EC%8B%A4%EC%8A%B5/image.png"/></a></figure><h2 id="6e1720e4-6f49-82f8-b13c-01635fbd0eae" class="" dir="auto">실습 목표</h2><p id="379720e4-6f49-8256-ae43-819e4066be32" class="" dir="auto">본 실습에서는 EC2 인스턴스를 기반으로 <strong>AMI를 생성하고 Launch Template을 만든 뒤 Auto Scaling Group을 구성하고 Application Load Balancer와 연동</strong>하는 과정을 수행한다.</p><p id="503720e4-6f49-8303-8bc6-81c4b08bb5ed" class="" dir="auto">실습을 통해 다음 내용을 이해한다.</p><ul id="700720e4-6f49-83a9-a69a-01140104b8f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Web Application 자동 실행 설정</li></ul><ul id="1a8720e4-6f49-8301-aba4-816251d07c8e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AMI 생성 방법</li></ul><ul id="1d3720e4-6f49-82d4-8fc9-8154961f63c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Launch Template 구성 방법</li></ul><ul id="f51720e4-6f49-83b4-bcaa-816adbe333d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling Group 생성 방법</li></ul><ul id="3cf720e4-6f49-8326-bd26-0159c0630483" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Application Load Balancer와 Auto Scaling 연동</li></ul><ul id="3e8720e4-6f49-83c0-a024-8152f5560818" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU 사용률 기반 Scale Out 동작</li></ul><ul id="010720e4-6f49-8292-8a30-815dca68c669" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 서브넷과 프라이빗 서브넷의 역할 구분</li></ul><hr id="df1720e4-6f49-83e5-9ab7-81c9048eb797" dir="auto"/><h1 id="ebe720e4-6f49-823c-abf3-81ede3ecd491" class="" dir="auto">1. 전체 아키텍처 이해</h1><p id="c18720e4-6f49-82f6-ab33-01c894cfcbb1" class="" dir="auto">이번 실습의 목표 구조는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="c06720e4-6f49-83f1-a166-81ef2260e8ea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+  ↓
+Application Load Balancer
+(Public Subnet)
+  ↓
+EC2 Auto Scaling Group
+(Private Subnet)</code></pre><p id="30d720e4-6f49-8333-8bc8-81038fad615f" class="" dir="auto">이 구조에서 중요한 점은 다음과 같다.</p><ul id="dfc720e4-6f49-8230-8ddd-01830a6a1d93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 사용자는 <strong>Internet-facing ALB</strong> 로 접속한다.</li></ul><ul id="b16720e4-6f49-8331-924f-81fc258f708a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB는 퍼블릭 서브넷에 배치해야 한다.</li></ul><ul id="bb9720e4-6f49-83f4-bebf-81733137b991" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 웹 애플리케이션은 프라이빗 서브넷의 EC2 인스턴스에서 실행한다.</li></ul><ul id="609720e4-6f49-833b-b382-017847b81805" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling Group은 프라이빗 서브넷에 인스턴스를 자동 생성한다.</li></ul><ul id="aa5720e4-6f49-82a8-911a-81b7c31d1dfd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB는 Target Group을 통해 프라이빗 서브넷의 EC2 인스턴스로 요청을 전달한다.</li></ul><hr id="edf720e4-6f49-832d-8c62-018da043bdcb" dir="auto"/><h1 id="bfe720e4-6f49-8296-adcc-01bc71016e63" class="" dir="auto">2. 사전 네트워크 구성 확인</h1><p id="c3d720e4-6f49-8327-8dd0-01af588a4e19" class="" dir="auto">실습 전에 반드시 네트워크 구성이 올바른지 확인해야 한다.</p><h2 id="c14720e4-6f49-82ff-bd83-017491e99462" class="" dir="auto">2.1 서브넷 구성 예시</h2><p id="ca1720e4-6f49-826a-8a87-8150541ef91e" class="" dir="auto">예시 구성은 다음과 같다.</p><pre id="1dd720e4-6f49-839e-891b-014a0267c42a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-2a
+ ├ public subnet-a
+ └ private subnet-a
+
+ap-northeast-2c
+ ├ public subnet-c
+ └ private subnet-c</code></pre><p id="5a9720e4-6f49-83cb-af9b-01c481f3f897" class="" dir="auto">즉 같은 가용 영역 안에서도 퍼블릭 서브넷과 프라이빗 서브넷은 각각 따로 존재할 수 있다.</p><p id="311720e4-6f49-82d1-ad53-81c7e2c8a896" class="" dir="auto">여기서 중요한 것은 <strong>가용 영역 이름이 아니라 서브넷이 어떤 라우팅 테이블을 사용하는가</strong>다.</p><hr id="a76720e4-6f49-8227-bfe9-81fab1e766f2" dir="auto"/><h2 id="a3e720e4-6f49-82cd-9ef1-01055cba29e6" class="" dir="auto">2.2 퍼블릭 서브넷의 의미</h2><p id="11b720e4-6f49-8239-b7c4-0124582ff0b7" class="" dir="auto">퍼블릭 서브넷은 일반적으로 다음 라우팅을 가진다.</p><pre id="424720e4-6f49-83a3-8321-81c8e09bc9fc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">0.0.0.0/0 -&gt; Internet Gateway</code></pre><p id="ebb720e4-6f49-83de-895f-8127c32ee2e5" class="" dir="auto">이런 서브넷에는 보통 다음 리소스를 둔다.</p><ul id="fe3720e4-6f49-82fc-80bd-01d619876ca0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet-facing ALB</li></ul><ul id="494720e4-6f49-83e7-b907-01eccf690e12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAT Gateway</li></ul><ul id="a6a720e4-6f49-824f-9593-011cafb62744" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bastion Host</li></ul><hr id="ce1720e4-6f49-82d2-81ff-8101a3855258" dir="auto"/><h2 id="3a3720e4-6f49-8347-adfb-81427e88a697" class="" dir="auto">2.3 프라이빗 서브넷의 의미</h2><p id="91f720e4-6f49-824a-ab16-817af27705dd" class="" dir="auto">프라이빗 서브넷은 일반적으로 Internet Gateway로 직접 나가는 기본 경로가 없다.</p><p id="1de720e4-6f49-820b-8883-0135822aa625" class="" dir="auto">예를 들면 다음과 같다.</p><pre id="3ce720e4-6f49-8210-ac78-815a116e9404" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC CIDR -&gt; local</code></pre><p id="7ad720e4-6f49-82de-bf3a-0141266e79a1" class="" dir="auto">또는 외부 아웃바운드가 필요한 경우 다음과 같이 NAT Gateway를 사용한다.</p><pre id="b8b720e4-6f49-8256-af05-81c6217890a1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">0.0.0.0/0 -&gt; NAT Gateway</code></pre><p id="474720e4-6f49-8279-9771-81f5bec682e0" class="" dir="auto">이런 서브넷에는 보통 다음 리소스를 둔다.</p><ul id="c44720e4-6f49-823d-8f22-8153ff72b184" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Web Server</li></ul><ul id="23c720e4-6f49-831c-94c2-010e20ddeebc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">App Server</li></ul><ul id="7da720e4-6f49-83db-b338-01e2c42877be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling EC2</li></ul><ul id="408720e4-6f49-831b-86ab-81c61f38a9ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Database</li></ul><hr id="f72720e4-6f49-82f1-bede-81f92e942eb9" dir="auto"/><h2 id="c3c720e4-6f49-82ff-ad40-81ebf99e27d0" class="" dir="auto">2.4 이번 실습에서 반드시 기억할 점</h2><p id="369720e4-6f49-8359-8e0f-81d98c873cbf" class="" dir="auto">이번 실습에서는 다음 구분이 반드시 필요하다.</p><ul id="3a5720e4-6f49-828e-b7fa-0105c6b1d038" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ALB는 퍼블릭 서브넷</strong></li></ul><ul id="b4e720e4-6f49-8297-b995-0178a6c4c159" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ASG 인스턴스는 프라이빗 서브넷</strong></li></ul><p id="e10720e4-6f49-830f-b01f-015f25dbbf3a" class="" dir="auto">만약 ALB가 프라이빗 서브넷에 배치되어 있으면, Internet-facing 으로 생성했더라도 외부에서 접속되지 않을 수 있다.</p><p id="2fa720e4-6f49-82d9-a05c-01225696be8c" class="" dir="auto">이전에 겪은 현상처럼, ALB와 대상 서버가 같은 라우팅 테이블을 공유하는 상태에서 <code>0.0.0.0/0 -&gt; IGW</code> 를 넣으면 접속되고 빼면 안 되는 현상이 나타날 수 있다.</p><p id="93d720e4-6f49-8296-921d-81be9e53894b" class="" dir="auto">이것은 <strong>대상 서버가 원래 IGW가 필요해서가 아니라, ALB가 퍼블릭 서브넷에 있지 않았기 때문</strong>이다.</p><hr id="00b720e4-6f49-8313-a4b0-811a8bb1dd44" dir="auto"/><h1 id="ddd720e4-6f49-8300-8831-013842546d17" class="" dir="auto">3. Web Application 자동 실행 설정</h1><p id="606720e4-6f49-826e-85ed-01c02464149f" class="" dir="auto">Auto Scaling 환경에서는 새로운 EC2 인스턴스가 생성될 때마다 애플리케이션이 자동으로 실행되어야 한다.</p><p id="8cb720e4-6f49-8246-af43-81df4f5f88ed" class="" dir="auto">이를 위해 systemd 서비스를 설정한다.</p><hr id="e7d720e4-6f49-8360-acac-81d420c9f8d9" dir="auto"/><h2 id="a4c720e4-6f49-8280-9f4f-81ed459d7b87" class="" dir="auto">3.1 Web Server 접속</h2><p id="f0d720e4-6f49-8268-9d55-0162bef49e40" class="" dir="auto">Bastion Host를 통해 초기 Web Server 인스턴스에 접속한다.</p><p id="ac4720e4-6f49-8249-9797-819a3d70a065" class="" dir="auto">이 인스턴스는 이후 AMI 생성의 기준이 되는 인스턴스다.</p><hr id="fff720e4-6f49-837e-9115-81bc1979dc8a" dir="auto"/><h2 id="8e4720e4-6f49-823a-88d2-81088be34ad4" class="" dir="auto">3.2 자동 실행 스크립트 작성</h2><p id="459720e4-6f49-82f8-97bf-0157aea0a5aa" class="" dir="auto">다음 파일을 생성한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="69c720e4-6f49-836e-aa3c-814bf127c1be" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi streamlit_service.sh</code></pre><p id="381720e4-6f49-825b-93ed-81e28d795144" class="" dir="auto">다음 내용을 입력한다.</p><pre id="e0a720e4-6f49-8385-a4cc-814816e4885e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+
+sudo bash -c &#x27;cat &lt;&lt; EOF &gt; /etc/systemd/system/streamlit.service
+[Unit]
+Description=Streamlit Application Service
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/root/streamlit-project
+ExecStart=/usr/local/bin/streamlit run main.py --server.port 80 --server.address 0.0.0.0
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF&#x27;
+
+sudo systemctl daemon-reload
+sudo systemctl enable streamlit.service
+sudo systemctl start streamlit.service
+
+echo &quot;Streamlit 서비스가 등록 및 시작되었음&quot;</code></pre><hr id="2b2720e4-6f49-83b5-a508-0107ed7e3902" dir="auto"/><h2 id="897720e4-6f49-83e8-948a-010faa0145da" class="" dir="auto">3.3 스크립트 실행</h2><p id="0b2720e4-6f49-8307-a786-01bcd2ebe34f" class="" dir="auto">다음 명령으로 실행한다.</p><pre id="094720e4-6f49-83de-9843-0122cad65470" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">sh ./streamlit_service.sh</code></pre><p id="1e7720e4-6f49-8340-97a2-019ef5f3a20c" class="" dir="auto">이 스크립트가 수행하는 일은 다음과 같다.</p><ol type="1" id="82a720e4-6f49-830f-9cfd-01f97f2bc6b8" class="numbered-list" start="1" dir="auto"><li><code>streamlit.service</code> 파일 생성</li></ol><ol type="1" id="053720e4-6f49-8336-b474-01aa82c5c0eb" class="numbered-list" start="2" dir="auto"><li>Streamlit 실행 명령 등록</li></ol><ol type="1" id="f89720e4-6f49-8264-86ed-01d20b6c5244" class="numbered-list" start="3" dir="auto"><li>systemd 서비스 등록</li></ol><ol type="1" id="a58720e4-6f49-821b-8208-0167a7f7584a" class="numbered-list" start="4" dir="auto"><li>부팅 시 자동 실행 설정</li></ol><ol type="1" id="2c6720e4-6f49-83a5-9f53-81ac366bb3f0" class="numbered-list" start="5" dir="auto"><li>현재 세션에서 서비스 즉시 시작</li></ol><hr id="3c9720e4-6f49-830c-82c2-81b925ffd834" dir="auto"/><h2 id="8ba720e4-6f49-83d8-83c7-015881089d36" class="" dir="auto">3.4 서비스 상태 확인</h2><p id="222720e4-6f49-82c2-9ebd-01c584f0964a" class="" dir="auto">다음 명령으로 서비스 상태를 확인한다.</p><pre id="de3720e4-6f49-83ae-af8e-81c5f264d9cc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">sudo systemctl status streamlit.service</code></pre><p id="c8e720e4-6f49-829b-9b4d-81dd7b6be02d" class="" dir="auto">정상 동작 여부를 확인하려면 다음 명령도 수행한다.</p><pre id="fa4720e4-6f49-82c5-b714-816b30530044" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">sudo ss -tulpn | grep :80</code></pre><p id="70d720e4-6f49-837f-a3be-8119e613cf53" class="" dir="auto">또는</p><pre id="f96720e4-6f49-83c0-8950-813065b79972" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://localhost</code></pre><h3 id="26e720e4-6f49-839e-b3b8-81c4feafcf0c" class="" dir="auto">설명</h3><ul id="359720e4-6f49-8372-995a-8100091cd7da" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>systemctl status</code> 는 서비스가 정상 실행 중인지 확인하는 명령이다.</li></ul><ul id="6a8720e4-6f49-8265-815c-019861d08955" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ss -tulpn</code> 은 현재 어떤 프로세스가 어떤 포트를 열고 있는지 확인한다.</li></ul><ul id="a1d720e4-6f49-8289-a8a3-013da262e2a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>grep :80</code> 은 80번 포트를 사용하는 프로세스만 필터링해서 보여준다.</li></ul><ul id="71d720e4-6f49-82fe-9b4e-014bd0d6402c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>curl http://localhost</code> 는 로컬 서버에서 웹 응답이 정상적으로 오는지 확인한다.</li></ul><p id="3f5720e4-6f49-8265-902d-81fc1f609dbf" class="" dir="auto">이번 실습에서는 Streamlit이 80 포트에서 직접 서비스되므로, 이후 Target Group 포트와 보안 그룹 포트도 동일하게 맞춰야 한다.</p><hr id="ed5720e4-6f49-8353-b7a4-0122556594d6" dir="auto"/><h1 id="be1720e4-6f49-822b-b7aa-0131a5f4001a" class="" dir="auto">4. Web Server AMI 생성</h1><p id="16c720e4-6f49-82de-bf65-81f45614f269" class="" dir="auto">Auto Scaling은 동일한 설정을 가진 EC2 인스턴스를 반복적으로 생성해야 하므로 AMI가 필요하다.</p><p id="e4c720e4-6f49-82f0-ac62-01f73be283ba" class="" dir="auto">AMI는 현재 설정된 인스턴스를 이미지로 저장한 것이다.</p><hr id="3c3720e4-6f49-8281-8320-810985f18349" dir="auto"/><h2 id="a23720e4-6f49-828f-8bce-014e6675e5b4" class="" dir="auto">4.1 AMI 생성 대상 확인</h2><p id="aef720e4-6f49-8351-b36a-018e9fca62ac" class="" dir="auto">다음 EC2 인스턴스를 선택한다.</p><pre id="09b720e4-6f49-82e2-946a-8183e6f533a9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-ec2-web</code></pre><p id="1cd720e4-6f49-8332-b001-014f6607db6b" class="" dir="auto">이 인스턴스에는 다음이 준비되어 있어야 한다.</p><ul id="c80720e4-6f49-8297-a0d4-01da5d2797ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 코드</li></ul><ul id="502720e4-6f49-8285-87d0-819c6b4ac2ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python 및 Streamlit 설치</li></ul><ul id="c05720e4-6f49-8262-b9df-817e1bccbaed" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>streamlit.service</code> 설정 완료</li></ul><ul id="193720e4-6f49-8231-8027-81e7c9473698" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 정상 실행 상태</li></ul><hr id="b54720e4-6f49-825d-9a9f-818d5f2e23b5" dir="auto"/><h2 id="896720e4-6f49-8395-982c-8137f00eea29" class="" dir="auto">4.2 AMI 생성 메뉴 이동</h2><p id="70a720e4-6f49-8387-bc34-818cd496bf9a" class="" dir="auto">다음 메뉴로 이동한다.</p><pre id="797720e4-6f49-8200-b16b-01488dbc82d2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">작업
+→ 이미지 및 템플릿
+→ 이미지 생성</code></pre><hr id="087720e4-6f49-832a-b4e7-81dab534a90d" dir="auto"/><h2 id="0e8720e4-6f49-82fd-a6c9-810bd2352188" class="" dir="auto">4.3 AMI 설정</h2><p id="ec5720e4-6f49-828f-92fa-81616e8e19fe" class="" dir="auto">이미지 이름 예시는 다음과 같다.</p><pre id="e62720e4-6f49-8284-a4e3-818bb5f4545c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-ami-web-v1-YYMMDD</code></pre><p id="ce3720e4-6f49-826d-8b2a-019ac167cd3a" class="" dir="auto">옵션은 다음처럼 설정할 수 있다.</p><pre id="35f720e4-6f49-8282-9ec7-8121e054bd8f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">재부팅 안 함</code></pre><h3 id="745720e4-6f49-83ac-9029-8153efad6f78" class="" dir="auto">설명</h3><p id="bfc720e4-6f49-83f1-9c88-81746dd9426d" class="" dir="auto">이 옵션은 서비스 중단 없이 AMI를 만들기 위해 사용할 수 있다.</p><p id="8b0720e4-6f49-82ba-97ae-817fe38de4c0" class="" dir="auto">다만 운영 환경에서는 파일 시스템 일관성 측면에서 재부팅 후 생성하는 것이 더 안전한 경우가 있다.</p><p id="c71720e4-6f49-8209-b641-81a16de10fe6" class="" dir="auto">실습 환경에서는 빠르게 진행하기 위해 재부팅 안 함 옵션을 사용할 수 있다.</p><p id="5cc720e4-6f49-83dc-a546-81064f770359" class="" dir="auto">AMI 생성 버튼을 클릭한다.</p><hr id="e7f720e4-6f49-837f-abb3-8137cbce41ab" dir="auto"/><h2 id="2b6720e4-6f49-8321-90f6-8145766d92ee" class="" dir="auto">4.4 AMI 생성 상태 확인</h2><p id="044720e4-6f49-83ad-bc74-81ee07361904" class="" dir="auto">다음 메뉴로 이동한다.</p><pre id="353720e4-6f49-8326-9bcb-81f3c8ef9579" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 콘솔
+→ AMI</code></pre><p id="ddc720e4-6f49-8328-88db-8130192c5e52" class="" dir="auto">다음 AMI의 상태를 확인한다.</p><pre id="a59720e4-6f49-8300-a74a-815d7e6d1a66" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-ami-web-v1-YYMMDD</code></pre><p id="20e720e4-6f49-832b-aa5b-811049fc921c" class="" dir="auto">상태가 <strong>Available</strong> 이 되면 사용 가능하다.</p><hr id="8c8720e4-6f49-836b-9cb1-81a932101ca5" dir="auto"/><h1 id="a29720e4-6f49-83ac-a74c-81e29e2646ab" class="" dir="auto">5. Launch Template 생성</h1><p id="ec1720e4-6f49-8232-a843-010558865437" class="" dir="auto">Auto Scaling Group은 Launch Template을 기준으로 EC2 인스턴스를 생성한다.</p><p id="b79720e4-6f49-83d8-8a05-01af827e47e0" class="" dir="auto">즉 Launch Template에는 <strong>어떤 이미지로 어떤 인스턴스를 어떤 설정으로 만들 것인가</strong>가 정의된다.</p><hr id="0d0720e4-6f49-83e6-a75d-8107d71dfe52" dir="auto"/><h2 id="d28720e4-6f49-83a0-a441-817b1be37268" class="" dir="auto">5.1 Launch Template 생성 메뉴 이동</h2><p id="205720e4-6f49-8241-a6bd-01234db7d422" class="" dir="auto">다음 메뉴로 이동한다.</p><pre id="b57720e4-6f49-831f-955b-813b5c4fd902" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 콘솔
+→ 시작 템플릿
+→ 시작 템플릿 생성</code></pre><hr id="9e2720e4-6f49-838d-9efa-0148b0f6b674" dir="auto"/><h2 id="88e720e4-6f49-822c-a7d7-0193ad03eb21" class="" dir="auto">5.2 기본 설정</h2><p id="38c720e4-6f49-8204-95fd-81e5b8dc7711" class="" dir="auto">시작 템플릿 이름</p><pre id="e5f720e4-6f49-8269-ae97-815911f7790d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-template-autoscaling-web</code></pre><p id="d52720e4-6f49-8213-a2ea-0125c60f0147" class="" dir="auto">옵션</p><pre id="93f720e4-6f49-8391-bc03-01bbb2a36e42" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Auto Scaling 지침 활성화</code></pre><hr id="ed0720e4-6f49-8281-8e22-81f489f6e5c7" dir="auto"/><h2 id="f58720e4-6f49-8245-9c3b-01411d4b06c9" class="" dir="auto">5.3 AMI 선택</h2><p id="b72720e4-6f49-8295-a8cb-01ef3e0e3338" class="" dir="auto">다음 AMI를 선택한다.</p><pre id="fb5720e4-6f49-8339-8632-01125854cee8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-ami-web-v1-YYMMDD</code></pre><hr id="36d720e4-6f49-838a-bf5a-013a0facb283" dir="auto"/><h2 id="376720e4-6f49-836a-8abc-8198e35e6a2f" class="" dir="auto">5.4 인스턴스 설정</h2><p id="da9720e4-6f49-82b6-a164-013592eaaa11" class="" dir="auto">인스턴스 유형</p><pre id="9c6720e4-6f49-832b-a208-01133da72853" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">t3.micro</code></pre><p id="7d5720e4-6f49-8353-a7cb-81246bc18f6d" class="" dir="auto">키 페어</p><pre id="81a720e4-6f49-82ff-9cf9-01fa15e015cf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-keypair</code></pre><hr id="89c720e4-6f49-838b-9088-819c267975c3" dir="auto"/><h2 id="91f720e4-6f49-8298-b557-81e10ad43f5f" class="" dir="auto">5.5 네트워크 설정</h2><p id="a6f720e4-6f49-822c-ba28-01119361349f" class="" dir="auto">서브넷은 다음처럼 설정한다.</p><pre id="d1b720e4-6f49-8275-aefa-8104fbeea9ed" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">시작 템플릿에 포함하지 않음</code></pre><p id="deb720e4-6f49-836a-b60f-01d29271d35e" class="" dir="auto">이유는 실제 서브넷 선택을 Auto Scaling Group 단계에서 하기 때문이다.</p><p id="78a720e4-6f49-83fe-a524-81cbeb35d702" class="" dir="auto">보안 그룹은 다음을 선택한다.</p><pre id="04e720e4-6f49-82b1-b1b6-81047d440df9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-sg-web</code></pre><h3 id="a4f720e4-6f49-83e8-ab44-01696b826b94" class="" dir="auto">보안 그룹 주의사항</h3><p id="f78720e4-6f49-8380-9960-01ffa7dfb12a" class="" dir="auto">이 보안 그룹은 웹 서버용 보안 그룹이어야 하며, 일반적으로 다음 규칙을 가진다.</p><p id="d2f720e4-6f49-8271-9943-010b2681a9e4" class="" dir="auto">인바운드 예시</p><pre id="712720e4-6f49-8356-b926-01895a22647a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">HTTP 80
+Source: ALB 보안 그룹</code></pre><p id="610720e4-6f49-837a-94af-817734bdb9ce" class="" dir="auto">즉 80 포트를 전체 인터넷에 열기보다 <strong>ALB 보안 그룹만 허용하는 방식</strong>이 더 적절하다.</p><hr id="7c5720e4-6f49-836c-a93b-8170f99f7bf0" dir="auto"/><h2 id="f62720e4-6f49-8236-af00-819c3868709f" class="" dir="auto">5.6 태그 설정</h2><p id="5ba720e4-6f49-83ac-92b3-8195faaacae8" class="" dir="auto">Tag Key</p><pre id="21d720e4-6f49-8221-b968-811853b5edad" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name</code></pre><p id="524720e4-6f49-83fd-b1e0-011cb0df4a25" class="" dir="auto">Tag Value</p><pre id="303720e4-6f49-8209-8ce9-81199ff6318e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-ec2-web</code></pre><hr id="ab0720e4-6f49-83b1-88ba-01bf3779ed05" dir="auto"/><h2 id="3d0720e4-6f49-82eb-8bc3-818eb3c4883f" class="" dir="auto">5.7 고급 설정</h2><p id="554720e4-6f49-83bf-8e4f-01d26eb5aa1c" class="" dir="auto">IAM Instance Profile</p><pre id="a29720e4-6f49-82ae-8f8c-81d64f43b167" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-role-ec2</code></pre><p id="9d6720e4-6f49-836e-8bea-01ed1f298315" class="" dir="auto">Hostname type</p><pre id="db6720e4-6f49-8274-a301-0158dca62d8e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IP name</code></pre><p id="130720e4-6f49-8385-9c4b-8179aefb20ff" class="" dir="auto">옵션 활성화</p><pre id="756720e4-6f49-8329-8d86-013b21d749ea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">리소스 기반 IPv4(A레코드) DNS 요청</code></pre><p id="ad6720e4-6f49-838b-ab56-0157990c405e" class="" dir="auto">설정 완료 후 다음을 클릭한다.</p><pre id="37b720e4-6f49-83c3-9520-81973bfa3f53" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">시작 템플릿 생성</code></pre><hr id="542720e4-6f49-83c4-b564-819d21183156" dir="auto"/><h1 id="6db720e4-6f49-826d-bdaf-01c8f9c058dd" class="" dir="auto">6. Auto Scaling Group 생성</h1><p id="2d9720e4-6f49-834b-b42c-81f20b48c6ae" class="" dir="auto">이제 Launch Template을 기반으로 Auto Scaling Group을 생성한다.</p><hr id="489720e4-6f49-82ae-afe5-015fa718963e" dir="auto"/><h2 id="bf6720e4-6f49-8250-8adb-811650d127c0" class="" dir="auto">6.1 생성 메뉴 이동</h2><p id="b3b720e4-6f49-8289-b194-8148f004f937" class="" dir="auto">다음 메뉴로 이동한다.</p><pre id="482720e4-6f49-8255-af80-81dba436085e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 콘솔
+→ Auto Scaling Group
+→ Auto Scaling Group 생성</code></pre><hr id="10b720e4-6f49-82a8-b742-81d54ed0a551" dir="auto"/><h2 id="298720e4-6f49-8282-9a1f-81a32835a544" class="" dir="auto">6.2 기본 설정</h2><p id="4de720e4-6f49-83fe-896e-01158566d7ac" class="" dir="auto">Auto Scaling Group 이름</p><pre id="9b2720e4-6f49-83cb-b0f4-0109436f3b54" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-asg-web</code></pre><p id="bd1720e4-6f49-839a-9302-81dabb9e31a9" class="" dir="auto">Launch Template</p><pre id="09f720e4-6f49-83bf-9000-8157a6861ffd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-template-autoscaling-web</code></pre><hr id="988720e4-6f49-822a-a3e1-8198ad6933d0" dir="auto"/><h2 id="78d720e4-6f49-8318-adde-0160452bd158" class="" dir="auto">6.3 네트워크 설정</h2><p id="028720e4-6f49-82fd-9eab-81fab07a78de" class="" dir="auto">VPC</p><pre id="f9a720e4-6f49-83ba-98b2-0192cc5ae38a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-vpc-ap-01</code></pre><p id="13b720e4-6f49-82d2-9a43-0163c6e23036" class="" dir="auto">서브넷</p><pre id="356720e4-6f49-83f7-b2d5-81807ed54006" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-sub-pri-01
+이니셜-sub-pri-02</code></pre><p id="b08720e4-6f49-8347-a6dd-01e97b91240e" class="" dir="auto">여기서 중요한 점은 다음과 같다.</p><ul id="e39720e4-6f49-839f-a8b6-81262d72c9aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling 인스턴스는 <strong>Private Subnet에서 실행됨</strong></li></ul><ul id="c50720e4-6f49-833d-83d4-81521e7d812c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 서브넷은 <strong>ALB용 퍼블릭 서브넷과 구분되어야 함</strong></li></ul><ul id="3c0720e4-6f49-8320-8b9b-8111d0304e09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB와 ASG 인스턴스가 같은 라우팅 테이블을 공유하면 안 됨</li></ul><hr id="b02720e4-6f49-82d7-b332-81f01020def7" dir="auto"/><h2 id="a8f720e4-6f49-82bc-8548-8148669344a7" class="" dir="auto">6.4 Load Balancer 연결</h2><p id="fcf720e4-6f49-832b-9523-81129e11e935" class="" dir="auto">옵션</p><pre id="cd3720e4-6f49-82e8-a2bd-0151a4a07a2f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">기존 로드 밸런서 연결</code></pre><p id="0b8720e4-6f49-827b-8627-01474ad168a9" class="" dir="auto">대상 그룹</p><pre id="61f720e4-6f49-8388-bb9d-01fb33bf1bfe" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-tg-web</code></pre><p id="9a2720e4-6f49-8267-b38c-013a2e56fd76" class="" dir="auto">옵션 활성화</p><pre id="57f720e4-6f49-82ad-883d-81fb590d9584" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Elastic Load Balancer 상태 확인</code></pre><h3 id="190720e4-6f49-8317-a639-014291a8139e" class="" dir="auto">설명</h3><p id="494720e4-6f49-83aa-9e57-812ac78d5789" class="" dir="auto">이 옵션을 활성화하면 Auto Scaling Group은 ELB 상태를 기준으로 인스턴스 상태를 판단할 수 있다.</p><p id="9ab720e4-6f49-8231-86e4-810001002075" class="" dir="auto">즉 Target Group 헬스 체크에서 비정상으로 판단된 인스턴스는 교체 대상이 될 수 있다.</p><hr id="a72720e4-6f49-82de-a65f-01a3d31e274b" dir="auto"/><h2 id="985720e4-6f49-8235-a3c3-01b76828b811" class="" dir="auto">6.5 그룹 크기 설정</h2><p id="354720e4-6f49-83b3-a2a2-0128ea30edce" class="" dir="auto">Desired Capacity</p><pre id="b61720e4-6f49-82e0-8ded-01256f97d309" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1</code></pre><p id="987720e4-6f49-82d0-b950-01b99f3712d7" class="" dir="auto">Minimum Capacity</p><pre id="8ff720e4-6f49-8205-bc1b-8107e10b3912" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1</code></pre><p id="910720e4-6f49-82a3-8912-01cbdb74a80a" class="" dir="auto">Maximum Capacity</p><pre id="112720e4-6f49-8311-9942-817c82b386e6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">4</code></pre><p id="756720e4-6f49-82b9-930d-0134ac17fe4f" class="" dir="auto">즉 최소 1개, 최대 4개의 EC2 인스턴스가 실행된다.</p><hr id="081720e4-6f49-8332-8620-01fc5eb6c2e0" dir="auto"/><h2 id="47f720e4-6f49-83ce-b4df-8175b22d5e38" class="" dir="auto">6.6 Auto Scaling 정책 설정</h2><p id="b8e720e4-6f49-8241-84c3-81da1d4e1442" class="" dir="auto">정책 유형</p><pre id="790720e4-6f49-8325-abc1-81a1fbce55a7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Target Tracking Scaling Policy</code></pre><p id="1ef720e4-6f49-8248-a907-81064437e3a0" class="" dir="auto">정책 이름</p><pre id="9ec720e4-6f49-82d1-a435-01c192aa1701" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Target Tracking Policy</code></pre><p id="bc9720e4-6f49-823c-b216-011bb428149e" class="" dir="auto">지표 유형</p><pre id="2cb720e4-6f49-839f-af1e-81b1ca3f2956" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Average CPU Utilization</code></pre><p id="8cc720e4-6f49-828d-9dee-81de286d1b32" class="" dir="auto">Target Value</p><pre id="a32720e4-6f49-825d-bb9f-81c7e788cc2d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">30</code></pre><h3 id="07d720e4-6f49-8384-9576-8111fe16ea24" class="" dir="auto">설명</h3><p id="55a720e4-6f49-8298-b9ec-01810b559713" class="" dir="auto">Target Tracking 정책은 특정 지표를 목표값 근처로 유지하려는 방식이다.</p><p id="ffe720e4-6f49-8323-b767-8105f292dd83" class="" dir="auto">여기서는 평균 CPU 사용률 30%를 목표로 한다.</p><p id="173720e4-6f49-8260-a174-81dc18fa2c3a" class="" dir="auto">즉 CPU가 지속적으로 30%를 넘으면 인스턴스를 추가하는 방향으로 동작하고,</p><p id="84f720e4-6f49-83c6-b49d-81ea378c8a68" class="" dir="auto">반대로 CPU가 낮아지면 인스턴스 수를 줄이는 방향으로 동작한다.</p><p id="386720e4-6f49-83bb-8b85-0163f5e63d7d" class="" dir="auto">주의할 점은 <strong>정확히 30%를 넘는 순간 즉시 Scale Out이 발생하는 것은 아님</strong>이다.</p><p id="5b2720e4-6f49-8359-b327-01b5490e997f" class="" dir="auto">CloudWatch 지표 수집 주기, 평가 기간, 쿨다운 시간 등에 따라 실제 반응 시점은 조금 다를 수 있다.</p><hr id="959720e4-6f49-83f6-b701-01754d9bc816" dir="auto"/><h2 id="eb1720e4-6f49-821a-ab88-01a2d541a195" class="" dir="auto">6.7 태그 설정</h2><p id="88f720e4-6f49-82a4-bc74-01d7dd0a4382" class="" dir="auto">Tag Key</p><pre id="e88720e4-6f49-83f7-a2df-019e647490ef" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Name</code></pre><p id="af6720e4-6f49-8365-ab88-014ed888c3df" class="" dir="auto">Tag Value</p><pre id="ac5720e4-6f49-8272-a238-811b0c2178a7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-asg-web</code></pre><p id="800720e4-6f49-8278-9ce0-01437ee260ce" class="" dir="auto">생성 완료 후 Auto Scaling Group을 생성한다.</p><hr id="aa4720e4-6f49-833d-9eb9-0182bd318996" dir="auto"/><h1 id="1ae720e4-6f49-8343-8829-01a3da358dd3" class="" dir="auto">7. Application Load Balancer 확인</h1><p id="b95720e4-6f49-83f2-bb24-0122ae733373" class="" dir="auto">Auto Scaling Group과 연결되는 ALB가 올바르게 구성되어 있는지 확인한다.</p><hr id="0d1720e4-6f49-8353-b038-81cd99680023" dir="auto"/><h2 id="86e720e4-6f49-8278-9e70-817df7862449" class="" dir="auto">7.1 ALB 확인 항목</h2><p id="47a720e4-6f49-82f9-bab6-812f33bd4957" class="" dir="auto">다음 메뉴로 이동한다.</p><pre id="ff6720e4-6f49-8379-b739-01930ccf1115" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 콘솔
+→ Load Balancer
+→ 이니셜-alb-web</code></pre><p id="4d8720e4-6f49-8241-8077-0121a3635dad" class="" dir="auto">다음 항목을 확인한다.</p><ul id="dec720e4-6f49-83c8-952a-01028eaea31b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Scheme: <code>internet-facing</code></li></ul><ul id="bd8720e4-6f49-82b4-a1ce-814a3d641c69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결된 서브넷: 퍼블릭 서브넷 2개 이상</li></ul><ul id="eb5720e4-6f49-82c8-ad9e-8183a0ac2f38" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리스너: HTTP 80 또는 HTTPS 443</li></ul><ul id="fb6720e4-6f49-82ec-9942-016aee23deae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결 대상 그룹: <code>이니셜-tg-web</code></li></ul><hr id="f1c720e4-6f49-8367-ba47-0103d666d7ad" dir="auto"/><h2 id="253720e4-6f49-8338-9875-0148904cd667" class="" dir="auto">7.2 중요 확인 사항</h2><p id="be5720e4-6f49-8369-ad4a-016611e295df" class="" dir="auto">Internet-facing ALB 는 반드시 퍼블릭 서브넷에 연결되어 있어야 한다.</p><p id="88c720e4-6f49-82e6-b17a-010299616700" class="" dir="auto">즉 ALB가 연결된 서브넷의 라우팅 테이블에는 다음 경로가 있어야 한다.</p><pre id="6e4720e4-6f49-83f4-9d14-01de65668e3d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">0.0.0.0/0 -&gt; Internet Gateway</code></pre><p id="eea720e4-6f49-83a0-a95e-8165749261fe" class="" dir="auto">이 조건이 없으면 ALB가 외부에서 접근되지 않을 수 있다.</p><hr id="204720e4-6f49-8214-b81a-81b7c7b013ee" dir="auto"/><h1 id="863720e4-6f49-8359-9f9d-81f21a2a71da" class="" dir="auto">8. Web Service 접속</h1><p id="e99720e4-6f49-833a-a617-01429d79e64a" class="" dir="auto">ALB DNS 이름을 확인한다.</p><p id="c58720e4-6f49-828c-940a-81aba40ff243" class="" dir="auto">다음 메뉴 이동</p><pre id="358720e4-6f49-833c-95f3-81ac17a807e1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 콘솔
+→ Load Balancer
+→ 이니셜-alb-web</code></pre><p id="6b8720e4-6f49-82d1-b191-0194f15b786b" class="" dir="auto">DNS 주소 예시</p><pre id="8b3720e4-6f49-82b0-a6d6-81f6fdf7eb69" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://xxxx.ap-northeast-2.elb.amazonaws.com</code></pre><p id="158720e4-6f49-83b8-b2ef-0186edfdb46a" class="" dir="auto">브라우저로 접속한다.</p><h3 id="937720e4-6f49-82f3-affa-816c99f0d293" class="" dir="auto">주의</h3><p id="7e6720e4-6f49-824e-ae02-01149020be7a" class="" dir="auto">접속 확인은 반드시 <strong>ALB DNS 주소</strong> 기준으로 해야 한다.</p><p id="a55720e4-6f49-83a3-b22b-81b3c3e73d98" class="" dir="auto">대상 EC2가 프라이빗 서브넷에 있으므로 EC2 공인 IP 접속을 기준으로 판단하면 안 된다.</p><hr id="5eb720e4-6f49-82a7-9fb2-81e61b429b7d" dir="auto"/><h1 id="302720e4-6f49-83b2-9273-811f7d6b24c8" class="" dir="auto">9. Scale Out 테스트</h1><p id="056720e4-6f49-83f6-9b72-810042eb69b1" class="" dir="auto">웹 페이지에서 부하 유발 기능을 실행한다.</p><p id="295720e4-6f49-830c-8d56-81e5e276c8e5" class="" dir="auto">예시</p><pre id="fc7720e4-6f49-8250-9972-81d487daa635" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Stress Tool</code></pre><p id="1df720e4-6f49-8221-9970-812d834cfb05" class="" dir="auto">이 기능은 CPU 사용률을 증가시키기 위한 것이다.</p><p id="e56720e4-6f49-83fa-8a5c-0178944541c3" class="" dir="auto">CPU 사용률이 증가하면 Auto Scaling 정책에 따라 새 인스턴스가 생성될 수 있다.</p><hr id="9f8720e4-6f49-82bf-b024-01ac131945dd" dir="auto"/><h1 id="680720e4-6f49-83ee-b188-0171ad9cac66" class="" dir="auto">10. Auto Scaling 동작 확인</h1><p id="d26720e4-6f49-83ff-acc2-817ae6f98b9d" class="" dir="auto">다음 메뉴로 이동한다.</p><pre id="897720e4-6f49-83af-aac0-81f7f9b8a911" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 콘솔
+→ Auto Scaling Group
+→ 이니셜-asg-web</code></pre><p id="f54720e4-6f49-83b1-bc50-810d06a318a1" class="" dir="auto">확인 항목은 다음과 같다.</p><pre id="b14720e4-6f49-827b-8870-0125f413ee83" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">모니터링
+활동(Activity)
+인스턴스 관리</code></pre><p id="81f720e4-6f49-831f-9777-01e2b9e93f5a" class="" dir="auto">다음과 같은 결과를 확인할 수 있다.</p><ul id="f14720e4-6f49-82c5-a156-81d9ba3aa21a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU 사용률 증가</li></ul><ul id="256720e4-6f49-8330-92ee-81d6351502fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새로운 EC2 인스턴스 생성</li></ul><ul id="a78720e4-6f49-82de-87ac-0160f372ddcc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Target Group 자동 등록</li></ul><ul id="01f720e4-6f49-8203-b51d-012db3dba61b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부하 감소 후 Scale In</li></ul><hr id="916720e4-6f49-8258-856f-8133b40edb70" dir="auto"/><h1 id="b05720e4-6f49-82f7-91bb-81cbd80bb8d9" class="" dir="auto">11. Target Group 상태 확인</h1><p id="8c6720e4-6f49-8337-ac15-01202a2e119d" class="" dir="auto">다음 메뉴로 이동한다.</p><pre id="cb6720e4-6f49-829e-a781-81c66cc39c1f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 콘솔
+→ 대상 그룹
+→ 이니셜-tg-web</code></pre><p id="9b5720e4-6f49-83bd-8569-01f37d7c47cc" class="" dir="auto">확인 항목</p><ul id="7b8720e4-6f49-82bd-8ed7-8199f2a25914" class="bulleted-list" dir="auto"><li style="list-style-type:disc">등록된 대상 수</li></ul><ul id="c12720e4-6f49-823b-b2bf-015083643221" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health 상태</li></ul><ul id="156720e4-6f49-82bb-902f-011bfe559de5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">deregistration 중인 대상 존재 여부</li></ul><h3 id="58d720e4-6f49-83a3-b656-01ae146eec26" class="" dir="auto">설명</h3><p id="f15720e4-6f49-83c7-98c2-0127ef03d014" class="" dir="auto">Scale In 이 발생하면 기존 인스턴스가 바로 사라지지 않고 잠시 남아 있을 수 있다.</p><p id="188720e4-6f49-83e3-9cb0-010089a8640d" class="" dir="auto">이것은 ALB의 <strong>deregistration delay</strong> 때문이다.</p><p id="855720e4-6f49-8327-991b-81f18738c769" class="" dir="auto">즉 다음과 같은 상태가 잠시 보일 수 있다.</p><ul id="2b2720e4-6f49-835c-ba09-8152489b85ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정상 1</li></ul><ul id="0b2720e4-6f49-82e9-a6f2-01d048d7224d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">제거 중 1</li></ul><p id="875720e4-6f49-83f4-9954-812b09f4ed6f" class="" dir="auto">이것은 비정상이 아니라 연결 종료를 위한 정상 동작일 수 있다.</p><hr id="1e2720e4-6f49-8288-b7ab-0100402b5fb0" dir="auto"/><h1 id="a68720e4-6f49-831c-b0ce-81ae0c067e03" class="" dir="auto">12. 정리</h1><p id="f92720e4-6f49-83db-842a-01d4bb098d3d" class="" dir="auto">이번 실습에서 수행한 작업은 다음과 같다.</p><ol type="1" id="465720e4-6f49-8282-b6ee-81e7a96c1e95" class="numbered-list" start="1" dir="auto"><li>Web Application 자동 실행 설정</li></ol><ol type="1" id="103720e4-6f49-8219-89f8-01c8c3324a14" class="numbered-list" start="2" dir="auto"><li>AMI 생성</li></ol><ol type="1" id="93f720e4-6f49-82af-bd4c-8126ce1d3010" class="numbered-list" start="3" dir="auto"><li>Launch Template 생성</li></ol><ol type="1" id="b89720e4-6f49-828f-bf51-817e4482a417" class="numbered-list" start="4" dir="auto"><li>Auto Scaling Group 생성</li></ol><ol type="1" id="cfb720e4-6f49-8270-8ae3-012792d68f34" class="numbered-list" start="5" dir="auto"><li>ALB 및 Target Group 연동</li></ol><ol type="1" id="07d720e4-6f49-8264-93b3-81d7c91ab734" class="numbered-list" start="6" dir="auto"><li>CPU 기반 Scale Out 테스트</li></ol><ol type="1" id="fa4720e4-6f49-835e-a4b7-0160474f3f68" class="numbered-list" start="7" dir="auto"><li>Scale In 및 대상 그룹 상태 확인</li></ol><ol type="1" id="2f6720e4-6f49-827f-bdf5-81f48a5aedc9" class="numbered-list" start="8" dir="auto"><li>퍼블릭 서브넷과 프라이빗 서브넷 역할 구분 확인</li></ol><hr id="136720e4-6f49-8393-9729-0182b62c8b11" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

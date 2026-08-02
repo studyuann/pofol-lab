@@ -1,0 +1,792 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>12장 AWS 엣지 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="bf8720e4-6f49-82dc-a556-01a540c17ae8" class="page sans"><header><h1 class="page-title" dir="auto">12장 AWS 엣지 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="439720e4-6f49-8237-98d5-81346f2940ac" class="" dir="auto">Route 53, CloudFront, DDoS 보호, AWS Outposts</h2><hr id="91a720e4-6f49-831a-b8c3-816a80b71b37" dir="auto"/><h1 id="db7720e4-6f49-830a-a3c4-010c5e0a746d" class="" dir="auto">12.1 엣지 아키텍처 개요</h1><p id="ea4720e4-6f49-8377-af17-010945324f3a" class="" dir="auto">사용자가 클라우드 서비스를 사용할 때 실제 경험하는 품질은 단순히 백엔드 서버 성능만으로 결정되지 않음.</p><p id="e36720e4-6f49-8282-b68d-81d1de1fd8e6" class="" dir="auto">다음 요소가 함께 영향을 줌.</p><ul id="ec5720e4-6f49-8383-91ac-0166ffb11944" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자가 어느 위치에서 접속하는가</li></ul><ul id="3e7720e4-6f49-8398-9fda-811b594737bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DNS가 얼마나 빠르고 안정적으로 응답하는가</li></ul><ul id="9f5720e4-6f49-824e-b143-014951308474" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 콘텐츠가 사용자와 얼마나 가까운 곳에서 제공되는가</li></ul><ul id="3cc720e4-6f49-837b-bbd8-01c297d45f25" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대규모 공격 상황에서도 서비스가 유지되는가</li></ul><ul id="300720e4-6f49-8242-b41b-01c70ed751e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일부 워크로드를 온프레미스에 가깝게 배치해야 하는가</li></ul><p id="112720e4-6f49-83f3-9e19-01c403031a10" class="" dir="auto">즉, 엣지 아키텍처는 <strong>클라우드 중심부가 아니라 사용자 접점</strong>에서의 성능, 가용성, 보안, 지연시간을 다루는 영역임.</p><p id="cd1720e4-6f49-83e5-8dd3-016487e8e5f6" class="" dir="auto">AWS에서 이 역할을 대표적으로 담당하는 서비스가 다음과 같음.</p><ul id="5ab720e4-6f49-8337-b546-01abe11aba77" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53</li></ul><ul id="b2d720e4-6f49-83f9-b742-81e636c7c5c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront</li></ul><ul id="f3c720e4-6f49-835d-950a-01cd249924d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Shield / WAF</li></ul><ul id="be8720e4-6f49-83b8-8b07-8182b1f3cf4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Outposts</li></ul><hr id="9fe720e4-6f49-8376-85c7-01660ad8b45a" dir="auto"/><h1 id="89e720e4-6f49-837e-9d0e-01a7aaf31381" class="" dir="auto">12.2 엣지 서비스가 필요한 이유</h1><p id="d5c720e4-6f49-82c3-b79f-81c596586c1e" class="" dir="auto">클라우드에 서버를 잘 배치했다고 해도, 사용자는 항상 AWS 리전 내부에 있는 것이 아님.</p><p id="ca9720e4-6f49-83ca-81fd-019659c6efb0" class="" dir="auto">전 세계 다양한 위치에서 접속하며, 네트워크 경로도 일정하지 않음.</p><p id="932720e4-6f49-82c6-aca6-81b5822c594b" class="" dir="auto">이때 발생할 수 있는 문제</p><ul id="f63720e4-6f49-822c-8aa5-817e58eeb013" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DNS 응답 지연</li></ul><ul id="daf720e4-6f49-828f-8bbe-0161459cb229" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원본 서버까지 장거리 전송으로 인한 느린 응답</li></ul><ul id="4e9720e4-6f49-820a-a395-01c7d9ada4f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대규모 트래픽 공격에 취약</li></ul><ul id="87e720e4-6f49-8306-9d35-8130e6d6b226" class="bulleted-list" dir="auto"><li style="list-style-type:disc">글로벌 사용자에게 동일한 성능 제공 어려움</li></ul><ul id="de3720e4-6f49-83ef-b065-0153c72e4963" class="bulleted-list" dir="auto"><li style="list-style-type:disc">온프레미스와 유사한 위치에서 처리해야 하는 워크로드 존재</li></ul><p id="d6e720e4-6f49-8369-a1b7-815ed35592ba" class="" dir="auto">즉, 엣지 서비스는 단순 부가 기능이 아니라 <strong>사용자 경험 최적화와 서비스 보호를 위한 핵심 계층</strong>임.</p><hr id="0c9720e4-6f49-83ff-a8b7-81887c1378b3" dir="auto"/><h1 id="026720e4-6f49-82bb-a72d-01aff8b03101" class="" dir="auto">12.3 AWS 글로벌 인프라와 엣지</h1><p id="f72720e4-6f49-8314-90ba-01015a535da4" class="" dir="auto">AWS는 리전과 AZ만 있는 것이 아니라, 전 세계에 분산된 엣지 로케이션과 네트워크 인프라를 함께 운영함.</p><p id="d8a720e4-6f49-8277-b231-81f4a3936659" class="" dir="auto">여기서 중요한 개념</p><ul id="8c9720e4-6f49-8271-941e-0124ed6b799a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Region</li></ul><ul id="1fd720e4-6f49-8384-b4ec-816ea87bc24b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Availability Zone</li></ul><ul id="676720e4-6f49-83d4-a88c-01b789e2c858" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Edge Location</li></ul><p id="860720e4-6f49-8223-b8db-01cdfe5f5799" class="" dir="auto">앞에서 리전과 AZ는 학습했으므로, 여기서는 Edge Location의 의미가 중요함.</p><h3 id="64c720e4-6f49-824c-82a0-812aeb50c393" class="" dir="auto">Edge Location</h3><p id="0a6720e4-6f49-83d0-97b6-81f937b4c919" class="" dir="auto">사용자와 가까운 위치에서 콘텐츠 전달, DNS 응답, 일부 보안 기능 등을 수행하는 글로벌 접점임.</p><p id="1ce720e4-6f49-8335-b9d5-8179df112e21" class="" dir="auto">대표적으로 다음 서비스들이 Edge Location을 활용함.</p><ul id="f44720e4-6f49-825a-9149-81f152fcb29b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront</li></ul><ul id="175720e4-6f49-83de-a42c-81feb36d83cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53</li></ul><ul id="55b720e4-6f49-838c-8e13-81d96880488d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Shield 일부 기능</li></ul><p id="14b720e4-6f49-83f5-bb80-8159deef1b6e" class="" dir="auto">즉, 엣지 아키텍처는 AWS의 글로벌 분산 네트워크를 기반으로 동작함.</p><hr id="390720e4-6f49-8274-954d-81111e83d6f5" dir="auto"/><h1 id="0d9720e4-6f49-8366-b211-01ab999be388" class="" dir="auto">12.4 Amazon Route 53 개요</h1><p id="c38720e4-6f49-8301-9b95-012b44a6e2b8" class="" dir="auto">Route 53은 AWS의 관리형 DNS 서비스임.</p><p id="995720e4-6f49-8355-b8a8-01e3f6c2eeb0" class="" dir="auto">도메인 이름을 IP 주소나 AWS 리소스와 연결해 주는 역할을 함.</p><p id="e72720e4-6f49-82f9-b8ab-01553645949b" class="" dir="auto">예를 들어 사용자가 브라우저에 다음을 입력한다고 가정하면</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="7b7720e4-6f49-8254-ba2e-819cc2f3c0da" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.example.com</code></pre><p id="826720e4-6f49-8211-847d-8155ff4815a6" class="" dir="auto">실제로는 이 이름을 어느 서버나 서비스로 보낼지 결정해야 함.</p><p id="f1e720e4-6f49-83cc-a424-81aae03e5c09" class="" dir="auto">그 역할을 DNS가 하며, Route 53은 AWS가 제공하는 DNS 서비스임.</p><p id="c00720e4-6f49-832f-833e-8143ebf99526" class="" dir="auto">즉, Route 53의 핵심은 다음과 같음.</p><pre id="8b5720e4-6f49-8362-acf4-812331182629" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자가 기억하기 쉬운 이름을
+실제 서비스 위치와 연결한다.</code></pre><hr id="ee1720e4-6f49-83a5-b8b4-81c00f6bda3f" dir="auto"/><h1 id="13e720e4-6f49-8326-8760-819075e7f2a6" class="" dir="auto">12.5 DNS가 중요한 이유</h1><p id="b6b720e4-6f49-829b-8ef9-01cb871f1886" class="" dir="auto">DNS는 사용자가 서비스를 이용할 때 거의 항상 가장 먼저 거치는 단계임.</p><p id="dad720e4-6f49-82fd-886a-0152a780a586" class="" dir="auto">따라서 느리거나 잘못 구성되면 서비스 전체 접근성에 영향을 줌.</p><p id="b38720e4-6f49-836c-becb-81bf387f4017" class="" dir="auto">DNS가 중요한 이유</p><h3 id="90d720e4-6f49-824a-9e71-817b10cf1118" class="" dir="auto">1. 서비스 진입점</h3><p id="c58720e4-6f49-8214-b8ba-814c9cdec4f4" class="" dir="auto">사용자는 IP보다 도메인 이름으로 접속함.</p><h3 id="7f6720e4-6f49-830e-b79c-01a8f04ccdf5" class="" dir="auto">2. 가용성에 영향</h3><p id="dc8720e4-6f49-8397-9e82-81e5c08b0095" class="" dir="auto">잘못된 DNS 설정은 서비스 장애와 동일한 결과를 만들 수 있음.</p><h3 id="a11720e4-6f49-82c1-9c30-01bd2b168cad" class="" dir="auto">3. 트래픽 분산과 장애 조치 가능</h3><p id="8c2720e4-6f49-8359-9516-81d7781d3002" class="" dir="auto">DNS 수준에서 여러 대상 중 어디로 보낼지 결정할 수 있음.</p><p id="b63720e4-6f49-823b-8d88-0181ce77e90e" class="" dir="auto">즉, DNS는 단순 주소 변환이 아니라 <strong>서비스 접근 제어의 출발점</strong>임.</p><hr id="f4b720e4-6f49-8307-8f57-01fd79f012a3" dir="auto"/><h1 id="9d1720e4-6f49-825a-8af5-01a902745ea1" class="" dir="auto">12.6 Route 53의 역할</h1><p id="437720e4-6f49-8225-8f4b-81bd49162127" class="" dir="auto">Route 53은 단순 A 레코드 저장소가 아님.</p><p id="24f720e4-6f49-8282-a492-018963572436" class="" dir="auto">다음 기능들을 제공함.</p><ul id="52c720e4-6f49-82c3-847b-017232be35d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DNS 레코드 관리</li></ul><ul id="cce720e4-6f49-82a8-958e-813f54d70ca9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">도메인 등록</li></ul><ul id="ccc720e4-6f49-8375-9013-81e02a631347" class="bulleted-list" dir="auto"><li style="list-style-type:disc">헬스 체크</li></ul><ul id="c8d720e4-6f49-8323-8fcd-81972801f49f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅 정책 기반 트래픽 분산</li></ul><ul id="b15720e4-6f49-830b-8c54-81e230b848bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 조치 라우팅</li></ul><p id="5eb720e4-6f49-8223-babc-010253cf9284" class="" dir="auto">즉, Route 53은 DNS 서비스이면서 동시에 <strong>글로벌 트래픽 제어 서비스</strong>의 성격도 가짐.</p><hr id="d15720e4-6f49-83f6-8681-0111c07033e1" dir="auto"/><h1 id="3ca720e4-6f49-83ac-8ab9-8120a91bc508" class="" dir="auto">12.7 Hosted Zone 개념</h1><p id="e0b720e4-6f49-82f0-a103-01093d3617d2" class="" dir="auto">Route 53에서 중요한 개념 중 하나가 Hosted Zone임.</p><p id="e02720e4-6f49-82e6-98b1-012906612d85" class="" dir="auto">Hosted Zone은 특정 도메인에 대한 DNS 레코드 집합을 관리하는 논리적 공간임.</p><p id="506720e4-6f49-839d-a757-81aec30d8663" class="" dir="auto">예를 들어</p><pre id="74b720e4-6f49-838a-b50a-81b2835584c8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">example.com</code></pre><p id="054720e4-6f49-83f2-adda-812e308fe430" class="" dir="auto">도메인을 관리한다면, 그 안에 다음과 같은 레코드가 들어갈 수 있음.</p><ul id="139720e4-6f49-82f2-a197-81ad8b253441" class="bulleted-list" dir="auto"><li style="list-style-type:disc">www.example.com</li></ul><ul id="7dd720e4-6f49-82f6-8ae7-816214ddfd69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">api.example.com</li></ul><ul id="c2a720e4-6f49-82f4-853e-017f8a0e5f71" class="bulleted-list" dir="auto"><li style="list-style-type:disc">mail.example.com</li></ul><p id="add720e4-6f49-8288-8d5a-012e9035f8b2" class="" dir="auto">즉, Hosted Zone은 도메인 단위 DNS 관리 영역이라고 보면 됨.</p><hr id="4d6720e4-6f49-835c-8ccb-81166a12d333" dir="auto"/><h1 id="e45720e4-6f49-825c-9f2b-81b1b82746be" class="" dir="auto">12.8 DNS 레코드 기본 개념</h1><p id="131720e4-6f49-835d-87a7-81e4a9bf2be5" class="" dir="auto">Route 53에서는 다양한 레코드를 사용할 수 있음.</p><p id="300720e4-6f49-82c8-99ed-01ea2ecbc79c" class="" dir="auto">대표적으로 다음을 이해하면 됨.</p><h3 id="f34720e4-6f49-83c6-9d55-015ef2e8cd0a" class="" dir="auto">A 레코드</h3><p id="024720e4-6f49-837d-8ee4-019c443de76d" class="" dir="auto">도메인 이름을 IPv4 주소에 매핑함.</p><h3 id="d29720e4-6f49-82cf-9a38-813e993d67cf" class="" dir="auto">AAAA 레코드</h3><p id="740720e4-6f49-8317-a5db-817e754662ba" class="" dir="auto">도메인 이름을 IPv6 주소에 매핑함.</p><h3 id="cb9720e4-6f49-838d-b746-810dd2c14277" class="" dir="auto">CNAME 레코드</h3><p id="bc1720e4-6f49-832a-b220-819b34ad1ad2" class="" dir="auto">다른 도메인 이름으로 별칭을 연결함.</p><h3 id="2e7720e4-6f49-8253-ac94-812fd869ce1b" class="" dir="auto">MX 레코드</h3><p id="79e720e4-6f49-8254-abd5-815009230116" class="" dir="auto">메일 서버를 지정함.</p><h3 id="67d720e4-6f49-8384-82e7-81343f889d31" class="" dir="auto">TXT 레코드</h3><p id="6a9720e4-6f49-83f3-9c20-819621a65054" class="" dir="auto">도메인 검증, SPF, DKIM 등 부가 정보를 저장함.</p><p id="212720e4-6f49-82ba-a1ef-818b47efa077" class="" dir="auto">즉, DNS는 단순히 웹 접속뿐 아니라 다양한 네트워크 서비스의 주소 체계를 담당함.</p><hr id="87c720e4-6f49-821b-999c-017180b435fb" dir="auto"/><h1 id="399720e4-6f49-8225-b347-81851af983e6" class="" dir="auto">12.9 Alias 레코드</h1><p id="63c720e4-6f49-82e0-b93f-012e3df1890f" class="" dir="auto">AWS Route 53에서는 일반 DNS의 CNAME과 유사하지만 더 AWS 친화적인 <strong>Alias 레코드</strong>를 지원함.</p><p id="3c6720e4-6f49-8218-82b1-018fb1ac43a5" class="" dir="auto">Alias 레코드는 다음과 같은 AWS 리소스를 대상으로 많이 사용함.</p><ul id="c9a720e4-6f49-838c-b47f-019ae5895d83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront Distribution</li></ul><ul id="ba3720e4-6f49-830f-a467-81c500874987" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB</li></ul><ul id="771720e4-6f49-8317-9504-01e6dbc98eb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 Static Website Endpoint</li></ul><ul id="276720e4-6f49-82f1-a65a-01a59e1553b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway</li></ul><p id="5be720e4-6f49-83bf-a951-814a435e8c3f" class="" dir="auto">장점</p><ul id="bfe720e4-6f49-82c3-8ec5-815d797a0d90" class="bulleted-list" dir="auto"><li style="list-style-type:disc">루트 도메인(apex domain)에도 활용 가능함</li></ul><ul id="535720e4-6f49-835f-aa3c-81febed4499d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 리소스와 자연스럽게 연동됨</li></ul><p id="bc7720e4-6f49-8227-8c2c-818ffff6cb2a" class="" dir="auto">즉, AWS 환경에서는 CNAME보다 Alias를 더 자주 보게 됨.</p><hr id="678720e4-6f49-8281-8d20-01ad242be7a8" dir="auto"/><h1 id="71f720e4-6f49-8261-9302-012cda6f6de1" class="" dir="auto">12.10 Route 53 라우팅 정책</h1><p id="c38720e4-6f49-83cf-92c9-01b185f7fb2b" class="" dir="auto">Route 53의 중요한 강점 중 하나는 단순 응답이 아니라 <strong>정책 기반 라우팅</strong>임.</p><p id="882720e4-6f49-83b8-bd42-01b8b302a8f7" class="" dir="auto">대표적인 정책</p><ul id="e07720e4-6f49-83d4-bc3c-01f0fa74f0ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Simple Routing</li></ul><ul id="0d6720e4-6f49-834d-97b0-014b42b68d8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Weighted Routing</li></ul><ul id="70f720e4-6f49-8210-8d17-8171b5236d25" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Latency Routing</li></ul><ul id="f06720e4-6f49-83c0-a54b-81d8f403a9da" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Failover Routing</li></ul><ul id="07e720e4-6f49-8315-96ac-0125bfdff318" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Geolocation / Geoproximity Routing</li></ul><ul id="c7c720e4-6f49-829c-82d5-81081b75beb6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Multi-Value Answer Routing</li></ul><p id="f4b720e4-6f49-8271-b7ea-819098ae9a26" class="" dir="auto">이 장에서는 개념 중심으로 이해하면 충분함.</p><hr id="7f6720e4-6f49-83e0-8d7f-0113b419ec91" dir="auto"/><h2 id="7b5720e4-6f49-82c5-a5e5-01bc8e1317bb" class="" dir="auto">12.10.1 Simple Routing</h2><p id="d78720e4-6f49-839c-81c2-0134e6a5ddb6" class="" dir="auto">가장 기본적인 방식임.</p><p id="60e720e4-6f49-83c0-ae16-01f7aaa38da4" class="" dir="auto">하나의 도메인을 하나의 대상에 연결하는 단순 구조임.</p><p id="f34720e4-6f49-832e-ab62-01e2c2b5cae8" class="" dir="auto">예</p><ul id="33b720e4-6f49-83fe-9ee0-8150b78475eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>www.example.com</code> → 하나의 ALB</li></ul><hr id="9a5720e4-6f49-830b-b78b-81ea7da3812b" dir="auto"/><h2 id="21e720e4-6f49-837c-b919-015ace2b91c8" class="" dir="auto">12.10.2 Weighted Routing</h2><p id="825720e4-6f49-83f4-9e53-8101ffbf6521" class="" dir="auto">여러 대상에 가중치를 두고 트래픽을 분산함.</p><p id="be8720e4-6f49-837a-8181-81b4a0c8dfdc" class="" dir="auto">예</p><ul id="dad720e4-6f49-83c3-b136-815571dc8cf4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새 버전 서버 10%</li></ul><ul id="3a3720e4-6f49-83b7-b53c-81004f17de4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 버전 서버 90%</li></ul><p id="4f0720e4-6f49-8219-8c5b-81a381e74854" class="" dir="auto">즉, 점진적 전환이나 간단한 실험 구조에 활용 가능함.</p><hr id="e23720e4-6f49-82d8-9798-8140c53c90ed" dir="auto"/><h2 id="f95720e4-6f49-8307-9ad8-0162cd9e39e1" class="" dir="auto">12.10.3 Latency Routing</h2><p id="a98720e4-6f49-83e1-b637-8120461de29c" class="" dir="auto">사용자에게 가장 낮은 지연시간이 예상되는 리전으로 트래픽을 보냄.</p><p id="140720e4-6f49-838d-8e2c-81b14cf3d0f7" class="" dir="auto">예</p><ul id="d76720e4-6f49-8293-9e03-81e15d0f71aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한국 사용자는 서울 리전</li></ul><ul id="451720e4-6f49-83a6-a42e-015a24a44bc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">미국 동부 사용자는 버지니아 리전</li></ul><p id="fc8720e4-6f49-833c-9ad0-811b4e09d547" class="" dir="auto">즉, 글로벌 사용자 성능 최적화에 적합함.</p><hr id="276720e4-6f49-82e6-96a5-81911ce042b4" dir="auto"/><h2 id="a26720e4-6f49-82e9-8da8-81e9a1cd4e8d" class="" dir="auto">12.10.4 Failover Routing</h2><p id="a93720e4-6f49-82c4-81db-0152b72e3086" class="" dir="auto">주 대상이 비정상일 때 보조 대상으로 넘기는 방식임.</p><p id="7d2720e4-6f49-83a6-887d-81c5975ec2c2" class="" dir="auto">예</p><ul id="ef7720e4-6f49-83da-b0d6-01feba1b8d0d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Primary ALB 장애 시 Secondary ALB로 전환</li></ul><p id="618720e4-6f49-83a3-8fdb-01eac777b01f" class="" dir="auto">즉, DNS 기반 장애 조치 구조에 사용함.</p><hr id="775720e4-6f49-826f-99c1-01e6e0a3d4c2" dir="auto"/><h2 id="6a3720e4-6f49-82fc-badd-81d84b844c9a" class="" dir="auto">12.10.5 Geolocation Routing</h2><p id="548720e4-6f49-83ec-86a5-816b1bf1f15d" class="" dir="auto">사용자 위치 정보에 따라 다른 대상에 응답함.</p><p id="072720e4-6f49-825c-8465-0176dd8b3e6d" class="" dir="auto">예</p><ul id="d19720e4-6f49-8348-9f86-81d93f06a1d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한국 사용자 → 한국 사이트</li></ul><ul id="7cb720e4-6f49-822b-a81a-01afba68695d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일본 사용자 → 일본 사이트</li></ul><ul id="bc0720e4-6f49-83a8-a6e5-816382f38d53" class="bulleted-list" dir="auto"><li style="list-style-type:disc">유럽 사용자 → 유럽 사이트</li></ul><p id="aac720e4-6f49-8259-b4b1-81666ec3a329" class="" dir="auto">즉, 국가별/지역별 사용자 경험 분리에 적합함.</p><hr id="999720e4-6f49-8304-a0ee-01784a451f86" dir="auto"/><h1 id="761720e4-6f49-8261-bc53-012bcd851219" class="" dir="auto">12.11 Route 53 Health Check</h1><p id="e51720e4-6f49-8217-b33c-8125cb4a7ad3" class="" dir="auto">Route 53은 Health Check 기능과 연계해 비정상 대상에 대한 DNS 응답을 제어할 수 있음.</p><p id="b4a720e4-6f49-8206-8e33-01cf9f64d8ff" class="" dir="auto">예를 들어 웹 서버가 응답하지 않으면 DNS에서 그 대상을 제외하거나, 보조 대상으로 넘길 수 있음.</p><p id="c1d720e4-6f49-82e2-9de4-0102fff3e8e3" class="" dir="auto">즉, Route 53은 DNS 수준에서도 가용성 전략에 참여할 수 있음.</p><hr id="530720e4-6f49-8261-9d59-012d9369bfbe" dir="auto"/><h1 id="e71720e4-6f49-8326-b4b4-01a1faa21e06" class="" dir="auto">12.12 Amazon CloudFront 개요</h1><p id="d23720e4-6f49-830c-b894-0141ef7356fc" class="" dir="auto">CloudFront는 AWS의 CDN(Content Delivery Network) 서비스임.</p><p id="45e720e4-6f49-8390-b853-819e8b46335e" class="" dir="auto">정적 콘텐츠, 동적 콘텐츠, API 응답 일부를 전 세계 엣지 로케이션을 통해 사용자에게 더 빠르게 전달할 수 있게 해줌.</p><p id="c3e720e4-6f49-83a1-a43e-81fc87b84fbb" class="" dir="auto">즉, CloudFront의 핵심은 다음과 같음.</p><pre id="57e720e4-6f49-8258-bd80-01ed505873db" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자와 가까운 위치에서 콘텐츠를 제공해
+지연시간을 줄이고 원본 부하를 낮춘다.</code></pre><hr id="3c5720e4-6f49-8223-b4d0-81e4e523fab3" dir="auto"/><h1 id="d2c720e4-6f49-82c2-ac28-014c4a0c432a" class="" dir="auto">12.13 CDN이 필요한 이유</h1><p id="78e720e4-6f49-827e-996a-812e7eaaec2a" class="" dir="auto">사용자가 서울 리전에 있는 서버에 접속하는 경우를 생각해보면, 한국 사용자에게는 크게 느리지 않을 수 있음.</p><p id="4ba720e4-6f49-83f5-8a22-81a1d4228326" class="" dir="auto">하지만 미국이나 유럽 사용자는 훨씬 먼 경로를 거쳐야 할 수 있음.</p><p id="352720e4-6f49-8268-b2b8-81ae13c04cad" class="" dir="auto">이때 문제</p><ul id="1e7720e4-6f49-82bd-8558-0188673d2373" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 파일 응답 지연</li></ul><ul id="aba720e4-6f49-834f-85f8-01b364ce54d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지/영상 다운로드 느림</li></ul><ul id="873720e4-6f49-828b-88c1-01d68ac29f03" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원본 서버에 요청 집중</li></ul><ul id="d5b720e4-6f49-83cf-898d-814ea0d71e7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전 세계 사용자 경험 불균형</li></ul><p id="7fd720e4-6f49-82a1-9488-81698004ae52" class="" dir="auto">CDN은 이런 문제를 해결하기 위해 사용자와 가까운 위치에 콘텐츠를 캐시함.</p><p id="328720e4-6f49-835b-b47d-81756d33d26e" class="" dir="auto">즉, CDN은 성능 향상뿐 아니라 <strong>원본 서버 보호와 글로벌 사용자 경험 개선</strong>에도 중요함.</p><hr id="27c720e4-6f49-82d1-ba3d-81f40045bc69" dir="auto"/><h1 id="397720e4-6f49-832e-b051-818820daa551" class="" dir="auto">12.14 CloudFront의 기본 구조</h1><p id="a82720e4-6f49-833b-8401-818a61c879e2" class="" dir="auto">CloudFront를 이해할 때 중요한 개념</p><ul id="1b1720e4-6f49-824b-a0a8-814b9613d833" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Distribution</li></ul><ul id="219720e4-6f49-820d-a37e-811c42b99934" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Edge Location</li></ul><ul id="229720e4-6f49-828b-b67e-01711cafb8a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Origin</li></ul><ul id="488720e4-6f49-82b3-9256-8120d09caa5c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cache</li></ul><ul id="86e720e4-6f49-8256-b072-014a102d94f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Behavior</li></ul><hr id="5dc720e4-6f49-8399-9c28-8192986c029b" dir="auto"/><h2 id="d48720e4-6f49-82c2-9607-8121148e4d57" class="" dir="auto">12.14.1 Distribution</h2><p id="fd8720e4-6f49-824c-a8b1-812389558118" class="" dir="auto">CloudFront의 배포 단위임.</p><p id="5a4720e4-6f49-826a-932c-011958960d8b" class="" dir="auto">어떤 원본을 대상으로 어떤 캐시 정책과 동작 정책을 적용할지 정의한 전체 구성을 의미함.</p><hr id="7cb720e4-6f49-825e-b38f-81c02f4fc684" dir="auto"/><h2 id="2df720e4-6f49-82d4-8b5e-01d3739ec148" class="" dir="auto">12.14.2 Origin</h2><p id="a25720e4-6f49-8304-a41d-012655c161a8" class="" dir="auto">CloudFront가 원본 콘텐츠를 가져오는 원천 서버 또는 스토리지임.</p><p id="c85720e4-6f49-82a1-a635-818e35380533" class="" dir="auto">대표 예</p><ul id="8fb720e4-6f49-8382-b718-81eafc2d6981" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷</li></ul><ul id="ba3720e4-6f49-83fa-9727-01b573950cb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB</li></ul><ul id="e06720e4-6f49-8231-84ad-010c2a3400dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 웹 서버</li></ul><ul id="74b720e4-6f49-8253-9627-81dc17c7482d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway</li></ul><p id="af6720e4-6f49-8273-a872-01ac5d984b13" class="" dir="auto">즉, CloudFront는 원본을 대체하는 것이 아니라 원본 앞단에서 콘텐츠를 캐싱하고 전달함.</p><hr id="afa720e4-6f49-835c-b1e8-01a27a3081c1" dir="auto"/><h2 id="798720e4-6f49-838b-9d23-01b5513007ea" class="" dir="auto">12.14.3 Edge Location</h2><p id="037720e4-6f49-82fd-8778-01544545039e" class="" dir="auto">사용자와 가까운 위치에서 콘텐츠를 제공하는 글로벌 접점임.</p><p id="2f4720e4-6f49-82d5-a9ae-81b356f1b713" class="" dir="auto">CloudFront는 이 위치들에 콘텐츠를 캐싱해 둠.</p><hr id="3d3720e4-6f49-830f-a602-81cc272f5fe1" dir="auto"/><h2 id="850720e4-6f49-83d2-903a-8139ecb0f81a" class="" dir="auto">12.14.4 Cache</h2><p id="d21720e4-6f49-822d-8bfb-01511fa4c46e" class="" dir="auto">사용자가 요청한 콘텐츠를 엣지 위치에 임시 저장해 두는 기능임.</p><p id="557720e4-6f49-8283-9fe5-018c08652cf1" class="" dir="auto">같은 요청이 다시 오면 원본까지 가지 않고 더 빠르게 응답 가능함.</p><hr id="9bc720e4-6f49-8286-8c45-01ff1e423f0d" dir="auto"/><h2 id="27b720e4-6f49-83b0-971d-81395d135dac" class="" dir="auto">12.14.5 Behavior</h2><p id="05d720e4-6f49-8230-8a43-0158d51acb94" class="" dir="auto">어떤 경로 요청에 어떤 Origin, 캐시 정책, 보안 정책을 적용할지를 정하는 설정임.</p><p id="e14720e4-6f49-83b4-acc9-01d4428fe6d8" class="" dir="auto">예</p><ul id="0cf720e4-6f49-83a7-bc92-01e282bafd26" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/images/*</code> 는 정적 콘텐츠 캐시 최적화</li></ul><ul id="865720e4-6f49-83d5-a5f2-81ffa14fb5e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/api/*</code> 는 캐시 없이 원본 전달</li></ul><p id="19e720e4-6f49-8357-ae15-01aff9e687f3" class="" dir="auto">즉, CloudFront는 경로별로 다르게 동작하도록 설계 가능함.</p><hr id="777720e4-6f49-8230-879c-81f4b2827e27" dir="auto"/><h1 id="5d6720e4-6f49-82ba-97d1-81ff25587415" class="" dir="auto">12.15 CloudFront의 장점</h1><h3 id="619720e4-6f49-82c3-b0b9-01443196944a" class="" dir="auto">1. 지연시간 감소</h3><p id="8b5720e4-6f49-8372-8bdc-01eae383c4d7" class="" dir="auto">사용자 가까운 엣지에서 응답 가능함.</p><h3 id="594720e4-6f49-8223-914c-81d5e7940771" class="" dir="auto">2. 원본 서버 부하 감소</h3><p id="27d720e4-6f49-8207-92f1-0113352b3ca0" class="" dir="auto">캐시 적중 시 원본 요청이 줄어듦.</p><h3 id="ba6720e4-6f49-8327-a94b-014414e080e4" class="" dir="auto">3. 글로벌 서비스 품질 향상</h3><p id="b73720e4-6f49-82e0-a5fa-0113d19aa0c7" class="" dir="auto">전 세계 사용자에게 더 균일한 성능 제공 가능함.</p><h3 id="6d2720e4-6f49-8239-935e-0191602576e0" class="" dir="auto">4. 보안 기능 연계</h3><p id="dcb720e4-6f49-8329-94c0-811736ec51d7" class="" dir="auto">WAF, Shield, HTTPS, OAC/OAI 등과 결합 가능함.</p><p id="40a720e4-6f49-8286-b515-817e2c3fa425" class="" dir="auto">즉, CloudFront는 성능과 보안을 함께 강화하는 서비스임.</p><hr id="9fd720e4-6f49-831b-8c6a-01b6a6d481af" dir="auto"/><h1 id="f96720e4-6f49-82a3-964c-8194e5288b1c" class="" dir="auto">12.16 CloudFront와 정적 콘텐츠</h1><p id="d73720e4-6f49-825e-9e99-81646669882e" class="" dir="auto">CloudFront는 정적 파일 전달에 특히 강함.</p><p id="535720e4-6f49-82d0-99a0-8124932da3c2" class="" dir="auto">대표 대상</p><ul id="93b720e4-6f49-82a8-888e-014a6a1e8faa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지</li></ul><ul id="0ac720e4-6f49-82ef-9e74-81dc8b8a8903" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CSS</li></ul><ul id="8af720e4-6f49-83b5-b3ad-81879bc8e5f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JavaScript</li></ul><ul id="43b720e4-6f49-83c2-a52d-0154f16b2c18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTML</li></ul><ul id="995720e4-6f49-8278-a5b7-8161baf1a68e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동영상 일부</li></ul><ul id="694720e4-6f49-8255-9dfb-81bc3b6a5b9e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다운로드 파일</li></ul><p id="011720e4-6f49-8234-b466-017ffa08dd00" class="" dir="auto">정적 콘텐츠는 자주 변경되지 않고 반복 요청되는 경우가 많기 때문에 캐시 효율이 높음.</p><p id="895720e4-6f49-828c-b164-812e19cd58d6" class="" dir="auto">즉, S3를 원본으로 두고 CloudFront를 앞단에 두는 구조가 매우 자주 사용됨.</p><hr id="8f8720e4-6f49-83e0-a29f-81343c053ed1" dir="auto"/><h1 id="db3720e4-6f49-8210-bfa1-81be52caf3d5" class="" dir="auto">12.17 CloudFront와 동적 콘텐츠</h1><p id="648720e4-6f49-8342-8c4f-01cb739f8939" class="" dir="auto">CloudFront는 정적 파일뿐 아니라 동적 콘텐츠에도 일부 도움을 줄 수 있음.</p><p id="798720e4-6f49-8286-9bdc-011ad121837c" class="" dir="auto">다만 동적 콘텐츠는 캐시 여부를 신중히 봐야 함.</p><p id="2c5720e4-6f49-82df-9152-012596ddf2dd" class="" dir="auto">예</p><ul id="7e1720e4-6f49-836d-a3ee-81b0160ee710" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API 응답 일부</li></ul><ul id="e3f720e4-6f49-8375-9a11-8116883dc6d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그인 전 공용 페이지</li></ul><ul id="2ab720e4-6f49-83fb-b65a-81c988d462bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">헤더/쿠키 기반 정책 제어</li></ul><p id="edf720e4-6f49-82c7-8e58-01092c092853" class="" dir="auto">즉, CloudFront는 모든 것을 무조건 캐시하는 서비스가 아니라,</p><p id="ab3720e4-6f49-821d-95d3-01bd8140518a" class="" dir="auto"><strong>무엇을 캐시하고 무엇은 원본으로 넘길지 정책적으로 결정하는 서비스</strong>임.</p><hr id="321720e4-6f49-832a-ba2f-01d0249a0f14" dir="auto"/><h1 id="99a720e4-6f49-8294-a88c-811351f33785" class="" dir="auto">12.18 S3 + CloudFront 구조</h1><p id="a50720e4-6f49-82d4-8d86-01e8583035d4" class="" dir="auto">AWS에서 매우 대표적인 엣지 아키텍처 패턴 중 하나임.</p><pre id="439720e4-6f49-82de-94c0-01e42ce6a791" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+   │
+CloudFront
+   │
+S3 Origin</code></pre><p id="6b4720e4-6f49-8257-9ea1-019a85dc3f6e" class="" dir="auto">이 구조의 의미</p><ul id="2c2720e4-6f49-837b-9f48-0107d7e62cef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3는 원본 저장소</li></ul><ul id="859720e4-6f49-827e-89b1-81e0ce6356ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront는 글로벌 배포 계층</li></ul><ul id="cc2720e4-6f49-82f8-840d-81ffcf263017" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 가까운 엣지에서 콘텐츠 수신</li></ul><p id="60b720e4-6f49-839c-a8b1-811ea7b0492a" class="" dir="auto">이 패턴은 정적 웹사이트, 이미지 배포, 다운로드 파일 배포에서 매우 자주 사용됨.</p><hr id="9b8720e4-6f49-8277-9793-81231e67782d" dir="auto"/><h1 id="4f2720e4-6f49-8291-a119-0131722d45a2" class="" dir="auto">12.19 CloudFront와 보안</h1><p id="385720e4-6f49-8211-8a41-0147ce8cd7bd" class="" dir="auto">CloudFront는 단순 캐시가 아니라 보안 계층으로도 의미가 있음.</p><h3 id="ac9720e4-6f49-82da-9981-0106dc26fa5b" class="" dir="auto">1. HTTPS 종료</h3><p id="445720e4-6f49-82d3-ab59-01ad754a4f0b" class="" dir="auto">TLS 인증서를 연결해 안전한 전송 가능</p><h3 id="b40720e4-6f49-82df-a31b-01ed94172cb8" class="" dir="auto">2. 원본 보호</h3><p id="97a720e4-6f49-8289-81e2-81cd4213e4cd" class="" dir="auto">사용자가 원본 S3나 ALB에 직접 접근하지 않고 CloudFront만 통하게 구성 가능</p><h3 id="774720e4-6f49-82c7-b9e2-8178fda4de0a" class="" dir="auto">3. AWS WAF 연계</h3><p id="d3c720e4-6f49-8204-91b7-815aa6344e8f" class="" dir="auto">웹 공격 필터링 가능</p><h3 id="bd3720e4-6f49-82d7-9dbf-01606506b73b" class="" dir="auto">4. Shield 연계</h3><p id="e97720e4-6f49-8259-9a25-81737de8107b" class="" dir="auto">DDoS 보호 강화 가능</p><p id="db5720e4-6f49-8326-b640-814e3cb77375" class="" dir="auto">즉, CloudFront는 <strong>성능 가속기이자 보안 게이트웨이</strong> 역할도 할 수 있음.</p><hr id="0a6720e4-6f49-82f9-a6fa-01f31f05ad57" dir="auto"/><h1 id="d6f720e4-6f49-8344-9041-81f59bc5316d" class="" dir="auto">12.20 DDoS 개요</h1><p id="282720e4-6f49-83bd-8209-015b9a13ccd3" class="" dir="auto">DDoS는 <strong>Distributed Denial of Service</strong>의 약자이며, 대량의 트래픽을 집중시켜 정상 사용자가 서비스를 이용하지 못하게 만드는 공격 방식임.</p><p id="e86720e4-6f49-83c5-8b2e-8101ee6af902" class="" dir="auto">예를 들어</p><ul id="e6e720e4-6f49-8303-a80c-01d9b0dfe2c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대량 HTTP 요청</li></ul><ul id="9ff720e4-6f49-8219-afd3-01da58b1d3a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 대역폭 소진</li></ul><ul id="744720e4-6f49-821b-8b2c-01414e37b2cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결 요청 폭주</li></ul><p id="be6720e4-6f49-820f-b547-01412b8644e0" class="" dir="auto">등이 발생할 수 있음.</p><p id="62a720e4-6f49-821e-9ab8-814ca5debd85" class="" dir="auto">즉, DDoS는 서비스 성능 저하를 넘어 <strong>가용성 자체를 위협하는 공격</strong>임.</p><hr id="f76720e4-6f49-8372-9eac-81549e1c77fe" dir="auto"/><h1 id="ddc720e4-6f49-82d1-8ac0-8196f6aaec0f" class="" dir="auto">12.21 왜 DDoS 보호가 중요한가</h1><p id="dd0720e4-6f49-83c1-9edc-01129ee82834" class="" dir="auto">운영 환경에서는 서비스가 정상 사용자뿐 아니라 악의적 대량 요청에도 견딜 수 있어야 함.</p><p id="c2a720e4-6f49-836e-a260-81e2309c86fa" class="" dir="auto">DDoS 보호가 중요한 이유</p><h3 id="ff6720e4-6f49-8392-a895-0183861ab8a6" class="" dir="auto">1. 가용성 유지</h3><p id="faf720e4-6f49-82a5-842b-818d6b473245" class="" dir="auto">서비스가 멈추면 비즈니스 영향이 큼.</p><h3 id="c02720e4-6f49-83d2-a6ce-013868567b1f" class="" dir="auto">2. 네트워크 자원 보호</h3><p id="7b7720e4-6f49-83d9-bf3d-81578fc2669d" class="" dir="auto">트래픽 폭주로 대역폭이 고갈될 수 있음.</p><h3 id="d6e720e4-6f49-82d1-b03c-014601a2e1e1" class="" dir="auto">3. 원본 인프라 보호</h3><p id="94b720e4-6f49-837b-9fc2-81ee057a2a6d" class="" dir="auto">백엔드 서버까지 공격이 도달하면 장애가 확대될 수 있음.</p><p id="a78720e4-6f49-83fa-b6c0-01198b88185a" class="" dir="auto">즉, DDoS 보호는 보안의 일부이면서 동시에 <strong>고가용성 전략의 일부</strong>임.</p><hr id="a95720e4-6f49-8394-9620-0181758ef06b" dir="auto"/><h1 id="def720e4-6f49-838b-8fc3-01565f2a831d" class="" dir="auto">12.22 AWS Shield 개요</h1><p id="25a720e4-6f49-825f-b8d6-017f3b1118bf" class="" dir="auto">AWS Shield는 AWS에서 제공하는 관리형 DDoS 보호 서비스임.</p><p id="705720e4-6f49-836f-b4ce-0162ad870f53" class="" dir="auto">종류</p><ul id="a1f720e4-6f49-824f-aa78-81feb97232d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shield Standard</li></ul><ul id="1f9720e4-6f49-83bf-a379-816daae69d7e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shield Advanced</li></ul><hr id="1aa720e4-6f49-82db-bbb0-81f10c073232" dir="auto"/><h2 id="1bc720e4-6f49-836d-a851-815a8fe14cf1" class="" dir="auto">12.22.1 Shield Standard</h2><p id="30c720e4-6f49-836a-87c8-01ccec78dd77" class="" dir="auto">기본적으로 AWS 고객에게 제공되는 수준의 DDoS 보호임.</p><p id="e5c720e4-6f49-835d-abd6-0155e007c699" class="" dir="auto">대표적으로 다음 서비스와 연계됨.</p><ul id="4db720e4-6f49-8261-adbd-0131e039cc62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront</li></ul><ul id="06d720e4-6f49-8214-8db4-01f9a417d0df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53</li></ul><ul id="5c6720e4-6f49-8283-9767-0136b1dc7407" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Global Accelerator</li></ul><ul id="26d720e4-6f49-8393-8487-814e7051dbea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ELB 일부</li></ul><p id="92a720e4-6f49-8319-84f5-817b18a338a8" class="" dir="auto">즉, 기본적인 대규모 네트워크/전송 계층 공격에 대한 방어를 자동으로 제공함.</p><hr id="ba2720e4-6f49-82a5-8c7c-01dd5efbd758" dir="auto"/><h2 id="d87720e4-6f49-8223-8747-019b43e3885d" class="" dir="auto">12.22.2 Shield Advanced</h2><p id="192720e4-6f49-82ae-a0d2-8164dcb72534" class="" dir="auto">보다 강화된 보호, 가시성, 지원 체계를 제공하는 상위 옵션임.</p><p id="dc5720e4-6f49-8236-81a1-011036c3a010" class="" dir="auto">대규모 중요 서비스에서 고려할 수 있음.</p><p id="47c720e4-6f49-831b-866d-8173c642fc89" class="" dir="auto">즉, Shield Advanced는 기본 보호를 넘어 <strong>고급 운영/보호 기능</strong>에 초점을 둠.</p><hr id="abe720e4-6f49-8357-a0a3-811aff8a0ea1" dir="auto"/><h1 id="86f720e4-6f49-8323-8d2c-01c2a589f78b" class="" dir="auto">12.23 AWS WAF 개요</h1><p id="38c720e4-6f49-82e7-a05a-81bad365d71f" class="" dir="auto">WAF는 <strong>Web Application Firewall</strong>임.</p><p id="248720e4-6f49-83dc-be2e-813ca46fd93c" class="" dir="auto">L7, 즉 애플리케이션 계층에서 HTTP/HTTPS 요청을 검사하고 필터링하는 보안 서비스임.</p><p id="1cc720e4-6f49-838f-998f-0177f0bb783f" class="" dir="auto">대표적으로 다음 공격 방어에 유용함.</p><ul id="741720e4-6f49-8335-aad7-810c11cfd3fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQL Injection</li></ul><ul id="e36720e4-6f49-8245-ab6a-8104bd0dce9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">XSS</li></ul><ul id="f9f720e4-6f49-83e4-ba68-81b4392d5caa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비정상 봇 요청</li></ul><ul id="50d720e4-6f49-83d6-892a-0100600cb7cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 패턴 요청 차단</li></ul><ul id="7ce720e4-6f49-8333-83d3-013b8a3000fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">국가/IP 기반 차단</li></ul><ul id="21f720e4-6f49-8293-91ed-8187bf05a3c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 빈도 제한</li></ul><p id="862720e4-6f49-8319-94de-81ac4907ce51" class="" dir="auto">즉, Shield가 대규모 트래픽 공격 보호에 가깝다면, WAF는 <strong>웹 요청 내용 자체를 제어하는 서비스</strong>임.</p><hr id="950720e4-6f49-83a3-9d0a-013df443d5e6" dir="auto"/><h1 id="8a9720e4-6f49-8236-ad6a-0114dab438b8" class="" dir="auto">12.24 Shield와 WAF 차이</h1><table id="daf720e4-6f49-8265-9ef2-81f756c75f6f" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="028720e4-6f49-833f-a75f-818a261313d5" dir="ltr"><th id="M}Ql" class="simple-table-header-color simple-table-header">항목</th><th id="&gt;Fi_" class="simple-table-header-color simple-table-header">Shield</th><th id="]|Xi" class="simple-table-header-color simple-table-header">WAF</th></tr></thead><tbody><tr id="3a2720e4-6f49-8312-b301-01497bf17802" dir="ltr"><td id="M}Ql" class="">주 보호 대상</td><td id="&gt;Fi_" class="">DDoS 대규모 공격</td><td id="]|Xi" class="">웹 요청 패턴 공격</td></tr><tr id="75b720e4-6f49-827c-a578-810b2c4cd798" dir="ltr"><td id="M}Ql" class="">계층</td><td id="&gt;Fi_" class="">주로 네트워크/전송 계층</td><td id="]|Xi" class="">애플리케이션 계층</td></tr><tr id="cc7720e4-6f49-83b9-a7a9-017ff4fb71cb" dir="ltr"><td id="M}Ql" class="">대표 대상</td><td id="&gt;Fi_" class="">트래픽 폭주</td><td id="]|Xi" class="">SQLi, XSS, 봇, 비정상 요청</td></tr></tbody></table><p id="dc9720e4-6f49-8295-9143-018a844b28bb" class="" dir="auto">즉,</p><ul id="fc8720e4-6f49-83c8-9198-0116873529f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>대량 트래픽 보호</strong>는 Shield</li></ul><ul id="c8d720e4-6f49-825b-9e98-8164d12858c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>웹 요청 필터링</strong>은 WAF</li></ul><p id="945720e4-6f49-83af-bca2-019601334664" class="" dir="auto">라고 보면 됨.</p><hr id="dd8720e4-6f49-826c-9949-01f056f950f9" dir="auto"/><h1 id="ef8720e4-6f49-82da-86df-01d1e1066eda" class="" dir="auto">12.25 CloudFront + Shield + WAF 조합</h1><p id="4d5720e4-6f49-82ce-9528-0193e8ce8204" class="" dir="auto">엣지 보안 아키텍처에서 매우 중요한 조합임.</p><pre id="739720e4-6f49-8349-ba5f-019537604649" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+   │
+CloudFront
+   ├ Shield
+   └ WAF
+   │
+Origin (S3 / ALB / API Gateway)</code></pre><p id="4b9720e4-6f49-82f5-b65a-015053537180" class="" dir="auto">이 구조의 의미</p><ul id="914720e4-6f49-83b7-8505-01ecf60f5157" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront : 글로벌 진입점</li></ul><ul id="1b4720e4-6f49-83e8-8288-01f995249ab9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shield : 대규모 공격 완충</li></ul><ul id="370720e4-6f49-8254-a106-01614393940e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF : 악성 웹 요청 필터링</li></ul><ul id="bd6720e4-6f49-828f-b60a-81551606ca81" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Origin : 실제 백엔드</li></ul><p id="f9c720e4-6f49-829d-99a3-01fbfa430667" class="" dir="auto">즉, 원본 서버를 인터넷에 직접 노출하기보다,</p><p id="665720e4-6f49-833c-bbc1-01fd39c7b5ec" class="" dir="auto">엣지 계층에서 성능과 보안을 함께 처리하는 구조임.</p><hr id="107720e4-6f49-8202-81b3-01e3daf49c59" dir="auto"/><h1 id="81d720e4-6f49-82eb-8604-8144179b9f9d" class="" dir="auto">12.26 AWS Outposts 개요</h1><p id="f65720e4-6f49-8299-ab21-8126e4606172" class="" dir="auto">AWS Outposts는 AWS 인프라와 서비스를 온프레미스 또는 고객 사이트에 가까운 위치에 확장해 배치할 수 있게 하는 서비스임.</p><p id="ac6720e4-6f49-82f4-9e8e-011378d26bbb" class="" dir="auto">즉, Outposts는 다음과 같은 개념임.</p><pre id="ec0720e4-6f49-836a-a3cd-81f2ca6da5b9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS의 하드웨어와 운영 모델을
+고객의 데이터센터나 현장으로 확장한다.</code></pre><p id="2d8720e4-6f49-83c8-b74c-8103bff5b842" class="" dir="auto">이는 단순 VPN 연결과는 다른 개념임.</p><p id="e6b720e4-6f49-82ed-ac6c-816a251240f8" class="" dir="auto">온프레미스에 AWS와 유사한 실행 환경 자체를 가져오는 방식에 가까움.</p><hr id="07a720e4-6f49-83a6-a567-01942cd6fe10" dir="auto"/><h1 id="081720e4-6f49-8258-9bd9-8124512c4d21" class="" dir="auto">12.27 Outposts가 필요한 이유</h1><p id="465720e4-6f49-827b-8fa7-017e22781ae4" class="" dir="auto">다음과 같은 상황에서는 모든 워크로드를 리전에만 두기 어려울 수 있음.</p><h3 id="896720e4-6f49-8224-8258-01133a792149" class="" dir="auto">1. 초저지연 요구</h3><p id="dfa720e4-6f49-831a-a730-0162e0cd03eb" class="" dir="auto">공장, 병원, 통신, 실시간 장비 제어 등에서 현장 가까운 위치 처리가 필요할 수 있음.</p><h3 id="76b720e4-6f49-8337-ac71-017af5863932" class="" dir="auto">2. 데이터 지역성 요구</h3><p id="13a720e4-6f49-82e1-ba0a-81d4af83ec00" class="" dir="auto">특정 데이터가 현장에 가까이 있어야 하는 요구가 있을 수 있음.</p><h3 id="1a3720e4-6f49-830c-97ce-010045ceadba" class="" dir="auto">3. 하이브리드 운영</h3><p id="791720e4-6f49-8255-a50d-81fefb97e713" class="" dir="auto">온프레미스 시스템과 매우 밀접하게 연결된 워크로드가 존재할 수 있음.</p><p id="b78720e4-6f49-8216-9cb9-811fe4beea32" class="" dir="auto">즉, Outposts는 클라우드를 쓰되 <strong>리전 바깥 현장 가까이에서 AWS 운영 모델을 유지하고 싶을 때</strong> 의미가 있음.</p><hr id="569720e4-6f49-82fa-a299-0118cc0d2526" dir="auto"/><h1 id="1a3720e4-6f49-82d5-8902-81234c779c4e" class="" dir="auto">12.28 Outposts의 특징</h1><h3 id="814720e4-6f49-83a5-99e9-81f9819bc5fa" class="" dir="auto">1. AWS 일관된 운영 모델</h3><p id="cee720e4-6f49-822c-b8f1-01b3e3ec9534" class="" dir="auto">온프레미스 위치에서도 AWS 서비스 방식과 유사한 운영 가능</p><h3 id="7b7720e4-6f49-8307-bf8f-01cb56a1d9f0" class="" dir="auto">2. 하이브리드 환경 적합</h3><p id="db8720e4-6f49-8311-88fe-01db2d31143f" class="" dir="auto">온프레미스와 클라우드를 자연스럽게 연결 가능</p><h3 id="7db720e4-6f49-83dd-8bb7-81bfd868beb6" class="" dir="auto">3. 저지연 처리</h3><p id="f3e720e4-6f49-83fd-8885-81ecb0b0bba5" class="" dir="auto">현장 가까운 위치 처리 가능</p><p id="03f720e4-6f49-8329-ade6-0120aaa6fe09" class="" dir="auto">즉, Outposts는 “온프레미스냐 클라우드냐”의 이분법보다</p><p id="831720e4-6f49-836c-9ac5-81f588647b52" class="" dir="auto"><strong>클라우드 운영 모델의 확장</strong>이라는 관점에서 이해하는 것이 좋음.</p><hr id="ab0720e4-6f49-829b-8650-8111ce0f87ba" dir="auto"/><h1 id="2cd720e4-6f49-82c2-8e3b-01dc50efb138" class="" dir="auto">12.29 Route 53, CloudFront, Outposts의 관점 차이</h1><p id="f9b720e4-6f49-82c4-ac4f-8150fa5ffc3b" class="" dir="auto">이 장의 서비스들은 모두 “사용자와 가까운 쪽”과 관련 있지만 역할이 다름.</p><table id="63f720e4-6f49-82eb-8ad7-0139bd459be5" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="516720e4-6f49-8302-8d06-01a51878648f" dir="ltr"><th id="jNW?" class="simple-table-header-color simple-table-header">서비스</th><th id="OpRG" class="simple-table-header-color simple-table-header">핵심 역할</th></tr></thead><tbody><tr id="3c5720e4-6f49-8377-b081-0105ececbd2b" dir="ltr"><td id="jNW?" class="">Route 53</td><td id="OpRG" class="">사용자를 올바른 서비스 진입점으로 안내</td></tr><tr id="07e720e4-6f49-82e2-b4e1-01cda6f97bb5" dir="ltr"><td id="jNW?" class="">CloudFront</td><td id="OpRG" class="">콘텐츠를 사용자 가까이에서 전달</td></tr><tr id="923720e4-6f49-83e2-ad50-812ce7e83604" dir="ltr"><td id="jNW?" class="">Shield / WAF</td><td id="OpRG" class="">사용자 접점에서 공격 방어</td></tr><tr id="cab720e4-6f49-82dd-abc3-81f6517bc92b" dir="ltr"><td id="jNW?" class="">Outposts</td><td id="OpRG" class="">AWS 실행 환경을 사용자/현장 가까이에 확장</td></tr></tbody></table><p id="538720e4-6f49-82c0-9c45-811c9c595ede" class="" dir="auto">즉,</p><ul id="d48720e4-6f49-8202-b709-01605a3de2a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>접속 경로 결정</strong>은 Route 53</li></ul><ul id="e4c720e4-6f49-837d-a118-81d286b128e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>콘텐츠 전달 가속</strong>은 CloudFront</li></ul><ul id="47d720e4-6f49-833c-8f78-81a97af94d81" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>접점 보안 강화</strong>는 Shield/WAF</li></ul><ul id="e6f720e4-6f49-83a0-8789-8149656d4789" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>현장 인프라 확장</strong>은 Outposts</li></ul><p id="995720e4-6f49-8360-b973-8178a344bfeb" class="" dir="auto">라고 보면 됨.</p><hr id="6a8720e4-6f49-82d3-86b6-81a990d458ea" dir="auto"/><h1 id="3aa720e4-6f49-8299-90d9-01bf8e531461" class="" dir="auto">12.30 글로벌 아키텍처 관점의 의미</h1><p id="ea7720e4-6f49-82cc-a1c2-0136f0f36553" class="" dir="auto">엣지 서비스는 글로벌 아키텍처와 매우 강하게 연결됨.</p><p id="002720e4-6f49-83c9-926e-81aaee34b8e5" class="" dir="auto">예를 들어 글로벌 서비스에서는 다음 구조를 자주 고려함.</p><ul id="3d0720e4-6f49-823e-bf69-811331d56cef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53으로 지역별 사용자 분산</li></ul><ul id="e6f720e4-6f49-83a6-95f4-816ebf9fb531" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront로 글로벌 콘텐츠 가속</li></ul><ul id="5ce720e4-6f49-827a-8742-01627995f093" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF/Shield로 전 세계 트래픽 보호</li></ul><ul id="f9e720e4-6f49-8219-b6e9-010189000867" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다중 리전 원본 구조 설계</li></ul><ul id="d2f720e4-6f49-8287-a21c-81ccd4452d7e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 시 DNS 기반 페일오버</li></ul><p id="f18720e4-6f49-83e1-b6c9-01e8cba01004" class="" dir="auto">즉, 엣지 서비스는 글로벌 트래픽과 멀티 리전 아키텍처의 시작점이 됨.</p><hr id="8e4720e4-6f49-827e-89ff-0134f2de2578" dir="auto"/><h1 id="6dc720e4-6f49-8398-8249-815c00764140" class="" dir="auto">12.31 멀티 티어 아키텍처와의 연결</h1><p id="7a1720e4-6f49-82f5-959c-81c726618cc5" class="" dir="auto">앞에서 만든 멀티 티어 구조를 엣지 관점으로 확장하면 다음과 같음.</p><pre id="c11720e4-6f49-834d-a794-81bc0ffc170e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+   │
+Route 53
+   │
+CloudFront
+   ├ Shield / WAF
+   │
+ALB 또는 S3 Origin
+   │
+Web / App / Data Tier</code></pre><p id="151720e4-6f49-8242-97c0-01cb646d1f28" class="" dir="auto">이 구조의 의미</p><ul id="191720e4-6f49-82a5-8434-01d31f87b31d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53 : 도메인 진입점</li></ul><ul id="892720e4-6f49-8213-be59-81ecc7eb9203" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront : 글로벌 가속 및 캐싱</li></ul><ul id="11b720e4-6f49-83ab-b76f-01d7cfed882f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shield/WAF : 엣지 보안</li></ul><ul id="ca0720e4-6f49-8336-abe7-01a6530edeba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB/S3 : 원본</li></ul><ul id="380720e4-6f49-8289-8c99-81e8a1616bc0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Web/App/Data : 실제 백엔드</li></ul><p id="3f7720e4-6f49-83ab-ba37-015486502c52" class="" dir="auto">즉, 엣지 계층은 기존 아키텍처 앞단에 붙어 사용자 경험과 보안을 강화함.</p><hr id="602720e4-6f49-8292-b522-813f7d550ca2" dir="auto"/><h1 id="92e720e4-6f49-8268-9998-01d65598e66c" class="" dir="auto">12.32 운영 관점의 설계 포인트</h1><h3 id="9b6720e4-6f49-83dc-82ab-81dbabe2e563" class="" dir="auto">1. 원본을 직접 노출하지 않는 구조가 유리함</h3><p id="999720e4-6f49-83c6-ae39-01719c277f79" class="" dir="auto">CloudFront 앞단 구조로 원본 보호가 쉬워짐.</p><h3 id="199720e4-6f49-83b9-8d79-81dc2bd3137c" class="" dir="auto">2. DNS는 단순 이름 매핑이 아님</h3><p id="d0a720e4-6f49-82d4-b858-019d44d61557" class="" dir="auto">장애 조치, 지연시간 최적화, 글로벌 분산까지 고려해야 함.</p><h3 id="255720e4-6f49-8235-adde-017661e33d5c" class="" dir="auto">3. 캐시 정책이 중요함</h3><p id="904720e4-6f49-82f7-bb30-810894b433dc" class="" dir="auto">무조건 캐시가 아니라, 어떤 경로를 얼마나 캐시할지 정책이 필요함.</p><h3 id="0bd720e4-6f49-82b6-8853-811b115788f6" class="" dir="auto">4. 보안은 엣지에서 선제적으로 처리하는 것이 유리함</h3><p id="e75720e4-6f49-832d-bbfa-019ffd9259ef" class="" dir="auto">공격이 원본까지 가기 전에 막는 것이 좋음.</p><h3 id="2d3720e4-6f49-8370-abe8-01de3ea88544" class="" dir="auto">5. 하이브리드 요구가 있으면 Outposts 같은 선택지도 봐야 함</h3><p id="65c720e4-6f49-8348-ae36-8121dd8b4ce1" class="" dir="auto">모든 것을 리전 중심으로만 볼 수 없는 경우가 있음.</p><hr id="a88720e4-6f49-82f9-a35d-818ffd8eddec" dir="auto"/><h1 id="ca4720e4-6f49-8210-b8e6-810104875faf" class="" dir="auto">12.33 서비스 역할 한 번에 정리</h1><h2 id="4ed720e4-6f49-8396-9dcb-01c15dce183d" class="" dir="auto">Route 53</h2><p id="6e4720e4-6f49-83ba-9fdd-018dd61a1c9e" class="" dir="auto">도메인 이름을 서비스 진입점과 연결하고, 정책 기반 라우팅을 수행한다.</p><h2 id="04c720e4-6f49-8225-b2be-81860ec4e928" class="" dir="auto">CloudFront</h2><p id="262720e4-6f49-82c8-994d-0136a10aa73d" class="" dir="auto">콘텐츠를 엣지 로케이션에 캐시해 사용자 가까이에서 빠르게 전달한다.</p><h2 id="e36720e4-6f49-824b-adf1-01730496d9a0" class="" dir="auto">AWS Shield</h2><p id="5ee720e4-6f49-8370-afd6-81df0e7c692a" class="" dir="auto">DDoS 공격으로부터 서비스를 보호한다.</p><h2 id="dae720e4-6f49-83c4-b79b-819c463e7e38" class="" dir="auto">AWS WAF</h2><p id="df2720e4-6f49-8283-97ae-81b64ee5a63d" class="" dir="auto">웹 요청을 검사해 애플리케이션 계층 공격을 차단한다.</p><h2 id="8d9720e4-6f49-836e-b348-01f36af2b083" class="" dir="auto">AWS Outposts</h2><p id="ea4720e4-6f49-83bf-b96f-8102cfc41ad3" class="" dir="auto">AWS 인프라와 운영 모델을 온프레미스/현장으로 확장한다.</p><hr id="bcd720e4-6f49-82c7-ae85-811336e8a80c" dir="auto"/><h1 id="9c7720e4-6f49-8206-84d5-81115c405048" class="" dir="auto">12.34 장 요약</h1><p id="e14720e4-6f49-824e-a8b3-81aec1f2acc7" class="" dir="auto">이번 장에서 학습한 핵심 내용</p><ul id="4c8720e4-6f49-8307-95da-81e892e25b94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">엣지 아키텍처가 필요한 이유</li></ul><ul id="65b720e4-6f49-8213-a0bd-0149193cc2e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53의 개념과 DNS의 의미</li></ul><ul id="e2d720e4-6f49-83e4-879e-8125237e97fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Hosted Zone, Alias, 라우팅 정책</li></ul><ul id="b51720e4-6f49-83a8-b535-81cf3eabd678" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Health Check와 장애 조치 라우팅</li></ul><ul id="c01720e4-6f49-83cf-a4c6-81cdf0191304" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront의 개념과 CDN 필요성</li></ul><ul id="dce720e4-6f49-83d4-b207-818d0152c658" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Origin, Cache, Distribution, Behavior 개념</li></ul><ul id="334720e4-6f49-8340-80dc-8148e3760707" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DDoS 보호와 Shield의 역할</li></ul><ul id="b3c720e4-6f49-83f1-a83a-811e7119716e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF와 Shield의 차이</li></ul><ul id="777720e4-6f49-82f0-8b8f-019bb90e9e9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront + Shield + WAF 조합</li></ul><ul id="459720e4-6f49-82fb-9c81-81083863beaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Outposts의 개념과 하이브리드 의미</li></ul><ul id="daa720e4-6f49-8274-80ea-815221e422d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 티어 구조 앞단의 엣지 계층 역할</li></ul><hr id="717720e4-6f49-821c-a972-01af3e643d9a" dir="auto"/><h1 id="025720e4-6f49-8334-ab88-8165636dab4b" class="" dir="auto">12.35 한 줄 정리</h1><pre id="55e720e4-6f49-83a6-8716-813878c80d7d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Route 53은 사용자를 올바른 서비스로 안내한다.
+CloudFront는 콘텐츠를 사용자 가까이에서 전달한다.
+Shield와 WAF는 엣지에서 서비스를 보호한다.
+Outposts는 AWS 운영 모델을 현장 가까이로 확장한다.</code></pre></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

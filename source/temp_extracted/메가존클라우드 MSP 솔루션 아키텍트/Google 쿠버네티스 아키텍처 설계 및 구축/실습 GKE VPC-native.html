@@ -1,0 +1,854 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. GKE VPC-native</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="762720e4-6f49-83eb-9c79-810da689a9c8" class="page sans"><header><h1 class="page-title" dir="auto">실습. GKE VPC-native</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="ddd720e4-6f49-83d4-aaa3-0190abf76563" dir="auto"/><h3 id="4a9720e4-6f49-8394-a75e-817c46f9281e" class="" dir="auto">nginx 파드 생성 후 동일 VPC의 다른 서브넷 VM에서 Pod IP로 직접 접속하기</h3><hr id="916720e4-6f49-83a0-84b9-81dfedb415bf" dir="auto"/><h2 id="3e3720e4-6f49-8293-b4c2-81d97c0daf13" class="" dir="auto">1. 실습 목표</h2><ul id="793720e4-6f49-83c3-934f-016d8afde342" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC-native GKE 클러스터를 생성한다</li></ul><ul id="969720e4-6f49-831b-be93-0142026d9604" class="bulleted-list" dir="auto"><li style="list-style-type:disc">nginx 파드를 배포한다</li></ul><ul id="0a6720e4-6f49-831d-9598-01657689e88e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파드에 부여된 <strong>Pod IP</strong>를 확인한다</li></ul><ul id="6f3720e4-6f49-825f-a29f-017071b6e68f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동일 VPC의 다른 서브넷에 있는 VM에서 <strong>Pod IP로 직접 </strong><code><strong>curl</strong></code> 한다</li></ul><ul id="eb0720e4-6f49-82ce-b121-016f1a9ef52d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이를 통해 <strong>Pod IP가 VPC 내부에서 라우팅된다</strong>는 점을 확인한다</li></ul><hr id="bb5720e4-6f49-83e9-8156-0113fefb01d7" dir="auto"/><h2 id="f8a720e4-6f49-82c7-abcb-81c463585cc8" class="" dir="auto">2. 실습 구조</h2><p id="fe6720e4-6f49-8285-acfb-016a5ee85e15" class="" dir="auto">구성은 다음과 같다.</p><ul id="63b720e4-6f49-8332-9c62-81ac551f62cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC : <code>vpc-native-lab-vpc</code></li></ul><ul id="050720e4-6f49-834e-a063-81b52b9552eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE용 서브넷 : <code>gke-subnet</code><ul id="c9c720e4-6f49-832a-a7d9-0165c7d057a5" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Primary range: <code>10.10.0.0/24</code></li></ul><ul id="9b3720e4-6f49-8294-98d1-01f731ee95c6" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Secondary range(Pod): <code>10.20.0.0/16</code></li></ul><ul id="524720e4-6f49-8231-8bff-01bc9dbe0b24" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Secondary range(Service): <code>10.30.0.0/20</code></li></ul></li></ul><ul id="8e5720e4-6f49-8241-98dc-814d478499f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM용 서브넷 : <code>vm-subnet</code><ul id="3cd720e4-6f49-82d6-bd49-011da172135a" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Primary range: <code>10.40.0.0/24</code></li></ul></li></ul><ul id="0b4720e4-6f49-8324-9b62-81915b8814f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE Standard 클러스터 : <code>vpc-native-cluster</code></li></ul><ul id="a7a720e4-6f49-83c5-8b9f-814351e1d8c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 VM : <code>curl-vm</code></li></ul><ul id="d7e720e4-6f49-836e-a4a4-0105e09faf3d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 대상 파드 : <code>nginx</code></li></ul><p id="9c2720e4-6f49-83ac-af6c-812f44597f7f" class="" dir="auto">핵심 포인트</p><ul id="26b720e4-6f49-8377-ae99-015becc5b9f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>노드 IP</strong>는 GKE 서브넷의 기본 대역에서 할당됨</li></ul><ul id="831720e4-6f49-8369-a107-813bbfb61984" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Pod IP</strong>는 GKE 서브넷의 Secondary range에서 할당됨</li></ul><ul id="fcb720e4-6f49-836c-b7d6-01920a53ebd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 <strong>Pod IP가 같은 VPC 안에서 직접 라우팅</strong>됨</li></ul><hr id="286720e4-6f49-82e9-b284-01a627a9f8a2" dir="auto"/><h2 id="bca720e4-6f49-8384-bcde-810f1adee58c" class="" dir="auto">3. 사전 준비</h2><p id="b53720e4-6f49-821a-aeaf-011c332ca2ba" class="" dir="auto">Cloud Shell 또는 gcloud가 설치된 환경에서 진행한다.</p><p id="434720e4-6f49-8294-8bf5-819853dc0465" class="" dir="auto">프로젝트와 리전을 변수로 지정한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="e5c720e4-6f49-8232-8a06-81d4e52fb4ac" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export PROJECT_ID=$(gcloud config get-value project)
+export REGION=asia-northeast3
+export ZONE=asia-northeast3-a</code></pre><p id="433720e4-6f49-82cc-ab42-0190e7d24382" class="" dir="auto">현재 프로젝트 확인:</p><pre id="42d720e4-6f49-8312-a4d8-812f056e737b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud config get-value project</code></pre><p id="cc8720e4-6f49-825b-a7c0-810fe32af948" class="" dir="auto">필요 API 활성화:</p><pre id="672720e4-6f49-8393-8cf4-0166afc918eb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services enable container.googleapis.com compute.googleapis.com</code></pre><hr id="2b0720e4-6f49-823e-a651-019fa7377a9b" dir="auto"/><h2 id="8fc720e4-6f49-8396-bb74-013eb0334ee8" class="" dir="auto">4. VPC와 서브넷 생성</h2><h3 id="5b5720e4-6f49-8277-83e7-811db425615d" class="" dir="auto">4-1. VPC 생성</h3><pre id="400720e4-6f49-824f-a397-8172efe22dcd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks create vpc-native-lab-vpc \
+  --subnet-mode=custom</code></pre><p id="a3f720e4-6f49-8289-98d3-81d4d2ec7772" class="" dir="auto">설명:</p><ul id="f4e720e4-6f49-8381-91ed-815d82e20ef1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--subnet-mode=custom</code><ul id="00c720e4-6f49-82e6-9618-81c732cb43c4" class="bulleted-list" dir="auto"><li style="list-style-type:circle">자동 모드 VPC가 아니라 직접 서브넷을 설계하는 방식이다</li></ul><ul id="8ca720e4-6f49-820e-8588-0121adb19d75" class="bulleted-list" dir="auto"><li style="list-style-type:circle">GKE 실습에서는 IP 대역을 명확하게 제어하기 위해 custom 모드를 사용한다</li></ul></li></ul><hr id="d6b720e4-6f49-8300-9c64-019ad1601f88" dir="auto"/><h3 id="aaf720e4-6f49-827b-92bb-819ccc916f08" class="" dir="auto">4-2. GKE용 서브넷 생성</h3><p id="e17720e4-6f49-837a-87f7-014d3a47470f" class="" dir="auto">이 서브넷에는 <strong>기본 대역 + secondary range 두 개</strong>가 필요하다.</p><pre id="f87720e4-6f49-82eb-914b-810b7f2ec78c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks subnets create gke-subnet \
+  --network=vpc-native-lab-vpc \
+  --region=$REGION \
+  --range=10.10.0.0/24 \
+  --secondary-range=gke-pod-range=10.20.0.0/16,gke-svc-range=10.30.0.0/20</code></pre><p id="0a9720e4-6f49-834a-b174-81c16a7d384e" class="" dir="auto">설명:</p><ul id="756720e4-6f49-83f0-afaf-8174f20fd04b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--range=10.10.0.0/24</code><ul id="f49720e4-6f49-83c9-ad83-01f387327763" class="bulleted-list" dir="auto"><li style="list-style-type:circle">노드 NIC가 붙는 기본 subnet 대역이다</li></ul></li></ul><ul id="cfd720e4-6f49-8266-b36f-811cde48cf1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--secondary-range=...</code><ul id="4df720e4-6f49-82d8-b9c3-8164c5b67c0e" class="bulleted-list" dir="auto"><li style="list-style-type:circle">VPC-native에서 Pod와 Service IP를 위한 보조 대역이다</li></ul></li></ul><ul id="509720e4-6f49-834d-bf57-01eb45c8c5c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gke-pod-range=10.20.0.0/16</code><ul id="6cd720e4-6f49-834d-b9f5-81e9f72bdfea" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Pod IP가 여기서 할당됨</li></ul></li></ul><ul id="74f720e4-6f49-83c1-be9d-8193f6cf5a1b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gke-svc-range=10.30.0.0/20</code><ul id="65c720e4-6f49-8349-870a-012d4e63189c" class="bulleted-list" dir="auto"><li style="list-style-type:circle">ClusterIP Service 대역이다</li></ul></li></ul><p id="e66720e4-6f49-828e-9d37-81d9bb97665d" class="" dir="auto">VPC-native 클러스터는 subnet의 secondary range를 사용해 Pod/Service IP를 관리한다. -</p><hr id="775720e4-6f49-8386-be6d-81fbab8f42a6" dir="auto"/><h3 id="0e1720e4-6f49-834d-b324-01ab170cadc1" class="" dir="auto">4-3. VM용 서브넷 생성</h3><p id="c04720e4-6f49-82e2-ab39-01fe26681f4c" class="" dir="auto">VM은 같은 VPC지만 <strong>다른 서브넷</strong>에 둔다.</p><pre id="b37720e4-6f49-82e2-bd2e-81daf6232301" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks subnets create vm-subnet \
+  --network=vpc-native-lab-vpc \
+  --region=$REGION \
+  --range=10.40.0.0/24</code></pre><hr id="f04720e4-6f49-8344-a28a-01e60702f2c4" dir="auto"/><h2 id="49f720e4-6f49-836f-bd43-811a8c340b30" class="" dir="auto">5. 방화벽 규칙 생성</h2><p id="0ac720e4-6f49-83dd-8205-814455ab7baf" class="" dir="auto">같은 VPC라도 GCP에서는 <strong>VPC 방화벽 규칙</strong>이 적용된다.</p><p id="01c720e4-6f49-8237-97fe-810a59c0d717" class="" dir="auto">따라서 VM에서 Pod로 HTTP 접근이 가능하도록 허용 규칙을 만든다.</p><h3 id="19a720e4-6f49-837e-9895-812ba1e89f3f" class="" dir="auto">5-1. 내부 통신 허용 규칙</h3><pre id="522720e4-6f49-82ed-8118-813899ffe1b4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules create allow-internal-lab \
+  --network=vpc-native-lab-vpc \
+  --allow=tcp:80,tcp:22,icmp \
+  --source-ranges=10.10.0.0/24,10.20.0.0/16,10.30.0.0/20,10.40.0.0/24</code></pre><p id="f8a720e4-6f49-821d-94fd-010dd0458773" class="" dir="auto">설명:</p><ul id="f4f720e4-6f49-8322-9aae-814bf635fb6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>tcp:80</code><ul id="b45720e4-6f49-83e5-806f-01fdca25c382" class="bulleted-list" dir="auto"><li style="list-style-type:circle">nginx 접속용</li></ul></li></ul><ul id="897720e4-6f49-833b-9264-81ac8f50286d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>tcp:22</code><ul id="aae720e4-6f49-8249-a2aa-81f5eb197f42" class="bulleted-list" dir="auto"><li style="list-style-type:circle">SSH 접속용</li></ul></li></ul><ul id="29d720e4-6f49-8347-a23b-0198571aaa77" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>icmp</code><ul id="f75720e4-6f49-82af-96cc-0193d3b1871e" class="bulleted-list" dir="auto"><li style="list-style-type:circle">네트워크 테스트용</li></ul></li></ul><ul id="a3d720e4-6f49-82b4-a999-01c4967519c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--source-ranges</code><ul id="3ce720e4-6f49-82c4-89bd-8100d59641df" class="bulleted-list" dir="auto"><li style="list-style-type:circle">실습에 사용하는 주요 내부 대역을 모두 허용함</li></ul></li></ul><p id="0b6720e4-6f49-8309-b29e-8139eb1f0784" class="" dir="auto">좀 더 엄격하게 하려면 VM 서브넷만 source로 허용해도 된다.</p><p id="870720e4-6f49-8392-86a3-81ef1285a295" class="" dir="auto">예:</p><pre id="bd3720e4-6f49-83b7-bcdd-01f0b63f4a68" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules create allow-vm-to-pod-http \
+  --network=vpc-native-lab-vpc \
+  --allow=tcp:80 \
+  --source-ranges=10.40.0.0/24</code></pre><hr id="eaf720e4-6f49-82b5-b961-81873e918610" dir="auto"/><h2 id="7b5720e4-6f49-825b-84db-01023144bd3f" class="" dir="auto">6. GKE Standard 클러스터 생성</h2><h3 id="50b720e4-6f49-82ec-aae8-81f0d853dc04" class="" dir="auto">6-1. VPC-native 클러스터 생성</h3><pre id="0cd720e4-6f49-821f-8cac-81bec3f9e5c0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters create vpc-native-cluster \
+  --zone=$ZONE \
+  --network=vpc-native-lab-vpc \
+  --subnetwork=gke-subnet \
+  --enable-ip-alias \
+  --cluster-secondary-range-name=gke-pod-range \
+  --services-secondary-range-name=gke-svc-range \
+  --num-nodes=2</code></pre><p id="ced720e4-6f49-82c2-a125-0171f6e8fccc" class="" dir="auto">설명:</p><ul id="32c720e4-6f49-8248-a3d0-01121c881141" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--enable-ip-alias</code><ul id="052720e4-6f49-82b5-a2cd-8188afcde99a" class="bulleted-list" dir="auto"><li style="list-style-type:circle">VPC-native 클러스터를 만드는 핵심 옵션이다</li></ul><ul id="f94720e4-6f49-8257-814a-01fd65d7d60b" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Alias IP 기반으로 Pod IP를 사용한다</li></ul></li></ul><ul id="26c720e4-6f49-83e6-a5c4-8190bd1ea375" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--cluster-secondary-range-name=gke-pod-range</code><ul id="b60720e4-6f49-82d2-90c7-81eb38d36f11" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Pod IP로 사용할 secondary range 이름 지정</li></ul></li></ul><ul id="92b720e4-6f49-8291-a0c0-0112cdf4ada4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--services-secondary-range-name=gke-svc-range</code><ul id="43e720e4-6f49-82e3-9741-8117971d22cd" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Service IP range 지정</li></ul></li></ul><ul id="9b9720e4-6f49-8362-b942-0162c4c63102" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--num-nodes=2</code></li></ul><p id="8f7720e4-6f49-8355-921a-01f4e581237a" class="" dir="auto"> VPC-native 생성 시 <code>--enable-ip-alias</code>를 사용하며, 이 방식이 권장된다. </p><p id="eb6720e4-6f49-8235-bfc8-01e546c8371e" class="" dir="auto">클러스터 생성 확인:</p><pre id="77a720e4-6f49-82e9-9f95-014f3217fbc6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters list</code></pre><pre id="a57720e4-6f49-839e-a298-01c754e3f74d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters list \
+    --format=&quot;table(name, zone, networkConfig.network, ipAllocationPolicy.useIpAliases)&quot;</code></pre><p id="efb720e4-6f49-8369-99f5-0109c06c0a8d" class="" dir="auto">kubectl 인증 정보 가져오기:</p><pre id="606720e4-6f49-82d9-9c99-81e3dde7be31" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials vpc-native-cluster --zone=$ZONE</code></pre><hr id="5a3720e4-6f49-834f-bd40-8119ce718e6e" dir="auto"/><h2 id="a64720e4-6f49-8255-8ec3-81905069bbf9" class="" dir="auto">7. 테스트용 VM 생성</h2><p id="1e3720e4-6f49-8291-bbad-81192917df2d" class="" dir="auto">같은 VPC의 다른 서브넷에 VM을 만든다.</p><pre id="7af720e4-6f49-83b0-be08-0136d2ce628e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instances create curl-vm \
+  --zone=$ZONE \
+  --machine-type=e2-micro \
+  --subnet=vm-subnet \
+  --image-family=debian-12 \
+  --image-project=debian-cloud</code></pre><p id="6e4720e4-6f49-8370-9dec-810e93a24347" class="" dir="auto">설명:</p><ul id="2f2720e4-6f49-838e-89a4-01f7acb190ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--subnet=vm-subnet</code><ul id="7ed720e4-6f49-8386-9648-812f16fb077e" class="bulleted-list" dir="auto"><li style="list-style-type:circle">GKE와는 다른 서브넷에 VM 생성</li></ul></li></ul><ul id="295720e4-6f49-8388-969f-81e8b0ec6f42" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>debian-12</code><ul id="1ea720e4-6f49-8296-8281-8144e22432ec" class="bulleted-list" dir="auto"><li style="list-style-type:circle">기본 네트워크 실습용으로 무난함</li></ul></li></ul><p id="456720e4-6f49-8294-8035-8199e8268ae4" class="" dir="auto">VM 내부 IP 확인:</p><pre id="335720e4-6f49-8212-a11c-01681c616882" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute instances describe curl-vm \
+  --zone=$ZONE \
+  --format=&quot;get(networkInterfaces[0].networkIP)&quot;</code></pre><hr id="e13720e4-6f49-82a2-8d2b-019a1cd58c2d" dir="auto"/><h2 id="384720e4-6f49-8381-9d25-81c24d14172d" class="" dir="auto">8. nginx 파드 배포</h2><h3 id="640720e4-6f49-8238-8073-0120dc3c4cf5" class="" dir="auto">8-1. nginx 파드 생성</h3><pre id="f5f720e4-6f49-8268-81f2-81408b145dbd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl run nginx \
+  --image=nginx \
+  --port=80</code></pre><p id="be4720e4-6f49-822e-8c8d-01beb2c37a6d" class="" dir="auto">파드 상태 확인:</p><pre id="d8d720e4-6f49-835d-8d41-8143feb0d151" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -o wide</code></pre><p id="279720e4-6f49-83d3-9407-814c44ec8563" class="" dir="auto">예상 결과 예시:</p><pre id="a36720e4-6f49-8388-bbf9-0145d78f2723" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME    READY   STATUS    RESTARTS   AGE   IP          NODE
+nginx   1/1     Running   0          20s   10.20.0.5   gke-vpc-native-cluster-default-pool-...</code></pre><p id="da8720e4-6f49-83af-ad7a-0102a9c0fe71" class="" dir="auto">여기서 중요한 것은 <code>IP</code> 항목이다.</p><ul id="053720e4-6f49-83c1-a50d-81f48673c2bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>10.20.0.5</code><ul id="ca6720e4-6f49-82a4-ab98-0154a2be6573" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Pod IP</li></ul><ul id="43e720e4-6f49-8384-b25b-01991fb79ed5" class="bulleted-list" dir="auto"><li style="list-style-type:circle">아까 secondary range로 지정한 <code>10.20.0.0/16</code> 대역에서 할당된 주소다</li></ul></li></ul><p id="f33720e4-6f49-8253-9ab8-81b3fcadde36" class="" dir="auto">즉, Pod가 단순히 노드 내부 가상 주소가 아니라, <strong>VPC가 인지하는 Alias IP 체계로 붙어 있는 주소</strong>라는 점이 핵심이다.-</p><hr id="2f9720e4-6f49-838d-85e7-0164bfee86f4" dir="auto"/><h3 id="d2b720e4-6f49-8343-a2aa-01cb549ca70b" class="" dir="auto">8-2. nginx 응답 페이지를 구분 가능하게 수정</h3><pre id="e43720e4-6f49-8365-9e2c-01648470287e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec nginx -- /bin/sh -c &#x27;echo &quot;hello from gke pod&quot; &gt; /usr/share/nginx/html/index.html&#x27;</code></pre><p id="5cd720e4-6f49-824e-97ae-019c0c0bb4e1" class="" dir="auto">파드 내부에서 직접 확인:</p><pre id="2aa720e4-6f49-83d8-81f7-019d59e6c4dd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec nginx -- curl -s localhost</code></pre><p id="9cc720e4-6f49-8228-af2c-018a10a5d994" class="" dir="auto">예상 결과:</p><pre id="cd3720e4-6f49-823d-b931-8171ee50dfe9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">hello from gke pod</code></pre><hr id="08e720e4-6f49-83cb-b99c-819619b3483b" dir="auto"/><h2 id="382720e4-6f49-83e8-8028-012b6ac5e83c" class="" dir="auto">9. Pod IP 확인</h2><p id="49b720e4-6f49-83a7-911f-01ad77cfde80" class="" dir="auto">Pod IP만 따로 추출한다.</p><pre id="4fb720e4-6f49-82ff-865c-012a19775869" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export POD_IP=$(kubectl get pod nginx -o jsonpath=&#x27;{.status.podIP}&#x27;)
+echo $POD_IP</code></pre><p id="605720e4-6f49-8301-b174-812703cc85a0" class="" dir="auto">예상 예시:</p><pre id="9d0720e4-6f49-8328-9c64-018ca528ec12" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">10.20.0.5</code></pre><hr id="3a9720e4-6f49-8205-9327-816d0d23e714" dir="auto"/><h2 id="59f720e4-6f49-8311-bb26-01a90c04d414" class="" dir="auto">10. VM에서 Pod IP로 직접 curl</h2><h3 id="aa0720e4-6f49-829c-a508-01ea3206bbd5" class="" dir="auto">10-1. VM에 SSH 접속</h3><pre id="290720e4-6f49-837f-bb72-011a5c45a493" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute ssh curl-vm --zone=$ZONE</code></pre><hr id="eb9720e4-6f49-8311-95b8-81568010b20c" dir="auto"/><h3 id="67b720e4-6f49-8243-8f61-8159cb1b58f2" class="" dir="auto">10-2. VM에서 Pod IP로 curl</h3><p id="748720e4-6f49-8331-9824-015312265b57" class="" dir="auto">SSH 접속 후 다음 명령 실행:</p><pre id="272720e4-6f49-83f5-b9f1-81f189eede49" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://10.20.0.5</code></pre><p id="991720e4-6f49-8293-be79-0184457c50db" class="" dir="auto">또는 Cloud Shell에서 환경변수 값을 이용해 바로 실행하려면:</p><pre id="182720e4-6f49-82df-b7eb-015e1b5e4655" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute ssh curl-vm --zone=$ZONE --command=&quot;curl -s http://$POD_IP&quot;</code></pre><p id="5ba720e4-6f49-82f6-b239-8143335d628d" class="" dir="auto">예상 결과:</p><pre id="7a1720e4-6f49-8252-b56f-012239d236ac" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">hello from gke pod</code></pre><p id="63e720e4-6f49-822a-8f7a-016bd51f44bd" class="" dir="auto">이 결과가 의미하는 것은 다음과 같다.</p><ul id="87f720e4-6f49-8360-9e26-01908be194d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM은 <strong>다른 서브넷</strong>에 있음</li></ul><ul id="803720e4-6f49-837d-aa77-0172c3f3c4ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그런데도 Pod IP로 <strong>직접 HTTP 요청</strong>이 감</li></ul><ul id="c61720e4-6f49-831d-b557-01c9338dcac5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">별도의 NodePort, LoadBalancer, Ingress 없이도 됨</li></ul><ul id="4ff720e4-6f49-82dd-a76b-81b60051b794" class="bulleted-list" dir="auto"><li style="list-style-type:disc">즉, <strong>Pod IP 자체가 VPC 내부에서 라우팅 가능한 주소로 동작</strong>함을 확인한 것이다 </li></ul><hr id="715720e4-6f49-8224-81a4-8100765ba36f" dir="auto"/><h2 id="386720e4-6f49-83f8-9f98-0137b2149915" class="" dir="auto">11. 왜 이게 중요한가</h2><p id="f7b720e4-6f49-8243-8e83-010ddedb8074" class="" dir="auto">GKE의 VPC-native에서는 다음과 같이 동작한다.</p><ul id="4fc720e4-6f49-82d1-8e58-81da707b0896" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod IP가 VPC 내부에서 직접 라우팅됨</li></ul><ul id="285720e4-6f49-837f-aefe-011c15ee754e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드에 Alias IP 형태로 연결됨</li></ul><ul id="e98720e4-6f49-8288-bf35-819209f80ca0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC가 그 주소를 인지함</li></ul><ul id="802720e4-6f49-834b-ba43-0136ca268e31" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그래서 같은 VPC 안의 다른 VM도 그 Pod IP로 직접 접근 가능함.</li></ul><hr id="686720e4-6f49-83a5-9cf2-8152ad2906c6" dir="auto"/><h2 id="0de720e4-6f49-8239-88fe-01f92bdbd239" class="" dir="auto">12. 전체 명령어 모음</h2><pre id="3b2720e4-6f49-836e-970b-81073c056c5e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export PROJECT_ID=$(gcloud config get-value project)
+export REGION=asia-northeast3
+export ZONE=asia-northeast3-a
+
+gcloud services enable container.googleapis.com compute.googleapis.com
+
+gcloud compute networks create vpc-native-lab-vpc \
+  --subnet-mode=custom
+
+gcloud compute networks subnets create gke-subnet \
+  --network=vpc-native-lab-vpc \
+  --region=$REGION \
+  --range=10.10.0.0/24 \
+  --secondary-range=gke-pod-range=10.20.0.0/16,gke-svc-range=10.30.0.0/20
+
+gcloud compute networks subnets create vm-subnet \
+  --network=vpc-native-lab-vpc \
+  --region=$REGION \
+  --range=10.40.0.0/24
+
+gcloud compute firewall-rules create allow-internal-lab \
+  --network=vpc-native-lab-vpc \
+  --allow=tcp:80,tcp:22,icmp \
+  --source-ranges=10.10.0.0/24,10.20.0.0/16,10.30.0.0/20,10.40.0.0/24
+
+gcloud container clusters create vpc-native-cluster \
+  --zone=$ZONE \
+  --network=vpc-native-lab-vpc \
+  --subnetwork=gke-subnet \
+  --enable-ip-alias \
+  --cluster-secondary-range-name=gke-pod-range \
+  --services-secondary-range-name=gke-svc-range \
+  --num-nodes=2
+
+gcloud container clusters get-credentials vpc-native-cluster --zone=$ZONE
+
+gcloud compute instances create curl-vm \
+  --zone=$ZONE \
+  --machine-type=e2-micro \
+  --subnet=vm-subnet \
+  --image-family=debian-12 \
+  --image-project=debian-cloud
+
+kubectl run nginx --image=nginx --port=80
+
+kubectl exec nginx -- /bin/sh -c &#x27;echo &quot;hello from gke pod&quot; &gt; /usr/share/nginx/html/index.html&#x27;
+
+kubectl get pods -o wide
+
+export POD_IP=$(kubectl get pod nginx -o jsonpath=&#x27;{.status.podIP}&#x27;)
+echo $POD_IP
+
+gcloud compute ssh curl-vm --zone=$ZONE --command=&quot;curl -s http://$POD_IP&quot;</code></pre><hr id="10b720e4-6f49-8359-aba4-01e2ea1d48ff" dir="auto"/><h2 id="f73720e4-6f49-82e5-8c88-81e417621c9c" class="" dir="auto">16. 정리</h2><blockquote id="48d720e4-6f49-823f-ab49-81b480fd92ec" class="" dir="auto">VPC-native GKE에서는 Pod IP가 subnet의 secondary range에서 할당되며, 이 주소는 같은 VPC 내부에서 직접 라우팅된다. 따라서 동일 VPC의 다른 서브넷에 있는 VM도 Pod IP로 직접 접근할 수 있다.</blockquote></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

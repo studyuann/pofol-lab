@@ -1,0 +1,785 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>9장 AWS 컨테이너 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="857720e4-6f49-8341-a212-81b5499549e5" class="page sans"><header><h1 class="page-title" dir="auto">9장 AWS 컨테이너 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="f19720e4-6f49-8261-8db2-01ec4da5abe3" class="" dir="auto">마이크로서비스, ECR, ECS, EKS</h2><hr id="02c720e4-6f49-83f2-b6c1-813805a778a4" dir="auto"/><h1 id="21a720e4-6f49-82e1-bbd5-8148f0369631" class="" dir="auto">9.1 컨테이너 아키텍처 개요</h1><p id="eb4720e4-6f49-82cb-b8a6-81363833a679" class="" dir="auto">애플리케이션을 실행하는 방식은 계속 발전해 왔음.</p><p id="c74720e4-6f49-82af-aef1-810ba9cde8a1" class="" dir="auto">초기에는 물리 서버에 직접 애플리케이션을 설치했고, 이후 가상머신 기반으로 여러 서버를 나누어 사용하게 되었음.</p><p id="490720e4-6f49-82c8-a57e-01c7195e4731" class="" dir="auto">ㅓ그리고 최근에는 컨테이너 기반 배포가 매우 일반적인 방식이 되었음.</p><p id="48a720e4-6f49-82c1-9d50-81943f6d24eb" class="" dir="auto">컨테이너가 주목받는 이유는 다음과 같음.</p><ul id="d18720e4-6f49-8222-80ab-017f7a933b31" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 실행 환경을 일관되게 만들 수 있음</li></ul><ul id="bc7720e4-6f49-829a-bba4-817ba5ca3f76" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 단위를 가볍게 가져갈 수 있음</li></ul><ul id="f6c720e4-6f49-82ab-b28e-81cfb3f2678c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발 환경과 운영 환경 차이를 줄일 수 있음</li></ul><ul id="5f5720e4-6f49-82bb-966c-81d7072fcb26" class="bulleted-list" dir="auto"><li style="list-style-type:disc">마이크로서비스 구조와 잘 맞음</li></ul><ul id="3d4720e4-6f49-8250-be3e-81fc36d8e7f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화와 확장에 유리함</li></ul><p id="466720e4-6f49-83a2-8001-0123d4146de1" class="" dir="auto">즉, 컨테이너는 단순히 “가볍게 실행되는 기술”이 아니라</p><p id="61f720e4-6f49-83e1-bd6f-013a72a3040b" class="" dir="auto"><strong>현대적인 애플리케이션 배포와 운영 방식의 핵심 구성요소</strong>임.</p><hr id="c50720e4-6f49-82a8-960c-01cfe0030094" dir="auto"/><h1 id="fe1720e4-6f49-825b-949d-81387709ca73" class="" dir="auto">9.2 전통적인 배포 방식의 한계</h1><p id="7ca720e4-6f49-83c2-8802-01584ec43730" class="" dir="auto">컨테이너의 필요성을 이해하려면 먼저 기존 배포 방식의 한계를 봐야 함.</p><p id="75a720e4-6f49-82cb-bbce-01b9ae537f13" class="" dir="auto">예를 들어 하나의 서버에 다음을 직접 설치한다고 가정하면</p><ul id="4d8720e4-6f49-82c4-8ea3-014e129574ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영체제</li></ul><ul id="708720e4-6f49-83e1-bc19-01be649e9376" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버</li></ul><ul id="0e1720e4-6f49-8337-af26-81d580e719b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">런타임</li></ul><ul id="6fe720e4-6f49-82d7-887e-018b9488734e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라이브러리</li></ul><ul id="109720e4-6f49-832e-b085-81fdb5a28b40" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션</li></ul><p id="9fa720e4-6f49-8359-96bb-01e75722de05" class="" dir="auto">이 방식은 다음 문제를 일으키기 쉬움.</p><h3 id="d2f720e4-6f49-8299-957a-813de86cf47f" class="" dir="auto">1. 환경 차이</h3><p id="db3720e4-6f49-82e4-85fe-01e2a5984ba3" class="" dir="auto">개발 서버와 운영 서버의 패키지 버전이 다르면 예상하지 못한 오류가 발생할 수 있음.</p><h3 id="ca3720e4-6f49-83c2-9ae9-8175494136f4" class="" dir="auto">2. 의존성 충돌</h3><p id="fcb720e4-6f49-826e-a860-01aee8960e78" class="" dir="auto">서로 다른 애플리케이션이 같은 서버에서 다른 버전의 라이브러리를 요구할 수 있음.</p><h3 id="c62720e4-6f49-8368-b274-81bb77fd7cbf" class="" dir="auto">3. 배포 재현성 부족</h3><p id="1e3720e4-6f49-8223-8c73-81d8450a161d" class="" dir="auto">새 서버에 동일한 환경을 다시 만드는 과정이 복잡할 수 있음.</p><h3 id="22f720e4-6f49-827e-8ade-01144ebc0461" class="" dir="auto">4. 확장 속도 한계</h3><p id="97c720e4-6f49-82e9-8b17-01298b51ff7d" class="" dir="auto">새 인스턴스를 띄운 뒤 패키지를 설치하고 애플리케이션을 구성하는 시간이 오래 걸릴 수 있음.</p><p id="b37720e4-6f49-82b2-abc9-81d421407c78" class="" dir="auto">즉, 서버 중심 배포 방식은 규모가 커질수록 관리 부담이 커짐.</p><hr id="d76720e4-6f49-8253-8c7e-0165e572a53b" dir="auto"/><h1 id="065720e4-6f49-8237-ad28-818e1a0bbbf6" class="" dir="auto">9.3 컨테이너란 무엇인가</h1><p id="0e0720e4-6f49-8292-92e9-019237348689" class="" dir="auto">컨테이너는 애플리케이션과 그 실행에 필요한 라이브러리, 설정, 종속성을 하나의 패키지로 묶어 실행하는 기술임.</p><p id="c6a720e4-6f49-8341-9214-01d05bc07974" class="" dir="auto">핵심은 다음과 같음.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="61d720e4-6f49-832d-96b8-81e079dcbd9c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">애플리케이션이 어디서 실행되든 동일한 방식으로 동작하도록 실행 환경을 함께 묶는다.</code></pre><p id="799720e4-6f49-829a-99c7-817322315881" class="" dir="auto">즉, 컨테이너는 “코드만 배포”하는 것이 아니라</p><p id="a31720e4-6f49-83e9-a7c8-816b4ced04a0" class="" dir="auto"><strong>코드 + 실행 환경을 함께 배포하는 방식</strong>이라고 볼 수 있음.</p><hr id="bee720e4-6f49-82b2-9158-01bd41c71bc5" dir="auto"/><h1 id="88f720e4-6f49-8340-a237-81d837b7bc41" class="" dir="auto">9.4 가상머신과 컨테이너 차이</h1><p id="826720e4-6f49-836b-8e7f-015b58d29c01" class="" dir="auto">학생들이 가장 많이 헷갈리는 부분 중 하나가</p><p id="3d7720e4-6f49-8373-915c-01cf6fba0c5c" class="" dir="auto">가상머신과 컨테이너를 비슷한 것으로 보는 점임.</p><p id="1c1720e4-6f49-83af-ace5-81b534229d4e" class="" dir="auto">둘 다 격리된 실행 환경을 제공하지만 구조가 다름.</p><table id="7a2720e4-6f49-8287-a544-81a4e3d6976f" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="1cd720e4-6f49-827e-90cb-01e28cfaa299" dir="ltr"><th id="BSEK" class="simple-table-header-color simple-table-header">항목</th><th id="{JxB" class="simple-table-header-color simple-table-header">가상머신</th><th id="SWiR" class="simple-table-header-color simple-table-header">컨테이너</th></tr></thead><tbody><tr id="e9f720e4-6f49-839c-afda-018e10c76a1a" dir="ltr"><td id="BSEK" class="">격리 단위</td><td id="{JxB" class="">OS 전체</td><td id="SWiR" class="">프로세스/애플리케이션</td></tr><tr id="00d720e4-6f49-83aa-892c-01414d884fe4" dir="ltr"><td id="BSEK" class="">포함 내용</td><td id="{JxB" class="">Guest OS 포함</td><td id="SWiR" class="">애플리케이션과 종속성</td></tr><tr id="8af720e4-6f49-8231-a49d-81613a8cc77c" dir="ltr"><td id="BSEK" class="">무게</td><td id="{JxB" class="">상대적으로 무거움</td><td id="SWiR" class="">상대적으로 가벼움</td></tr><tr id="907720e4-6f49-8271-9cc1-812667c439fc" dir="ltr"><td id="BSEK" class="">시작 속도</td><td id="{JxB" class="">느린 편</td><td id="SWiR" class="">빠른 편</td></tr><tr id="f15720e4-6f49-829e-be92-81504f15ee2c" dir="ltr"><td id="BSEK" class="">자원 효율성</td><td id="{JxB" class="">낮을 수 있음</td><td id="SWiR" class="">높음</td></tr></tbody></table><p id="292720e4-6f49-82ed-b09b-8160ddf290a8" class="" dir="auto">가상머신은 하이퍼바이저 위에 게스트 OS 전체를 올리는 구조임.</p><p id="868720e4-6f49-827e-a725-01b69edef65a" class="" dir="auto">반면 컨테이너는 호스트 OS 커널을 공유하면서 프로세스를 격리하는 방식임.</p><p id="faf720e4-6f49-83d5-b9c3-01d8b5306a7d" class="" dir="auto">즉, 컨테이너는 더 가볍고 빠르게 확장하기 좋음.</p><hr id="576720e4-6f49-82f2-b810-819a91f70028" dir="auto"/><h1 id="cdd720e4-6f49-836b-b8b9-0192a8d7a8b1" class="" dir="auto">9.5 컨테이너의 장점</h1><h3 id="aa2720e4-6f49-8302-b943-0120338ec7ea" class="" dir="auto">1. 일관된 실행 환경</h3><p id="e10720e4-6f49-8363-9b2f-81d9198cb398" class="" dir="auto">개발 환경, 테스트 환경, 운영 환경 차이를 줄일 수 있음.</p><h3 id="209720e4-6f49-8237-b8ca-015de7a6f345" class="" dir="auto">2. 빠른 배포</h3><p id="50d720e4-6f49-8222-baa2-8152733a5cba" class="" dir="auto">이미지 단위로 배포하므로 실행 준비가 빠름.</p><h3 id="4b9720e4-6f49-8368-b5d0-814fc8538cd6" class="" dir="auto">3. 높은 자원 효율성</h3><p id="3af720e4-6f49-8398-9cf0-81b9d252cf41" class="" dir="auto">게스트 OS 전체를 매번 띄우지 않아도 됨.</p><h3 id="15e720e4-6f49-829f-bbea-01e4682e371a" class="" dir="auto">4. 마이크로서비스 친화성</h3><p id="1f9720e4-6f49-8264-8997-0135984051ff" class="" dir="auto">서비스를 작은 단위로 쪼개 배포하기 좋음.</p><h3 id="222720e4-6f49-83c4-8cad-813f9c85ad32" class="" dir="auto">5. 확장 자동화에 유리함</h3><p id="b09720e4-6f49-83bd-9eda-813e049bb1f3" class="" dir="auto">동일 이미지 기반으로 인스턴스를 여러 개 복제하기 쉬움.</p><p id="e0c720e4-6f49-82c6-a93d-81dbecae2afe" class="" dir="auto">즉, 컨테이너는 배포 속도와 운영 유연성 측면에서 강점이 큼.</p><hr id="70e720e4-6f49-83cd-be60-812ce7b3436e" dir="auto"/><h1 id="89d720e4-6f49-83ee-b2ce-0111632e97c0" class="" dir="auto">9.6 컨테이너의 한계와 고려사항</h1><p id="192720e4-6f49-8319-aac4-01e0dcfe6e51" class="" dir="auto">컨테이너가 만능은 아님.</p><p id="e22720e4-6f49-8287-a986-013932093f1c" class="" dir="auto">다음과 같은 운영 복잡성이 생길 수 있음.</p><h3 id="684720e4-6f49-836e-bd0f-013e83f190e1" class="" dir="auto">1. 오케스트레이션 필요</h3><p id="66b720e4-6f49-8380-9de3-0175dc728880" class="" dir="auto">컨테이너 수가 많아지면 배포, 장애 복구, 확장, 네트워크 연결을 수동 관리하기 어려움.</p><h3 id="a1e720e4-6f49-83aa-9bd8-01b71e9f293a" class="" dir="auto">2. 상태 저장 문제</h3><p id="91e720e4-6f49-8309-ba6a-81b6a66e6aa3" class="" dir="auto">컨테이너는 본질적으로 일시적인 실행 단위이므로 상태 저장을 별도 설계해야 함.</p><h3 id="ce0720e4-6f49-825e-800a-0131d2f2dfb3" class="" dir="auto">3. 네트워크와 보안 복잡성</h3><p id="ffb720e4-6f49-83ba-9cc3-01453b10fa57" class="" dir="auto">서비스 간 통신, 인증, 접근 제어, 비밀값 관리가 중요해짐.</p><h3 id="e7d720e4-6f49-839e-a93f-01c81cb34574" class="" dir="auto">4. 운영 추적성 필요</h3><p id="81d720e4-6f49-83d4-bec0-012ac0cae8e0" class="" dir="auto">로그, 모니터링, 버전 관리가 더 중요해짐.</p><p id="c5e720e4-6f49-8218-8617-814533de432c" class="" dir="auto">즉, 컨테이너 자체보다</p><p id="9b2720e4-6f49-8253-ab02-81467b3f5d18" class="" dir="auto"><strong>컨테이너를 대규모로 어떻게 관리할 것인가</strong>가 실제 핵심 과제임.</p><hr id="04a720e4-6f49-824e-b205-818902df1833" dir="auto"/><h1 id="67d720e4-6f49-824b-91ca-01bc97c7c02d" class="" dir="auto">9.7 Docker 개요</h1><p id="054720e4-6f49-8390-a58b-816c89c8504e" class="" dir="auto">컨테이너 기술을 설명할 때 가장 대표적으로 언급되는 것이 Docker임.</p><p id="db5720e4-6f49-8213-87cb-01cdfb9c0f2a" class="" dir="auto">Docker는 컨테이너 이미지를 만들고 실행하고 배포하는 데 널리 사용되는 도구임.</p><p id="d97720e4-6f49-828c-a27b-0196974b2334" class="" dir="auto">Docker를 이해할 때 중요한 요소</p><ul id="774720e4-6f49-83b5-a62c-01caff53b783" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Image</li></ul><ul id="a4d720e4-6f49-8243-b8ef-8149f1127411" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Container</li></ul><ul id="73f720e4-6f49-8277-acbb-811174f6a621" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dockerfile</li></ul><ul id="dce720e4-6f49-83ff-9144-812264c2ccb2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Registry</li></ul><p id="dd8720e4-6f49-83a8-8f69-8152f904d138" class="" dir="auto">이 개념을 먼저 이해하면 AWS의 ECR, ECS, EKS도 훨씬 쉽게 이해할 수 있음.</p><hr id="5da720e4-6f49-83e2-8566-01675604c2bf" dir="auto"/><h1 id="288720e4-6f49-83dd-93c6-016830a06647" class="" dir="auto">9.8 Docker Image</h1><p id="1af720e4-6f49-83d3-8746-81a8bf72a9c3" class="" dir="auto">이미지는 컨테이너 실행에 필요한 파일과 설정을 담고 있는 불변 패키지임.</p><p id="283720e4-6f49-83ae-afb6-81fd03df418b" class="" dir="auto">쉽게 말하면 “컨테이너의 실행 원본”임.</p><p id="1e8720e4-6f49-82e8-afea-81f067e774db" class="" dir="auto">예를 들어 하나의 이미지 안에는 다음이 포함될 수 있음.</p><ul id="6f7720e4-6f49-8329-ad3e-814f1848fe50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 코드</li></ul><ul id="f0f720e4-6f49-8302-b1da-018b6ef7684a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">런타임</li></ul><ul id="034720e4-6f49-83b9-bf0d-8132546993a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라이브러리</li></ul><ul id="089720e4-6f49-8223-bd38-017ab8a6a087" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경 설정 일부</li></ul><ul id="e29720e4-6f49-83fc-8815-0146fc990160" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 명령</li></ul><p id="6c9720e4-6f49-83ce-b231-01c8449c9916" class="" dir="auto">즉, 이미지는 실행 가능한 템플릿이고, 컨테이너는 그 이미지를 기반으로 실행된 인스턴스라고 보면 됨.</p><hr id="b41720e4-6f49-8322-aad4-01629bff63e5" dir="auto"/><h1 id="ff8720e4-6f49-82fa-ac98-01c1474cf22c" class="" dir="auto">9.9 Container</h1><p id="88f720e4-6f49-8396-96b7-0143d56c97d7" class="" dir="auto">컨테이너는 이미지를 실제로 실행한 결과물임.</p><p id="0f4720e4-6f49-8249-aa68-816fbc235773" class="" dir="auto">이미지가 설계도라면 컨테이너는 그 설계도로 띄운 실행 중 프로세스임.</p><p id="edc720e4-6f49-839d-b7ee-8160514967f3" class="" dir="auto">이미지와 컨테이너의 관계</p><pre id="c40720e4-6f49-8200-8556-016d8067c65c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Image → 실행 → Container</code></pre><p id="3b7720e4-6f49-82cf-9bae-019d5ec4d482" class="" dir="auto">같은 이미지를 여러 번 실행하면 여러 개의 컨테이너를 만들 수 있음.</p><p id="11b720e4-6f49-838a-9e02-016d4c38c162" class="" dir="auto">이 특성 때문에 동일한 애플리케이션을 여러 개 손쉽게 복제해 확장하기 좋음.</p><hr id="41c720e4-6f49-824e-a602-8196e8c4af41" dir="auto"/><h1 id="48c720e4-6f49-8314-9465-01db852ad524" class="" dir="auto">9.10 Dockerfile</h1><p id="479720e4-6f49-83d1-81d4-015d10125d9e" class="" dir="auto">Dockerfile은 이미지를 만들기 위한 정의 파일임.</p><p id="45e720e4-6f49-82d3-bbbf-01da0e2363af" class="" dir="auto">즉, 컨테이너 이미지를 어떻게 구성할지를 코드처럼 적어 놓은 파일임.</p><p id="b90720e4-6f49-8353-8d78-81166c00bbed" class="" dir="auto">예를 들어 Dockerfile에는 다음 정보가 들어갈 수 있음.</p><ul id="9f9720e4-6f49-83b6-a0c2-813bbb5c9b77" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 베이스 이미지를 사용할지</li></ul><ul id="140720e4-6f49-8227-972c-811659dad8e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 파일을 복사할지</li></ul><ul id="434720e4-6f49-8361-b1b2-8174de71e71e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 패키지를 설치할지</li></ul><ul id="36a720e4-6f49-8230-a489-01137d19227c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 명령으로 애플리케이션을 실행할지</li></ul><p id="9c8720e4-6f49-825e-8cae-0138b586aabc" class="" dir="auto">즉, Dockerfile은</p><p id="329720e4-6f49-8201-8116-017c2c59d4f4" class="" dir="auto"><strong>애플리케이션 실행 환경을 코드로 정의하는 파일</strong>임.</p><p id="47a720e4-6f49-827f-877d-8100141d06b0" class="" dir="auto">이 점에서 CloudFormation이 인프라 정의 파일이라면, Dockerfile은 애플리케이션 실행 환경 정의 파일이라고 볼 수 있음.</p><hr id="661720e4-6f49-8377-b59d-81b21a6ebaf9" dir="auto"/><h1 id="75c720e4-6f49-8293-b836-012b68f90d2e" class="" dir="auto">9.11 Registry</h1><p id="d2a720e4-6f49-839e-a924-01aef6ac47c9" class="" dir="auto">Registry는 컨테이너 이미지를 저장하고 배포하는 저장소임.</p><p id="76f720e4-6f49-82cd-af98-01303d0f581b" class="" dir="auto">Docker 이미지를 만들었다면 어딘가에 보관하고, 필요할 때 가져와야 함.</p><p id="4c3720e4-6f49-82a0-b6da-81e6ca2f980c" class="" dir="auto">그 역할을 하는 것이 Registry임.</p><p id="3c6720e4-6f49-833c-8825-0185ad807b45" class="" dir="auto">대표적인 예</p><ul id="2f2720e4-6f49-82f7-86d0-01c7c785202d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Hub</li></ul><ul id="752720e4-6f49-838b-a52d-816cda1a8d36" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon ECR</li></ul><p id="ea5720e4-6f49-83b0-9ce4-0116ab95454e" class="" dir="auto">즉, 이미지가 애플리케이션 패키지라면 Registry는 그 패키지 보관소임.</p><hr id="90e720e4-6f49-835c-99d5-818f3cf5510f" dir="auto"/><h1 id="271720e4-6f49-832b-ba98-81729b31c67e" class="" dir="auto">9.12 마이크로서비스 개요</h1><p id="bfe720e4-6f49-82de-9799-81043679bd9d" class="" dir="auto">컨테이너 아키텍처를 설명할 때 마이크로서비스를 빼놓기 어려움.</p><p id="639720e4-6f49-83ef-bb64-814870391958" class="" dir="auto">둘은 자주 함께 사용되기 때문임.</p><p id="4ba720e4-6f49-83d0-a2cc-01a112852661" class="" dir="auto">마이크로서비스는 애플리케이션을 하나의 거대한 단일 프로그램으로 만드는 대신,</p><p id="4a4720e4-6f49-828d-a75a-81af94e535c1" class="" dir="auto">작고 독립적인 여러 서비스로 나누어 구성하는 아키텍처 방식임.</p><p id="5e0720e4-6f49-834f-9913-8196aded6aec" class="" dir="auto">예를 들어 전자상거래 시스템을 생각하면 다음처럼 나눌 수 있음.</p><ul id="bc5720e4-6f49-832c-9516-81781b43ca4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 서비스</li></ul><ul id="188720e4-6f49-82fd-b409-0138dfa8abbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주문 서비스</li></ul><ul id="f4a720e4-6f49-837c-804f-81266d36a1cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상품 서비스</li></ul><ul id="4c6720e4-6f49-830e-b21d-8156eb4e3f12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결제 서비스</li></ul><ul id="65b720e4-6f49-821b-b4be-81c949446c23" class="bulleted-list" dir="auto"><li style="list-style-type:disc">알림 서비스</li></ul><p id="c3c720e4-6f49-83ea-88cf-813f64923975" class="" dir="auto">즉, 기능별로 독립된 서비스 단위로 나누는 방식임.</p><hr id="12c720e4-6f49-83d1-889a-817d54b4b5b5" dir="auto"/><h1 id="ca3720e4-6f49-836b-9272-01189dd01eaf" class="" dir="auto">9.13 모놀리식과 마이크로서비스 차이</h1><h3 id="f59720e4-6f49-82d2-8e86-8176139a3911" class="" dir="auto">모놀리식 아키텍처</h3><p id="f24720e4-6f49-835f-afc9-814fae952848" class="" dir="auto">애플리케이션 전체가 하나의 큰 배포 단위로 구성됨.</p><p id="7b8720e4-6f49-82ea-acbf-8119f57c7c70" class="" dir="auto">장점</p><ul id="aa0720e4-6f49-827e-9c52-813550dc8664" class="bulleted-list" dir="auto"><li style="list-style-type:disc">초기 구조가 단순함</li></ul><ul id="b8d720e4-6f49-83d5-a92c-8164ff6b2fde" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발과 배포가 직관적일 수 있음</li></ul><p id="9bd720e4-6f49-8362-940e-01879bd271ca" class="" dir="auto">한계</p><ul id="f26720e4-6f49-822c-a8b6-01b613fe7b07" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일부 기능 변경도 전체 재배포가 필요할 수 있음</li></ul><ul id="b66720e4-6f49-82f4-92bc-813c3b32528f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">규모가 커질수록 복잡도가 증가함</li></ul><ul id="708720e4-6f49-8348-aa24-81d27203bc1a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 기능만 독립 확장하기 어려움</li></ul><h3 id="919720e4-6f49-825d-b7ea-01fe5101f3b0" class="" dir="auto">마이크로서비스 아키텍처</h3><p id="86d720e4-6f49-83bc-a414-817d51dad757" class="" dir="auto">기능별로 작은 서비스로 분리함.</p><p id="a27720e4-6f49-8383-aca2-81b4d45826b0" class="" dir="auto">장점</p><ul id="26d720e4-6f49-8268-b683-0130b76041f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">독립 배포 가능</li></ul><ul id="0cf720e4-6f49-832a-acc0-0185b7b586f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스별 확장 가능</li></ul><ul id="406720e4-6f49-8339-a2ee-81362ee8d4d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기술 스택 선택 유연성 증가</li></ul><ul id="bea720e4-6f49-8386-bcba-816f4e91b81a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 영향 범위를 줄일 수 있음</li></ul><p id="801720e4-6f49-8357-b758-813aec6efbe0" class="" dir="auto">한계</p><ul id="39d720e4-6f49-8306-8bc8-81b8f35cd7b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 간 통신 복잡도 증가</li></ul><ul id="227720e4-6f49-8200-baa5-818214e222e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 복잡도 증가</li></ul><ul id="be7720e4-6f49-82fb-b722-016be52d5f97" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모니터링, 배포, 인증, 데이터 관리가 어려워질 수 있음</li></ul><p id="c65720e4-6f49-8287-8767-81607f8c4376" class="" dir="auto">즉, 마이크로서비스는 강력하지만 운영 난이도도 같이 올라감.</p><hr id="184720e4-6f49-8212-875b-01bc5a814524" dir="auto"/><h1 id="f8f720e4-6f49-839c-8774-015b4b8b896e" class="" dir="auto">9.14 컨테이너와 마이크로서비스의 관계</h1><p id="f86720e4-6f49-83c1-8526-0173081a9211" class="" dir="auto">마이크로서비스는 논리적 아키텍처 방식이고, 컨테이너는 그 서비스를 배포하기 좋은 실행 단위임.</p><p id="4bd720e4-6f49-8288-ad8c-819ddae03cfc" class="" dir="auto">둘은 같은 개념이 아니지만 매우 잘 맞음.</p><p id="d57720e4-6f49-8336-9166-81f5f121a156" class="" dir="auto">왜 잘 맞는가</p><ul id="422720e4-6f49-8223-9424-81cd37cc7e77" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 서비스를 독립 이미지로 만들기 쉬움</li></ul><ul id="f9e720e4-6f49-837d-9ecc-81c4fa6e9631" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스별로 다른 배포 주기를 가질 수 있음</li></ul><ul id="323720e4-6f49-825d-b231-8128f88e2533" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스별 개별 확장이 가능함</li></ul><ul id="5c8720e4-6f49-8280-963b-011d11bd32f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동일한 실행 환경을 유지하기 쉬움</li></ul><p id="1e6720e4-6f49-826d-acc5-81a91e3dafca" class="" dir="auto">즉, 마이크로서비스를 운영할 때 컨테이너가 매우 유용한 배포 단위가 됨.</p><hr id="1ff720e4-6f49-8240-93ab-012eaf129903" dir="auto"/><h1 id="86c720e4-6f49-828c-a922-817676b6a926" class="" dir="auto">9.15 오케스트레이션의 필요성</h1><p id="0ca720e4-6f49-8355-961c-012f092b87be" class="" dir="auto">컨테이너를 하나만 실행하는 것은 비교적 단순함.</p><p id="d3d720e4-6f49-824a-9ad3-81ed4631c44f" class="" dir="auto">하지만 운영 환경에서는 다음 상황이 발생함.</p><ul id="7ef720e4-6f49-82f2-b97d-81220b9edcf9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너가 여러 대의 서버에 분산 실행됨</li></ul><ul id="1be720e4-6f49-8245-b6b2-81774ba7e22c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애가 나면 자동 재시작이 필요함</li></ul><ul id="c8c720e4-6f49-82eb-a7cd-81eb726f94d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">트래픽 증가 시 컨테이너 수를 늘려야 함</li></ul><ul id="849720e4-6f49-821f-a7e8-81b07318edaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 버전을 교체해 무중단 배포가 필요함</li></ul><ul id="280720e4-6f49-8399-9ab8-01ad41d1a579" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 연결과 서비스 디스커버리가 필요함</li></ul><p id="31d720e4-6f49-83e4-b7ea-0126b7760ae9" class="" dir="auto">즉, 컨테이너가 많아질수록 “실행”보다 “관리”가 더 어려워짐.</p><p id="69a720e4-6f49-8329-974c-0137b79074c4" class="" dir="auto">이 문제를 해결하는 것이 컨테이너 오케스트레이션임.</p><p id="340720e4-6f49-83f7-a038-81393e2c0098" class="" dir="auto">AWS에서는 이 영역을 대표적으로 다음 서비스가 담당함.</p><ul id="bcc720e4-6f49-82bf-88b5-0194f942b2cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ECS</li></ul><ul id="f88720e4-6f49-83fe-a728-8182ed0812ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EKS</li></ul><hr id="a56720e4-6f49-82c1-a098-01740f5eff74" dir="auto"/><h1 id="f16720e4-6f49-83ea-ad46-016c10174593" class="" dir="auto">9.16 Amazon ECR 개요</h1><p id="2b0720e4-6f49-82ae-b73e-0143a35fa5d7" class="" dir="auto">Amazon ECR은 <strong>Elastic Container Registry</strong>의 약자임.</p><p id="11d720e4-6f49-8217-96df-81c03ec5a09a" class="" dir="auto">AWS에서 제공하는 관리형 컨테이너 이미지 저장소임.</p><p id="532720e4-6f49-8333-88bd-81d4c039e854" class="" dir="auto">역할은 매우 명확함.</p><pre id="914720e4-6f49-820f-8dac-0186a2b0add8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">컨테이너 이미지를 안전하게 저장하고, 배포 대상이 그 이미지를 가져가도록 한다.</code></pre><p id="bb9720e4-6f49-83e1-ae59-81723704d73c" class="" dir="auto">즉, ECR은 실행 환경이 아니라 <strong>이미지 저장소</strong>임.</p><hr id="7ec720e4-6f49-8347-922f-01bb0ae538e9" dir="auto"/><h1 id="12d720e4-6f49-830b-b4b3-81adbaab4dc0" class="" dir="auto">9.17 ECR의 역할</h1><p id="e8c720e4-6f49-826a-b6a3-01c618b6bc29" class="" dir="auto">ECR은 다음 용도로 사용됨.</p><ul id="3ef720e4-6f49-82c5-b3c3-812255f6d0c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 이미지 저장</li></ul><ul id="f20720e4-6f49-828a-b040-019c3f49be17" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버전 태깅</li></ul><ul id="814720e4-6f49-82d5-9ab9-81d7a2725c9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ECS/EKS 배포용 이미지 제공</li></ul><ul id="11c720e4-6f49-82f7-a682-8140c7ab46d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">접근 제어</li></ul><ul id="fdf720e4-6f49-82c4-aaa0-013c4f23db16" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS IAM과 통합된 인증</li></ul><p id="69a720e4-6f49-82a6-b0aa-813d42246b21" class="" dir="auto">예를 들어 개발자가 애플리케이션 이미지를 빌드한 뒤 ECR에 업로드하면,</p><p id="dfc720e4-6f49-8264-ae2d-81b535c68d56" class="" dir="auto">ECS나 EKS가 그 이미지를 pull해서 컨테이너를 실행함.</p><p id="77a720e4-6f49-8289-888c-81fcab2dab0a" class="" dir="auto">즉, ECR은 컨테이너 배포 파이프라인의 시작점이라고 볼 수 있음.</p><hr id="12a720e4-6f49-82e9-b3d1-017499e17794" dir="auto"/><h1 id="f20720e4-6f49-8382-a2df-01312ca1c486" class="" dir="auto">9.18 ECR의 장점</h1><h3 id="d95720e4-6f49-839e-9698-8103933c480a" class="" dir="auto">1. AWS 통합</h3><p id="fed720e4-6f49-8291-a3f8-018f330c1cb2" class="" dir="auto">IAM, ECS, EKS와 자연스럽게 연동됨.</p><h3 id="4c5720e4-6f49-8209-8679-0126c7a998c3" class="" dir="auto">2. 이미지 버전 관리</h3><p id="58e720e4-6f49-8362-8caf-818c75ead169" class="" dir="auto">태그를 통해 버전을 구분할 수 있음.</p><h3 id="735720e4-6f49-8360-aaf4-01e2b996e960" class="" dir="auto">3. 보안 통제</h3><p id="453720e4-6f49-82af-b74c-8145d3296b5e" class="" dir="auto">누가 어떤 이미지를 업로드하고 가져갈지 제어 가능함.</p><h3 id="27b720e4-6f49-829a-bfcc-0137319323f6" class="" dir="auto">4. 운영 단순화</h3><p id="fb9720e4-6f49-832c-9e41-8103acb7ac48" class="" dir="auto">별도 사설 레지스트리를 직접 구축하지 않아도 됨.</p><p id="396720e4-6f49-82ca-9c62-81dbc4de6898" class="" dir="auto">즉, ECR은 AWS 환경에서 컨테이너 이미지를 관리하기 위한 표준 저장소 역할을 함.</p><hr id="f0c720e4-6f49-826c-905c-819e7de25d03" dir="auto"/><h1 id="2ab720e4-6f49-82ae-85ff-81e74e938e63" class="" dir="auto">9.19 Amazon ECS 개요</h1><p id="5a4720e4-6f49-8397-bf81-0197f25b51ef" class="" dir="auto">Amazon ECS는 <strong>Elastic Container Service</strong>의 약자임.</p><p id="909720e4-6f49-829b-a976-01542c73adca" class="" dir="auto">AWS의 관리형 컨테이너 오케스트레이션 서비스임.</p><p id="b4d720e4-6f49-8280-8308-8126abab548f" class="" dir="auto">쉽게 말하면 다음 역할을 함.</p><ul id="f03720e4-6f49-82b4-ab23-8181168a22e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너를 어디서 실행할지 결정</li></ul><ul id="75f720e4-6f49-82a6-b5b8-81790328cdb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">몇 개를 실행할지 관리</li></ul><ul id="ee0720e4-6f49-8300-ae68-011fe10fae0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애가 나면 다시 실행</li></ul><ul id="395720e4-6f49-8212-b79b-01909a378bae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업데이트 시 교체</li></ul><ul id="f90720e4-6f49-8361-b877-81bee24a17fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로드 밸런서와 연결</li></ul><ul id="8e2720e4-6f49-828a-abf0-816dfc99fd44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오토스케일링 연동</li></ul><p id="461720e4-6f49-832f-bc4e-014694bf5931" class="" dir="auto">즉, ECS는 컨테이너를 “저장”하는 서비스가 아니라</p><p id="72c720e4-6f49-838d-9a3f-816a458f3bd8" class="" dir="auto"><strong>컨테이너를 실행하고 운영하는 서비스</strong>임.</p><hr id="5b7720e4-6f49-8329-b31c-818d3feea7ea" dir="auto"/><h1 id="22f720e4-6f49-8328-8e7a-019b1f4d28ca" class="" dir="auto">9.20 ECS의 핵심 개념</h1><p id="86e720e4-6f49-8307-85c0-810232fd3b57" class="" dir="auto">ECS를 이해할 때 중요한 개념</p><ul id="530720e4-6f49-8212-b598-01f6a95ec4a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cluster</li></ul><ul id="be7720e4-6f49-8327-aab1-0191d6d35888" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Task Definition</li></ul><ul id="af8720e4-6f49-83b9-922b-8153cc9d209e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Task</li></ul><ul id="a1e720e4-6f49-8248-a7e6-01b57a49810f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service</li></ul><ul id="935720e4-6f49-834e-996a-01b48e6e076c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Launch Type</li></ul><hr id="3f8720e4-6f49-83ba-8caf-0136e93c146a" dir="auto"/><h2 id="524720e4-6f49-82d3-9652-81c2c1dd7f98" class="" dir="auto">9.20.1 Cluster</h2><p id="551720e4-6f49-836c-b05a-810bd8f0c227" class="" dir="auto">클러스터는 ECS가 컨테이너를 실행하는 논리적 영역임.</p><p id="e3a720e4-6f49-82c0-833d-81658e8d1ac6" class="" dir="auto">즉, 실행 대상과 관리 범위를 묶는 단위라고 보면 됨.</p><hr id="728720e4-6f49-83ba-a12b-8165eb03bf1c" dir="auto"/><h2 id="b80720e4-6f49-8240-b28d-01dc95fbdfa9" class="" dir="auto">9.20.2 Task Definition</h2><p id="303720e4-6f49-833f-b6d7-0136db05b619" class="" dir="auto">Task Definition은 컨테이너를 어떻게 실행할지 정의한 설계서임.</p><p id="ef9720e4-6f49-826c-8e3f-01098a9f9ec3" class="" dir="auto">포함 예시</p><ul id="9ab720e4-6f49-8249-8c76-8130a0b4ed22" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 이미지 사용할지</li></ul><ul id="7b7720e4-6f49-82a0-a627-8140d8b54b82" class="bulleted-list" dir="auto"><li style="list-style-type:disc">몇 개 컨테이너를 묶을지</li></ul><ul id="12a720e4-6f49-82bf-af43-81ca2c18d985" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU/메모리 얼마나 쓸지</li></ul><ul id="bd3720e4-6f49-8323-b641-01002e9c8787" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경변수</li></ul><ul id="743720e4-6f49-830f-a39b-0122f0b74ca8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트</li></ul><ul id="351720e4-6f49-83f8-9554-819b3760c503" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 설정</li></ul><p id="d81720e4-6f49-82e0-9bee-01da67d18507" class="" dir="auto">즉, Task Definition은 ECS 버전의 실행 청사진임.</p><hr id="464720e4-6f49-82b5-ae39-81d9b74458e1" dir="auto"/><h2 id="fcd720e4-6f49-8273-b79c-01da533987f2" class="" dir="auto">9.20.3 Task</h2><p id="8fc720e4-6f49-8259-9548-818861f74dbf" class="" dir="auto">Task는 Task Definition을 실제로 실행한 단위임.</p><p id="2c9720e4-6f49-8320-8fd1-01e547987251" class="" dir="auto">즉, 이미지를 바탕으로 띄운 컨테이너 실행 단위라고 보면 됨.</p><hr id="806720e4-6f49-82ad-8d6a-8111cf1275da" dir="auto"/><h2 id="1a4720e4-6f49-8206-953d-011690427b69" class="" dir="auto">9.20.4 Service</h2><p id="564720e4-6f49-8368-9b9d-810962e453cf" class="" dir="auto">Service는 원하는 수의 Task를 계속 유지하도록 관리하는 기능임.</p><p id="733720e4-6f49-82c4-a6fb-01f38dfa00a4" class="" dir="auto">예를 들어 3개의 Task를 항상 유지하고 싶다면, Service가 이를 보장함.</p><p id="054720e4-6f49-8299-b2e9-01af5949572a" class="" dir="auto">Task 하나가 죽으면 새로 다시 띄우는 식으로 동작함.</p><p id="572720e4-6f49-83e3-aaac-81024017e9a8" class="" dir="auto">즉, Service는 운영 환경에서 지속적으로 애플리케이션을 유지하는 핵심 개념임.</p><hr id="bd5720e4-6f49-8200-8902-819b280d4cb0" dir="auto"/><h1 id="ebb720e4-6f49-8295-8fce-016c1c02d5e2" class="" dir="auto">9.21 ECS Launch Type</h1><p id="c22720e4-6f49-83cf-99b4-81c80399a617" class="" dir="auto">ECS는 컨테이너를 어디서 실행할지에 따라 대표적으로 두 가지 방식을 가짐.</p><ul id="c65720e4-6f49-83e7-9937-019725a44834" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 Launch Type</li></ul><ul id="d49720e4-6f49-8340-bf0c-8167ff23d748" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Fargate Launch Type</li></ul><hr id="4b9720e4-6f49-8263-9f32-8155084446d4" dir="auto"/><h2 id="0e3720e4-6f49-82ec-ac21-01f1d4235c52" class="" dir="auto">9.21.1 EC2 Launch Type</h2><p id="7ec720e4-6f49-83c3-8c31-81ed5082114e" class="" dir="auto">ECS용 EC2 인스턴스를 직접 준비하고, 그 위에서 컨테이너를 실행하는 방식임.</p><p id="77a720e4-6f49-826a-b8fb-81a165e2e536" class="" dir="auto">특징</p><ul id="cdb720e4-6f49-82bd-bec5-01281b69b953" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 서버 관리가 필요함</li></ul><ul id="442720e4-6f49-82ae-9e2f-81443a35fe83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">더 세밀한 제어 가능</li></ul><ul id="0a8720e4-6f49-83dc-b692-017f08e7b4d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 커스텀 환경이 필요할 때 유리할 수 있음</li></ul><p id="4e9720e4-6f49-83b1-84e5-812967383129" class="" dir="auto">즉, ECS를 쓰더라도 하부 서버 운영 책임이 일부 남아 있음.</p><hr id="f15720e4-6f49-82c5-83e1-81c6f9e2d5e1" dir="auto"/><h2 id="8f3720e4-6f49-8308-a66c-013fce6c5475" class="" dir="auto">9.21.2 Fargate Launch Type</h2><p id="562720e4-6f49-82f4-8369-814305fc6cdd" class="" dir="auto">서버를 직접 관리하지 않고 컨테이너를 실행하는 방식임.</p><p id="cd3720e4-6f49-82ca-9731-81496609f967" class="" dir="auto">즉, 서버리스에 가까운 컨테이너 실행 모델임.</p><p id="e45720e4-6f49-82cb-9b84-81eeb4f13753" class="" dir="auto">특징</p><ul id="573720e4-6f49-8399-8314-81dc7ef6768e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 인스턴스 관리 불필요</li></ul><ul id="4af720e4-6f49-839f-a29f-810af81eddfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 단위로 실행</li></ul><ul id="cc9720e4-6f49-83ca-b921-012467ec3752" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 단순화</li></ul><ul id="d4f720e4-6f49-8355-8423-01b672dc2cc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빠른 시작과 학습에 유리함</li></ul><p id="a59720e4-6f49-8228-9dbd-81d64b7fd07f" class="" dir="auto">교육 환경이나 표준적인 웹 애플리케이션에서는 Fargate가 설명하기 쉬움.</p><hr id="0ab720e4-6f49-838e-9af6-0130f60d8b01" dir="auto"/><h1 id="676720e4-6f49-8349-82b7-812f85bc0208" class="" dir="auto">9.22 ECS와 로드 밸런서</h1><p id="42f720e4-6f49-83c1-8ff1-015039f13c20" class="" dir="auto">운영 환경에서는 ECS Service를 ALB와 연결해서 트래픽을 분산하는 경우가 많음.</p><p id="5b4720e4-6f49-83e6-b4fd-016ae9212e4a" class="" dir="auto">구조 예</p><pre id="4b7720e4-6f49-83cb-ad71-81caadb038a7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+  │
+ALB
+  │
+ECS Service
+  │
+여러 Task</code></pre><p id="de4720e4-6f49-8316-b19b-0168f4d8eb20" class="" dir="auto">이 구조에서는 ALB가 요청을 여러 Task로 분산하고, ECS는 Task 개수를 유지함.</p><p id="6e2720e4-6f49-8212-87d6-0113688fb923" class="" dir="auto">즉, ECS는 컨테이너 운영 계층, ALB는 트래픽 진입 계층 역할을 함.</p><hr id="b35720e4-6f49-8332-a6fb-819e9a74f32b" dir="auto"/><h1 id="0da720e4-6f49-823e-8716-01974e6f4b0c" class="" dir="auto">9.23 ECS와 Auto Scaling</h1><p id="896720e4-6f49-8344-8865-81b4de562557" class="" dir="auto">ECS도 부하에 따라 확장할 수 있음.</p><p id="053720e4-6f49-8326-9016-019213af113d" class="" dir="auto">단, EC2 Auto Scaling과 개념이 조금 다름.</p><p id="e77720e4-6f49-8258-b8a1-0142743fd8b6" class="" dir="auto">여기서는 인스턴스 수가 아니라 주로 <strong>Task 수</strong>를 조정함.</p><p id="fe9720e4-6f49-823f-9a87-0161ee730701" class="" dir="auto">예</p><ul id="d3f720e4-6f49-825e-88e0-81f92ecf1129" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 증가 → Task 수 증가</li></ul><ul id="f4b720e4-6f49-8325-9554-012570d7d5a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부하 감소 → Task 수 감소</li></ul><p id="349720e4-6f49-8269-9166-8108019a1215" class="" dir="auto">즉, ECS에서의 스케일링은</p><p id="02e720e4-6f49-82ad-8203-015c2b641423" class="" dir="auto">“서버 수 조정”보다 “컨테이너 실행 단위 조정” 관점으로 보는 것이 더 적절함.</p><hr id="576720e4-6f49-82bc-a18d-81ecafcccced" dir="auto"/><h1 id="52a720e4-6f49-82ab-845a-814121c6a453" class="" dir="auto">9.24 Amazon EKS 개요</h1><p id="801720e4-6f49-83eb-aabd-016d118f6b0a" class="" dir="auto">Amazon EKS는 <strong>Elastic Kubernetes Service</strong>의 약자임.</p><p id="ebb720e4-6f49-82ad-89dd-81dde8a4993a" class="" dir="auto">AWS에서 제공하는 관리형 Kubernetes 서비스임.</p><p id="49b720e4-6f49-83f3-9ddf-81322a181183" class="" dir="auto">즉, Kubernetes를 AWS 환경에서 비교적 쉽게 운영할 수 있도록 제어 영역을 관리해 주는 서비스임.</p><p id="84a720e4-6f49-82dc-8f7b-81f76da76bf9" class="" dir="auto">중요한 점은 다음임.</p><pre id="702720e4-6f49-8380-a219-81cd131c2dbe" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ECS는 AWS 자체 컨테이너 오케스트레이션 서비스이고,
+EKS는 Kubernetes 기반 오케스트레이션 서비스다.</code></pre><p id="614720e4-6f49-8330-a001-01bc7b4abe86" class="" dir="auto">즉, 둘 다 컨테이너를 운영하지만 기반 철학과 생태계가 다름.</p><hr id="a8c720e4-6f49-820c-8544-01ae7c22eeb0" dir="auto"/><h1 id="104720e4-6f49-829a-8401-0177bbbd60af" class="" dir="auto">9.25 Kubernetes 개요</h1><p id="a46720e4-6f49-83f6-acaa-012c3f87c9a4" class="" dir="auto">Kubernetes는 컨테이너 오케스트레이션을 위한 오픈소스 플랫폼임.</p><p id="731720e4-6f49-8230-98f4-811a3b9b0bce" class="" dir="auto">대규모 컨테이너 배포, 확장, 복구, 네트워킹을 자동화하기 위해 널리 사용됨.</p><p id="f67720e4-6f49-820c-86f3-812616f59824" class="" dir="auto">핵심 목적</p><ul id="d74720e4-6f49-83a1-8a41-81dac904b4c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원하는 수의 컨테이너 유지</li></ul><ul id="f8b720e4-6f49-8270-b44f-8189d86e4a33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 시 자동 복구</li></ul><ul id="409720e4-6f49-8361-b0e5-81215470be20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">무중단 배포 지원</li></ul><ul id="2b6720e4-6f49-8230-a565-0117ee4432f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 디스커버리</li></ul><ul id="af8720e4-6f49-82a1-820e-0177ede0c4b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장 자동화</li></ul><p id="388720e4-6f49-8365-884b-01f0c57f5153" class="" dir="auto">즉, Kubernetes는 컨테이너를 “띄우는 도구”가 아니라</p><p id="f60720e4-6f49-8347-b2a1-010233666da9" class="" dir="auto"><strong>대규모 컨테이너 운영 플랫폼</strong>임.</p><hr id="e11720e4-6f49-83e3-b51d-81d859394fc0" dir="auto"/><h1 id="e4c720e4-6f49-8399-9acf-01e6d7c913dc" class="" dir="auto">9.26 EKS가 필요한 이유</h1><p id="ab3720e4-6f49-831b-87df-01efb325881e" class="" dir="auto">Kubernetes를 직접 구축하려면 제어 플레인, 인증, 네트워크, 업그레이드, 고가용성 등을 많이 관리해야 함.</p><p id="3ec720e4-6f49-8375-b925-0180f45e9968" class="" dir="auto">이 부담이 크기 때문에 AWS에서는 EKS를 제공함.</p><p id="4c2720e4-6f49-8217-97d7-81b1834be5a1" class="" dir="auto">EKS의 의미</p><ul id="3fc720e4-6f49-82c0-b847-01a9afc6bccc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes 제어 영역 운영 부담 완화</li></ul><ul id="6b8720e4-6f49-832a-88ce-01fa21990603" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 서비스와 연계 쉬움</li></ul><ul id="cc8720e4-6f49-83db-8d9a-81cd67e34f57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">표준 Kubernetes 생태계 활용 가능</li></ul><ul id="e18720e4-6f49-8315-93a1-81d78f8afcc0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티클라우드/하이브리드 경험과 연결 가능</li></ul><p id="c1b720e4-6f49-8347-b383-013c8e6c4436" class="" dir="auto">즉, EKS는 “Kubernetes를 AWS에 맞게 쉽게 운영하는 방식”이라고 보면 됨.</p><hr id="cd3720e4-6f49-8296-96a7-81afaf1a06b8" dir="auto"/><h1 id="1b2720e4-6f49-83bf-ae39-01f114b122be" class="" dir="auto">9.27 ECS와 EKS 차이</h1><p id="1e1720e4-6f49-8317-a855-01dd73eab952" class="" dir="auto">이 둘은 매우 자주 비교됨.</p><table id="20b720e4-6f49-83f4-9b20-01d64b425516" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="be1720e4-6f49-8385-9513-812ca7270258" dir="ltr"><th id="^IO_" class="simple-table-header-color simple-table-header">항목</th><th id="MEQK" class="simple-table-header-color simple-table-header">ECS</th><th id="gtLG" class="simple-table-header-color simple-table-header">EKS</th></tr></thead><tbody><tr id="eb9720e4-6f49-827d-86ba-0122b24a4644" dir="ltr"><td id="^IO_" class="">기반</td><td id="MEQK" class="">AWS 고유 서비스</td><td id="gtLG" class="">Kubernetes</td></tr><tr id="3fd720e4-6f49-826e-b890-810d63cfa743" dir="ltr"><td id="^IO_" class="">학습 난이도</td><td id="MEQK" class="">비교적 낮음</td><td id="gtLG" class="">상대적으로 높음</td></tr><tr id="350720e4-6f49-834e-9205-817c8224dc28" dir="ltr"><td id="^IO_" class="">유연성/생태계</td><td id="MEQK" class="">AWS 중심</td><td id="gtLG" class="">Kubernetes 생태계 활용</td></tr><tr id="36c720e4-6f49-834c-9b9e-016a993a5336" dir="ltr"><td id="^IO_" class="">운영 복잡도</td><td id="MEQK" class="">상대적으로 낮음</td><td id="gtLG" class="">상대적으로 높음</td></tr><tr id="c20720e4-6f49-8208-9447-81b738d5573c" dir="ltr"><td id="^IO_" class="">이식성</td><td id="MEQK" class="">낮은 편</td><td id="gtLG" class="">높은 편</td></tr></tbody></table><p id="6e4720e4-6f49-8325-8e05-01072c2807aa" class="" dir="auto">즉,</p><ul id="ce0720e4-6f49-83ab-98d6-0185fc9e983c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>AWS에 최적화된 단순한 운영</strong>을 원하면 ECS가 적합할 수 있음</li></ul><ul id="f54720e4-6f49-83f1-aad1-018832724870" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Kubernetes 표준과 확장성</strong>이 중요하면 EKS가 적합할 수 있음</li></ul><hr id="bb5720e4-6f49-83f5-94a0-01b63470bcd2" dir="auto"/><h1 id="447720e4-6f49-82e8-920a-812317015990" class="" dir="auto">9.28 Fargate와 EKS/ECS 관계</h1><p id="c65720e4-6f49-8341-b3c2-01c3cf4aa315" class="" dir="auto">Fargate는 별도의 오케스트레이터가 아니라 <strong>컨테이너 실행 방식</strong>에 가까움.</p><p id="df0720e4-6f49-8217-8ac9-01a6cc6b125a" class="" dir="auto">ECS와도 함께 사용할 수 있고, EKS에서도 일부 방식으로 활용할 수 있음.</p><p id="558720e4-6f49-8372-ab4b-01728cac1ea0" class="" dir="auto">즉, 관계를 정리하면 다음과 같음.</p><ul id="ad5720e4-6f49-8253-94a1-01040ae523cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ECR : 이미지 저장</li></ul><ul id="e0c720e4-6f49-8239-a901-8113d43f2e8d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ECS / EKS : 컨테이너 오케스트레이션</li></ul><ul id="52c720e4-6f49-82a7-ae58-81a6a68a0eae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Fargate : 서버 관리 없이 컨테이너 실행</li></ul><p id="cc6720e4-6f49-82cb-a3be-81d37007caaf" class="" dir="auto">이 구분을 명확히 해야 학생들이 서비스 역할을 헷갈리지 않음.</p><hr id="857720e4-6f49-8378-adbd-81e2fa3b8f0f" dir="auto"/><h1 id="9b8720e4-6f49-838d-8edf-81da756656a0" class="" dir="auto">9.29 컨테이너 네트워크와 서비스 연결</h1><p id="657720e4-6f49-8369-a7e5-81dace744305" class="" dir="auto">컨테이너 환경에서는 단순히 애플리케이션을 띄우는 것만이 아니라, 서비스 간 연결 방식도 중요함.</p><p id="521720e4-6f49-83de-8dee-0178a7281776" class="" dir="auto">주요 고려 요소</p><ul id="ce5720e4-6f49-82ac-8ccc-01384c1ecab3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 디스커버리</li></ul><ul id="53a720e4-6f49-83c9-9be7-017435f61115" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부 통신 방식</li></ul><ul id="ba2720e4-6f49-83a0-883d-814301e83108" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로드 밸런서 연결</li></ul><ul id="3a6720e4-6f49-83b5-9b01-81070e88560c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹 또는 네트워크 정책</li></ul><ul id="cb6720e4-6f49-83c3-a763-01bfb1075b0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 공개 여부</li></ul><p id="a60720e4-6f49-83b2-82ff-817a96917141" class="" dir="auto">즉, 컨테이너 환경도 결국 네트워크 아키텍처 위에서 동작함.</p><p id="06e720e4-6f49-8257-926f-819476acd966" class="" dir="auto">VPC, Subnet, Security Group과의 연결을 이해해야 전체 구조가 보임.</p><hr id="5df720e4-6f49-82f9-b988-8140bcefcc1a" dir="auto"/><h1 id="eac720e4-6f49-827e-bc8b-01fd9861c524" class="" dir="auto">9.30 상태 비저장과 상태 저장</h1><p id="2ed720e4-6f49-835d-b996-81e212653ee9" class="" dir="auto">컨테이너 아키텍처를 설명할 때 중요한 원칙 중 하나는 <strong>상태 비저장(Stateless)</strong> 설계임.</p><p id="fb3720e4-6f49-83dc-9193-8152956748cf" class="" dir="auto">왜냐하면 컨테이너는 쉽게 생성되고 쉽게 종료될 수 있기 때문임.</p><p id="e67720e4-6f49-8236-94a6-010e9a321a09" class="" dir="auto">따라서 운영 환경에서는 다음과 같이 분리하는 것이 일반적임.</p><ul id="74d720e4-6f49-8319-b56e-01d55770a932" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 컨테이너 : 상태 비저장</li></ul><ul id="816720e4-6f49-8352-8aad-012d0c14ef9e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 저장소 : 외부 서비스 사용</li></ul><p id="34b720e4-6f49-82bd-ad08-8123b26dca45" class="" dir="auto">예</p><ul id="fe1720e4-6f49-832e-a525-81af871a5d3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터베이스 → RDS, DynamoDB</li></ul><ul id="dfd720e4-6f49-8384-ab8f-010a662fa429" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세션 → Redis</li></ul><ul id="afd720e4-6f49-821e-b4c4-01daa4050e37" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 → S3, EFS</li></ul><p id="4ac720e4-6f49-830d-afac-012461127c48" class="" dir="auto">즉, 컨테이너 자체에 중요한 데이터를 저장하는 방식은 피하는 것이 일반적임.</p><hr id="1e7720e4-6f49-8229-80ad-01401d8d4f7c" dir="auto"/><h1 id="b28720e4-6f49-820f-a46e-8186d5d8f250" class="" dir="auto">9.31 컨테이너 보안 고려사항</h1><p id="a24720e4-6f49-836e-8e21-01eae48ddf41" class="" dir="auto">컨테이너 환경에서도 보안은 매우 중요함.</p><p id="7c4720e4-6f49-8305-9815-815a68bd1976" class="" dir="auto">주요 관점</p><h3 id="4fc720e4-6f49-83b3-89ff-81246f716164" class="" dir="auto">1. 이미지 보안</h3><p id="f9d720e4-6f49-82f0-8119-811990138c30" class="" dir="auto">신뢰할 수 없는 이미지를 사용하면 위험함.</p><h3 id="177720e4-6f49-8291-8e3a-8167f98aaa9c" class="" dir="auto">2. 비밀정보 관리</h3><p id="5d2720e4-6f49-828b-89e6-01d2c6cf8f36" class="" dir="auto">DB 비밀번호, API 키를 이미지에 직접 넣으면 안 됨.</p><h3 id="9c1720e4-6f49-8204-a22b-81fffc653c08" class="" dir="auto">3. 권한 최소화</h3><p id="b8b720e4-6f49-82fe-b41f-01fdc3029ea2" class="" dir="auto">컨테이너가 AWS 서비스에 접근할 때 최소 권한 원칙이 필요함.</p><h3 id="0e2720e4-6f49-8203-afbe-01f4b26212fe" class="" dir="auto">4. 네트워크 제한</h3><p id="b8b720e4-6f49-82a0-8435-015e97d6dbf9" class="" dir="auto">서비스 간 불필요한 통신을 줄여야 함.</p><p id="98b720e4-6f49-831e-9345-0170c1a825e4" class="" dir="auto">즉, 컨테이너가 가볍다고 해서 보안이 단순해지는 것은 아니며,</p><p id="bd6720e4-6f49-83dd-a433-014cf20c13b9" class="" dir="auto">오히려 이미지·레지스트리·런타임까지 포함해 더 넓게 봐야 함.</p><hr id="9c5720e4-6f49-829d-93d7-816ea3aa5041" dir="auto"/><h1 id="de5720e4-6f49-835c-9088-81c535595be2" class="" dir="auto">9.32 운영 관점의 컨테이너 아키텍처</h1><p id="520720e4-6f49-83b8-92a1-81663a6fe5b9" class="" dir="auto">컨테이너 환경에서는 다음 요소를 함께 봐야 함.</p><ul id="b37720e4-6f49-8253-8a3d-81272cd98bae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 저장소</li></ul><ul id="2b1720e4-6f49-83c2-a469-819e8642956b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 자동화</li></ul><ul id="cd4720e4-6f49-83e5-8f6b-817780a9dc9f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 확장</li></ul><ul id="715720e4-6f49-8248-be1d-01453b977782" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로깅</li></ul><ul id="d78720e4-6f49-82c5-9874-01e6dd159038" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모니터링</li></ul><ul id="114720e4-6f49-8286-ab62-010f9a53fa89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 복구</li></ul><ul id="dfb720e4-6f49-83d9-b534-015bf3c4b533" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버전 롤백</li></ul><ul id="020720e4-6f49-825c-94de-81e5fa2d6f01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 연결</li></ul><ul id="d9f720e4-6f49-836e-a12f-814f637e3485" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비밀값 관리</li></ul><p id="80f720e4-6f49-83bf-bfe0-0198c9dcb7bd" class="" dir="auto">즉, 컨테이너는 실행 기술 하나가 아니라</p><p id="ded720e4-6f49-83de-98dc-814c059cb768" class="" dir="auto"><strong>배포, 운영, 확장, 복구를 포함하는 운영 체계 전체와 연결된 아키텍처 주제</strong>임.</p><hr id="181720e4-6f49-83f6-b4cf-8140489db6b9" dir="auto"/><h1 id="a12720e4-6f49-820c-9152-01b86e6569f5" class="" dir="auto">9.33 멀티 티어 아키텍처와 컨테이너의 연결</h1><p id="b1c720e4-6f49-82d9-ac83-0149d18bf475" class="" dir="auto">기존 EC2 기반 멀티 티어 구조를 컨테이너 기반으로 바꾸면 다음처럼 볼 수 있음.</p><pre id="b9f720e4-6f49-8378-bf1a-0111bad8e1ce" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+  │
+ALB
+  │
+ECS Service 또는 EKS Workload
+  │
+RDS / Redis / DynamoDB / S3</code></pre><p id="203720e4-6f49-82b0-b70a-81897146f2c6" class="" dir="auto">즉, 웹·앱 계층이 EC2 인스턴스 대신 컨테이너 오케스트레이션 환경으로 대체되는 구조임.</p><p id="4b5720e4-6f49-8275-b3dc-81a8f24489ba" class="" dir="auto">이 구조의 의미는 다음과 같음.</p><ul id="f08720e4-6f49-83f4-8450-812d0ceab2de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 계층 배포가 더 유연해짐</li></ul><ul id="079720e4-6f49-83a2-b393-0113941e6d7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스별 독립 배포가 쉬워짐</li></ul><ul id="0d4720e4-6f49-82d7-8010-81f1fa29c7f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장 단위가 인스턴스보다 더 작아짐</li></ul><ul id="264720e4-6f49-8356-945f-01c5433b6ec3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">마이크로서비스 구조와 잘 맞음</li></ul><hr id="b43720e4-6f49-8288-8611-81dbb2748bf4" dir="auto"/><h1 id="e23720e4-6f49-83cf-bfe0-013db26c773a" class="" dir="auto">9.34 서비스 역할 한 번에 정리</h1><p id="0fe720e4-6f49-83bc-a4ad-8138d7e7fc60" class="" dir="auto">이 장에서 학생들이 가장 헷갈리지 않게 이해해야 하는 핵심 구분은 다음임.</p><h2 id="864720e4-6f49-829e-b994-813a45ddfc07" class="" dir="auto">ECR</h2><p id="404720e4-6f49-832e-b466-01fce8d1ae4a" class="" dir="auto">컨테이너 이미지를 저장하는 곳임.</p><h2 id="04a720e4-6f49-82ee-9129-818107de6715" class="" dir="auto">ECS</h2><p id="6d8720e4-6f49-82e2-958e-819120a1d77d" class="" dir="auto">AWS 방식으로 컨테이너를 실행하고 운영하는 서비스임.</p><h2 id="327720e4-6f49-82f3-a38a-81254614b80b" class="" dir="auto">EKS</h2><p id="ab0720e4-6f49-8399-851d-01ac3ce30c04" class="" dir="auto">Kubernetes 기반으로 컨테이너를 운영하는 서비스임.</p><h2 id="051720e4-6f49-82ac-af58-81265272e9ca" class="" dir="auto">Fargate</h2><p id="103720e4-6f49-8210-ba68-01e96b864e34" class="" dir="auto">서버를 직접 관리하지 않고 컨테이너를 실행하는 방식임.</p><p id="f2c720e4-6f49-83bf-9f7b-0180a58f27a2" class="" dir="auto">즉,</p><pre id="0f5720e4-6f49-8386-b262-81dbc204fbd6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이미지는 ECR에 저장한다.
+컨테이너는 ECS 또는 EKS에서 운영한다.
+서버 관리 없이 실행하려면 Fargate를 사용할 수 있다.</code></pre><p id="f17720e4-6f49-82ca-8af2-817420eeadd4" class="" dir="auto">이렇게 정리하면 됨.</p><hr id="2dc720e4-6f49-8232-a21b-01f9f637e22e" dir="auto"/><h1 id="055720e4-6f49-83c8-90cc-010756cc87f8" class="" dir="auto">9.35 장 요약</h1><p id="27f720e4-6f49-82e2-b4ec-81be5d35525e" class="" dir="auto">이번 장에서 학습한 핵심 내용</p><ul id="81f720e4-6f49-8213-9a88-81bf749cf97e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너가 필요한 이유</li></ul><ul id="82d720e4-6f49-83bb-aff7-819c1f3a814a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가상머신과 컨테이너 차이</li></ul><ul id="19b720e4-6f49-8211-9bed-810bbd3d2c17" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker Image, Container, Dockerfile, Registry 개념</li></ul><ul id="ca3720e4-6f49-8201-8470-81c6a82659b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">마이크로서비스와 컨테이너의 관계</li></ul><ul id="cc4720e4-6f49-8340-af7f-8161e990db29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오케스트레이션 필요성</li></ul><ul id="c35720e4-6f49-830d-ad17-81d8903e2692" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon ECR의 역할</li></ul><ul id="69a720e4-6f49-8236-8210-017fd2ba141a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon ECS의 핵심 개념</li></ul><ul id="66f720e4-6f49-8399-bbab-018f1375c96e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 Launch Type과 Fargate 차이</li></ul><ul id="d1a720e4-6f49-8326-a98a-812d9011bc1a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon EKS와 Kubernetes 개요</li></ul><ul id="b22720e4-6f49-82e3-b291-81369602ed5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ECS와 EKS 비교</li></ul><ul id="ed9720e4-6f49-82f0-a67f-81eadb6dde57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태 비저장 설계와 외부 데이터 저장 원칙</li></ul><ul id="2bf720e4-6f49-8292-bfbc-0169993b9cc2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 아키텍처의 운영 관점</li></ul><hr id="130720e4-6f49-83c9-a85c-81d70403f4e1" dir="auto"/><h1 id="735720e4-6f49-8226-a010-81627eaaef6b" class="" dir="auto">9.36 한 줄 정리</h1><pre id="84d720e4-6f49-8382-94dd-0114a32fe927" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">컨테이너는 애플리케이션과 실행 환경을 함께 패키징한다.
+ECR은 이미지를 저장한다.
+ECS와 EKS는 컨테이너를 운영한다.
+컨테이너 아키텍처는 마이크로서비스와 잘 맞지만 운영 체계까지 함께 설계해야 한다.</code></pre></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

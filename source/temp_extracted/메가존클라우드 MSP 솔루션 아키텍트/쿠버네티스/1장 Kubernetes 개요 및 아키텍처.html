@@ -1,0 +1,815 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>1장. Kubernetes 개요 및 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="b93720e4-6f49-8390-a1b1-01b071c8de37" class="page sans"><header><h1 class="page-title" dir="auto">1장. Kubernetes 개요 및 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="03b720e4-6f49-8338-b598-81c07d57ebc9" dir="auto"/><h1 id="322720e4-6f49-8397-ba07-81b86b91bafb" class="" dir="auto">1-1. 왜 Kubernetes인가?</h1><h2 id="36b720e4-6f49-82a0-81f9-819af81dbe53" class="" dir="auto">🔹 Docker의 한계 (운영 관점)</h2><p id="ca2720e4-6f49-8308-b8c1-01681532fe0e" class="" dir="auto">Docker는 컨테이너 실행에는 매우 강력하지만,</p><p id="c82720e4-6f49-83ec-850c-010c14a5eeb2" class="" dir="auto"><strong>대규모 운영 환경에서는 한계</strong>가 존재합니다.</p><h3 id="c37720e4-6f49-831c-b5f8-81d297898a73" class="" dir="auto">실습: Docker의 운영 문제 확인</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="117720e4-6f49-8242-964f-0194bceda3a3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 3개의 nginx 컨테이너 실행
+docker run -d -p 8081:80 --name web1 nginx
+docker run -d -p 8082:80 --name web2 nginx
+docker run -d -p 8083:80 --name web3 nginx
+
+# 컨테이너 확인
+docker ps</code></pre><hr id="b90720e4-6f49-82d6-b421-8104fc993368" dir="auto"/><h3 id="86f720e4-6f49-83dc-a4c3-0114557dd61f" class="" dir="auto">❗ 문제 1: 컨테이너가 죽으면?</h3><pre id="7f2720e4-6f49-827e-83aa-81f0a81a1cc6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker stop web1
+docker ps</code></pre><p id="41c720e4-6f49-822c-98c2-81c9c0d20986" class="" dir="auto">→ 자동 복구되지 않음</p><p id="cfa720e4-6f49-8218-930d-01b1f95941f7" class="" dir="auto">→ 관리자가 직접 재시작해야 함</p><hr id="14e720e4-6f49-820b-9b48-8182b7aed12d" dir="auto"/><h3 id="4b2720e4-6f49-831e-beac-81dd76df599e" class="" dir="auto">❗ 문제 2: 여러 서버에 배포하려면?</h3><ul id="421720e4-6f49-83ee-8c50-81eff2d05f3a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 A</li></ul><ul id="b71720e4-6f49-82c1-b7e1-01e1504407f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 B</li></ul><ul id="0a1720e4-6f49-8378-a9a4-017814a5b836" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 C</li></ul><p id="8ed720e4-6f49-820a-acda-01ef3cfd0653" class="" dir="auto">각 서버에 직접 SSH 접속 후 실행 필요</p><hr id="70c720e4-6f49-823b-a1c7-81e73d9441bd" dir="auto"/><h3 id="b99720e4-6f49-8332-b9d4-81d90b92dcd4" class="" dir="auto">❗ 문제 3: 로드밸런싱은?</h3><ul id="525720e4-6f49-831d-b1d5-81ff6e42d58d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트 수동 관리</li></ul><ul id="7bf720e4-6f49-838c-b1d9-81d174d922cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">별도 nginx 또는 HAProxy 설정 필요</li></ul><hr id="be6720e4-6f49-822e-912a-81b5841224eb" dir="auto"/><h2 id="a23720e4-6f49-829a-9c28-818bc2e05804" class="" dir="auto">🔴 정리: Docker는 “컨테이너 실행 도구”</h2><pre id="184720e4-6f49-82f3-9899-81843a770828" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">✗ 단일 호스트 중심
+✗ 자동 복구 없음
+✗ 클러스터 관리 불가
+✗ 선언적 관리 불가</code></pre><hr id="b50720e4-6f49-8390-afb6-01cda6c0c60f" dir="auto"/><h1 id="88a720e4-6f49-8224-88f6-81fffd8751ca" class="" dir="auto">1-2. Kubernetes의 핵심 철학</h1><h2 id="888720e4-6f49-83c7-b29e-01ee062ed8a4" class="" dir="auto">🔹 선언적(Declarative) 모델</h2><p id="c95720e4-6f49-825a-8d96-818fe0e1e3d2" class="" dir="auto">Kubernetes는 <strong>원하는 상태(Desired State)</strong> 를 선언합니다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="300720e4-6f49-8239-8e7d-0183b3eaf321" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">spec:
+  replicas: 3</code></pre><p id="402720e4-6f49-828a-a428-01023b70b0c7" class="" dir="auto">의미:</p><blockquote id="931720e4-6f49-82a3-9631-011428d3bd96" class="" dir="auto">“nginx는 항상 3개 유지”</blockquote><p id="3da720e4-6f49-82a8-b638-01fd415153e4" class="" dir="auto">Kubernetes는:</p><ul id="3d3720e4-6f49-8390-b676-8112c43f6391" class="bulleted-list" dir="auto"><li style="list-style-type:disc">3개 실행</li></ul><ul id="5c4720e4-6f49-830d-9c66-8131cb7eeff8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">죽으면 자동 재생성</li></ul><ul id="5bc720e4-6f49-8233-9ec8-8143f4382112" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드가 죽으면 다른 노드에 재배치</li></ul><hr id="d18720e4-6f49-8268-820c-81932c625f22" dir="auto"/><h2 id="b23720e4-6f49-8318-879b-019138b59545" class="" dir="auto">🔹 Docker vs Kubernetes 비교</h2><table id="597720e4-6f49-8222-8161-8126ca461933" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="62b720e4-6f49-825f-9db5-01a4309feaad" dir="ltr"><th id=":bB_" class="simple-table-header-color simple-table-header">구분</th><th id="~}VJ" class="simple-table-header-color simple-table-header">Docker</th><th id="\P{?" class="simple-table-header-color simple-table-header">Kubernetes</th></tr></thead><tbody><tr id="644720e4-6f49-8279-8cef-81bba130d907" dir="ltr"><td id=":bB_" class="">목적</td><td id="~}VJ" class="">컨테이너 실행</td><td id="\P{?" class="">컨테이너 오케스트레이션</td></tr><tr id="156720e4-6f49-8281-b609-01ac4fcaaf19" dir="ltr"><td id=":bB_" class="">관리 단위</td><td id="~}VJ" class="">컨테이너</td><td id="\P{?" class="">Pod</td></tr><tr id="1c5720e4-6f49-8201-a046-012e5a2f4ce7" dir="ltr"><td id=":bB_" class="">여러 개 관리</td><td id="~}VJ" class="">수동</td><td id="\P{?" class="">Deployment</td></tr><tr id="8e1720e4-6f49-82f0-a59b-8192ad72de35" dir="ltr"><td id=":bB_" class="">자동 복구</td><td id="~}VJ" class="">없음</td><td id="\P{?" class="">있음</td></tr><tr id="80e720e4-6f49-82d1-ac10-81d3973e68ec" dir="ltr"><td id=":bB_" class="">스케일링</td><td id="~}VJ" class="">수동</td><td id="\P{?" class="">자동</td></tr><tr id="64a720e4-6f49-83f8-b535-81502b7ea56d" dir="ltr"><td id=":bB_" class="">로드밸런싱</td><td id="~}VJ" class="">별도 설정</td><td id="\P{?" class="">Service</td></tr></tbody></table><hr id="04c720e4-6f49-820a-b306-81072b532345" dir="auto"/><h1 id="fc2720e4-6f49-8310-804f-01823f4fd6a1" class="" dir="auto">1-3. Kubernetes 아키텍처</h1><p id="cbe720e4-6f49-8325-87d9-0196d830d9e5" class="" dir="auto">Kubernetes는 크게 두 영역으로 구성됩니다.</p><pre id="956720e4-6f49-82af-bd79-81ba9b054dde" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Control Plane + Worker Node</code></pre><hr id="afe720e4-6f49-832a-b07b-0176eb8e1817" dir="auto"/><h2 id="1dd720e4-6f49-8322-be43-8138850dac23" class="" dir="auto">🔵 전체 구조</h2><pre id="e32720e4-6f49-82f3-afad-81478ed4c5eb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">                ┌────────────────────┐
+                │   Control Plane    │
+                │--------------------│
+                │  API Server        │
+                │  Scheduler         │
+                │  Controller Mgr    │
+                │  etcd              │
+                └──────────┬─────────┘
+                           │
+        ┌──────────────────┼──────────────────┐
+        │                  │                  │
+   ┌────▼───────┐     ┌────▼───────┐     ┌────▼───────┐
+   │ Worker1    │     │ Worker2    │     │ Worker3    │
+   │------------│     │------------│     │------------│
+   │ kubelet    │     │ kubelet    │     │ kubelet    │
+   │ kube-proxy │     │ kube-proxy │     │ kube-proxy │
+   │ containerd │     │ containerd │     │ containerd │
+   │ Pod        │     │ Pod        │     │ Pod        │
+   └────────────┘     └────────────┘     └────────────┘</code></pre><hr id="f1d720e4-6f49-821b-b47a-01ff398da06b" dir="auto"/><h1 id="7a5720e4-6f49-8269-8f06-01758a7e5757" class="" dir="auto">1-4. Control Plane 구성요소</h1><hr id="1e1720e4-6f49-829c-bf7e-01a3cd5466b6" dir="auto"/><h2 id="cfe720e4-6f49-82b2-882d-0113ec60be20" class="" dir="auto">1️⃣ API Server</h2><ul id="73d720e4-6f49-8303-80ad-01874ac0f9b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 요청의 진입점</li></ul><ul id="291720e4-6f49-82f3-a7c4-815403c7bb52" class="bulleted-list" dir="auto"><li style="list-style-type:disc">kubectl 명령은 모두 API Server로 전달</li></ul><ul id="762720e4-6f49-822f-ae34-81b7205c71d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">REST API 기반</li></ul><p id="b39720e4-6f49-8331-9008-0125d7dc1918" class="" dir="auto">실습:</p><pre id="991720e4-6f49-8200-b2fa-8156dcff8c31" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl cluster-info</code></pre><hr id="7a3720e4-6f49-82d7-a85f-0173b911ed71" dir="auto"/><h2 id="ebb720e4-6f49-82bb-acef-81cdd4a08ebc" class="" dir="auto">2️⃣ etcd</h2><ul id="3c5720e4-6f49-83ea-9f21-81c27fcf0a8e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분산 Key-Value 저장소</li></ul><ul id="0d3720e4-6f49-8333-a915-01135db925bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터의 모든 상태 저장</li></ul><ul id="932720e4-6f49-82ad-894b-8145899d3dda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod, Service, ConfigMap 등 저장</li></ul><p id="692720e4-6f49-8358-a6ca-01095d3cdf45" class="" dir="auto">👉 etcd = Kubernetes의 DB</p><hr id="d4c720e4-6f49-837f-9eb2-813a90d2ddfd" dir="auto"/><h2 id="be0720e4-6f49-825f-b3c7-8112c914149d" class="" dir="auto">3️⃣ Scheduler</h2><ul id="2cb720e4-6f49-83b4-be3e-81fb0c4e3065" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새 Pod이 어느 노드에 배치될지 결정</li></ul><ul id="0ea720e4-6f49-83f2-ac90-01d7fbf3ef19" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU, Memory 요청 고려</li></ul><ul id="f26720e4-6f49-83ab-a122-81f65a82e847" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드 상태 고려</li></ul><hr id="0de720e4-6f49-83c4-9605-018bf5799239" dir="auto"/><h2 id="e5d720e4-6f49-8287-b3de-015e14a68af2" class="" dir="auto">4️⃣ Controller Manager</h2><ul id="212720e4-6f49-82af-a709-014b06b63b54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">“현재 상태”와 “원하는 상태”를 비교</li></ul><ul id="361720e4-6f49-833c-bec0-01d8ccd698e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다르면 수정</li></ul><p id="931720e4-6f49-83ad-9ced-8173ee4b6de9" class="" dir="auto">예:</p><pre id="a89720e4-6f49-833a-80ca-01033c6c2bb8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">replicas: 3
+→ 현재 2개면?
+→ 1개 생성</code></pre><hr id="18f720e4-6f49-8275-864c-015d2568afbc" dir="auto"/><h1 id="ff6720e4-6f49-8278-896e-817efa84438a" class="" dir="auto">1-5. Worker Node 구성요소</h1><hr id="399720e4-6f49-83b2-9335-81eb89b81e53" dir="auto"/><h2 id="1ed720e4-6f49-82ab-b7f8-0187bb819111" class="" dir="auto">1️⃣ kubelet</h2><ul id="a28720e4-6f49-825a-98f2-81825175c162" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 노드에서 실행</li></ul><ul id="285720e4-6f49-8267-9f33-81927a7bcd7e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Server 지시 수신</li></ul><ul id="667720e4-6f49-823d-b0a0-8119368788a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 생성/상태 모니터링</li></ul><hr id="5fa720e4-6f49-82c0-a6d4-81a3a7d668a5" dir="auto"/><h2 id="8d2720e4-6f49-8292-9e0a-81bbe0ffd30c" class="" dir="auto">2️⃣ kube-proxy</h2><ul id="41c720e4-6f49-83f8-afba-81a12c6d77b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service 네트워크 구현</li></ul><ul id="d6a720e4-6f49-8243-889d-01c406dac058" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 간 통신 라우팅</li></ul><hr id="72d720e4-6f49-8289-91d8-01bcb373ca16" dir="auto"/><h2 id="ec6720e4-6f49-8218-aae6-81f33c4a7c1e" class="" dir="auto">3️⃣ Container Runtime</h2><ul id="e55720e4-6f49-8235-8941-012762268c7f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 컨테이너 실행</li></ul><ul id="aee720e4-6f49-820f-b8ef-0156e3805fb1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">containerd (현재 표준)</li></ul><ul id="304720e4-6f49-82a9-a5ae-01fbc0397f09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker는 CRI 미지원으로 제외됨</li></ul><hr id="8fd720e4-6f49-8381-84e3-814a64fc8219" dir="auto"/><h1 id="694720e4-6f49-8246-9fc2-01e37e3e8219" class="" dir="auto">1-6. Kubernetes의 핵심 오브젝트</h1><hr id="914720e4-6f49-8238-a02e-81d2aea87c13" dir="auto"/><h1 id="832720e4-6f49-8273-9188-81f32579ad5e" class="" dir="auto">✅ Pod</h1><blockquote id="748720e4-6f49-838a-81d8-01b35d258f86" class="" dir="auto">컨테이너가 실제로 실행되는 최소 단위</blockquote><ul id="fe3720e4-6f49-83a2-b101-01d8631bfa7f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하나 이상의 컨테이너 포함</li></ul><ul id="a92720e4-6f49-8367-b073-01b6ae1f59bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동일 IP 공유</li></ul><ul id="bae720e4-6f49-8385-b509-8106fbe37f0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">쿠버네티스의 가장 기본 객체</li></ul><p id="5f5720e4-6f49-8328-ae23-01a0b573d64e" class="" dir="auto">👉 하지만 <strong>직접 운영용으로 쓰는 경우는 거의 없음</strong></p><p id="571720e4-6f49-8301-be26-8143bf026662" class="" dir="auto">→ 보통 Deployment가 관리함</p><hr id="f28720e4-6f49-8299-8c2b-8124a5522269" dir="auto"/><h1 id="cc1720e4-6f49-821a-8025-81d6f91d3344" class="" dir="auto">✅ Deployment</h1><blockquote id="b7c720e4-6f49-8365-8c4d-812137e9faa2" class="" dir="auto">Pod을 관리하는 오브젝트</blockquote><ul id="42e720e4-6f49-8294-9767-01784ab1c01a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">replicas 유지</li></ul><ul id="03f720e4-6f49-82c5-b2d0-01a2ae25f665" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Rolling Update 지원</li></ul><ul id="9b1720e4-6f49-824c-a394-81ab05367127" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 재시작</li></ul><ul id="ee7720e4-6f49-83b6-8c08-0148da617c84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">롤백 가능</li></ul><p id="6a7720e4-6f49-826f-9f29-01d0efdbc18b" class="" dir="auto">👉 <strong>실무에서 가장 많이 사용하는 오브젝트</strong></p><hr id="c88720e4-6f49-8295-99a1-019673a069bb" dir="auto"/><h1 id="a80720e4-6f49-825e-8892-81ff0e5e6aab" class="" dir="auto">✅ Service</h1><blockquote id="189720e4-6f49-825b-8877-81e884e4073b" class="" dir="auto">Pod에 접근하기 위한 네트워크 추상화</blockquote><ul id="ce2720e4-6f49-836c-8eab-011eed7dca90" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod IP는 계속 바뀜</li></ul><ul id="d66720e4-6f49-830a-9680-81302e32b9ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service는 고정된 접근점 제공</li></ul><ul id="db9720e4-6f49-83a4-a097-017f0ca37fc8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ClusterIP / NodePort / LoadBalancer 제공</li></ul><p id="9ad720e4-6f49-838d-b65e-81a6449fbae6" class="" dir="auto">👉 Pod을 외부/내부에서 접근하려면 필수</p><hr id="9ae720e4-6f49-8398-aa3d-816cef1de080" dir="auto"/><h1 id="b96720e4-6f49-8225-9cde-814ccf842f26" class="" dir="auto">✅ Namespace</h1><blockquote id="98a720e4-6f49-836d-bed0-81e58c207f0a" class="" dir="auto">리소스 논리적 격리 단위</blockquote><ul id="f25720e4-6f49-82ae-ac93-8115a958a6f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">팀 단위 분리</li></ul><ul id="db1720e4-6f49-8202-95f9-01bf4697cb3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경(dev/prod) 분리</li></ul><ul id="61b720e4-6f49-8204-832b-01eba5d3f7f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RBAC 적용 범위 구분</li></ul><p id="635720e4-6f49-83ed-b01c-81a610a5c3a9" class="" dir="auto">👉 운영 환경에서는 거의 필수</p><h1 id="f80720e4-6f49-821c-945e-0146f314477b" class="" dir="auto">1-7. 동작 흐름 이해 (중요)</h1><p id="858720e4-6f49-826b-8a3b-01fbf4e61e57" class="" dir="auto">예: nginx 3개 생성 요청</p><pre id="849720e4-6f49-8342-8ba0-01fba7140e2a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. kubectl apply
+2. API Server가 요청처
+3. etcd에 기록
+4. Controller가 감지
+5. Scheduler가 노드 선택
+6. kubelet이 Pod 생성
+7. containerd가 컨테이너 실행</code></pre><h1 id="ec9720e4-6f49-8227-b03a-8131c5cbe768" class="" dir="auto">1️⃣ kubectl apply</h1><p id="4e9720e4-6f49-82c9-af90-8159067c9c29" class="" dir="auto">사용자가 다음과 같이 실행했음.</p><pre id="54f720e4-6f49-83c2-b01c-8178bf79b8ad" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kubectl apply-f pod.yaml</code></pre><p id="69e720e4-6f49-839c-8b44-81a973956420" class="" dir="auto">이 순간 일어나는 일:</p><ul id="9ae720e4-6f49-8311-bbea-01448f19f4e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">kubectl은 YAML을 읽음</li></ul><ul id="b4a720e4-6f49-82f8-82f1-01c345484a08" class="bulleted-list" dir="auto"><li style="list-style-type:disc">kubeconfig에 있는 API Server 주소로 요청을 보냄</li></ul><ul id="253720e4-6f49-8287-a52d-0105074e0926" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP REST 요청 형태로 전송됨 (POST / PATCH)</li></ul><p id="9fb720e4-6f49-83b1-86a2-0133e55f89ad" class="" dir="auto">즉,</p><blockquote id="807720e4-6f49-830b-9b2f-01fe1bf7de1f" class="" dir="auto">“이런 상태가 되길 원함” 이라는 선언을 API Server에 전달한 것임.</blockquote><hr id="99c720e4-6f49-83d8-888d-81b62092628b" dir="auto"/><h1 id="c36720e4-6f49-825f-9d44-01b9050206d4" class="" dir="auto">2️⃣ API Server 저장</h1><p id="eef720e4-6f49-827e-91f3-81f6a3bf8759" class="" dir="auto">API Server는 쿠버네티스의 중앙 관문임.</p><p id="d57720e4-6f49-82e9-86fc-017129536251" class="" dir="auto">역할:</p><ul id="f78720e4-6f49-822b-b56c-01f72d29d308" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증 (Authentication)</li></ul><ul id="48b720e4-6f49-8255-a714-81633ecce52f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">권한 확인 (Authorization)</li></ul><ul id="b06720e4-6f49-82d9-9f1a-0158d7961f5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 유효성 검사</li></ul><ul id="b92720e4-6f49-8285-9842-81edcfef9762" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 구조 검증</li></ul><p id="741720e4-6f49-83e2-a1ec-011b3fe0e7f9" class="" dir="auto">YAML이 올바르면 내부 오브젝트로 변환함.</p><p id="6d7720e4-6f49-83e4-acf9-01d77c358707" class="" dir="auto">이때 중요한 점:</p><blockquote id="5ec720e4-6f49-82d0-a35a-01ae3e0b2090" class="" dir="auto">아직 Pod가 실행된 건 아님<p id="729720e4-6f49-83db-a480-01770bec671a" class="" dir="auto">단지 “원하는 상태”가 저장될 준비가 된 것뿐임</p></blockquote><hr id="3a8720e4-6f49-8220-9411-811b128d4513" dir="auto"/><h1 id="cc3720e4-6f49-82f3-b467-0172cc17100f" class="" dir="auto">3️⃣ etcd에 기록</h1><p id="479720e4-6f49-824a-9496-81edaab7f8de" class="" dir="auto">API Server는 최종적으로 상태를 <strong>etcd</strong>에 저장함.</p><p id="7dd720e4-6f49-8335-9799-81f1ea6c1d22" class="" dir="auto">etcd는:</p><ul id="18f720e4-6f49-82e4-b762-013984564a33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분산 Key-Value 저장소</li></ul><ul id="262720e4-6f49-83b5-ae74-814f8c801a38" class="bulleted-list" dir="auto"><li style="list-style-type:disc">쿠버네티스의 “상태 데이터베이스”</li></ul><ul id="138720e4-6f49-82fa-8482-018b9824c2a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터의 모든 리소스 상태 저장</li></ul><p id="ab1720e4-6f49-8351-b245-013a971bc4e9" class="" dir="auto">즉,</p><blockquote id="7d1720e4-6f49-826c-b047-8150b3797ee4" class="" dir="auto">etcd에 “이런 Pod가 존재해야 한다”라는 데이터가 기록됨.</blockquote><p id="dd9720e4-6f49-83f0-88f5-0147f5fc3b92" class="" dir="auto">이 시점에서도 아직 실행은 안 됨.</p><hr id="538720e4-6f49-83cf-a03a-818ab75c4d37" dir="auto"/><h1 id="eca720e4-6f49-82eb-90ed-81aa08ef349c" class="" dir="auto">4️⃣ Controller가 감지</h1><p id="55d720e4-6f49-8322-aef4-81fc2dadfc09" class="" dir="auto">쿠버네티스에는 여러 Controller가 존재함.</p><p id="acb720e4-6f49-8324-9c93-81a6ab4e17b8" class="" dir="auto">예:</p><ul id="e8a720e4-6f49-828c-b1f3-01f3b1f65a65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deployment Controller</li></ul><ul id="ade720e4-6f49-8204-b79e-01fe9ce0a24b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ReplicaSet Controller</li></ul><ul id="0ae720e4-6f49-83af-a409-019155cdf0e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Node Controller 등</li></ul><p id="325720e4-6f49-83db-a9b8-012c94b42bbf" class="" dir="auto">Controller의 역할은:</p><blockquote id="970720e4-6f49-82f4-8610-81a01444abe3" class="" dir="auto">현재 상태와 원하는 상태를 비교하는 것</blockquote><p id="12c720e4-6f49-82f0-be51-01478aff4192" class="" dir="auto">예를 들어:</p><ul id="fc0720e4-6f49-821b-b85f-81b44fd09e1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">replicas=3인데 현재 Pod가 0개임</li></ul><ul id="c6c720e4-6f49-8328-9404-81157110a6d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그러면 Controller가 3개 생성해야 한다고 판단함</li></ul><p id="99f720e4-6f49-82fd-a92f-81f3764e11e6" class="" dir="auto">이 과정을 <strong>Reconciliation Loop</strong>라고 함.</p><hr id="2b6720e4-6f49-83d3-9e04-8195c5f4e134" dir="auto"/><h1 id="0fb720e4-6f49-8271-b257-015912a8ea5f" class="" dir="auto">5️⃣ Scheduler가 노드 선택</h1><p id="164720e4-6f49-825c-afb8-010cb5afe5f8" class="" dir="auto">Pod이 생성 대상이 되면,</p><p id="bbb720e4-6f49-83f8-9b78-81f2ac6af152" class="" dir="auto">Scheduler가 다음을 판단함:</p><ul id="c4a720e4-6f49-82a8-abd8-01ba76605e01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 노드가 적절한가?</li></ul><ul id="348720e4-6f49-82a9-9b0e-813440d6d8cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU, Memory 충분한가?</li></ul><ul id="f48720e4-6f49-82bf-9c7d-813c8284f5cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">taint/toleration 조건 만족하는가?</li></ul><ul id="f93720e4-6f49-8244-b185-816ffab7e7a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">affinity 조건 만족하는가?</li></ul><p id="63d720e4-6f49-82c5-a646-01afb4730cf0" class="" dir="auto">그 후:</p><blockquote id="9bd720e4-6f49-83d2-919a-01d774e85356" class="" dir="auto">해당 Pod을 특정 Node에 바인딩함</blockquote><p id="1ff720e4-6f49-83a7-95e7-8159c0ea2360" class="" dir="auto">이 과정을 “스케줄링”이라고 함.</p><hr id="ead720e4-6f49-822c-8dff-01bf6ec434c8" dir="auto"/><h1 id="dad720e4-6f49-82d0-a054-810a6ee18c92" class="" dir="auto">6️⃣ kubelet이 Pod 생성</h1><p id="8d7720e4-6f49-820a-990f-019cd23b88ee" class="" dir="auto">이제 해당 노드에 있는 kubelet이 동작함.</p><p id="930720e4-6f49-82dc-b66d-01bea592bdf1" class="" dir="auto">kubelet은:</p><ul id="d77720e4-6f49-822d-a45e-014a136d26f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Server를 지속적으로 감시함</li></ul><ul id="13b720e4-6f49-82c6-b5b4-8125cfc90729" class="bulleted-list" dir="auto"><li style="list-style-type:disc">“이 노드에 Pod 배치됨”을 확인함</li></ul><p id="6e0720e4-6f49-82d5-a64b-01d1c3f358e5" class="" dir="auto">그 후:</p><ul id="9e8720e4-6f49-83c7-8011-014bf82b1282" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 명세(spec) 확인</li></ul><ul id="459720e4-6f49-83e4-b57d-01c98684d5a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">볼륨 준비</li></ul><ul id="7e8720e4-6f49-824a-baae-81b6892fd932" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 설정 요청(CNI)</li></ul><ul id="b60720e4-6f49-82aa-a5b7-012a5d407253" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 실행 준비</li></ul><p id="52d720e4-6f49-83df-9f37-8133ad578e5f" class="" dir="auto">즉,</p><blockquote id="2d1720e4-6f49-82ad-bf70-815bdd03b916" class="" dir="auto">kubelet이 실제 실행 담당자임.</blockquote><hr id="965720e4-6f49-82a2-9943-8103b9ed6764" dir="auto"/><h1 id="817720e4-6f49-8316-ad88-01af92282ae6" class="" dir="auto">7️⃣ containerd가 컨테이너 실행</h1><p id="6de720e4-6f49-8272-b913-81d9766d3dfe" class="" dir="auto">kubelet은 직접 컨테이너를 실행하지 않음.</p><p id="c15720e4-6f49-82cb-a5d9-01d2b47797f3" class="" dir="auto">대신:</p><blockquote id="4b0720e4-6f49-8370-a2b0-811d6862cc52" class="" dir="auto">Container Runtime에게 실행 요청함</blockquote><p id="c88720e4-6f49-8226-8175-81ee9d810b51" class="" dir="auto">보통:</p><ul id="fb6720e4-6f49-831b-bd66-01a50c95a24b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">containerd : 범용 컨테이너 런타임.  쿠버네티스 기본 런타임</li></ul><ul id="272720e4-6f49-82c0-9085-816d9fe87830" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CRI-O : 쿠버네티스 전용 런타임</li></ul><p id="052720e4-6f49-836b-8008-81dded8fecbb" class="" dir="auto">containerd가 하는 일:</p><ol type="1" id="126720e4-6f49-8214-b36f-81d73cbd334f" class="numbered-list" start="1" dir="auto"><li>이미지 pull</li></ol><ol type="1" id="21f720e4-6f49-82bd-aec7-01c251aac57a" class="numbered-list" start="2" dir="auto"><li>컨테이너 생성</li></ol><ol type="1" id="509720e4-6f49-8263-b3f0-018a6d722247" class="numbered-list" start="3" dir="auto"><li>네임스페이스 설정</li></ol><ol type="1" id="fb7720e4-6f49-82d0-ab58-81f1ac708c0e" class="numbered-list" start="4" dir="auto"><li>cgroup 설정</li></ol><ol type="1" id="7d3720e4-6f49-831a-a16f-01f81a33b970" class="numbered-list" start="5" dir="auto"><li>프로세스 시작</li></ol><p id="ad4720e4-6f49-83ac-ac5a-8124507eba77" class="" dir="auto">이제 컨테이너가 실제로 동작함.</p><hr id="de4720e4-6f49-8201-9d47-810d3119e0f8" dir="auto"/><h1 id="452720e4-6f49-8289-9d68-0149859787e9" class="" dir="auto">1-8. 실습: 클러스터 상태 확인</h1><pre id="bfe720e4-6f49-83bb-af9f-81adbc8d78be" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 노드 확인
+kubectl get nodes -o wide
+
+# 시스템 Pod 확인
+kubectl get pods -n kube-system
+
+# API 자원 목록
+kubectl api-resources</code></pre><hr id="702720e4-6f49-83f2-a72c-010d2d4b7421" dir="auto"/><h1 id="fc5720e4-6f49-8255-9e3a-817e7839ace7" class="" dir="auto">1-9. 정리</h1><pre id="888720e4-6f49-8344-a1a7-81bfaa9a439a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. Kubernetes는 &quot;원하는 상태&quot;를 선언한다.
+2. Control Plane이 상태를 관리한다.
+3. Pod가 최소 배포 단위다.
+4. Service가 로드밸런싱을 제공한다.
+5. 모든 상태는 etcd에 저장된다.</code></pre><hr id="8d3720e4-6f49-8330-9be9-81b5b506a85c" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

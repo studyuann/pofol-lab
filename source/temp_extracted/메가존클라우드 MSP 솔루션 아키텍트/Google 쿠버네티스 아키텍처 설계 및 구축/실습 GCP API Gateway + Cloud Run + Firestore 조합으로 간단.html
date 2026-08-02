@@ -1,0 +1,1085 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. GCP API Gateway + Cloud Run + Firestore 조합으로 간단한 서버리스 메모 API 생성</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="23c720e4-6f49-832a-b338-8185bc90ffc9" class="page sans"><header><h1 class="page-title" dir="auto"><strong>실습. GCP API Gateway + Cloud Run + Firestore</strong> 조합으로 간단한 <strong>서버리스 메모 API 생성</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h1 id="2e2720e4-6f49-821b-97ec-8129d60f891c" class="" dir="auto">1. 실습 목표</h1><ul id="c64720e4-6f49-83ff-9c0e-019ee65bbebb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firestore 데이터베이스를 생성한다.</li></ul><ul id="2e8720e4-6f49-8378-9613-813a51718354" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Run에 Node.js 기반 REST API를 배포한다.</li></ul><ul id="e24720e4-6f49-8246-8d25-010a71a06401" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway를 생성해 Cloud Run 앞단에 둔다.</li></ul><ul id="038720e4-6f49-833e-bfdb-815f39968394" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Key를 이용해 Gateway를 통해서만 API를 호출해본다.</li></ul><ul id="d52720e4-6f49-8340-800f-81e0bfda5631" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firestore에 데이터가 저장되는지 확인한다.</li></ul><hr id="348720e4-6f49-8334-a1d8-0177f0f9a828" dir="auto"/><h1 id="0af720e4-6f49-82c7-a5de-01e53bd997c7" class="" dir="auto">2. 실습 시나리오</h1><p id="556720e4-6f49-831e-af7c-010cb5d824ea" class="" dir="auto">간단한 메모 API를 만든다.</p><p id="896720e4-6f49-83a5-bcaf-81e93a52e007" class="" dir="auto">구현할 기능은 다음과 같다.</p><ul id="0b5720e4-6f49-8226-bb65-0117c093ffc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>GET /health</code> : 상태 확인</li></ul><ul id="b9e720e4-6f49-8389-9544-014e5ac723f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>POST /notes</code> : 메모 등록</li></ul><ul id="7cb720e4-6f49-837d-9a64-81a39bd073bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>GET /notes</code> : 메모 목록 조회</li></ul><ul id="93e720e4-6f49-8310-9815-01b986c3e980" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>GET /notes/{id}</code> : 메모 단건 조회</li></ul><ul id="fb0720e4-6f49-838c-9b75-81d52ada0a52" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>DELETE /notes/{id}</code> : 메모 삭제</li></ul><p id="25c720e4-6f49-8232-bd90-812395c216be" class="" dir="auto">데이터는 Firestore의 <code>notes</code> 컬렉션에 저장한다.</p><hr id="996720e4-6f49-839b-88fc-81995444f630" dir="auto"/><h1 id="c1a720e4-6f49-837a-b8cd-81de7eb4fdee" class="" dir="auto">3. 사전 준비</h1><h2 id="a92720e4-6f49-8237-919e-01459834d58d" class="" dir="auto">3-1. 준비 항목</h2><ul id="9cc720e4-6f49-833c-91d1-8195348942fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP 프로젝트 1개</li></ul><ul id="0ca720e4-6f49-8311-9e35-81b6703a3f2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">과금 계정 연결</li></ul><ul id="314720e4-6f49-83df-8207-01eed373dc8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로컬 PC에 <code>gcloud</code> 설치 및 인증 완료</li></ul><ul id="603720e4-6f49-8314-9b7f-81d5c68c9280" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Node.js 20 이상 권장</li></ul><ul id="ae5720e4-6f49-83ff-8f5b-81844ffd9292" class="bulleted-list" dir="auto"><li style="list-style-type:disc">작업용 터미널</li></ul><h2 id="74d720e4-6f49-821d-87ec-81adc7b384ed" class="" dir="auto">3-2. 사용할 리전 예시</h2><ul id="b03720e4-6f49-831d-9015-015e00359dbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Run: <code>asia-northeast3</code> (서울)</li></ul><ul id="396720e4-6f49-837e-ac40-01300eb04f5f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firestore: 가까운 리전으로 선택<br/>Firestore는 데이터베이스 생성 시 데이터 액세스 모드와 리전을 선택한다. Native mode가 새 앱에 권장된다.</li></ul><hr id="5ca720e4-6f49-8276-9dc6-819957be42af" dir="auto"/><h1 id="503720e4-6f49-82ca-a231-0115ec21f9db" class="" dir="auto">4. 전체 아키텍처</h1><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="364720e4-6f49-822b-a6df-016eff7a9db8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[사용자]
+   │
+   ▼
+[API Gateway]
+   │
+   ▼
+[Cloud Run - notes-api]
+   │
+   ▼
+[Firestore Native mode]</code></pre><hr id="679720e4-6f49-82a4-af28-81c26b7a8668" dir="auto"/><h1 id="1a0720e4-6f49-83a2-8fa9-81f1a3c4a5ff" class="" dir="auto">5. 실습용 환경 변수 설정</h1><p id="2ad720e4-6f49-82ae-a287-81b01fe67667" class="" dir="auto">먼저 프로젝트 값을 변수로 잡아두고 진행한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="320720e4-6f49-83c9-8481-01205490fa9f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export PROJECT_ID=&quot;YOUR_PROJECT_ID&quot;
+export REGION=&quot;asia-northeast3&quot;
+export SERVICE_NAME=&quot;notes-api&quot;
+export API_ID=&quot;notes-api&quot;
+export API_CONFIG_ID=&quot;notes-api-config-v1&quot;
+export GATEWAY_ID=&quot;notes-api-gateway&quot;</code></pre><p id="fc9720e4-6f49-8263-ab04-01e36666cb01" class="" dir="auto">현재 프로젝트 설정도 맞춘다.</p><pre id="ca9720e4-6f49-83c1-bb80-81ee43257778" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud config set project $PROJECT_ID</code></pre><p id="336720e4-6f49-8232-9a37-81935563d00f" class="" dir="auto">설정 확인:</p><pre id="5f0720e4-6f49-8301-b49e-0136c30c67c4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud config list project</code></pre><p id="ca4720e4-6f49-82d9-a159-0118904a91de" class="" dir="auto">이 명령은 현재 gcloud 기본 프로젝트가 어디로 설정되어 있는지 보여준다.</p><p id="be2720e4-6f49-836e-afa8-016c8523e141" class="" dir="auto">이 값이 틀리면 Cloud Run, API Gateway, Firestore가 엉뚱한 프로젝트에 생성될 수 있으므로 먼저 확인하는 습관이 중요하다. </p><hr id="d18720e4-6f49-83b3-a0ac-010b178aa725" dir="auto"/><h1 id="bca720e4-6f49-822e-9d69-01492097f283" class="" dir="auto">6. 필요한 API 활성화</h1><p id="b8c720e4-6f49-820f-8948-81d7cc132a4d" class="" dir="auto">실습에 필요한 주요 API를 활성화한다.</p><pre id="8a1720e4-6f49-8329-9d7f-814f482710c7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services enable \
+  run.googleapis.com \
+  cloudbuild.googleapis.com \
+  artifactregistry.googleapis.com \
+  apigateway.googleapis.com \
+  servicemanagement.googleapis.com \
+  servicecontrol.googleapis.com \
+  firestore.googleapis.com</code></pre><p id="270720e4-6f49-82c1-96ab-0102db40ce89" class="" dir="auto">API Gateway는 개발 환경 구성 시 필요한 Google 서비스 활성화를 요구한다. Cloud Run 배포도 Cloud Run Admin API, Cloud Build, Artifact Registry 사용 흐름과 연결된다.</p><hr id="55a720e4-6f49-8289-94d1-810328dcaf63" dir="auto"/><h1 id="ba6720e4-6f49-8332-b3b7-8113793557bc" class="" dir="auto">7. Firestore 데이터베이스 생성</h1><h2 id="d3e720e4-6f49-8245-8216-81a206583a39" class="" dir="auto">7-1. 콘솔에서 생성</h2><ol type="1" id="86f720e4-6f49-82cb-aebd-81764e679b95" class="numbered-list" start="1" dir="auto"><li>GCP 콘솔 접속</li></ol><ol type="1" id="09b720e4-6f49-8310-8cf4-814997816b1c" class="numbered-list" start="2" dir="auto"><li><strong>Firestore</strong> 검색</li></ol><ol type="1" id="cf2720e4-6f49-834d-b756-812bd85a1ce3" class="numbered-list" start="3" dir="auto"><li><strong>Create database</strong> 클릭</li></ol><ol type="1" id="416720e4-6f49-833f-a155-0122d8ac9253" class="numbered-list" start="4" dir="auto"><li><strong>Firestore in Native mode</strong> 선택</li></ol><ol type="1" id="3ec720e4-6f49-828f-81d4-81ccb8569254" class="numbered-list" start="5" dir="auto"><li>보안 규칙은 서버 앱 실습 기준으로 기본값 또는 제한적 설정 선택</li></ol><ol type="1" id="59d720e4-6f49-8244-b6f0-815c4e21c52f" class="numbered-list" start="6" dir="auto"><li>리전 선택</li></ol><ol type="1" id="04d720e4-6f49-82b2-a092-814ad2d7e137" class="numbered-list" start="7" dir="auto"><li>생성 완료</li></ol><p id="561720e4-6f49-83e7-a871-8185af5d4225" class="" dir="auto">Firestore 데이터베이스는 콘솔에서 만들 수 있고, 생성 시 데이터 액세스 모드와 리전을 선택한다. Firestore Native mode는 새 애플리케이션에 권장된다.</p><h2 id="208720e4-6f49-83ec-987c-81b831e426b0" class="" dir="auto">7-2. 왜 Native mode를 쓰는가</h2><p id="dc7720e4-6f49-821a-8290-01f8f52812ee" class="" dir="auto">이번 실습은 모바일/웹 연계가 아니라도 <strong>서버 애플리케이션에서 문서 기반 NoSQL 저장소를 빠르게 사용하는 목적</strong>에 잘 맞는다. Firestore Native mode는 자동 확장, 고성능, 애플리케이션 개발 편의성을 위해 제공된다.</p><hr id="e40720e4-6f49-83f4-9d77-81022f9211e7" dir="auto"/><h1 id="b01720e4-6f49-83b9-99d2-017f9d1e6495" class="" dir="auto">8. 실습 코드 작성</h1><h2 id="3f8720e4-6f49-82e1-ad59-0177534f7f93" class="" dir="auto">8-1. 프로젝트 디렉터리 생성</h2><pre id="130720e4-6f49-8372-90c9-01c5c8cb5519" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">mkdir gcp-serverless-notes-lab
+cd gcp-serverless-notes-lab</code></pre><h2 id="0b2720e4-6f49-82be-a5d2-81832b643837" class="" dir="auto">8-2. 파일 구조</h2><pre id="2a4720e4-6f49-83af-b2d0-8132c977cbd3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcp-serverless-notes-lab/
+├─ package.json
+├─ index.js
+└─ openapi.yaml</code></pre><hr id="d95720e4-6f49-82ac-b901-8174fd2963cc" dir="auto"/><h1 id="cdf720e4-6f49-8208-b8ee-81a2edf00334" class="" dir="auto">9. Cloud Run 백엔드 코드 작성</h1><h2 id="28b720e4-6f49-8373-a3d4-015c92552870" class="" dir="auto">9-1. package.json</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="b38720e4-6f49-8306-923b-81f8b3e3abe8" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;name&quot;:&quot;notes-api&quot;,
+  &quot;version&quot;:&quot;1.0.0&quot;,
+  &quot;description&quot;:&quot;Serverless Notes API with Cloud Run and Firestore&quot;,
+  &quot;main&quot;:&quot;index.js&quot;,
+  &quot;scripts&quot;: {
+    &quot;start&quot;:&quot;node index.js&quot;
+  },
+  &quot;dependencies&quot;: {
+    &quot;@google-cloud/firestore&quot;:&quot;^7.11.0&quot;,
+    &quot;express&quot;:&quot;^4.21.2&quot;
+  }
+}</code></pre><h3 id="c29720e4-6f49-8334-92b5-0168e6b0a410" class="" dir="auto">설명</h3><ul id="a34720e4-6f49-8204-b465-81f253481b12" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>express</code><br/>HTTP 요청을 쉽게 처리하기 위한 웹 프레임워크다.</li></ul><ul id="d76720e4-6f49-8318-a618-01d2d0da29c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>@google-cloud/firestore</code><br/>Firestore 서버 클라이언트 라이브러리다.</li></ul><ul id="835720e4-6f49-839f-bc81-01c2b696b671" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>start</code><br/>Cloud Run은 컨테이너가 시작될 때 애플리케이션을 실행해야 하므로 시작 명령이 필요하다.</li></ul><p id="93b720e4-6f49-824c-9915-0163464f86f8" class="" dir="auto">Firestore는 서버 클라이언트 라이브러리를 제공하며, Cloud Run에서는 ADC를 통해 인증을 자동 감지할 수 있다.</p><hr id="7e2720e4-6f49-8275-967f-8197ebb8a95d" dir="auto"/><h2 id="511720e4-6f49-832b-8e0f-81d565a361f7" class="" dir="auto">9-2. index.js</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js" integrity="sha512-m3JYEI6gx5fh9jF10FjGoMzVKcV2N6nchcDcqPCdI1L3R2WQV7br2XVNR8iTLb2daOMRl3zldbcfT40xU2ntVw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="18b720e4-6f49-823a-9d28-01e95c25b4eb" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">const express = require(&quot;express&quot;);
+const { Firestore, FieldValue } = require(&quot;@google-cloud/firestore&quot;);
+
+const app = express();
+app.use(express.json());
+
+const firestore = new Firestore();
+const collection = firestore.collection(&quot;notes&quot;);
+
+const PORT = process.env.PORT || 8080;
+
+app.get(&quot;/health&quot;, async (req, res) =&gt; {
+  res.status(200).json({
+    status: &quot;ok&quot;,
+    service: &quot;notes-api&quot;,
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.post(&quot;/notes&quot;, async (req, res) =&gt; {
+  try {
+    const { title, content, author } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({
+        message: &quot;title과 content는 필수값이다.&quot;,
+      });
+    }
+
+    const docRef = await collection.add({
+      title,
+      content,
+      author: author || &quot;anonymous&quot;,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+    });
+
+    const savedDoc = await docRef.get();
+
+    return res.status(201).json({
+      id: docRef.id,
+      ...savedDoc.data(),
+    });
+  } catch (error) {
+    console.error(&quot;POST /notes error:&quot;, error);
+    return res.status(500).json({
+      message: &quot;메모 등록 중 오류 발생&quot;,
+      error: error.message,
+    });
+  }
+});
+
+app.get(&quot;/notes&quot;, async (req, res) =&gt; {
+  try {
+    const snapshot = await collection.orderBy(&quot;createdAt&quot;, &quot;desc&quot;).get();
+
+    const notes = snapshot.docs.map((doc) =&gt; ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+
+    return res.status(200).json(notes);
+  } catch (error) {
+    console.error(&quot;GET /notes error:&quot;, error);
+    return res.status(500).json({
+      message: &quot;메모 목록 조회 중 오류 발생&quot;,
+      error: error.message,
+    });
+  }
+});
+
+app.get(&quot;/notes/:id&quot;, async (req, res) =&gt; {
+  try {
+    const docRef = collection.doc(req.params.id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({
+        message: &quot;해당 메모가 존재하지 않음&quot;,
+      });
+    }
+
+    return res.status(200).json({
+      id: doc.id,
+      ...doc.data(),
+    });
+  } catch (error) {
+    console.error(&quot;GET /notes/:id error:&quot;, error);
+    return res.status(500).json({
+      message: &quot;메모 단건 조회 중 오류 발생&quot;,
+      error: error.message,
+    });
+  }
+});
+
+app.delete(&quot;/notes/:id&quot;, async (req, res) =&gt; {
+  try {
+    const docRef = collection.doc(req.params.id);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      return res.status(404).json({
+        message: &quot;삭제할 메모가 존재하지 않음&quot;,
+      });
+    }
+
+    await docRef.delete();
+
+    return res.status(200).json({
+      message: &quot;메모 삭제 완료&quot;,
+      id: req.params.id,
+    });
+  } catch (error) {
+    console.error(&quot;DELETE /notes/:id error:&quot;, error);
+    return res.status(500).json({
+      message: &quot;메모 삭제 중 오류 발생&quot;,
+      error: error.message,
+    });
+  }
+});
+
+app.listen(PORT, &quot;0.0.0.0&quot;, () =&gt; {
+  console.log(`notes-api listening on port ${PORT}`);
+});</code></pre><h3 id="d55720e4-6f49-8340-adc2-01ccda359d1e" class="" dir="auto">설명</h3><h3 id="e81720e4-6f49-8343-a631-01dd6f824c9a" class="" dir="auto"><code>const firestore = new Firestore();</code></h3><p id="982720e4-6f49-8296-a5a3-814c164f547c" class="" dir="auto">이 코드는 Firestore 클라이언트를 생성한다.</p><p id="2b7720e4-6f49-8348-adf8-81c436dcb924" class="" dir="auto">Cloud Run 환경에서는 보통 별도의 키 파일을 코드에 넣지 않는다. Cloud Run 서비스 계정 권한이 있으면 ADC를 통해 인증이 처리된다.</p><h3 id="524720e4-6f49-82a3-a6d1-81f2c6be85d1" class="" dir="auto"><code>FieldValue.serverTimestamp()</code></h3><p id="916720e4-6f49-82f9-9ce2-816087f950ad" class="" dir="auto">문서 생성 시점을 Firestore 서버 시간이 기록하게 한다.</p><p id="a77720e4-6f49-83e4-9793-8157cefb5545" class="" dir="auto">클라이언트 PC 시간이 아니라 서버 기준 시간이 들어가므로 정렬과 감사 기록에 유리하다.</p><h3 id="eb2720e4-6f49-83ca-ab85-813d851d35dd" class="" dir="auto"><code>collection.orderBy(&quot;createdAt&quot;, &quot;desc&quot;)</code></h3><p id="c38720e4-6f49-839d-83c1-813ea677f93f" class="" dir="auto">최신 메모가 위로 오도록 정렬한다.</p><h3 id="508720e4-6f49-829b-a298-0156e3821917" class="" dir="auto">예외 처리</h3><p id="314720e4-6f49-827a-aaca-01423c5eca54" class="" dir="auto">모든 주요 API에 <code>try/catch</code>를 넣었다.</p><p id="f09720e4-6f49-83dd-8787-011729ecde63" class="" dir="auto">실습에서는 에러 원인을 빨리 찾는 것이 중요하므로 <code>console.error()</code>로 로그를 남긴다. Cloud Run 로그에서 바로 확인 가능하다.</p><hr id="4b0720e4-6f49-820d-b636-8133cf962e88" dir="auto"/><h1 id="9d5720e4-6f49-820d-9d1d-81fcc3bce917" class="" dir="auto">10. Cloud Run 서비스 계정 권한 부여</h1><h2 id="6e5720e4-6f49-8243-b7b7-817f8c12ebc4" class="" dir="auto">10-1. 전용 서비스 계정 생성</h2><pre id="e40720e4-6f49-83df-a591-81507336336f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud iam service-accounts create notes-api-sa \
+--display-name=&quot;Notes API Service Account&quot;</code></pre><h2 id="92b720e4-6f49-83d4-b69a-819458064130" class="" dir="auto">10-2. Firestore 권한 부여</h2><pre id="14d720e4-6f49-82b6-a337-8196ee05e4be" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud projects add-iam-policy-binding $PROJECT_ID \
+--member=&quot;serviceAccount:notes-api-sa@${PROJECT_ID}.iam.gserviceaccount.com&quot; \
+--role=&quot;roles/datastore.user&quot;</code></pre><p id="746720e4-6f49-827a-9f2e-01a8ac17d933" class="" dir="auto">Cloud Run에서 Google Cloud 서비스에 연결할 때는 서비스 ID와 ADC를 사용하며, Firestore 사용을 위해 <code>roles/datastore.user</code> 같은 적절한 IAM 역할 부여가 일반적이다. </p><hr id="0a0720e4-6f49-8200-acdc-01ac803cf555" dir="auto"/><h1 id="356720e4-6f49-822f-8cc7-81da0d98948d" class="" dir="auto">11. Cloud Run에 배포</h1><h2 id="d6b720e4-6f49-83be-af96-0132a29a1931" class="" dir="auto">11-1. 소스 코드에서 바로 배포</h2><pre id="89d720e4-6f49-832e-abdc-014571789754" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud run deploy $SERVICE_NAME \
+--source . \
+--region $REGION \
+--allow-unauthenticated \
+--service-account notes-api-sa@${PROJECT_ID}.iam.gserviceaccount.com</code></pre><h3 id="0f6720e4-6f49-839f-b8d7-81e3f241ab7e" class="" dir="auto">설명</h3><ul id="5ae720e4-6f49-82b3-bd4f-811647d04aa1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--source .</code><br/>현재 디렉터리의 소스 코드를 업로드해서 Cloud Build가 빌드 후 Cloud Run에 배포한다.</li></ul><ul id="9e7720e4-6f49-836b-a8d2-0180cb82d977" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--region $REGION</code><br/>배포 리전 지정</li></ul><ul id="81b720e4-6f49-8394-94c7-014fd670466a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--allow-unauthenticated</code><br/>인증 없는 HTTP 접근 허용<br/>API Gateway 연결 테스트를 빠르게 하기 위해 허용한다.</li></ul><ul id="1c5720e4-6f49-8386-aaf9-81b48be72c01" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--service-account</code><br/>런타임에 사용할 서비스 계정 지정</li></ul><p id="712720e4-6f49-828c-9746-814e46a92813" class="" dir="auto">Cloud Run은 소스에서 바로 Node.js 서비스를 배포할 수 있다.</p><h2 id="e50720e4-6f49-8232-a8c0-8123429630d3" class="" dir="auto">11-2. 서비스 URL 확인</h2><pre id="488720e4-6f49-83d6-9c86-81ba96eeadb5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud run services describe $SERVICE_NAME \
+--region $REGION \
+--format=&quot;value(status.url)&quot;</code></pre><p id="969720e4-6f49-838d-b5b4-8135ef7c715c" class="" dir="auto">출력 예시:</p><pre id="bc8720e4-6f49-82ad-b106-01908b6df69e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">https://notes-api-xxxxx-an.a.run.app</code></pre><p id="7cf720e4-6f49-823d-8677-81b9ef18b0f2" class="" dir="auto">이 URL은 뒤에서 OpenAPI 문서에 넣는다.</p><hr id="a53720e4-6f49-8304-b539-0138ae4ba29b" dir="auto"/><h1 id="37a720e4-6f49-83c4-a7f3-816b98821aaf" class="" dir="auto">12. Cloud Run 직접 테스트</h1><p id="862720e4-6f49-82ae-ab28-81758fcbc5f9" class="" dir="auto">Cloud Run URL을 변수로 저장한다.</p><pre id="0e7720e4-6f49-833a-bc35-81ada733c052" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export RUN_URL=$(gcloud run services describe $SERVICE_NAME \
+  --region $REGION \
+  --format=&quot;value(status.url)&quot;)
+echo $RUN_URL</code></pre><h2 id="819720e4-6f49-8260-aadd-018b37a1e744" class="" dir="auto">12-1. 상태 확인</h2><pre id="0a2720e4-6f49-831f-8324-01e4dea5d5eb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl $RUN_URL/health</code></pre><h2 id="645720e4-6f49-83d8-bf48-012729238609" class="" dir="auto">12-2. 메모 등록</h2><pre id="921720e4-6f49-83d7-9dec-019e900bd015" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl -X POST $RUN_URL/notes \
+-H &quot;Content-Type: application/json&quot; \
+-d&#x27;{
+    &quot;title&quot;: &quot;첫 번째 메모&quot;,
+    &quot;content&quot;: &quot;Cloud Run과 Firestore 연결 테스트&quot;,
+    &quot;author&quot;: &quot;kyt&quot;
+  }&#x27;</code></pre><h2 id="92e720e4-6f49-8239-ae0a-01e6152dc5cd" class="" dir="auto">12-3. 목록 조회</h2><pre id="539720e4-6f49-8341-815d-0157610ec186" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl $RUN_URL/notes</code></pre><p id="e54720e4-6f49-824e-a248-0196cbc0fabd" class="" dir="auto">여기까지 성공하면 <strong>Cloud Run ↔ Firestore</strong> 구간은 정상이다.</p><hr id="353720e4-6f49-828b-a309-01c448884a4f" dir="auto"/><h1 id="060720e4-6f49-835f-b81c-81a92e704637" class="" dir="auto">13. API Gateway용 OpenAPI 문서 작성</h1><p id="ae7720e4-6f49-82fc-88f5-01b2ae04f8f6" class="" dir="auto">이제 API Gateway가 어떤 경로를 어떤 백엔드로 보낼지 정의한다.</p><h2 id="05a720e4-6f49-83c4-bbbf-811b1feb27aa" class="" dir="auto">13-1. openapi.yaml</h2><p id="11b720e4-6f49-82a7-b445-011d4680f188" class="" dir="auto">아래 파일에서 <code>YOUR_PROJECT_ID</code>와 <code>YOUR_CLOUD_RUN_URL</code>은 실제 값으로 바꾼다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="e0c720e4-6f49-83c2-8263-8128e424f934" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">swagger: &quot;2.0&quot;
+info:
+  title: &quot;notes-api&quot;
+  description: &quot;Notes API Gateway for Cloud Run backend&quot;
+  version: &quot;1.0.0&quot;
+
+host: &quot;notes-api-gateway&quot;
+schemes:
+  - &quot;https&quot;
+produces:
+  - &quot;application/json&quot;
+
+securityDefinitions:
+  api_key:
+    type: &quot;apiKey&quot; 
+    name: &quot;x-api-key&quot;
+    in: &quot;header&quot;
+
+security:
+  - api_key: []
+
+paths:
+  /health:
+    get:
+      operationId: &quot;healthCheck&quot;
+      x-google-backend:
+        address: &quot;YOUR_CLOUD_RUN_URL&quot;
+        disable_auth: true
+      responses:
+        &quot;200&quot;:
+          description: &quot;OK&quot;
+
+  /notes:
+    get:
+      operationId: &quot;listNotes&quot;
+      x-google-backend:
+        address: &quot;YOUR_CLOUD_RUN_URL/notes&quot;
+        disable_auth: true
+      responses:
+        &quot;200&quot;:
+          description: &quot;OK&quot;
+
+    post:
+      operationId: &quot;createNote&quot;
+      x-google-backend:
+        address: &quot;YOUR_CLOUD_RUN_URL/notes&quot;
+        disable_auth: true
+      parameters:
+        - in: &quot;body&quot;
+          name: &quot;body&quot;
+          required: true
+          schema:
+            type: &quot;object&quot;
+            properties:
+              title:
+                type: &quot;string&quot;
+              content:
+                type: &quot;string&quot;
+              author:
+                type: &quot;string&quot;
+      responses:
+        &quot;201&quot;:
+          description: &quot;Created&quot;
+
+  /notes/{id}:
+    get:
+      operationId: &quot;getNote&quot;
+      x-google-backend:
+        address: &quot;YOUR_CLOUD_RUN_URL&quot;
+        path_translation: &quot;APPEND_PATH_TO_ADDRESS&quot; # 경로 변수 전달을 위해 추가
+        disable_auth: true
+      parameters:
+        - name: &quot;id&quot;
+          in: &quot;path&quot;
+          required: true
+          type: &quot;string&quot;
+      responses:
+        &quot;200&quot;:
+          description: &quot;OK&quot;
+
+    delete:
+      operationId: &quot;deleteNote&quot;
+      x-google-backend:
+        address: &quot;YOUR_CLOUD_RUN_URL&quot;
+        path_translation: &quot;APPEND_PATH_TO_ADDRESS&quot;
+        disable_auth: true
+      parameters:
+        - name: &quot;id&quot;
+          in: &quot;path&quot;
+          required: true
+          type: &quot;string&quot;
+      responses:
+        &quot;200&quot;:
+          description: &quot;Deleted&quot;</code></pre><hr id="171720e4-6f49-8358-b7a6-81b64de2692b" dir="auto"/><h2 id="fe1720e4-6f49-8246-83d8-81a7ebfe5ed3" class="" dir="auto">13-2. 파일 값 치환</h2><p id="935720e4-6f49-8381-a65e-81cb4e12509f" class="" dir="auto">리눅스/맥/Git Bash 기준:</p><pre id="b10720e4-6f49-82ae-b2a4-0127e6090537" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sed &quot;s|YOUR_CLOUD_RUN_URL|$RUN_URL|g&quot; openapi.yaml &gt; openapi-final.yaml</code></pre><p id="874720e4-6f49-8239-b69c-818849144bd0" class="" dir="auto">확인:</p><pre id="2a3720e4-6f49-8349-9650-81f55330a29d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cat openapi-final.yaml</code></pre><hr id="4e0720e4-6f49-8305-a57b-81d584875da1" dir="auto"/><h2 id="4ef720e4-6f49-834c-94bc-81599f4de68e" class="" dir="auto">13-3. 중요한 설정 설명</h2><h3 id="1d1720e4-6f49-8309-8964-8195cc01c36d" class="" dir="auto"><code>securityDefinitions</code></h3><pre id="a91720e4-6f49-82b4-bfcb-81de2a56bb48" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">securityDefinitions:
+  api_key:
+    type:&quot;apiKey&quot;
+    name:&quot;x-api-key&quot;
+    in:&quot;header&quot;</code></pre><p id="5cb720e4-6f49-82e4-a9d7-0192f3003c2e" class="" dir="auto">이 부분은 API Gateway가 <code>x-api-key</code> 헤더를 요구하게 만드는 설정이다.</p><p id="d6c720e4-6f49-82cc-a0ac-813dac8fd692" class="" dir="auto">API Gateway는 API Key 사용을 지원한다.</p><h3 id="cad720e4-6f49-8275-84bd-816773cc0328" class="" dir="auto"><code>security</code></h3><pre id="69d720e4-6f49-826e-9c31-81f29565f5bc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">security:
+  - api_key: []</code></pre><p id="a9b720e4-6f49-82c5-8c0d-0141c20b3aa5" class="" dir="auto">모든 경로에 기본적으로 API Key 요구 사항을 적용한다.</p><h3 id="f68720e4-6f49-830a-95cb-01ea79db926e" class="" dir="auto"><code>x-google-backend</code></h3><pre id="21a720e4-6f49-83bd-b760-810a5a30b91d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">x-google-backend:
+  address: YOUR_CLOUD_RUN_URL
+  disable_auth: true</code></pre><p id="bf4720e4-6f49-83a9-9600-81bc41d0fd38" class="" dir="auto">API Gateway가 실제 요청을 전달할 Cloud Run 백엔드 주소다.</p><p id="f05720e4-6f49-8235-9b58-812bcf7493bc" class="" dir="auto"> <code>x-google-backend</code>에서 <code>jwt_audience</code>나 <code>disable_auth</code> 중 하나를 설정할 수 있다. 설정하지 않으면 <code>address</code>에 맞춰 기본 동작이 정해진다. 이번 실습은 단순화를 위해 <code>disable_auth: true</code>를 사용한다.</p><hr id="f2a720e4-6f49-8347-b2ae-013c6c3d5aa0" dir="auto"/><h1 id="314720e4-6f49-8317-83cf-013aa0dac291" class="" dir="auto">14. API Gateway 리소스 생성</h1><h2 id="0e8720e4-6f49-8398-a8c4-01aedb68cedb" class="" dir="auto">14-1. API 생성</h2><pre id="748720e4-6f49-8385-b6e5-0144fcc51584" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud api-gateway apis create $API_ID</code></pre><h2 id="159720e4-6f49-82ef-8bcf-816e6b41a75d" class="" dir="auto">14-2. API Config 생성</h2><pre id="807720e4-6f49-8202-8182-014796856424" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud api-gateway api-configs create $API_CONFIG_ID \
+--api=$API_ID \
+--openapi-spec=openapi-final.yaml \
+--project=$PROJECT_ID</code></pre><p id="92e720e4-6f49-82e3-855f-81cc8dbfef8d" class="" dir="auto">API config는 OpenAPI 스펙을 업로드해서 생성한다. 새 스펙을 업로드할 때마다 새로운 API config가 만들어진다.</p><h2 id="75e720e4-6f49-8387-b169-81cdec314a4f" class="" dir="auto">14-3. Gateway 배포</h2><p id="454720e4-6f49-8328-ab86-811482f3ad7f" class="" dir="auto">Gateway 배포할 수 있는 리전이 정해져 있음. 다음 명령으로 확인할 수 있다.</p><pre id="e8f720e4-6f49-82c5-8158-01df9674a1ae" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">ACCESS_TOKEN=$(gcloud auth print-access-token)
+
+curl -s \
+  -H &quot;Authorization: Bearer ${ACCESS_TOKEN}&quot; \
+  &quot;https://apigateway.googleapis.com/v1/projects/PROJECT_ID/locations&quot;</code></pre><p id="2df720e4-6f49-82a7-9076-81da6a0d9a8b" class="" dir="auto">확인된 리전을 —location에 사용해야함.</p><pre id="a60720e4-6f49-82b7-9983-81bc30e45f8f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud api-gateway gateways create $GATEWAY_ID \
+--api=$API_ID \
+--api-config=$API_CONFIG_ID \
+--location=$REGION \
+--project=$PROJECT_ID</code></pre><p id="177720e4-6f49-83f9-914d-815d6eabd2de" class="" dir="auto">API Gateway와 Cloud Run 연동 흐름은  <strong>Cloud Run 배포 → OpenAPI 작성 → API config 생성 → Gateway 배포</strong> 순서로 진행한다.</p><hr id="b7e720e4-6f49-833a-a73e-01a58534854e" dir="auto"/><h1 id="73a720e4-6f49-8246-8b93-81ce697afe7b" class="" dir="auto">15. Gateway URL 확인</h1><pre id="cb2720e4-6f49-82d7-8aa0-81ec829ae46d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud api-gateway gateways describe $GATEWAY_ID \
+--location=$REGION \
+--format=&quot;value(defaultHostname)&quot;</code></pre><p id="6df720e4-6f49-834b-bb64-818fb53ce0cd" class="" dir="auto">출력 예시:</p><pre id="70a720e4-6f49-8394-8a69-81f3edb77adf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">notes-api-gateway-xxxxx.an.gateway.dev</code></pre><p id="efc720e4-6f49-82ec-97fc-81bf106a8723" class="" dir="auto">변수로 저장:</p><pre id="55c720e4-6f49-83f8-b7e2-819f18945ab0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export GATEWAY_HOST=$(gcloud api-gateway gateways describe $GATEWAY_ID \
+  --location=$REGION \
+  --format=&quot;value(defaultHostname)&quot;)
+
+echo $GATEWAY_HOST</code></pre><hr id="de6720e4-6f49-82fe-840f-81a401eee987" dir="auto"/><h1 id="1b8720e4-6f49-824a-9948-015228838e2c" class="" dir="auto">16. API Key 생성</h1><h2 id="b5e720e4-6f49-82e6-8b96-818f16b9857a" class="" dir="auto">16-1. API Key 생성</h2><pre id="959720e4-6f49-8334-a6e7-0185e95b1ac6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services api-keys create \
+--display-name=&quot;notes-api-key&quot;</code></pre><p id="1fd720e4-6f49-82fe-8873-01dc2d696a1d" class="" dir="auto">목록 조회:</p><pre id="a77720e4-6f49-833c-b381-016413a132f3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services api-keys list</code></pre><p id="5c5720e4-6f49-828f-b1e5-8174d1c3fd80" class="" dir="auto">생성된 Key 문자열은 콘솔 또는 명령 결과에서 확인한다.</p><p id="ed4720e4-6f49-82cc-887f-01ffdf8c5456" class="" dir="auto">예시:</p><pre id="262720e4-6f49-8271-89f2-01d647d34a21" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">export API_KEY=&quot;YOUR_API_KEY_VALUE&quot;</code></pre><h2 id="a2f720e4-6f49-83e0-8872-013074bfd673" class="" dir="auto">16-2. API Key 사용 제한 설정</h2><p id="4cb720e4-6f49-82e1-b426-81fcd1bfc3a7" class="" dir="auto">생성한 API key를 API Gateway 서비스에서만 사용할 수 있도록 제한한다.</p><pre id="008720e4-6f49-8326-9745-8123ba91e77f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services api-keys update API_KEY \
+--api-target=service=apigateway.googleapis.com</code></pre><p id="874720e4-6f49-833d-940f-8168409f8a25" class="" dir="auto">API Gateway는 API Key를 통해 요청한 프로젝트를 식별하고, 키가 없거나 유효하지 않으면 요청을 거부할 수 있다. 다만 API Key만 단독으로 쓰는 것은 민감한 API 보호에 충분하지 않을 수 있다.</p><hr id="2eb720e4-6f49-8353-b92f-014a3700642b" dir="auto"/><h1 id="0f2720e4-6f49-835a-b956-814b9cdbc4f6" class="" dir="auto">17. API Gateway를 통해 호출</h1><h2 id="a4a720e4-6f49-82a1-9a3e-01110a788fda" class="" dir="auto">17-1. 상태 확인</h2><pre id="d96720e4-6f49-83d0-9a23-0126802405e5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -H &quot;x-api-key:$API_KEY&quot; \
+  https://$GATEWAY_HOST/health</code></pre><h2 id="1e2720e4-6f49-83c9-b840-81e36994e856" class="" dir="auto">17-2. 메모 등록</h2><pre id="f04720e4-6f49-8258-8c61-810f43270c46" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl-X POST https://$GATEWAY_HOST/notes \
+-H&quot;Content-Type: application/json&quot; \
+-H&quot;x-api-key:$API_KEY&quot; \
+-d&#x27;{
+    &quot;title&quot;: &quot;Gateway 경유 메모&quot;,
+    &quot;content&quot;: &quot;API Gateway를 통해 Cloud Run 호출 성공&quot;,
+    &quot;author&quot;: &quot;kyt&quot;
+  }&#x27;</code></pre><h2 id="c27720e4-6f49-83d2-8c07-81eb679228cb" class="" dir="auto">17-3. 목록 조회</h2><pre id="af4720e4-6f49-82f2-847a-0169bd7768c4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -H &quot;x-api-key:$API_KEY&quot; \
+  https://$GATEWAY_HOST/notes</code></pre><h2 id="b8e720e4-6f49-8326-a04c-018f64abffcd" class="" dir="auto">17-4. 단건 조회</h2><pre id="827720e4-6f49-8347-b194-01ad629a6b38" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -H &quot;x-api-key:$API_KEY&quot; \
+  https://$GATEWAY_HOST/notes/문서ID</code></pre><h2 id="570720e4-6f49-83c3-8080-81b2964ec4f8" class="" dir="auto">17-5. 삭제</h2><pre id="56a720e4-6f49-8223-a7a4-816dcd6e04f0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -X DELETE \
+-H &quot;x-api-key:$API_KEY&quot; \
+  https://$GATEWAY_HOST/notes/문서ID</code></pre><hr id="4eb720e4-6f49-837a-824d-018fef7a1ef3" dir="auto"/><h1 id="61f720e4-6f49-820f-b09c-817479bcf828" class="" dir="auto">18. Firestore에서 데이터 확인</h1><ol type="1" id="a56720e4-6f49-8339-b724-01b1bdbb77e5" class="numbered-list" start="1" dir="auto"><li>콘솔에서 <strong>Firestore</strong> 이동</li></ol><ol type="1" id="649720e4-6f49-8397-b014-819274afc3f2" class="numbered-list" start="2" dir="auto"><li><code>notes</code> 컬렉션 확인</li></ol><ol type="1" id="3aa720e4-6f49-839e-b64c-010ae5a023f6" class="numbered-list" start="3" dir="auto"><li>문서가 생성되었는지 확인</li></ol><ol type="1" id="1f1720e4-6f49-82d1-9684-0101d43c1e42" class="numbered-list" start="4" dir="auto"><li><code>title</code>, <code>content</code>, <code>author</code>, <code>createdAt</code> 필드 확인</li></ol><p id="f5e720e4-6f49-8207-ad25-01e489542874" class="" dir="auto">이 단계에서 <strong>API Gateway → Cloud Run → Firestore</strong> 전체 체인이 정상 동작했는지 눈으로 검증할 수 있다.</p><hr id="74b720e4-6f49-8219-8df4-010a5012d36b" dir="auto"/><h1 id="413720e4-6f49-8243-a114-0183b5db5b84" class="" dir="auto">19. Cloud Run 로그 확인</h1><p id="fb2720e4-6f49-823b-a1fe-8121dd244768" class="" dir="auto">문제 발생 시 가장 먼저 볼 곳은 Cloud Run 로그다.</p><pre id="e1b720e4-6f49-8376-9b65-8153e725f63e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud run services logs read$SERVICE_NAME \
+--region$REGION</code></pre><p id="bad720e4-6f49-825b-ac4f-019825276f14" class="" dir="auto">또는 콘솔에서:</p><ul id="1d4720e4-6f49-8214-8e00-81abfc69e570" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Run</li></ul><ul id="449720e4-6f49-8222-b29a-012691bdb396" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 선택</li></ul><ul id="716720e4-6f49-8348-bcb2-819136fe1dae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 탭 확인</li></ul><p id="8fa720e4-6f49-83d2-a788-016c727ee625" class="" dir="auto"><code>console.error()</code>로 남긴 메시지가 그대로 보이면 디버깅이 훨씬 쉬워진다.</p><hr id="421720e4-6f49-827a-81e0-013c86ae6cba" dir="auto"/><h1 id="da7720e4-6f49-823d-a430-015a5299ade3" class="" dir="auto">20. 자주 발생하는 오류와 점검 포인트</h1><h2 id="1d6720e4-6f49-8319-8cfd-81ed244b8312" class="" dir="auto">20-1. Firestore 관련 권한 오류</h2><p id="3a0720e4-6f49-8338-b2c6-0170e4d70222" class="" dir="auto">증상 예시:</p><ul id="cf1720e4-6f49-8244-ba72-816fc44a5b72" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>7 PERMISSION_DENIED</code></li></ul><ul id="da1720e4-6f49-8285-9848-0136f40ba320" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Missing or insufficient permissions</code></li></ul><p id="314720e4-6f49-8304-ba3a-8186818ea173" class="" dir="auto">점검:</p><ul id="8cf720e4-6f49-8275-9bf6-81653e911b9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Run 서비스 계정이 맞는지 확인</li></ul><ul id="21e720e4-6f49-83ba-9b4d-019468163c3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>roles/datastore.user</code> 권한이 부여되었는지 확인</li></ul><pre id="b59720e4-6f49-827b-8455-01329599beeb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud projects get-iam-policy$PROJECT_ID \
+--flatten=&quot;bindings[].members&quot; \
+--format=&quot;table(bindings.role, bindings.members)&quot; \
+--filter=&quot;bindings.members:notes-api-sa@${PROJECT_ID}.iam.gserviceaccount.com&quot;</code></pre><p id="81c720e4-6f49-825b-9c4d-015e6f42a7cf" class="" dir="auto">Cloud Run에서 Firestore를 쓰려면 서비스 계정에 적절한 IAM 역할이 필요하다.</p><hr id="c9b720e4-6f49-8268-952a-01acd55080ff" dir="auto"/><h2 id="ef9720e4-6f49-82db-9b6f-01d32409e01f" class="" dir="auto">20-2. Gateway 호출 시 401 또는 403</h2><p id="308720e4-6f49-8257-9815-812bf002cf89" class="" dir="auto">점검:</p><ul id="1ba720e4-6f49-83ef-9ef7-815352c70b0e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>x-api-key</code> 헤더를 넣었는지 확인</li></ul><ul id="925720e4-6f49-8224-9c5f-0189504ef1df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Key 값이 정확한지 확인</li></ul><ul id="068720e4-6f49-83ad-8344-01ea2e1eb795" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway 배포가 완료되었는지 확인</li></ul><hr id="953720e4-6f49-8367-9ea1-81fbbdbd17de" dir="auto"/><h2 id="652720e4-6f49-824c-92a6-8185de511ac0" class="" dir="auto">20-3. Gateway 호출 시 404</h2><p id="c59720e4-6f49-822a-b65b-81ed91f4582e" class="" dir="auto">점검:</p><ul id="560720e4-6f49-8213-9d15-0172d47639dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>openapi-final.yaml</code>의 경로가 실제 코드 경로와 일치하는지 확인</li></ul><ul id="2d1720e4-6f49-8342-b360-01c115a53738" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/notes</code>, <code>/notes/{id}</code>, <code>/health</code> 오타 확인</li></ul><ul id="1bf720e4-6f49-83aa-a314-81eed5a43a1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway가 새 config를 보고 있는지 확인</li></ul><hr id="216720e4-6f49-8394-b4a2-816e6b704032" dir="auto"/><h2 id="63b720e4-6f49-8343-b123-818200ddcb13" class="" dir="auto">20-4. Gateway 호출 시 500</h2><p id="811720e4-6f49-8391-ba81-81333d78420d" class="" dir="auto">점검:</p><ul id="ade720e4-6f49-8206-8852-8164d0c83833" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Run 백엔드 URL이 <code>openapi-final.yaml</code>에 정확히 들어갔는지 확인</li></ul><ul id="224720e4-6f49-83ec-8822-01bc1850a45e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firestore 권한 문제인지 Cloud Run 로그에서 확인</li></ul><ul id="a29720e4-6f49-83ef-84ed-81e20bc3e5d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 오류인지 로그에서 stack trace 확인</li></ul><hr id="af1720e4-6f49-82d0-8726-01413bf61ab0" dir="auto"/><h1 id="2ee720e4-6f49-82bd-a0c2-0106be18344c" class="" dir="auto">21. 보안 관점에서 꼭 알아둘 점</h1><p id="c7d720e4-6f49-8382-bc20-01de0c9edbe2" class="" dir="auto">이번 실습은 <strong>학습용 단순 구성</strong>이다.</p><p id="c74720e4-6f49-8298-952c-01f1ed6382a2" class="" dir="auto">즉,</p><ul id="75a720e4-6f49-8345-a8cf-818313d871c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Run은 <code>--allow-unauthenticated</code>로 배포했음</li></ul><ul id="fce720e4-6f49-82d1-a8f9-01b75895677b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway는 API Key로 접근을 제어했음</li></ul><p id="d32720e4-6f49-8369-b230-8109a05b1888" class="" dir="auto">이 방식은 Gateway 연동 실습에는 편하지만, <strong>Cloud Run 원본 URL도 직접 호출될 수 있음</strong>.</p><p id="02c720e4-6f49-8260-b536-81388e347a76" class="" dir="auto">실무에서는 다음을 추가로 고려하는 편이 좋다.</p><ul id="a9b720e4-6f49-828e-8418-01896c85e298" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Run 직접 접근 제한</li></ul><ul id="6b1720e4-6f49-8333-9ce5-014a7874f4c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway 뒤에서만 접근되도록 구성</li></ul><ul id="092720e4-6f49-83d0-a8d1-01a313360940" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Key만이 아니라 IAM/JWT/OIDC 등 추가 인증 적용</li></ul><ul id="0d4720e4-6f49-834d-9382-81bb3fc09cbb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF, rate limit, 모니터링 연계</li></ul><p id="68f720e4-6f49-833a-951a-01109cde69c4" class="" dir="auto">API Gateway는 API Key 외에도 다른 인증 방식 구성을 지원하며, API Key만 단독으로 쓰는 것은 민감한 API 보호에 충분하지 않을 수 있다.</p><hr id="999720e4-6f49-8303-bdc7-015bd2710a6d" dir="auto"/><h1 id="947720e4-6f49-82f4-98be-8109e7120485" class="" dir="auto">22. 실습 완료 후 정리</h1><h2 id="31a720e4-6f49-83a6-aae9-014ab7bf95e9" class="" dir="auto">22-1. Gateway 삭제</h2><pre id="098720e4-6f49-8363-a21d-0144c2f90c80" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud api-gateway gateways delete $GATEWAY_ID \
+--location=$REGION</code></pre><h2 id="f5a720e4-6f49-829e-945d-01729c527be2" class="" dir="auto">22-2. API Config 삭제</h2><pre id="fc3720e4-6f49-8280-8c07-81f51c9bfe4f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud api-gateway api-configs delete $API_CONFIG_ID \
+--api=$API_ID</code></pre><h2 id="baf720e4-6f49-82c6-8861-01fcf23be1d5" class="" dir="auto">22-3. API 삭제</h2><pre id="272720e4-6f49-82cc-90ac-81e867f602bb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud api-gateway apis delete $API_ID</code></pre><h2 id="a4c720e4-6f49-8314-a799-81e809fdacc3" class="" dir="auto">22-4. Cloud Run 삭제</h2><pre id="a33720e4-6f49-83e8-9f56-812df0875929" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud run services delete $SERVICE_NAME \
+--region=$REGION</code></pre><h2 id="f75720e4-6f49-82ff-9a7b-811f90a43c53" class="" dir="auto">22-5. 서비스 계정 삭제</h2><pre id="d53720e4-6f49-824f-985e-815a69d71d1a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gcloud iam service-accounts delete \
+  notes-api-sa@${PROJECT_ID}.iam.gserviceaccount.com</code></pre><p id="66f720e4-6f49-83b5-b232-0127a99373d6" class="" dir="auto">Firestore 데이터베이스는 별도 비용과 데이터 보존 여부를 고려해서 콘솔에서 삭제 여부를 결정하면 된다. Firestore 데이터베이스는 생성·삭제를 별도로 관리한다.</p><hr id="b97720e4-6f49-82dd-a894-81fddc204da6" dir="auto"/><h1 id="6d5720e4-6f49-83a1-baab-01bba665fd4f" class="" dir="auto">23. 실습 정리</h1><p id="83d720e4-6f49-8326-ad7a-81a52c01c19b" class="" dir="auto">이 실습으로 확인한 핵심은 다음과 같다.</p><ul id="786720e4-6f49-82ee-a31b-012c0b41ef4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Cloud Run</strong>은 서버 없이 컨테이너 API를 운영할 수 있는 서버리스 실행 환경</li></ul><ul id="56a720e4-6f49-82b4-8236-015774d2e31a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Firestore</strong>는 문서형 NoSQL 데이터 저장소</li></ul><ul id="cd5720e4-6f49-82f0-bf01-8127b9f7d7e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>API Gateway</strong>는 외부 클라이언트가 접근하는 표준 진입점</li></ul><ul id="4f9720e4-6f49-83f3-bb96-819e579745b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세 서비스를 조합하면 <strong>백엔드 서버를 직접 운영하지 않고도 REST API 서비스</strong>를 만들 수 있음</li></ul><p id="2a8720e4-6f49-829d-b093-81436f98d4f8" class="" dir="auto">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

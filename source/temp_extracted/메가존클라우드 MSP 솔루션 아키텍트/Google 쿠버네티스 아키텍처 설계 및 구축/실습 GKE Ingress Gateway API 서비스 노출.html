@@ -1,0 +1,944 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. GKE Ingress / Gateway API 서비스 노출</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="1b7720e4-6f49-8231-9d9d-812e6f1b4122" class="page sans"><header><h1 class="page-title" dir="auto">실습. GKE Ingress / Gateway API 서비스 노출</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="d24720e4-6f49-8342-8aef-016b8c56e504" class="" dir="auto">1. 실습 목표</h2><ol type="1" id="a66720e4-6f49-83c2-85e8-01e8ed5a3d36" class="numbered-list" start="1" dir="auto"><li>GKE 클러스터에 샘플 애플리케이션을 배포한다.</li></ol><ol type="1" id="0fd720e4-6f49-8320-94c4-815b790a0547" class="numbered-list" start="2" dir="auto"><li>Service를 생성한다.</li></ol><ol type="1" id="6f3720e4-6f49-83ec-b422-013172e7a639" class="numbered-list" start="3" dir="auto"><li>Ingress를 이용해 외부 HTTP 접속을 구성한다.</li></ol><ol type="1" id="24c720e4-6f49-8363-8a2f-8151ff73e01f" class="numbered-list" start="4" dir="auto"><li>Gateway API를 이용해 외부 HTTP 접속을 구성한다.</li></ol><ol type="1" id="41b720e4-6f49-8208-b065-815bb8e155d3" class="numbered-list" start="5" dir="auto"><li>외부 IP를 확인하고 브라우저 또는 <code>curl</code>로 접속을 검증한다.</li></ol><ol type="1" id="29f720e4-6f49-82c1-8629-81e37812253f" class="numbered-list" start="6" dir="auto"><li>실습 종료 후 리소스를 정리한다.</li></ol><hr id="2c1720e4-6f49-8382-b9d0-01dc6b5a99cc" dir="auto"/><h2 id="74b720e4-6f49-833f-ae69-018501e730f2" class="" dir="auto">2. 실습 환경</h2><p id="5f4720e4-6f49-8200-bb4c-81000902275b" class="" dir="auto">다음 환경을 기준으로 진행한다.</p><ul id="67a720e4-6f49-8393-ba6c-81918f4e8f05" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP 프로젝트 1개</li></ul><ul id="ae5720e4-6f49-831d-83a6-81e19f2f0fd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE Standard 클러스터 1개</li></ul><ul id="d50720e4-6f49-8265-a468-0157a50833f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Shell 또는 <code>kubectl</code>, <code>gcloud</code>가 설치된 터미널</li></ul><ul id="71a720e4-6f49-82c4-abf9-81431ac2c5ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전/존 예시<ul id="4d9720e4-6f49-8255-8a19-01fbbbf3f954" class="bulleted-list" dir="auto"><li style="list-style-type:circle">리전: <code>asia-northeast3</code></li></ul><ul id="2ef720e4-6f49-8252-a7a9-019be6e50297" class="bulleted-list" dir="auto"><li style="list-style-type:circle">존: <code>asia-northeast3-a</code></li></ul></li></ul><hr id="def720e4-6f49-8320-9625-817d2af6cab7" dir="auto"/><h2 id="130720e4-6f49-8227-99a8-81d3b7c10860" class="" dir="auto">3. 사전 준비</h2><h2 id="364720e4-6f49-838c-a861-811f6d343298" class="" dir="auto">3-1. 환경 변수 설정</h2><p id="e72720e4-6f49-82d2-a5a8-01caa335c888" class="" dir="auto">Cloud Shell에서 아래 값을 먼저 설정한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="4a8720e4-6f49-823b-88aa-81ccd445ec26" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export PROJECT_ID=$(gcloud config get-value project)
+export CLUSTER_NAME=이니셜-std-cluster-1
+export ZONE=asia-northeast3-c
+export REGION=asia-northeast3
+export NAMESPACE=expose-lab</code></pre><p id="92e720e4-6f49-82bd-ab04-01a8f211a48f" class="" dir="auto">확인:</p><pre id="b1b720e4-6f49-8206-bbe6-01f45f05a01c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">echo $PROJECT_ID
+echo $CLUSTER_NAME
+echo $ZONE
+echo $REGION
+echo $NAMESPACE</code></pre><hr id="844720e4-6f49-833f-a8ac-01baf2f676e1" dir="auto"/><h2 id="0d7720e4-6f49-8330-85e2-8106fa89b01a" class="" dir="auto">3-2. API 활성화</h2><pre id="80e720e4-6f49-83b9-88d8-0185f5fc16e7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services enable container.googleapis.com</code></pre><hr id="479720e4-6f49-83a7-8de4-010a2c6ae8aa" dir="auto"/><h2 id="fdc720e4-6f49-8270-9cf1-81e28abf1c79" class="" dir="auto">3-3. 클러스터 접속 정보 가져오기</h2><pre id="2fe720e4-6f49-825a-8652-81ddf7f20c13" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials $CLUSTER_NAME \
+  --zone=$ZONE</code></pre><p id="35b720e4-6f49-82c1-af53-81afd49feae2" class="" dir="auto">현재 컨텍스트 확인:</p><pre id="f27720e4-6f49-8202-b255-81468bc19313" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl config current-context</code></pre><p id="e4b720e4-6f49-822a-a11b-811833bea7aa" class="" dir="auto">노드 확인:</p><pre id="0c4720e4-6f49-82e1-a9d2-0199657d418b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes</code></pre><hr id="298720e4-6f49-8203-8cb1-01ba4ab0a19e" dir="auto"/><h2 id="261720e4-6f49-8278-9f05-810a76c8960d" class="" dir="auto">3-4. 네임스페이스 생성</h2><pre id="663720e4-6f49-8242-8d7f-01f8fe29d5f8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create namespace $NAMESPACE</code></pre><p id="3e6720e4-6f49-8242-8344-8128dab3185f" class="" dir="auto">확인:</p><pre id="99b720e4-6f49-830d-a556-81c6b77b4f30" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ns</code></pre><hr id="bd6720e4-6f49-8382-8804-01d5f08ebb27" dir="auto"/><h1 id="751720e4-6f49-832e-8103-01746007c480" class="" dir="auto">4. 공통 실습 - 샘플 애플리케이션 배포</h1><p id="2aa720e4-6f49-8336-bbdf-0157a8946385" class="" dir="auto">Ingress와 Gateway API 둘 다 같은 애플리케이션을 대상으로 실습한다.</p><h2 id="198720e4-6f49-8364-87c1-814befc9ace1" class="" dir="auto">4-1. 샘플 Deployment 생성</h2><p id="eab720e4-6f49-8235-9742-8118a4961dd4" class="" dir="auto">파일명: <code>web-deploy.yaml</code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="e85720e4-6f49-830a-964c-8136e719ba78" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: expose-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: us-docker.pkg.dev/google-samples/containers/gke/hello-app:1.0
+        ports:
+        - containerPort: 8080</code></pre><p id="1f6720e4-6f49-8218-bee0-81378e44157a" class="" dir="auto">적용:</p><pre id="e7b720e4-6f49-821e-bc40-01a1f360bfa0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f web-deploy.yaml</code></pre><p id="d63720e4-6f49-8244-997f-815301b5fc61" class="" dir="auto">확인:</p><pre id="a28720e4-6f49-8302-a710-8113a801641c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get deploy -n $NAMESPACE
+kubectl get pods -n $NAMESPACE -o wide</code></pre><h3 id="5e6720e4-6f49-8365-8150-01eaa729ebfb" class="" dir="auto">설정 설명</h3><p id="304720e4-6f49-836c-bc16-81505f1ab605" class="" dir="auto"><code>replicas: 2</code></p><p id="bc0720e4-6f49-83c4-bec7-01f7696d5ca8" class="" dir="auto">같은 애플리케이션 Pod를 2개 실행한다. 하나가 재시작되거나 문제가 생겨도 다른 Pod가 계속 서비스할 수 있게 하기 위함이다.</p><p id="0d5720e4-6f49-8246-bec1-81486f17de71" class="" dir="auto"><code>containerPort: 8080</code></p><p id="9c8720e4-6f49-8291-913e-015f615ffb24" class="" dir="auto">컨테이너 내부 애플리케이션이 8080 포트에서 동작함을 의미한다. 실제 외부 노출 포트는 나중에 Service나 Ingress/Gateway에서 별도로 지정한다.</p><hr id="735720e4-6f49-826e-9796-016d064bf1fa" dir="auto"/><h2 id="293720e4-6f49-834d-aa3d-81a390f957c8" class="" dir="auto">4-2. Service 생성</h2><p id="abc720e4-6f49-82c0-a714-81af21a6282d" class="" dir="auto">Ingress와 Gateway API는 모두 결국 Service를 백엔드 대상으로 사용한다.</p><p id="df3720e4-6f49-832d-a8a1-8180ac6a4ae7" class="" dir="auto">파일명: <code>web-svc.yaml</code></p><pre id="2e9720e4-6f49-8302-8b0f-01a7531717f8" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Service
+metadata:
+  name: web
+  namespace: expose-lab
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: NodePort</code></pre><p id="def720e4-6f49-8218-86af-81f9e4367218" class="" dir="auto">적용:</p><pre id="84e720e4-6f49-8368-a123-8169aa033ad4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f web-svc.yaml</code></pre><p id="dea720e4-6f49-82e6-93af-01a7bf9c1f63" class="" dir="auto">확인:</p><pre id="901720e4-6f49-8347-9dfa-0146d72db540" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc -n $NAMESPACE
+kubectl describe svc web -n $NAMESPACE</code></pre><hr id="2fe720e4-6f49-8225-b8de-811706922026" dir="auto"/><h1 id="f48720e4-6f49-8217-b8a5-01ffadea055e" class="" dir="auto">5. 실습 1 - Ingress를 이용한 서비스 노출</h1><p id="c42720e4-6f49-82cd-8c18-012c0a519c40" class="" dir="auto">GKE의 기본 Ingress는 <code>kind: Ingress</code> 리소스를 생성하면 외부 Application Load Balancer를 자동 구성한다. 별도의 서드파티 NGINX Ingress 컨트롤러 기준이 아니라, <strong>GKE 기본 Ingress</strong> 기준 실습이다. </p><h2 id="3c8720e4-6f49-83b3-a17e-01380f18c108" class="" dir="auto">5-1. 가장 단순한 Ingress 생성</h2><p id="5f0720e4-6f49-82e6-b78c-81acf7884d7c" class="" dir="auto">파일명: <code>basic-ingress.yaml</code></p><pre id="174720e4-6f49-8287-8b3d-819fbf5f8f49" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: basic-ingress
+  namespace: expose-lab
+spec:
+  defaultBackend:
+    service:
+      name: web
+      port:
+        number: 8080</code></pre><p id="45d720e4-6f49-8385-aa8b-813cc7a75246" class="" dir="auto">적용:</p><pre id="baa720e4-6f49-83e0-8032-81a7c93293b5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f basic-ingress.yaml</code></pre><hr id="6d0720e4-6f49-826b-ba0b-81beb1718868" dir="auto"/><h2 id="e30720e4-6f49-831e-b71d-81534182b89a" class="" dir="auto">5-2. Ingress 상태 확인</h2><pre id="277720e4-6f49-834c-84ee-81d1f97432ec" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ingress -n $NAMESPACE
+kubectl describe ingress basic-ingress -n $NAMESPACE</code></pre><h3 id="635720e4-6f49-82fd-a83d-01cf6c083f64" class="" dir="auto">확인 포인트</h3><p id="29d720e4-6f49-831e-b3a1-015ae33a4d68" class="" dir="auto"><code>ADDRESS</code> 컬럼에 외부 IP가 할당되는지 확인한다.</p><p id="a34720e4-6f49-837e-a914-010cdab512f8" class="" dir="auto">처음에는 비어 있거나 <code>pending</code>처럼 보일 수 있다.</p><p id="bab720e4-6f49-8396-aa4e-81e69f9de579" class="" dir="auto">외부 Application Load Balancer가 생성되고 전파되는 데 몇 분 정도 걸릴 수 있다.</p><p id="4ff720e4-6f49-8359-a8ec-01d226bfbed1" class="" dir="auto">외부 IP만 따로 보고 싶다면:</p><pre id="326720e4-6f49-8282-baeb-8195027663d9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ingress basic-ingress -n $NAMESPACE \
+  -o jsonpath=&#x27;{.status.loadBalancer.ingress[0].ip}&#x27;; echo</code></pre><hr id="02c720e4-6f49-8392-b00c-81af4ee24e75" dir="auto"/><h2 id="6ff720e4-6f49-82f5-94bc-01bba8fdb4aa" class="" dir="auto">5-3. 접속 테스트</h2><p id="c3c720e4-6f49-836e-9d52-019ad1dc6a38" class="" dir="auto">외부 IP를 변수로 저장:</p><pre id="76a720e4-6f49-834d-9420-013209395011" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export INGRESS_IP=$(kubectl get ingress basic-ingress -n $NAMESPACE \
+  -o jsonpath=&#x27;{.status.loadBalancer.ingress[0].ip}&#x27;)
+echo $INGRESS_IP</code></pre><p id="cb2720e4-6f49-83f3-b864-01be9e37c302" class="" dir="auto">접속 확인:</p><pre id="715720e4-6f49-8381-ae9a-01e8136a99b1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://$INGRESS_IP</code></pre><p id="4eb720e4-6f49-8213-a7a9-014b872cfdb4" class="" dir="auto">정상이라면 다음과 비슷한 응답이 나온다.</p><pre id="012720e4-6f49-83f4-b006-012db3433f68" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Hello, world!
+Version: 1.0.0</code></pre><hr id="cc6720e4-6f49-82cd-8393-819fcc792e85" dir="auto"/><h2 id="9a4720e4-6f49-82cb-a16f-01c8e9e5771c" class="" dir="auto">5-4. 경로 기반 라우팅 확장 실습</h2><p id="de1720e4-6f49-839c-8a9a-01e8cf4c4942" class="" dir="auto">이번에는 <code>/</code>와 <code>/v2</code> 경로를 서로 다른 서비스로 보내는 예시를 실습한다.</p><h3 id="659720e4-6f49-8316-a5db-01509f8b2f2e" class="" dir="auto">두 번째 앱 배포</h3><p id="fba720e4-6f49-82bc-9f96-81a5d587019b" class="" dir="auto">파일명: <code>web2-deploy.yaml</code></p><pre id="b38720e4-6f49-83a5-a506-010ec08facd1" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web2
+  namespace: expose-lab
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: web2
+  template:
+    metadata:
+      labels:
+        app: web2
+    spec:
+      containers:
+      - name: web2
+        image: us-docker.pkg.dev/google-samples/containers/gke/hello-app:2.0
+        ports:
+        - containerPort: 8080</code></pre><p id="a09720e4-6f49-82c5-947b-81c7d4e2ee9d" class="" dir="auto">적용:</p><pre id="afc720e4-6f49-8297-ab90-0193e9eb2874" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f web2-deploy.yaml</code></pre><h3 id="31b720e4-6f49-8315-a0e5-012a20c715c8" class="" dir="auto">두 번째 Service 생성</h3><p id="1c0720e4-6f49-8345-bef3-011b2b116ebd" class="" dir="auto">파일명: <code>web2-svc.yaml</code></p><pre id="e76720e4-6f49-8364-8eb0-017c50827ad2" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Service
+metadata:
+  name: web2
+  namespace: expose-lab
+spec:
+  selector:
+    app: web2
+  ports:
+  - port: 8080
+    targetPort: 8080
+  type: NodePort</code></pre><p id="a92720e4-6f49-835f-9b69-814d4fb01d50" class="" dir="auto">적용:</p><pre id="999720e4-6f49-838e-92fd-015b1c7d417e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f web2-svc.yaml</code></pre><h3 id="be2720e4-6f49-8217-b080-0184119c5064" class="" dir="auto">Fanout Ingress 생성</h3><p id="905720e4-6f49-827b-ba7a-012b54694065" class="" dir="auto">파일명: <code>fanout-ingress.yaml</code></p><pre id="6fb720e4-6f49-83a4-a7bf-81ff219b07c2" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: fanout-ingress
+  namespace: expose-lab
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: web
+            port:
+              number: 8080
+      - path: /v2/*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: web2
+            port:
+              number: 8080</code></pre><p id="eb7720e4-6f49-8385-a847-012c2a946340" class="" dir="auto">적용:</p><pre id="1ea720e4-6f49-824d-8ed3-81bff5245ad4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f fanout-ingress.yaml</code></pre><hr id="013720e4-6f49-8229-abb5-01f3745fa99d" dir="auto"/><h2 id="aa2720e4-6f49-8246-bbaf-8116924eed51" class="" dir="auto">5-5. Fanout Ingress 검증</h2><pre id="c19720e4-6f49-8254-8055-014df4ccb9e1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ingress -n $NAMESPACE
+kubectl describe ingress fanout-ingress -n $NAMESPACE</code></pre><p id="3b6720e4-6f49-82ab-8347-81fbbb174ec7" class="" dir="auto">IP 확인:</p><pre id="736720e4-6f49-836d-9d25-011c761ff86f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export FANOUT_IP=$(kubectl get ingress fanout-ingress -n $NAMESPACE \
+  -o jsonpath=&#x27;{.status.loadBalancer.ingress[0].ip}&#x27;)
+echo $FANOUT_IP</code></pre><p id="510720e4-6f49-835f-83dd-8119bbf79df8" class="" dir="auto">테스트:</p><pre id="2b2720e4-6f49-8269-b54a-8158d76d6191" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://$FANOUT_IP/
+curl http://$FANOUT_IP/v2/</code></pre><h3 id="30d720e4-6f49-834c-a369-81c027914abd" class="" dir="auto">기대 결과</h3><ul id="ec9720e4-6f49-8362-8936-818f5e189acd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/</code> 요청은 <code>web</code> 서비스로 전달된다.</li></ul><ul id="568720e4-6f49-8271-aa96-0146a64f855b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/v2/</code> 요청은 <code>web2</code> 서비스로 전달된다.</li></ul><hr id="4de720e4-6f49-8207-b45e-814f2d1167bd" dir="auto"/><h1 id="88b720e4-6f49-837f-b2a0-01aa503ab5ff" class="" dir="auto">6. 실습 2 - Gateway API를 이용한 서비스 노출</h1><p id="a00720e4-6f49-8361-ae14-01be0fedd6a6" class="" dir="auto">Gateway API는 Ingress보다 역할이 더 분리돼 있다.</p><ul id="729720e4-6f49-8387-bff7-8154324ea626" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>GatewayClass</code>: 어떤 종류의 로드밸런서를 만들지 결정</li></ul><ul id="ca8720e4-6f49-822b-b0ac-8171a70c78ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Gateway</code>: 어디서 어떻게 받을지 결정</li></ul><ul id="8e5720e4-6f49-83df-bb56-81f079958f30" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>HTTPRoute</code>: 어떤 요청을 어느 Service로 보낼지 결정</li></ul><p id="295720e4-6f49-8388-a96e-014d28a80d11" class="" dir="auto">GKE는 여러 GatewayClass를 제공하며, 외부 공개용으로는 <code>gke-l7-global-external-managed</code> 또는 <code>gke-l7-regional-external-managed</code>를 사용할 수 있다. 단일 실습에서는 전역 외부 ALB 기반인 <code>gke-l7-global-external-managed</code>가 가장 일반적이다.</p><hr id="242720e4-6f49-83e6-a5b8-01e869a68807" dir="auto"/><h2 id="ba8720e4-6f49-8222-841c-01b65e5fdbf4" class="" dir="auto">6-1. 사용 가능한 GatewayClass 확인</h2><pre id="8da720e4-6f49-82db-bee7-81efb57e2d39" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get gatewayclass</code></pre><p id="ef3720e4-6f49-83dd-872b-01423a3fc97f" class="" dir="auto">정상이라면 다음과 비슷한 항목이 보일 수 있다.</p><pre id="e3c720e4-6f49-8229-80fd-01ddcb6a3837" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">gke-l7-global-external-managed
+gke-l7-regional-external-managed
+gke-l7-rilb</code></pre><hr id="069720e4-6f49-832a-888b-81d2bd0d5ab6" dir="auto"/><h2 id="3f0720e4-6f49-82ed-a0d6-01204c1aef45" class="" dir="auto">6-2. Gateway 생성</h2><p id="af6720e4-6f49-83a2-93a5-01a7dff8f788" class="" dir="auto">가장 단순한 외부 HTTP Gateway를 생성한다.</p><p id="f95720e4-6f49-83ab-bc1c-8163504dc8eb" class="" dir="auto">파일명: <code>external-gateway.yaml</code></p><pre id="045720e4-6f49-8235-b341-819946358bc0" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: external-http
+  namespace: expose-lab
+spec:
+  gatewayClassName: gke-l7-global-external-managed
+  listeners:
+  - name: http
+    protocol: HTTP
+    port: 80</code></pre><p id="4ad720e4-6f49-83b9-b287-017c4a89c90b" class="" dir="auto">적용:</p><pre id="7b5720e4-6f49-8371-a49e-81f0f6f2c3da" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f external-gateway.yaml</code></pre><p id="05e720e4-6f49-8257-986d-015a3011f0b5" class="" dir="auto"> <code>gatewayClassName: gke-l7-global-external-managed</code>가 전역 외부 Application Load Balancer를 의미한다. </p><hr id="9af720e4-6f49-83b8-9bce-81bb4cff442b" dir="auto"/><h2 id="fab720e4-6f49-833b-a0f7-813402d1e3b0" class="" dir="auto">6-3. Gateway 상태 확인</h2><pre id="7dd720e4-6f49-828f-90e5-01fb38743566" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get gateway -n $NAMESPACE
+kubectl describe gateway external-http -n $NAMESPACE</code></pre><p id="51f720e4-6f49-83ff-8cdd-81061ba0943f" class="" dir="auto">외부 IP 확인:</p><pre id="766720e4-6f49-83e2-a56f-01011ffeed7a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get gateway external-http -n $NAMESPACE \
+  -o jsonpath=&#x27;{.status.addresses[0].value}&#x27;; echo</code></pre><p id="04e720e4-6f49-8343-8cba-01ef13af72c2" class="" dir="auto"> <code>status.addresses.value</code>에 외부 IP가 표시된다.</p><hr id="a2a720e4-6f49-8306-94c9-010802b8a594" dir="auto"/><h2 id="2d7720e4-6f49-839a-a340-81f31d938699" class="" dir="auto">6-4. HTTPRoute 생성</h2><p id="d20720e4-6f49-83e3-885d-0155b2a25bfa" class="" dir="auto">이제 Gateway로 들어온 요청을 <code>web</code> 서비스로 연결한다.</p><p id="9b2720e4-6f49-82fa-bf10-014c9a2ea86f" class="" dir="auto">파일명: <code>web-route.yaml</code></p><pre id="245720e4-6f49-8287-8860-0149cfba1387" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: web-route
+  namespace: expose-lab
+spec:
+  parentRefs:
+  - kind: Gateway
+    name: external-http
+  rules:
+  - backendRefs:
+    - name: web
+      port: 8080</code></pre><p id="992720e4-6f49-8363-8f49-81eff706ee01" class="" dir="auto">적용:</p><pre id="693720e4-6f49-82a5-9fa7-01bd3e85813d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f web-route.yaml</code></pre><p id="52e720e4-6f49-82ab-9253-813fb349aa2e" class="" dir="auto"><code>HTTPRoute</code>는 Gateway로 들어온 HTTP(S) 트래픽을 Kubernetes Service로 라우팅하는 리소스다. </p><hr id="d31720e4-6f49-8399-a816-819685da39a4" dir="auto"/><h2 id="d4c720e4-6f49-839a-84f1-81ac6fbd04e0" class="" dir="auto">6-5. HTTPRoute 상태 확인</h2><pre id="ab4720e4-6f49-8301-8ab1-011278072e26" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get httproute -n $NAMESPACE
+kubectl describe httproute web-route -n $NAMESPACE</code></pre><h3 id="7dd720e4-6f49-82e6-9647-81a76c8e9ccd" class="" dir="auto">확인 포인트</h3><p id="a23720e4-6f49-83cb-8694-01911501df43" class="" dir="auto"><code>Accepted=True</code></p><p id="6ef720e4-6f49-83d6-98ee-81685966fa38" class="" dir="auto">HTTPRoute가 Gateway에 정상적으로 바인딩됐다는 뜻이다.</p><p id="73e720e4-6f49-822a-9a30-81e07ef2154e" class="" dir="auto"><code>Reconciled=True</code></p><p id="f4b720e4-6f49-83be-97d8-01236b04d185" class="" dir="auto">실제 구성 반영이 정상적으로 진행됐다는 뜻이다.</p><hr id="e97720e4-6f49-824f-9ca9-01f1a9c04614" dir="auto"/><h2 id="119720e4-6f49-83a8-8858-81631f25b27b" class="" dir="auto">6-6. 접속 테스트</h2><p id="296720e4-6f49-8211-978c-017f8a6a63c0" class="" dir="auto">외부 IP 변수 저장:</p><pre id="b14720e4-6f49-8298-90e6-01725f67ee7d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export GATEWAY_IP=$(kubectl get gateway external-http -n $NAMESPACE \
+  -o jsonpath=&#x27;{.status.addresses[0].value}&#x27;)
+echo $GATEWAY_IP</code></pre><p id="b3c720e4-6f49-8383-a924-81153c5c67f8" class="" dir="auto">접속 테스트:</p><pre id="6ae720e4-6f49-8254-8305-01b993fc5296" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://$GATEWAY_IP</code></pre><p id="308720e4-6f49-82c0-8b95-812c9f9a8743" class="" dir="auto">정상이라면 <code>hello-app</code> 응답이 출력된다.</p><hr id="018720e4-6f49-820a-b409-016293249a01" dir="auto"/><h1 id="422720e4-6f49-823f-b875-01f43eb05492" class="" dir="auto">7. Gateway API 경로 기반 라우팅 확장 실습</h1><p id="3f0720e4-6f49-83ad-b36a-815e10536a13" class="" dir="auto">이번에는 Gateway API에서 <code>/</code>는 <code>web</code>, <code>/v2</code>는 <code>web2</code>로 라우팅한다.</p><p id="1ef720e4-6f49-83c9-9e1e-01874175d70b" class="" dir="auto">파일명: <code>fanout-route.yaml</code></p><pre id="f42720e4-6f49-834d-90c8-01b2cdf962ab" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: fanout-route
+  namespace: expose-lab
+spec:
+  parentRefs:
+  - kind: Gateway
+    name: external-http
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /v2
+    backendRefs:
+    - name: web2
+      port: 8080
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: web
+      port: 8080</code></pre><p id="5d8720e4-6f49-824e-bf49-0113b19245c4" class="" dir="auto">적용:</p><pre id="fb8720e4-6f49-834a-8df7-01c268760ba0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f fanout-route.yaml</code></pre><p id="4ed720e4-6f49-82d5-bf28-01302e57e207" class="" dir="auto">검증:</p><pre id="7d1720e4-6f49-836a-a809-01846a1c1c35" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe httproute fanout-route -n $NAMESPACE
+curl http://$GATEWAY_IP/
+curl http://$GATEWAY_IP/v2</code></pre><p id="3da720e4-6f49-82fb-96e2-013064e160aa" class="" dir="auto"> HTTPRoute는 경로 기반 라우팅, 헤더 기반 라우팅, URL rewrite 같은 규칙을 제공하며, 경로 매칭은 <code>PathPrefix</code>를 사용한다.</p><hr id="0af720e4-6f49-8280-a3dc-01aad46ff85a" dir="auto"/><h1 id="97b720e4-6f49-82fd-b65d-8126637c521a" class="" dir="auto">8. Ingress와 Gateway API 실습 결과 비교</h1><h2 id="dbe720e4-6f49-83f9-a24b-014e0402f687" class="" dir="auto">Ingress 방식</h2><p id="171720e4-6f49-8211-a857-01489fcbe757" class="" dir="auto">Ingress에서는 <code>Ingress</code> 리소스 하나가 진입점과 라우팅 규칙을 포함한다.</p><h3 id="a09720e4-6f49-83d5-a507-013a365ada56" class="" dir="auto">핵심 확인 명령</h3><pre id="1c5720e4-6f49-82a8-9dec-01a2587ffc31" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ingress -n $NAMESPACE
+kubectl describe ingress basic-ingress -n $NAMESPACE</code></pre><h3 id="9f1720e4-6f49-826c-a228-81c67e6c3223" class="" dir="auto">외부 IP 확인 위치</h3><pre id="a88720e4-6f49-83a6-bdcf-016696fe702c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">.status.loadBalancer.ingress[0].ip</code></pre><p id="359720e4-6f49-8232-ade2-814a5b6b0e52" class="" dir="auto">GKE Ingress는 생성 시 외부 Application Load Balancer를 자동으로 구성한다. </p><hr id="eee720e4-6f49-83f0-abb1-81539e217b5e" dir="auto"/><h2 id="36b720e4-6f49-8309-90f9-811c63672804" class="" dir="auto">Gateway API 방식</h2><p id="08a720e4-6f49-8257-8852-016870b0254e" class="" dir="auto">Gateway API에서는 역할이 분리된다.</p><ul id="8b5720e4-6f49-821b-98fa-0185f566ba44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GatewayClass는 로드밸런서 종류</li></ul><ul id="4a3720e4-6f49-8342-a8db-813130d29c3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway는 수신 포트/프로토콜</li></ul><ul id="243720e4-6f49-8311-978e-018257a71707" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPRoute는 라우팅 규칙</li></ul><p id="141720e4-6f49-8295-aac6-81b3b76bde94" class="" dir="auto">조금 더 리소스가 많지만, 대규모 운영이나 팀 분리 관점에서는 더 구조적이다. </p><h3 id="fe3720e4-6f49-830b-8a1c-0153d43de746" class="" dir="auto">핵심 확인 명령</h3><pre id="eff720e4-6f49-8349-beef-812b4eb0ed64" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get gateway -n $NAMESPACE
+kubectl get httproute -n $NAMESPACE
+kubectl describe gateway external-http -n $NAMESPACE
+kubectl describe httproute web-route -n $NAMESPACE</code></pre><h3 id="532720e4-6f49-82b9-af46-0148ea271297" class="" dir="auto">외부 IP 확인 위치</h3><pre id="06d720e4-6f49-83dc-9b92-817e8490b4dd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">.status.addresses[0].value</code></pre><hr id="9d6720e4-6f49-83d6-bd1e-01d74aa1bc15" dir="auto"/><h1 id="67b720e4-6f49-8269-b61a-010e3dbc1e16" class="" dir="auto">10. 정리</h1><h2 id="674720e4-6f49-8221-a549-011f5005135a" class="" dir="auto">10-1. Ingress 관련 리소스 삭제</h2><pre id="7d7720e4-6f49-82fe-ba1b-011ff7fa0586" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete ingress fanout-ingress -n $NAMESPACE --ignore-not-found
+kubectl delete ingress basic-ingress -n $NAMESPACE --ignore-not-found</code></pre><hr id="ce0720e4-6f49-823d-856d-819f15543e1d" dir="auto"/><h2 id="3e3720e4-6f49-832b-a1c0-81ed3fd8edaf" class="" dir="auto">10-2. Gateway API 관련 리소스 삭제</h2><pre id="e7c720e4-6f49-8227-9db4-810887ae57c6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete httproute fanout-route -n $NAMESPACE --ignore-not-found
+kubectl delete httproute web-route -n $NAMESPACE --ignore-not-found
+kubectl delete gateway external-http -n $NAMESPACE --ignore-not-found</code></pre><hr id="915720e4-6f49-8330-a096-0162dd44ac11" dir="auto"/><h2 id="42e720e4-6f49-83af-a798-010c9f664dde" class="" dir="auto">10-3. 애플리케이션 삭제</h2><pre id="315720e4-6f49-83d1-bab0-81a26408e717" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete svc web2 -n $NAMESPACE --ignore-not-found
+kubectl delete svc web -n $NAMESPACE --ignore-not-found
+
+kubectl delete deploy web2 -n $NAMESPACE --ignore-not-found
+kubectl delete deploy web -n $NAMESPACE --ignore-not-found</code></pre><hr id="600720e4-6f49-8257-bc40-01c05f4e6dcd" dir="auto"/><h2 id="41c720e4-6f49-8241-a266-8183edce08d0" class="" dir="auto">10-4. 네임스페이스 삭제</h2><pre id="14d720e4-6f49-8279-9053-813be53624ca" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete namespace $NAMESPACE</code></pre><hr id="fdb720e4-6f49-83a0-a2e8-8166a3472e71" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

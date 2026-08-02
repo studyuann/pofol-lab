@@ -1,0 +1,2403 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영 자동화</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="5b0720e4-6f49-8339-9d18-01697992cca8" class="page sans"><header><h1 class="page-title" dir="auto">프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영 자동화</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="bb8720e4-6f49-82ca-9194-8149b4b06d0b" dir="auto"/><figure id="a1e720e4-6f49-8335-9d5b-810adb7b4352" class="image" data-notion-image="%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%94%EB%93%9C,%20FastAPI,%20MariaDB,%20boto3%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EB%A1%9C%EA%B7%B8%EC%9D%B8%20%EA%B8%B0%EB%B0%98%20AWS%20%EC%9A%B4%EC%98%81%20/image.png" dir="ltr"><a href="%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%94%EB%93%9C,%20FastAPI,%20MariaDB,%20boto3%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EB%A1%9C%EA%B7%B8%EC%9D%B8%20%EA%B8%B0%EB%B0%98%20AWS%20%EC%9A%B4%EC%98%81%20/image.png"><img style="width:703.982177734375px" src="%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%94%EB%93%9C,%20FastAPI,%20MariaDB,%20boto3%EB%A5%BC%20%EC%9D%B4%EC%9A%A9%ED%95%9C%20%EB%A1%9C%EA%B7%B8%EC%9D%B8%20%EA%B8%B0%EB%B0%98%20AWS%20%EC%9A%B4%EC%98%81%20/image.png"/></a></figure><h2 id="925720e4-6f49-8359-97e9-01af1d1f04c5" class="" dir="auto">1. 실습 주제</h2><p id="5f2720e4-6f49-8347-a0c6-011c184a53ff" class="" dir="auto">이번 실습은 <strong>Python을 이용한 클라우드 서비스 운영 자동화</strong>를 단순 스크립트 수준이 아니라, 실제 운영 도구에 가까운 구조로 구현하는 실습이다.</p><p id="ee5720e4-6f49-8297-8a23-014adea7e9ad" class="" dir="auto">구현 목표는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="fbd720e4-6f49-83c9-b7b8-0121b869fd5c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">로그인 사용자
+  ↓
+프론트엔드 랜딩페이지
+  ↓
+FastAPI 백엔드
+  ↓
+MariaDB 사용자 DB 조회
+  ↓
+JWT 인증
+  ↓
+사용자 role 확인
+  ↓
+IAM Role AssumeRole
+  ↓
+EC2 / S3 운영 자동화</code></pre><p id="9b6720e4-6f49-83cc-89d9-01e731e3b6af" class="" dir="auto">이번 실습은 앞에서 만든 IAM Role 실습과 이어진다.</p><p id="fbc720e4-6f49-82f7-8495-01eb9fc70170" class="" dir="auto">앞 실습에서 생성한 Role은 다음과 같다.</p><pre id="a1c720e4-6f49-8222-9829-81fbb78b2bcf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">app-viewer-role
+app-operator-role
+app-admin-role</code></pre><p id="ba6720e4-6f49-8236-9e03-01451e24c23d" class="" dir="auto">각 Role은 서로 다른 권한을 가진다.</p><table id="941720e4-6f49-82c7-93eb-81f32a4c63ec" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="176720e4-6f49-8304-b3a7-819e6866757a" dir="ltr"><th id="daX\" class="simple-table-header-color simple-table-header">로그인 사용자 role</th><th id="af_h" class="simple-table-header-color simple-table-header">IAM Role</th><th id="E]_w" class="simple-table-header-color simple-table-header">주요 권한</th></tr></thead><tbody><tr id="0cd720e4-6f49-8209-80f3-011a6b69fe9f" dir="ltr"><td id="daX\" class=""><code>viewer</code></td><td id="af_h" class=""><code>app-viewer-role</code></td><td id="E]_w" class="">EC2/S3 조회</td></tr><tr id="4cf720e4-6f49-8390-b0d5-81b0ed728160" dir="ltr"><td id="daX\" class=""><code>operator</code></td><td id="af_h" class=""><code>app-operator-role</code></td><td id="E]_w" class="">EC2 조회, 시작, 중지</td></tr><tr id="f69720e4-6f49-8216-bbfb-8165baf499e1" dir="ltr"><td id="daX\" class=""><code>admin</code></td><td id="af_h" class=""><code>app-admin-role</code></td><td id="E]_w" class="">EC2 운영 + S3 업로드</td></tr></tbody></table><hr id="362720e4-6f49-827a-b040-01e30128a7bd" dir="auto"/><h1 id="4f2720e4-6f49-837c-a35f-015fe11e0845" class="" dir="auto">2. 실습 목표</h1><p id="96b720e4-6f49-8308-ba93-815f22b4ffdc" class="" dir="auto">이번 실습을 완료하면 다음 구조를 직접 구현할 수 있다.</p><pre id="69f720e4-6f49-837d-b7a8-016c3e7f3145" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. MariaDB에 사용자 정보를 저장한다.
+2. FastAPI에서 DB 기반 로그인 기능을 구현한다.
+3. 비밀번호는 평문이 아니라 bcrypt 해시로 저장한다.
+4. 로그인 성공 시 JWT Access Token을 발급한다.
+5. 프론트엔드는 JWT를 localStorage에 저장한다.
+6. 프론트엔드는 API 요청 시 Authorization 헤더에 JWT를 포함한다.
+7. FastAPI는 JWT를 검증해 현재 로그인 사용자를 식별한다.
+8. 사용자의 role에 따라 AWS IAM Role ARN을 선택한다.
+9. FastAPI는 sts:AssumeRole을 호출해 임시 자격 증명을 발급받는다.
+10. 임시 자격 증명으로 EC2와 S3를 제어한다.
+11. 사용자 role별 권한 차이를 웹 화면에서 확인한다.</code></pre><hr id="fcc720e4-6f49-821d-8e33-013adb72d104" dir="auto"/><h1 id="e9c720e4-6f49-83a2-a89b-018adea61800" class="" dir="auto">3. 실습 결과 화면 구성</h1><p id="1c7720e4-6f49-83f2-ad91-81bfbd82d649" class="" dir="auto">최종 프론트엔드 화면은 다음 영역으로 구성한다.</p><pre id="fc0720e4-6f49-82c8-a982-014598961fbf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[로그인 영역]
+- 사용자 ID 입력
+- 비밀번호 입력
+- 로그인 버튼
+
+[사용자 정보 영역]
+- 현재 로그인 사용자
+- 사용자 role
+- 로그아웃 버튼
+
+[EC2 운영 영역]
+- EC2 인스턴스 목록 조회
+- EC2 시작
+- EC2 중지
+
+[S3 운영 영역]
+- S3 버킷 목록 조회
+- 버킷 내 객체 목록 조회
+- S3 파일 업로드
+
+[결과 메시지 영역]
+- API 응답 결과 출력
+- 권한 오류 메시지 출력</code></pre><hr id="9d0720e4-6f49-8229-a02e-01714aa6771e" dir="auto"/><h1 id="41e720e4-6f49-8330-8996-81570820e797" class="" dir="auto">4. 전체 아키텍처</h1><pre id="6b7720e4-6f49-83f4-b1c3-81906012c674" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Browser
+  |
+  | 1. 로그인 요청
+  v
+FastAPI /auth/login
+  |
+  | 2. MariaDB users 테이블 조회
+  v
+MariaDB
+  |
+  | 3. 비밀번호 검증 후 JWT 발급
+  v
+Browser localStorage
+  |
+  | 4. Authorization: Bearer &lt;token&gt;
+  v
+FastAPI 보호 API
+  |
+  | 5. JWT 검증
+  | 6. 사용자 role 확인
+  | 7. IAM Role ARN 선택
+  v
+AWS STS AssumeRole
+  |
+  | 8. 임시 자격 증명 발급
+  v
+boto3 EC2/S3 Client
+  |
+  | 9. EC2/S3 운영
+  v
+AWS Resources</code></pre><hr id="5d9720e4-6f49-8210-834b-8177dad0aaed" dir="auto"/><h1 id="8bf720e4-6f49-82ab-948a-8184f7fbec7f" class="" dir="auto">5. 실습 전제</h1><h2 id="b58720e4-6f49-835a-b5a4-8175ba40f21b" class="" dir="auto">5.1 AWS Role 사전 준비</h2><p id="cb5720e4-6f49-82df-8c0d-81c117f80866" class="" dir="auto">아래 IAM Role이 이미 존재해야 한다.</p><pre id="3a9720e4-6f49-8317-a0fe-81b8bb474769" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">app-viewer-role
+app-operator-role
+app-admin-role</code></pre><p id="a1b720e4-6f49-822b-a150-017caf7dbe6d" class="" dir="auto">각 Role의 Trust Policy에는 현재 FastAPI를 실행하는 IAM Principal이 들어가 있어야 한다.</p><p id="241720e4-6f49-82c1-92cb-019899289139" class="" dir="auto">로컬 실습에서는 IAM User가 Principal이다.</p><p id="9bc720e4-6f49-8342-8d00-8157e6d58184" class="" dir="auto">예:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="d79720e4-6f49-828c-be05-01da23729387" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;TrustLocalIamUser&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Principal&quot;: {
+        &quot;AWS&quot;: &quot;arn:aws:iam::471166314777:user/instructor&quot;
+      },
+      &quot;Action&quot;: &quot;sts:AssumeRole&quot;
+    }
+  ]
+}</code></pre><hr id="344720e4-6f49-82f9-8e64-0124ac5498a6" dir="auto"/><h2 id="a7a720e4-6f49-83e0-8319-81c9d043628b" class="" dir="auto">5.2 현재 AWS Profile 확인</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="956720e4-6f49-8386-a6ac-8166a319fafd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws sts get-caller-identity --profile instructor</code></pre><p id="c29720e4-6f49-8319-9b89-01c529841e3f" class="" dir="auto">예상 출력:</p><pre id="0e3720e4-6f49-8220-b958-01478bcc7536" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;UserId&quot;: &quot;AIDAxxxxxxxxxxxxx&quot;,
+    &quot;Account&quot;: &quot;471166314777&quot;,
+    &quot;Arn&quot;: &quot;arn:aws:iam::471166314777:user/instructor&quot;
+}</code></pre><p id="4b0720e4-6f49-82c2-bdb7-81f180ab74ef" class="" dir="auto">여기서 <code>Arn</code> 값이 IAM Role의 Trust Policy Principal과 일치해야 한다.</p><hr id="cde720e4-6f49-8278-957a-811919b96ecc" dir="auto"/><h1 id="a32720e4-6f49-83e6-9a0a-810243f8d88d" class="" dir="auto">6. 프로젝트 디렉터리 구성</h1><pre id="bc0720e4-6f49-827d-a605-81d4eccdad17" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cloud-ops-web/
+├── app/
+│   ├── main.py
+│   ├── database.py
+│   ├── models.py
+│   ├── schemas.py
+│   ├── auth.py
+│   ├── aws_role.py
+│   ├── ec2_service.py
+│   ├── s3_service.py
+│   ├── init_db.py
+│   └── static/
+│       ├── index.html
+│       ├── app.js
+│       └── style.css
+└── requirements.txt</code></pre><hr id="cb4720e4-6f49-82e7-acd7-81d3f4ba73c1" dir="auto"/><h1 id="6da720e4-6f49-835d-9364-01983ba23715" class="" dir="auto">7. 패키지 설치</h1><h2 id="79e720e4-6f49-822e-87da-818cd89317ae" class="" dir="auto">7.1 requirements.txt 작성</h2><p id="8bd720e4-6f49-822e-a26c-011cd330485f" class="" dir="auto">파일명: <code>requirements.txt</code></p><pre id="5c2720e4-6f49-83dc-8e2d-01b528805682" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">fastapi
+uvicorn
+boto3
+python-jose[cryptography]
+python-multipart
+sqlalchemy
+pymysql
+passlib[bcrypt]</code></pre><hr id="804720e4-6f49-824c-8fc0-819e92db2773" dir="auto"/><h2 id="523720e4-6f49-820d-9302-011bfa5b2bed" class="" dir="auto">7.2 패키지 설치</h2><pre id="aa7720e4-6f49-824c-b783-81d85b738cbe" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">pip install -r requirements.txt</code></pre><p id="6db720e4-6f49-83e3-a256-811a85bfc722" class="" dir="auto">명령어 설명:</p><pre id="1f4720e4-6f49-8224-a908-8164a915b21c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pip
+  Python 패키지 관리 명령어다.
+
+install
+  패키지를 설치한다.
+
+-r requirements.txt
+  requirements.txt 파일에 작성된 패키지 목록을 한 번에 설치한다.</code></pre><hr id="7cf720e4-6f49-826b-83b0-01f1733bae1c" dir="auto"/><h1 id="0df720e4-6f49-8240-a547-814c8db7f4a3" class="" dir="auto">8. MariaDB 준비</h1><h2 id="cdf720e4-6f49-8256-8678-01c5ae785751" class="" dir="auto">8.1 MariaDB 접속</h2><pre id="da0720e4-6f49-82a0-9b6b-81b9efb59496" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">mysql -u root -p</code></pre><hr id="1ec720e4-6f49-832a-acbe-01e937f051b7" dir="auto"/><h2 id="03a720e4-6f49-82d7-b9f2-812f4e5a5100" class="" dir="auto">8.2 데이터베이스 생성</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" integrity="sha512-sijCOJblSCXYYmXdwvqV0tak8QJW5iy2yLB1wAbbLc3OOIueqymizRFWUS/mwKctnzPKpNdPJV3aK1zlDMJmXQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="bcd720e4-6f49-8242-a9db-81ef587b3abf" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE DATABASE cloud_app
+DEFAULT CHARACTER SET utf8mb4
+COLLATE utf8mb4_unicode_ci;</code></pre><p id="c25720e4-6f49-8248-9ffe-01cb50f35f95" class="" dir="auto">설명:</p><pre id="075720e4-6f49-820c-b87e-81ed2f02d49f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CREATE DATABASE cloud_app
+  cloud_app이라는 데이터베이스를 생성한다.
+
+DEFAULT CHARACTER SET utf8mb4
+  한글과 다양한 문자를 저장할 수 있는 문자셋을 사용한다.
+
+COLLATE utf8mb4_unicode_ci
+  문자열 비교와 정렬 규칙을 지정한다.</code></pre><hr id="8c6720e4-6f49-8374-88bb-0197cecc8027" dir="auto"/><h2 id="d63720e4-6f49-8340-83bf-01cfff70ad07" class="" dir="auto">8.3 DB 사용자 생성</h2><pre id="93e720e4-6f49-8204-b27c-01beed244355" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE USER &#x27;cloud_user&#x27;@&#x27;localhost&#x27; IDENTIFIED BY &#x27;cloudpass123!&#x27;;</code></pre><hr id="2aa720e4-6f49-82cc-9ce2-816bbcd00731" dir="auto"/><h2 id="02c720e4-6f49-8384-804d-015aef4dabb3" class="" dir="auto">8.4 권한 부여</h2><pre id="e8d720e4-6f49-8367-9996-01c611b6ae0d" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">GRANT ALL PRIVILEGES ON cloud_app.* TO &#x27;cloud_user&#x27;@&#x27;localhost&#x27;;</code></pre><hr id="a1b720e4-6f49-82a6-8fb4-81b720536163" dir="auto"/><h2 id="2b6720e4-6f49-82f8-967e-8173fa4f70e0" class="" dir="auto">8.5 권한 반영</h2><pre id="e9a720e4-6f49-83a2-b792-81f6678e0e68" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">FLUSH PRIVILEGES;</code></pre><hr id="01f720e4-6f49-8386-b581-819a6a3102d4" dir="auto"/><h2 id="87c720e4-6f49-828d-953c-01046da4113a" class="" dir="auto">8.6 접속 확인</h2><pre id="979720e4-6f49-8362-978f-81a02f4a6baf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">mysql -u cloud_user -p cloud_app</code></pre><p id="6e3720e4-6f49-83da-b5c9-818242140a89" class="" dir="auto">비밀번호:</p><pre id="b5d720e4-6f49-8371-a31d-01810a4338fd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cloudpass123!</code></pre><p id="613720e4-6f49-8213-b5f2-01590b0a7449" class="" dir="auto">접속되면 DB 준비가 완료된 것이다.</p><hr id="fe4720e4-6f49-8247-9a5a-81ace830876b" dir="auto"/><h1 id="264720e4-6f49-8302-b5b1-815251d4daba" class="" dir="auto">9. DB 연결 설정</h1><h2 id="40b720e4-6f49-8334-8b8b-01de3cc65317" class="" dir="auto">9.1 database.py 작성</h2><p id="4a9720e4-6f49-83c8-ab88-81c2502ef909" class="" dir="auto">파일명: <code>app/database.py</code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="eda720e4-6f49-821a-9504-81221b53fe07" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker, declarative_base
+
+
+DB_USER = &quot;cloud_user&quot;
+DB_PASSWORD = &quot;cloudpass123!&quot;
+DB_HOST = &quot;localhost&quot;
+DB_PORT = 3306
+DB_NAME = &quot;cloud_app&quot;
+
+
+DATABASE_URL = (
+    f&quot;mysql+pymysql://{DB_USER}:{DB_PASSWORD}&quot;
+    f&quot;@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4&quot;
+)
+
+
+engine = create_engine(
+    DATABASE_URL,
+    pool_pre_ping=True
+)
+
+
+SessionLocal = sessionmaker(
+    autocommit=False,
+    autoflush=False,
+    bind=engine
+)
+
+
+Base = declarative_base()
+
+
+def get_db():
+    &quot;&quot;&quot;
+    FastAPI 요청마다 DB 세션을 생성하고 반환한다.
+
+    yield를 사용하면 요청 처리 중에는 DB 세션을 유지하고,
+    요청 처리가 끝난 뒤 finally 블록에서 세션을 닫을 수 있다.
+    &quot;&quot;&quot;
+
+    db = SessionLocal()
+
+    try:
+        yield db
+    finally:
+        db.close()</code></pre><hr id="034720e4-6f49-833b-930a-0177bf6dd37a" dir="auto"/><h2 id="100720e4-6f49-82a2-9251-01093f4b8e72" class="" dir="auto">9.2 코드 설명</h2><pre id="a06720e4-6f49-83de-941a-0114437b8d8d" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">DATABASE_URL = &quot;mysql+pymysql://...&quot;</code></pre><p id="95f720e4-6f49-8379-bcff-01b1cba59e42" class="" dir="auto">SQLAlchemy가 MariaDB에 접속할 때 사용하는 연결 문자열이다.</p><pre id="9e9720e4-6f49-836b-919f-012ea930c1a8" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">pool_pre_ping=True</code></pre><p id="244720e4-6f49-8280-9afe-011096ad5c61" class="" dir="auto">DB 연결이 끊겼는지 미리 확인한다.</p><p id="e33720e4-6f49-822b-b71c-81b5f7c49294" class="" dir="auto">오래 열린 연결 때문에 발생하는 오류를 줄일 수 있다.</p><pre id="0ff720e4-6f49-82bf-883c-01324a58423d" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">SessionLocal = sessionmaker(...)</code></pre><p id="44f720e4-6f49-822e-af20-81dfe57bf71b" class="" dir="auto">DB 작업에 사용할 세션 생성기다.</p><p id="f8a720e4-6f49-82e5-976d-01b94c414077" class="" dir="auto">FastAPI에서는 요청마다 DB 세션을 하나 생성해서 사용한다.</p><hr id="d12720e4-6f49-82e9-895f-81a099766932" dir="auto"/><h1 id="5f0720e4-6f49-830d-8f6b-0155c413fb8e" class="" dir="auto">10. 사용자 모델 작성</h1><h2 id="144720e4-6f49-8289-8b88-01440dc2b441" class="" dir="auto">10.1 models.py 작성</h2><p id="da8720e4-6f49-83b7-9492-81487ea5f184" class="" dir="auto">파일명: <code>app/models.py</code></p><pre id="9e2720e4-6f49-829c-9ead-81633a0e2856" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from sqlalchemy import Column, Integer, String, Boolean, DateTime
+from sqlalchemy.sql import func
+
+from database import Base
+
+
+class User(Base):
+    &quot;&quot;&quot;
+    users 테이블과 연결되는 ORM 모델이다.
+
+    이 클래스의 속성은 MariaDB users 테이블의 컬럼과 매핑된다.
+    &quot;&quot;&quot;
+
+    __tablename__ = &quot;users&quot;
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String(50), unique=True, nullable=False, index=True)
+    password_hash = Column(String(255), nullable=False)
+    role = Column(String(20), nullable=False)
+    display_name = Column(String(100), nullable=False)
+    is_active = Column(Boolean, nullable=False, default=True)
+    created_at = Column(DateTime, nullable=False, server_default=func.now())</code></pre><hr id="d28720e4-6f49-8289-bbc0-8155402b6569" dir="auto"/><h2 id="dd7720e4-6f49-8239-94bd-812e4205701c" class="" dir="auto">10.2 users 테이블 구조</h2><p id="b67720e4-6f49-8232-96cc-0195058f3451" class="" dir="auto">이 모델은 MariaDB에 다음 테이블을 만든다.</p><pre id="de2720e4-6f49-8295-bb40-819c9ccaed3f" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE TABLE users (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    display_name VARCHAR(100) NOT NULL,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);</code></pre><p id="eb1720e4-6f49-82b6-8b81-81b608d18a88" class="" dir="auto">비밀번호는 평문으로 저장하지 않는다.</p><p id="004720e4-6f49-8254-823e-811912864a43" class="" dir="auto">반드시 해시값으로 저장한다.</p><pre id="d97720e4-6f49-826d-b067-0135bba63ed7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">나쁜 예:
+password = viewer123
+
+좋은 예:
+password_hash = $2b$12$....</code></pre><hr id="1a4720e4-6f49-831d-a8d6-81fee11b88e3" dir="auto"/><h1 id="0f8720e4-6f49-8215-82fa-8135b3462d5a" class="" dir="auto">11. 응답 스키마 작성</h1><h2 id="f2e720e4-6f49-8263-b9e0-01a1a720755f" class="" dir="auto">11.1 schemas.py 작성</h2><p id="6e5720e4-6f49-8331-a4d3-8119ff8eaec6" class="" dir="auto">파일명: <code>app/schemas.py</code></p><pre id="d62720e4-6f49-83fe-b2c6-017ea9a43e0a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from pydantic import BaseModel
+
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str
+    username: str
+    role: str
+    display_name: str
+
+
+class UserResponse(BaseModel):
+    username: str
+    role: str
+    display_name: str
+
+
+class ApiResponse(BaseModel):
+    success: bool
+    message: str</code></pre><hr id="78f720e4-6f49-8276-8808-81a67412d8a9" dir="auto"/><h1 id="671720e4-6f49-829c-9e19-81d2884808dc" class="" dir="auto">12. DB 초기화 및 실습 사용자 생성</h1><h2 id="f40720e4-6f49-82c5-98ce-010f3e60603c" class="" dir="auto">12.1 init_db.py 작성</h2><p id="be3720e4-6f49-8385-bd50-81e9434325e1" class="" dir="auto">파일명: <code>app/init_db.py</code></p><pre id="04b720e4-6f49-8235-88d0-813cce1e1e5c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from passlib.context import CryptContext
+
+from database import Base, engine, SessionLocal
+from models import User
+
+
+pwd_context = CryptContext(
+    schemes=[&quot;bcrypt&quot;],
+    deprecated=&quot;auto&quot;
+)
+
+
+def hash_password(password: str):
+    &quot;&quot;&quot;
+    평문 비밀번호를 bcrypt 해시로 변환한다.
+    &quot;&quot;&quot;
+
+    return pwd_context.hash(password)
+
+
+def create_tables():
+    &quot;&quot;&quot;
+    SQLAlchemy 모델을 기준으로 DB 테이블을 생성한다.
+    이미 테이블이 있으면 새로 만들지 않는다.
+    &quot;&quot;&quot;
+
+    Base.metadata.create_all(bind=engine)
+
+
+def create_user_if_not_exists(db, username, password, role, display_name):
+    &quot;&quot;&quot;
+    사용자가 없으면 새로 생성한다.
+    이미 존재하면 생성하지 않는다.
+    &quot;&quot;&quot;
+
+    existing_user = db.query(User).filter(User.username == username).first()
+
+    if existing_user:
+        print(f&quot;[안내] 이미 존재하는 사용자임: {username}&quot;)
+        return
+
+    user = User(
+        username=username,
+        password_hash=hash_password(password),
+        role=role,
+        display_name=display_name,
+        is_active=True
+    )
+
+    db.add(user)
+    db.commit()
+
+    print(f&quot;[생성 완료] 사용자 생성: {username} / role={role}&quot;)
+
+
+def seed_users():
+    &quot;&quot;&quot;
+    실습용 사용자 3명을 생성한다.
+
+    viewer:
+        조회 사용자
+
+    operator:
+        EC2 운영 사용자
+
+    admin:
+        관리자 사용자
+    &quot;&quot;&quot;
+
+    db = SessionLocal()
+
+    try:
+        create_user_if_not_exists(
+            db=db,
+            username=&quot;viewer&quot;,
+            password=&quot;viewer123&quot;,
+            role=&quot;viewer&quot;,
+            display_name=&quot;조회 사용자&quot;
+        )
+
+        create_user_if_not_exists(
+            db=db,
+            username=&quot;operator&quot;,
+            password=&quot;operator123&quot;,
+            role=&quot;operator&quot;,
+            display_name=&quot;운영 사용자&quot;
+        )
+
+        create_user_if_not_exists(
+            db=db,
+            username=&quot;admin&quot;,
+            password=&quot;admin123&quot;,
+            role=&quot;admin&quot;,
+            display_name=&quot;관리 사용자&quot;
+        )
+
+    finally:
+        db.close()
+
+
+def main():
+    create_tables()
+    seed_users()
+    print(&quot;DB 초기화 완료&quot;)
+
+
+if __name__ == &quot;__main__&quot;:
+    main()</code></pre><hr id="80d720e4-6f49-83d6-9dc8-814380ff4516" dir="auto"/><h2 id="ac6720e4-6f49-83ab-b04f-81d952b587d0" class="" dir="auto">12.2 실행</h2><p id="024720e4-6f49-82be-8f12-014345a60983" class="" dir="auto"><code>app</code> 디렉터리로 이동해서 실행한다.</p><pre id="086720e4-6f49-8391-8c9e-8122347fe4da" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cd cloud-ops-web/app
+python init_db.py</code></pre><p id="fc1720e4-6f49-8290-82d6-8133156abdc3" class="" dir="auto">예상 출력:</p><pre id="c90720e4-6f49-839d-9bae-010c5fa481b4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[생성 완료] 사용자 생성: viewer / role=viewer
+[생성 완료] 사용자 생성: operator / role=operator
+[생성 완료] 사용자 생성: admin / role=admin
+DB 초기화 완료</code></pre><p id="8cc720e4-6f49-82b6-a41e-01ecce62bb0c" class="" dir="auto">이미 사용자가 있다면 다음처럼 출력될 수 있다.</p><pre id="673720e4-6f49-8288-b080-81d1dc2d3529" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[안내] 이미 존재하는 사용자임: viewer
+[안내] 이미 존재하는 사용자임: operator
+[안내] 이미 존재하는 사용자임: admin
+DB 초기화 완료</code></pre><hr id="3be720e4-6f49-8232-b59d-01df5665ce32" dir="auto"/><h2 id="660720e4-6f49-8213-9315-81ce5960db90" class="" dir="auto">12.3 DB 확인</h2><pre id="606720e4-6f49-8211-88e2-0127c8b7a0b4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">mysql -u cloud_user -p cloud_app</code></pre><pre id="65a720e4-6f49-8270-ba7b-01d410b31840" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT id, username, role, display_name, is_active, created_at
+FROM users;</code></pre><p id="81c720e4-6f49-83c8-b898-81971903e72c" class="" dir="auto">예상 결과:</p><pre id="502720e4-6f49-8201-bdda-01be3de3ea76" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">+----+----------+----------+---------------+-----------+---------------------+
+| id | username | role     | display_name  | is_active | created_at          |
++----+----------+----------+---------------+-----------+---------------------+
+|  1 | viewer   | viewer   | 조회 사용자    |         1 | 2026-04-29 10:00:00 |
+|  2 | operator | operator | 운영 사용자    |         1 | 2026-04-29 10:00:00 |
+|  3 | admin    | admin    | 관리 사용자    |         1 | 2026-04-29 10:00:00 |
++----+----------+----------+---------------+-----------+---------------------+</code></pre><hr id="ec8720e4-6f49-837c-be51-01e253cab0c5" dir="auto"/><h1 id="6f0720e4-6f49-8383-8bfa-0192f20d3900" class="" dir="auto">13. 인증 모듈 작성</h1><h2 id="739720e4-6f49-821c-804f-015062082a82" class="" dir="auto">13.1 auth.py 작성</h2><p id="056720e4-6f49-8278-9d0a-01255b8eecb3" class="" dir="auto">파일명: <code>app/auth.py</code></p><pre id="091720e4-6f49-823a-af39-016aa3a5d83d" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from datetime import datetime, timedelta, timezone
+
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import jwt, JWTError
+from passlib.context import CryptContext
+from sqlalchemy.orm import Session
+
+from database import get_db
+from models import User
+
+
+SECRET_KEY = &quot;change-this-secret-key-for-lab&quot;
+ALGORITHM = &quot;HS256&quot;
+ACCESS_TOKEN_EXPIRE_MINUTES = 120
+
+
+pwd_context = CryptContext(
+    schemes=[&quot;bcrypt&quot;],
+    deprecated=&quot;auto&quot;
+)
+
+
+oauth2_scheme = OAuth2PasswordBearer(
+    tokenUrl=&quot;/auth/login&quot;
+)
+
+
+def verify_password(plain_password: str, password_hash: str):
+    &quot;&quot;&quot;
+    입력받은 평문 비밀번호와 DB에 저장된 해시 비밀번호를 비교한다.
+
+    plain_password:
+        사용자가 로그인 화면에 입력한 비밀번호
+
+    password_hash:
+        DB users 테이블에 저장된 bcrypt 해시값
+    &quot;&quot;&quot;
+
+    return pwd_context.verify(plain_password, password_hash)
+
+
+def get_user_by_username(db: Session, username: str):
+    &quot;&quot;&quot;
+    username으로 사용자를 조회한다.
+    사용자가 없으면 None을 반환한다.
+    &quot;&quot;&quot;
+
+    return db.query(User).filter(User.username == username).first()
+
+
+def authenticate_user(db: Session, username: str, password: str):
+    &quot;&quot;&quot;
+    사용자 인증을 수행한다.
+
+    처리 순서:
+        1. username으로 DB에서 사용자 조회
+        2. 사용자가 없으면 None 반환
+        3. 비활성화 사용자면 None 반환
+        4. 비밀번호 검증 실패 시 None 반환
+        5. 성공 시 User 객체 반환
+    &quot;&quot;&quot;
+
+    user = get_user_by_username(db, username)
+
+    if user is None:
+        return None
+
+    if not user.is_active:
+        return None
+
+    if not verify_password(password, user.password_hash):
+        return None
+
+    return user
+
+
+def create_access_token(data: dict):
+    &quot;&quot;&quot;
+    JWT Access Token을 생성한다.
+
+    data:
+        토큰에 넣을 데이터다.
+        이번 실습에서는 sub, role, display_name 값을 넣는다.
+
+    exp:
+        토큰 만료 시간이다.
+    &quot;&quot;&quot;
+
+    to_encode = data.copy()
+
+    expire = datetime.now(timezone.utc) + timedelta(
+        minutes=ACCESS_TOKEN_EXPIRE_MINUTES
+    )
+
+    to_encode.update({
+        &quot;exp&quot;: expire
+    })
+
+    encoded_jwt = jwt.encode(
+        to_encode,
+        SECRET_KEY,
+        algorithm=ALGORITHM
+    )
+
+    return encoded_jwt
+
+
+def get_current_user(
+    token: str = Depends(oauth2_scheme),
+    db: Session = Depends(get_db)
+):
+    &quot;&quot;&quot;
+    Authorization 헤더의 Bearer Token을 검증하고 현재 사용자를 반환한다.
+
+    프론트엔드는 API 요청 시 다음 헤더를 보낸다.
+
+        Authorization: Bearer &lt;JWT_TOKEN&gt;
+
+    처리 순서:
+        1. JWT 디코딩
+        2. username 추출
+        3. DB에서 사용자 조회
+        4. 사용자 활성 여부 확인
+        5. User 객체 반환
+    &quot;&quot;&quot;
+
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail=&quot;인증 정보가 유효하지 않음&quot;,
+        headers={&quot;WWW-Authenticate&quot;: &quot;Bearer&quot;}
+    )
+
+    try:
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM]
+        )
+
+        username = payload.get(&quot;sub&quot;)
+
+        if username is None:
+            raise credentials_exception
+
+    except JWTError:
+        raise credentials_exception
+
+    user = get_user_by_username(db, username)
+
+    if user is None:
+        raise credentials_exception
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=&quot;비활성화된 사용자임&quot;
+        )
+
+    return user</code></pre><hr id="c86720e4-6f49-8304-920d-017cb93c7031" dir="auto"/><h2 id="81d720e4-6f49-8395-b45f-01d9fa796d2f" class="" dir="auto">13.2 핵심 설명</h2><pre id="380720e4-6f49-82fe-98cb-0194213b0467" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">oauth2_scheme = OAuth2PasswordBearer(tokenUrl=&quot;/auth/login&quot;)</code></pre><p id="91e720e4-6f49-83b0-812b-819e8b4539e6" class="" dir="auto">FastAPI에서 Bearer Token을 처리하기 위한 도구다.</p><p id="74b720e4-6f49-82d1-bb22-81fd1dd1e572" class="" dir="auto">요청 헤더에서 <code>Authorization: Bearer ...</code> 값을 읽는다.</p><pre id="184720e4-6f49-8230-9ae4-01b21ee57a92" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">jwt.encode(...)</code></pre><p id="31f720e4-6f49-836f-a860-01a573bed821" class="" dir="auto">사용자 정보를 담은 JWT를 생성한다.</p><pre id="657720e4-6f49-8315-a516-81fd104b40aa" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">jwt.decode(...)</code></pre><p id="62c720e4-6f49-82d0-8201-013fb0b1df13" class="" dir="auto">클라이언트가 보낸 JWT가 유효한지 검증한다.</p><hr id="b67720e4-6f49-82b4-a145-01e7b8dd0a3b" dir="auto"/><h1 id="746720e4-6f49-82ff-9d99-812a6860c683" class="" dir="auto">14. AWS AssumeRole 모듈 작성</h1><h2 id="8c2720e4-6f49-839d-85d1-81571b9541bd" class="" dir="auto">14.1 aws_role.py 작성</h2><p id="8a9720e4-6f49-82a8-8b03-017815527c53" class="" dir="auto">파일명: <code>app/aws_role.py</code></p><pre id="1c7720e4-6f49-83f8-aaee-01571793ee20" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import os
+
+import boto3
+from fastapi import HTTPException
+from botocore.exceptions import ClientError
+
+
+AWS_PROFILE = os.getenv(&quot;AWS_PROFILE&quot;, &quot;instructor&quot;)
+AWS_REGION = os.getenv(&quot;AWS_DEFAULT_REGION&quot;, &quot;ap-northeast-2&quot;)
+AWS_ACCOUNT_ID = os.getenv(&quot;AWS_ACCOUNT_ID&quot;, &quot;471166314777&quot;)
+
+
+USER_ROLE_MAP = {
+    &quot;viewer&quot;: f&quot;arn:aws:iam::{AWS_ACCOUNT_ID}:role/app-viewer-role&quot;,
+    &quot;operator&quot;: f&quot;arn:aws:iam::{AWS_ACCOUNT_ID}:role/app-operator-role&quot;,
+    &quot;admin&quot;: f&quot;arn:aws:iam::{AWS_ACCOUNT_ID}:role/app-admin-role&quot;
+}
+
+
+def create_base_session():
+    &quot;&quot;&quot;
+    AssumeRole을 호출하기 위한 기본 boto3 Session을 생성한다.
+
+    로컬 실습:
+        AWS_PROFILE 환경 변수 또는 기본값 instructor profile을 사용한다.
+
+    EC2 배포:
+        AWS_PROFILE을 제거하면 boto3 기본 인증 체인을 통해
+        EC2 Instance Profile Role을 사용할 수 있다.
+    &quot;&quot;&quot;
+
+    if AWS_PROFILE:
+        return boto3.Session(
+            profile_name=AWS_PROFILE,
+            region_name=AWS_REGION
+        )
+
+    return boto3.Session(
+        region_name=AWS_REGION
+    )
+
+
+def get_role_arn_for_user(user):
+    &quot;&quot;&quot;
+    로그인 사용자의 role 값을 기준으로 IAM Role ARN을 선택한다.
+
+    user.role 값:
+        viewer
+        operator
+        admin
+    &quot;&quot;&quot;
+
+    role_arn = USER_ROLE_MAP.get(user.role)
+
+    if role_arn is None:
+        raise HTTPException(
+            status_code=403,
+            detail=f&quot;지원하지 않는 사용자 role임: {user.role}&quot;
+        )
+
+    return role_arn
+
+
+def assume_role_for_user(user):
+    &quot;&quot;&quot;
+    로그인 사용자 role에 맞는 IAM Role을 AssumeRole 한다.
+
+    이 함수는 로그인 사용자의 AWS 자격 증명을 사용하는 것이 아니다.
+    FastAPI 서버가 가진 AWS 자격 증명으로 sts:AssumeRole을 호출한다.
+
+    로컬 실습에서는 instructor profile이 AssumeRole을 호출한다.
+    &quot;&quot;&quot;
+
+    role_arn = get_role_arn_for_user(user)
+
+    session_name = f&quot;app-{user.username}-{user.role}-session&quot;
+
+    base_session = create_base_session()
+    sts_client = base_session.client(&quot;sts&quot;)
+
+    try:
+        response = sts_client.assume_role(
+            RoleArn=role_arn,
+            RoleSessionName=session_name
+        )
+
+        return response[&quot;Credentials&quot;]
+
+    except ClientError as e:
+        error_code = e.response[&quot;Error&quot;][&quot;Code&quot;]
+
+        raise HTTPException(
+            status_code=403,
+            detail=f&quot;AssumeRole 실패: {error_code}&quot;
+        )
+
+
+def create_assumed_session(credentials):
+    &quot;&quot;&quot;
+    STS AssumeRole로 발급받은 임시 자격 증명으로 boto3 Session을 생성한다.
+
+    이 Session으로 만든 AWS 클라이언트는
+    원래 IAM User 권한이 아니라 Assume한 Role 권한으로 동작한다.
+    &quot;&quot;&quot;
+
+    return boto3.Session(
+        aws_access_key_id=credentials[&quot;AccessKeyId&quot;],
+        aws_secret_access_key=credentials[&quot;SecretAccessKey&quot;],
+        aws_session_token=credentials[&quot;SessionToken&quot;],
+        region_name=AWS_REGION
+    )
+
+
+def get_assumed_session_for_user(user):
+    &quot;&quot;&quot;
+    로그인 사용자 기준으로 AssumeRole을 수행하고,
+    Role 권한이 적용된 boto3 Session을 반환한다.
+    &quot;&quot;&quot;
+
+    credentials = assume_role_for_user(user)
+    return create_assumed_session(credentials)</code></pre><hr id="2c6720e4-6f49-83f4-a0b4-8197357821d5" dir="auto"/><h2 id="74b720e4-6f49-82f2-bcb8-811f57b165bc" class="" dir="auto">14.2 환경 변수 설정</h2><p id="bcc720e4-6f49-8352-b27a-01989117ed54" class="" dir="auto">Linux/macOS:</p><pre id="cfa720e4-6f49-831c-961a-81e342b25214" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export AWS_PROFILE=instructor
+export AWS_DEFAULT_REGION=ap-northeast-2
+export AWS_ACCOUNT_ID=471166314777</code></pre><p id="dc1720e4-6f49-83fd-a2b0-01b6c6d51500" class="" dir="auto">Windows PowerShell:</p><pre id="05f720e4-6f49-8267-b982-011a0c9417d4" class="code code-wrap" data-notion-code-syntax="powershell"><code class="language-powershell" style="white-space:pre-wrap;word-break:break-all">$env:AWS_PROFILE=&quot;instructor&quot;
+$env:AWS_DEFAULT_REGION=&quot;ap-northeast-2&quot;
+$env:AWS_ACCOUNT_ID=&quot;471166314777&quot;</code></pre><hr id="392720e4-6f49-825a-9e46-81ab193ada27" dir="auto"/><h1 id="b8d720e4-6f49-8238-9fd0-8155cf4e4ff4" class="" dir="auto">15. EC2 서비스 모듈 작성</h1><h2 id="518720e4-6f49-8307-997f-014a0e0161be" class="" dir="auto">15.1 ec2_service.py 작성</h2><p id="3fe720e4-6f49-83d1-bb98-017045683caf" class="" dir="auto">파일명: <code>app/ec2_service.py</code></p><pre id="509720e4-6f49-829b-8f93-815afa91e4e6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from fastapi import HTTPException
+from botocore.exceptions import ClientError
+
+from aws_role import AWS_REGION, get_assumed_session_for_user
+
+
+def extract_name_tag(instance):
+    &quot;&quot;&quot;
+    EC2 인스턴스의 Name 태그 값을 추출한다.
+    Name 태그가 없으면 빈 문자열을 반환한다.
+    &quot;&quot;&quot;
+
+    tags = instance.get(&quot;Tags&quot;, [])
+
+    for tag in tags:
+        if tag.get(&quot;Key&quot;) == &quot;Name&quot;:
+            return tag.get(&quot;Value&quot;, &quot;&quot;)
+
+    return &quot;&quot;
+
+
+def list_instances(user):
+    &quot;&quot;&quot;
+    로그인 사용자 권한에 맞는 IAM Role을 AssumeRole 한 뒤
+    EC2 인스턴스 목록을 조회한다.
+    &quot;&quot;&quot;
+
+    session = get_assumed_session_for_user(user)
+    ec2_client = session.client(&quot;ec2&quot;, region_name=AWS_REGION)
+
+    try:
+        response = ec2_client.describe_instances()
+
+        instances = []
+
+        for reservation in response.get(&quot;Reservations&quot;, []):
+            for instance in reservation.get(&quot;Instances&quot;, []):
+                instances.append({
+                    &quot;instance_id&quot;: instance.get(&quot;InstanceId&quot;),
+                    &quot;name&quot;: extract_name_tag(instance),
+                    &quot;instance_type&quot;: instance.get(&quot;InstanceType&quot;),
+                    &quot;state&quot;: instance.get(&quot;State&quot;, {}).get(&quot;Name&quot;),
+                    &quot;private_ip&quot;: instance.get(&quot;PrivateIpAddress&quot;, &quot;&quot;),
+                    &quot;public_ip&quot;: instance.get(&quot;PublicIpAddress&quot;, &quot;&quot;)
+                })
+
+        return instances
+
+    except ClientError as e:
+        raise HTTPException(
+            status_code=403,
+            detail=f&quot;EC2 인스턴스 조회 실패: {e.response[&#x27;Error&#x27;][&#x27;Code&#x27;]}&quot;
+        )
+
+
+def start_instance(user, instance_id: str):
+    &quot;&quot;&quot;
+    EC2 인스턴스를 시작한다.
+
+    viewer Role은 ec2:StartInstances 권한이 없으므로 실패해야 정상이다.
+    operator/admin Role은 성공할 수 있다.
+    &quot;&quot;&quot;
+
+    session = get_assumed_session_for_user(user)
+    ec2_client = session.client(&quot;ec2&quot;, region_name=AWS_REGION)
+
+    try:
+        ec2_client.start_instances(
+            InstanceIds=[instance_id]
+        )
+
+        return {
+            &quot;success&quot;: True,
+            &quot;message&quot;: f&quot;EC2 시작 요청 완료: {instance_id}&quot;
+        }
+
+    except ClientError as e:
+        raise HTTPException(
+            status_code=403,
+            detail=f&quot;EC2 시작 실패: {e.response[&#x27;Error&#x27;][&#x27;Code&#x27;]}&quot;
+        )
+
+
+def stop_instance(user, instance_id: str):
+    &quot;&quot;&quot;
+    EC2 인스턴스를 중지한다.
+
+    viewer Role은 ec2:StopInstances 권한이 없으므로 실패해야 정상이다.
+    operator/admin Role은 성공할 수 있다.
+    &quot;&quot;&quot;
+
+    session = get_assumed_session_for_user(user)
+    ec2_client = session.client(&quot;ec2&quot;, region_name=AWS_REGION)
+
+    try:
+        ec2_client.stop_instances(
+            InstanceIds=[instance_id]
+        )
+
+        return {
+            &quot;success&quot;: True,
+            &quot;message&quot;: f&quot;EC2 중지 요청 완료: {instance_id}&quot;
+        }
+
+    except ClientError as e:
+        raise HTTPException(
+            status_code=403,
+            detail=f&quot;EC2 중지 실패: {e.response[&#x27;Error&#x27;][&#x27;Code&#x27;]}&quot;
+        )</code></pre><hr id="e86720e4-6f49-82a4-88f4-8182df0dc108" dir="auto"/><h1 id="ee4720e4-6f49-83cf-ab51-0142a3a05349" class="" dir="auto">16. S3 서비스 모듈 작성</h1><h2 id="aed720e4-6f49-83cc-9ae8-01d2f890cf0e" class="" dir="auto">16.1 s3_service.py 작성</h2><p id="7c5720e4-6f49-832b-9e58-0164daa4e318" class="" dir="auto">파일명: <code>app/s3_service.py</code></p><pre id="439720e4-6f49-83c8-9f4a-016f3df4fd25" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from fastapi import HTTPException, UploadFile
+from botocore.exceptions import ClientError
+
+from aws_role import get_assumed_session_for_user
+
+
+def list_buckets(user):
+    &quot;&quot;&quot;
+    로그인 사용자 권한에 맞는 IAM Role을 AssumeRole 한 뒤
+    S3 버킷 목록을 조회한다.
+    &quot;&quot;&quot;
+
+    session = get_assumed_session_for_user(user)
+    s3_client = session.client(&quot;s3&quot;)
+
+    try:
+        response = s3_client.list_buckets()
+
+        buckets = []
+
+        for bucket in response.get(&quot;Buckets&quot;, []):
+            buckets.append({
+                &quot;name&quot;: bucket[&quot;Name&quot;],
+                &quot;creation_date&quot;: str(bucket[&quot;CreationDate&quot;])
+            })
+
+        return buckets
+
+    except ClientError as e:
+        raise HTTPException(
+            status_code=403,
+            detail=f&quot;S3 버킷 목록 조회 실패: {e.response[&#x27;Error&#x27;][&#x27;Code&#x27;]}&quot;
+        )
+
+
+def list_objects(user, bucket_name: str):
+    &quot;&quot;&quot;
+    특정 S3 버킷의 객체 목록을 조회한다.
+    &quot;&quot;&quot;
+
+    session = get_assumed_session_for_user(user)
+    s3_client = session.client(&quot;s3&quot;)
+
+    try:
+        response = s3_client.list_objects_v2(
+            Bucket=bucket_name
+        )
+
+        objects = []
+
+        for obj in response.get(&quot;Contents&quot;, []):
+            objects.append({
+                &quot;key&quot;: obj[&quot;Key&quot;],
+                &quot;size&quot;: obj[&quot;Size&quot;],
+                &quot;last_modified&quot;: str(obj[&quot;LastModified&quot;])
+            })
+
+        return objects
+
+    except ClientError as e:
+        raise HTTPException(
+            status_code=403,
+            detail=f&quot;S3 객체 목록 조회 실패: {e.response[&#x27;Error&#x27;][&#x27;Code&#x27;]}&quot;
+        )
+
+
+async def upload_file(user, bucket_name: str, file: UploadFile):
+    &quot;&quot;&quot;
+    S3에 파일을 업로드한다.
+
+    viewer/operator Role은 s3:PutObject 권한이 없으므로 실패해야 정상이다.
+    admin Role은 성공할 수 있다.
+    &quot;&quot;&quot;
+
+    session = get_assumed_session_for_user(user)
+    s3_client = session.client(&quot;s3&quot;)
+
+    object_key = f&quot;uploads/{file.filename}&quot;
+
+    try:
+        file_content = await file.read()
+
+        s3_client.put_object(
+            Bucket=bucket_name,
+            Key=object_key,
+            Body=file_content
+        )
+
+        return {
+            &quot;success&quot;: True,
+            &quot;message&quot;: &quot;S3 파일 업로드 완료&quot;,
+            &quot;bucket&quot;: bucket_name,
+            &quot;key&quot;: object_key
+        }
+
+    except ClientError as e:
+        raise HTTPException(
+            status_code=403,
+            detail=f&quot;S3 파일 업로드 실패: {e.response[&#x27;Error&#x27;][&#x27;Code&#x27;]}&quot;
+        )</code></pre><hr id="96b720e4-6f49-8376-ace3-813fb5fb8d3c" dir="auto"/><h1 id="4e1720e4-6f49-8226-bd3c-019c6f313d0e" class="" dir="auto">17. FastAPI 메인 애플리케이션 작성</h1><h2 id="69b720e4-6f49-83df-b9e3-01817206a2b1" class="" dir="auto">17.1 main.py 작성</h2><p id="24a720e4-6f49-834f-9f20-817bf6556590" class="" dir="auto">파일명: <code>app/main.py</code></p><pre id="136720e4-6f49-8350-a75b-81c02eb1f0fe" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from fastapi import FastAPI, Depends, HTTPException, Form, UploadFile, File
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+from sqlalchemy.orm import Session
+
+from database import get_db
+from auth import authenticate_user, create_access_token, get_current_user
+from schemas import TokenResponse, UserResponse
+from aws_role import assume_role_for_user, create_assumed_session
+from ec2_service import list_instances, start_instance, stop_instance
+from s3_service import list_buckets, list_objects, upload_file
+
+
+app = FastAPI(
+    title=&quot;Cloud Operations Automation API&quot;,
+    description=&quot;FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영 자동화 API&quot;,
+    version=&quot;1.0.0&quot;
+)
+
+
+app.mount(
+    &quot;/static&quot;,
+    StaticFiles(directory=&quot;static&quot;),
+    name=&quot;static&quot;
+)
+
+
+@app.get(&quot;/&quot;)
+def index():
+    &quot;&quot;&quot;
+    프론트엔드 랜딩페이지를 반환한다.
+    &quot;&quot;&quot;
+
+    return FileResponse(&quot;static/index.html&quot;)
+
+
+@app.post(&quot;/auth/login&quot;, response_model=TokenResponse)
+def login(
+    username: str = Form(...),
+    password: str = Form(...),
+    db: Session = Depends(get_db)
+):
+    &quot;&quot;&quot;
+    로그인 API다.
+
+    요청 형식:
+        application/x-www-form-urlencoded
+
+    입력:
+        username
+        password
+
+    처리:
+        1. DB에서 사용자 조회
+        2. 비밀번호 검증
+        3. JWT Access Token 발급
+    &quot;&quot;&quot;
+
+    user = authenticate_user(
+        db=db,
+        username=username,
+        password=password
+    )
+
+    if user is None:
+        raise HTTPException(
+            status_code=401,
+            detail=&quot;아이디 또는 비밀번호가 올바르지 않음&quot;
+        )
+
+    token = create_access_token({
+        &quot;sub&quot;: user.username,
+        &quot;role&quot;: user.role,
+        &quot;display_name&quot;: user.display_name
+    })
+
+    return {
+        &quot;access_token&quot;: token,
+        &quot;token_type&quot;: &quot;bearer&quot;,
+        &quot;username&quot;: user.username,
+        &quot;role&quot;: user.role,
+        &quot;display_name&quot;: user.display_name
+    }
+
+
+@app.get(&quot;/me&quot;, response_model=UserResponse)
+def me(current_user=Depends(get_current_user)):
+    &quot;&quot;&quot;
+    현재 로그인 사용자 정보를 반환한다.
+    JWT 인증이 필요한 API다.
+    &quot;&quot;&quot;
+
+    return {
+        &quot;username&quot;: current_user.username,
+        &quot;role&quot;: current_user.role,
+        &quot;display_name&quot;: current_user.display_name
+    }
+
+
+@app.get(&quot;/aws/whoami&quot;)
+def aws_whoami(current_user=Depends(get_current_user)):
+    &quot;&quot;&quot;
+    로그인 사용자의 role에 맞는 IAM Role을 AssumeRole 한 뒤
+    현재 AWS 인증 주체를 확인한다.
+
+    이 API는 로그인 사용자 role과 IAM Role 매핑이 정상인지 확인하는 용도다.
+    &quot;&quot;&quot;
+
+    credentials = assume_role_for_user(current_user)
+    session = create_assumed_session(credentials)
+
+    sts_client = session.client(&quot;sts&quot;)
+    identity = sts_client.get_caller_identity()
+
+    return {
+        &quot;login_user&quot;: {
+            &quot;username&quot;: current_user.username,
+            &quot;role&quot;: current_user.role,
+            &quot;display_name&quot;: current_user.display_name
+        },
+        &quot;aws_identity&quot;: identity
+    }
+
+
+@app.get(&quot;/api/ec2/instances&quot;)
+def api_list_instances(current_user=Depends(get_current_user)):
+    &quot;&quot;&quot;
+    EC2 인스턴스 목록을 조회한다.
+    &quot;&quot;&quot;
+
+    return {
+        &quot;items&quot;: list_instances(current_user)
+    }
+
+
+@app.post(&quot;/api/ec2/instances/{instance_id}/start&quot;)
+def api_start_instance(
+    instance_id: str,
+    current_user=Depends(get_current_user)
+):
+    &quot;&quot;&quot;
+    EC2 인스턴스를 시작한다.
+    &quot;&quot;&quot;
+
+    return start_instance(
+        user=current_user,
+        instance_id=instance_id
+    )
+
+
+@app.post(&quot;/api/ec2/instances/{instance_id}/stop&quot;)
+def api_stop_instance(
+    instance_id: str,
+    current_user=Depends(get_current_user)
+):
+    &quot;&quot;&quot;
+    EC2 인스턴스를 중지한다.
+    &quot;&quot;&quot;
+
+    return stop_instance(
+        user=current_user,
+        instance_id=instance_id
+    )
+
+
+@app.get(&quot;/api/s3/buckets&quot;)
+def api_list_buckets(current_user=Depends(get_current_user)):
+    &quot;&quot;&quot;
+    S3 버킷 목록을 조회한다.
+    &quot;&quot;&quot;
+
+    return {
+        &quot;items&quot;: list_buckets(current_user)
+    }
+
+
+@app.get(&quot;/api/s3/buckets/{bucket_name}/objects&quot;)
+def api_list_objects(
+    bucket_name: str,
+    current_user=Depends(get_current_user)
+):
+    &quot;&quot;&quot;
+    특정 S3 버킷의 객체 목록을 조회한다.
+    &quot;&quot;&quot;
+
+    return {
+        &quot;items&quot;: list_objects(
+            user=current_user,
+            bucket_name=bucket_name
+        )
+    }
+
+
+@app.post(&quot;/api/s3/buckets/{bucket_name}/upload&quot;)
+async def api_upload_file(
+    bucket_name: str,
+    file: UploadFile = File(...),
+    current_user=Depends(get_current_user)
+):
+    &quot;&quot;&quot;
+    S3 버킷에 파일을 업로드한다.
+    &quot;&quot;&quot;
+
+    return await upload_file(
+        user=current_user,
+        bucket_name=bucket_name,
+        file=file
+    )</code></pre><hr id="bc9720e4-6f49-824f-8535-01fd58949dd0" dir="auto"/><h1 id="ece720e4-6f49-8258-966d-01fa8746c19c" class="" dir="auto">18. FastAPI 실행</h1><p id="cab720e4-6f49-82a5-8843-8175a73dd2dc" class="" dir="auto"><code>app</code> 디렉터리에서 실행한다.</p><pre id="480720e4-6f49-83e5-ba8f-81847af4554b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">cd cloud-ops-web/app
+uvicorn main:app --reload</code></pre><p id="52c720e4-6f49-8263-8f84-01327d5008eb" class="" dir="auto">브라우저에서 Swagger UI 접속:</p><pre id="250720e4-6f49-828c-8817-018353fa4490" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://127.0.0.1:8000/docs</code></pre><p id="ed1720e4-6f49-83ee-bbc3-81bc383b58c6" class="" dir="auto">프론트엔드 접속:</p><pre id="dc8720e4-6f49-827d-889f-012401d9984d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://127.0.0.1:8000/</code></pre><hr id="865720e4-6f49-8246-b573-81b24b1b2550" dir="auto"/><h1 id="b6c720e4-6f49-8236-ba8d-0198917e04ec" class="" dir="auto">19. API 테스트 순서</h1><h2 id="575720e4-6f49-8283-b8e8-01c070c41a7a" class="" dir="auto">19.1 로그인 테스트</h2><p id="df7720e4-6f49-8380-b05a-0113233ec4b0" class="" dir="auto">Swagger 또는 curl로 테스트한다.</p><pre id="d31720e4-6f49-8202-8538-013822b43051" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -X POST http://127.0.0.1:8000/auth/login \
+  -H &quot;Content-Type: application/x-www-form-urlencoded&quot; \
+  -d &quot;username=viewer&amp;password=viewer123&quot;</code></pre><p id="0c3720e4-6f49-82e9-a32c-8157f4f97b80" class="" dir="auto">예상 응답:</p><pre id="d52720e4-6f49-82a8-b512-811a8b40fe09" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;access_token&quot;: &quot;eyJ...&quot;,
+  &quot;token_type&quot;: &quot;bearer&quot;,
+  &quot;username&quot;: &quot;viewer&quot;,
+  &quot;role&quot;: &quot;viewer&quot;,
+  &quot;display_name&quot;: &quot;조회 사용자&quot;
+}</code></pre><hr id="91e720e4-6f49-83f4-bde6-016aa64aa6fb" dir="auto"/><h2 id="ffb720e4-6f49-8340-b488-017d9bd2c636" class="" dir="auto">19.2 /me 테스트</h2><pre id="beb720e4-6f49-82e9-9c19-81660a4bf1ed" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://127.0.0.1:8000/me \
+  -H &quot;Authorization: Bearer &lt;access_token&gt;&quot;</code></pre><p id="ff2720e4-6f49-837d-99fe-0138b43907c0" class="" dir="auto">예상 응답:</p><pre id="2c0720e4-6f49-8360-a30b-0130db4e01e0" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;username&quot;: &quot;viewer&quot;,
+  &quot;role&quot;: &quot;viewer&quot;,
+  &quot;display_name&quot;: &quot;조회 사용자&quot;
+}</code></pre><hr id="0e3720e4-6f49-83c5-9f18-016876537b7f" dir="auto"/><h2 id="78a720e4-6f49-82de-9881-018d604d31ca" class="" dir="auto">19.3 AssumeRole 확인</h2><pre id="547720e4-6f49-837f-b482-81fad5192d3a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://127.0.0.1:8000/aws/whoami \
+  -H &quot;Authorization: Bearer &lt;access_token&gt;&quot;</code></pre><p id="236720e4-6f49-834b-bb77-018ad60e39df" class="" dir="auto">viewer 사용자라면 AWS ARN이 다음 형태로 나와야 한다.</p><pre id="dfa720e4-6f49-8251-89d7-01c410bd6efa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">arn:aws:sts::471166314777:assumed-role/app-viewer-role/app-viewer-viewer-session</code></pre><p id="b11720e4-6f49-822c-b62c-01c314393457" class="" dir="auto">operator 사용자라면 다음 형태로 나온다.</p><pre id="65f720e4-6f49-82bc-8740-01f09b90673e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">arn:aws:sts::471166314777:assumed-role/app-operator-role/app-operator-operator-session</code></pre><hr id="c0d720e4-6f49-834a-8014-01c9cf35a045" dir="auto"/><h1 id="89d720e4-6f49-83b7-b66f-81b6c931583c" class="" dir="auto">20. 프론트엔드 작성</h1><h2 id="57c720e4-6f49-834c-aa7c-81194531f28b" class="" dir="auto">20.1 index.html 작성</h2><p id="851720e4-6f49-8218-acde-0152377cddb9" class="" dir="auto">파일명: <code>app/static/index.html</code></p><pre id="4f0720e4-6f49-8256-8f15-0141a613c2ff" class="code code-wrap" data-notion-code-syntax="html"><code class="language-html" style="white-space:pre-wrap;word-break:break-all">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ko&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot; /&gt;
+  &lt;title&gt;Cloud Operations Automation&lt;/title&gt;
+  &lt;link rel=&quot;stylesheet&quot; href=&quot;/static/style.css&quot; /&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;div class=&quot;container&quot;&gt;
+    &lt;h1&gt;Cloud Operations Automation&lt;/h1&gt;
+    &lt;p class=&quot;subtitle&quot;&gt;로그인 사용자 권한별 EC2 / S3 운영 자동화&lt;/p&gt;
+
+    &lt;section id=&quot;login-section&quot; class=&quot;card&quot;&gt;
+      &lt;h2&gt;로그인&lt;/h2&gt;
+
+      &lt;div class=&quot;form-group&quot;&gt;
+        &lt;label&gt;Username&lt;/label&gt;
+        &lt;input id=&quot;username&quot; type=&quot;text&quot; placeholder=&quot;viewer / operator / admin&quot; /&gt;
+      &lt;/div&gt;
+
+      &lt;div class=&quot;form-group&quot;&gt;
+        &lt;label&gt;Password&lt;/label&gt;
+        &lt;input id=&quot;password&quot; type=&quot;password&quot; placeholder=&quot;password&quot; /&gt;
+      &lt;/div&gt;
+
+      &lt;button onclick=&quot;login()&quot;&gt;로그인&lt;/button&gt;
+
+      &lt;div class=&quot;hint&quot;&gt;
+        viewer / viewer123&lt;br /&gt;
+        operator / operator123&lt;br /&gt;
+        admin / admin123
+      &lt;/div&gt;
+    &lt;/section&gt;
+
+    &lt;section id=&quot;dashboard-section&quot; class=&quot;card hidden&quot;&gt;
+      &lt;h2&gt;운영 대시보드&lt;/h2&gt;
+
+      &lt;div class=&quot;user-box&quot;&gt;
+        &lt;div&gt;사용자: &lt;strong id=&quot;current-user&quot;&gt;&lt;/strong&gt;&lt;/div&gt;
+        &lt;div&gt;권한: &lt;strong id=&quot;current-role&quot;&gt;&lt;/strong&gt;&lt;/div&gt;
+        &lt;button onclick=&quot;logout()&quot;&gt;로그아웃&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;hr /&gt;
+
+      &lt;h3&gt;AWS 인증 확인&lt;/h3&gt;
+      &lt;button onclick=&quot;checkAwsWhoami()&quot;&gt;AssumeRole 확인&lt;/button&gt;
+
+      &lt;hr /&gt;
+
+      &lt;h3&gt;EC2 운영&lt;/h3&gt;
+      &lt;button onclick=&quot;loadInstances()&quot;&gt;EC2 목록 조회&lt;/button&gt;
+      &lt;div id=&quot;ec2-list&quot; class=&quot;list-box&quot;&gt;&lt;/div&gt;
+
+      &lt;hr /&gt;
+
+      &lt;h3&gt;S3 운영&lt;/h3&gt;
+      &lt;button onclick=&quot;loadBuckets()&quot;&gt;S3 버킷 목록 조회&lt;/button&gt;
+      &lt;div id=&quot;bucket-list&quot; class=&quot;list-box&quot;&gt;&lt;/div&gt;
+
+      &lt;div class=&quot;upload-box&quot;&gt;
+        &lt;h4&gt;S3 파일 업로드&lt;/h4&gt;
+        &lt;input id=&quot;upload-bucket&quot; type=&quot;text&quot; placeholder=&quot;업로드할 버킷 이름&quot; /&gt;
+        &lt;input id=&quot;upload-file&quot; type=&quot;file&quot; /&gt;
+        &lt;button onclick=&quot;uploadFile()&quot;&gt;업로드&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;hr /&gt;
+
+      &lt;h3&gt;API 결과&lt;/h3&gt;
+      &lt;pre id=&quot;result-box&quot;&gt;&lt;/pre&gt;
+    &lt;/section&gt;
+  &lt;/div&gt;
+
+  &lt;script src=&quot;/static/app.js&quot;&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre><hr id="170720e4-6f49-830c-9629-81a05257b0f1" dir="auto"/><h2 id="7ea720e4-6f49-8222-b166-0169fc8276ba" class="" dir="auto">20.2 style.css 작성</h2><p id="78e720e4-6f49-837e-96f4-018cb856ea07" class="" dir="auto">파일명: <code>app/static/style.css</code></p><pre id="e3d720e4-6f49-82f5-891b-011d6fb49fa7" class="code code-wrap" data-notion-code-syntax="css"><code class="language-css" style="white-space:pre-wrap;word-break:break-all">body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f8;
+  color: #222;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+h1 {
+  margin-bottom: 5px;
+}
+
+.subtitle {
+  color: #666;
+  margin-bottom: 30px;
+}
+
+.card {
+  background: white;
+  border-radius: 10px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.hidden {
+  display: none;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+
+input {
+  padding: 10px;
+  width: 300px;
+  max-width: 100%;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+
+button {
+  padding: 9px 14px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: white;
+  cursor: pointer;
+  margin: 4px;
+}
+
+button:hover {
+  background: #1d4ed8;
+}
+
+button.danger {
+  background: #dc2626;
+}
+
+button.danger:hover {
+  background: #b91c1c;
+}
+
+.user-box {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.hint {
+  margin-top: 15px;
+  color: #666;
+  font-size: 14px;
+}
+
+.list-box {
+  margin-top: 12px;
+}
+
+.item {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  margin: 8px 0;
+  background: #fafafa;
+}
+
+.item-title {
+  font-weight: bold;
+}
+
+.item-meta {
+  color: #555;
+  font-size: 14px;
+  margin-top: 4px;
+}
+
+.upload-box {
+  margin-top: 20px;
+}
+
+#result-box {
+  background: #111827;
+  color: #d1d5db;
+  padding: 15px;
+  border-radius: 8px;
+  min-height: 120px;
+  overflow-x: auto;
+}</code></pre><hr id="63c720e4-6f49-8216-94c5-019e4541bea3" dir="auto"/><h2 id="c3b720e4-6f49-8263-bc4b-01e210556a2d" class="" dir="auto">20.3 app.js 작성</h2><p id="87c720e4-6f49-83d5-9bb9-012e373af1a5" class="" dir="auto">파일명: <code>app/static/app.js</code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js" integrity="sha512-m3JYEI6gx5fh9jF10FjGoMzVKcV2N6nchcDcqPCdI1L3R2WQV7br2XVNR8iTLb2daOMRl3zldbcfT40xU2ntVw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="d13720e4-6f49-83b2-b53e-01e4fa800cc0" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">const API_BASE = &quot;&quot;;
+
+function getToken() {
+  return localStorage.getItem(&quot;access_token&quot;);
+}
+
+function setResult(data) {
+  const resultBox = document.getElementById(&quot;result-box&quot;);
+  resultBox.textContent = JSON.stringify(data, null, 2);
+}
+
+function showDashboard(user) {
+  document.getElementById(&quot;login-section&quot;).classList.add(&quot;hidden&quot;);
+  document.getElementById(&quot;dashboard-section&quot;).classList.remove(&quot;hidden&quot;);
+
+  document.getElementById(&quot;current-user&quot;).textContent = user.username;
+  document.getElementById(&quot;current-role&quot;).textContent = user.role;
+}
+
+function showLogin() {
+  document.getElementById(&quot;login-section&quot;).classList.remove(&quot;hidden&quot;);
+  document.getElementById(&quot;dashboard-section&quot;).classList.add(&quot;hidden&quot;);
+}
+
+async function apiFetch(url, options = {}) {
+  const token = getToken();
+
+  const headers = options.headers || {};
+
+  if (token) {
+    headers[&quot;Authorization&quot;] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(url, {
+    ...options,
+    headers: headers
+  });
+
+  const data = await response.json().catch(() =&gt; {
+    return { message: &quot;JSON 응답이 아님&quot; };
+  });
+
+  if (!response.ok) {
+    setResult({
+      success: false,
+      status: response.status,
+      detail: data.detail || data
+    });
+
+    throw new Error(data.detail || &quot;API 요청 실패&quot;);
+  }
+
+  return data;
+}
+
+async function login() {
+  const username = document.getElementById(&quot;username&quot;).value;
+  const password = document.getElementById(&quot;password&quot;).value;
+
+  const formData = new URLSearchParams();
+  formData.append(&quot;username&quot;, username);
+  formData.append(&quot;password&quot;, password);
+
+  try {
+    const response = await fetch(`${API_BASE}/auth/login`, {
+      method: &quot;POST&quot;,
+      headers: {
+        &quot;Content-Type&quot;: &quot;application/x-www-form-urlencoded&quot;
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setResult(data);
+      return;
+    }
+
+    localStorage.setItem(&quot;access_token&quot;, data.access_token);
+
+    showDashboard({
+      username: data.username,
+      role: data.role
+    });
+
+    setResult({
+      message: &quot;로그인 성공&quot;,
+      user: data
+    });
+
+  } catch (error) {
+    setResult({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+function logout() {
+  localStorage.removeItem(&quot;access_token&quot;);
+  showLogin();
+  setResult({
+    message: &quot;로그아웃 완료&quot;
+  });
+}
+
+async function loadMe() {
+  try {
+    const data = await apiFetch(`${API_BASE}/me`);
+    showDashboard(data);
+  } catch (error) {
+    showLogin();
+  }
+}
+
+async function checkAwsWhoami() {
+  try {
+    const data = await apiFetch(`${API_BASE}/aws/whoami`);
+    setResult(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function loadInstances() {
+  try {
+    const data = await apiFetch(`${API_BASE}/api/ec2/instances`);
+    renderInstances(data.items);
+    setResult(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function renderInstances(instances) {
+  const container = document.getElementById(&quot;ec2-list&quot;);
+  container.innerHTML = &quot;&quot;;
+
+  if (!instances || instances.length === 0) {
+    container.innerHTML = &quot;&lt;p&gt;조회된 EC2 인스턴스가 없음&lt;/p&gt;&quot;;
+    return;
+  }
+
+  instances.forEach(instance =&gt; {
+    const div = document.createElement(&quot;div&quot;);
+    div.className = &quot;item&quot;;
+
+    div.innerHTML = `
+      &lt;div class=&quot;item-title&quot;&gt;${instance.instance_id}&lt;/div&gt;
+      &lt;div class=&quot;item-meta&quot;&gt;Name: ${instance.name || &quot;-&quot;}&lt;/div&gt;
+      &lt;div class=&quot;item-meta&quot;&gt;Type: ${instance.instance_type}&lt;/div&gt;
+      &lt;div class=&quot;item-meta&quot;&gt;State: ${instance.state}&lt;/div&gt;
+      &lt;div class=&quot;item-meta&quot;&gt;Private IP: ${instance.private_ip || &quot;-&quot;}&lt;/div&gt;
+      &lt;div class=&quot;item-meta&quot;&gt;Public IP: ${instance.public_ip || &quot;-&quot;}&lt;/div&gt;
+      &lt;button onclick=&quot;startInstance(&#x27;${instance.instance_id}&#x27;)&quot;&gt;Start&lt;/button&gt;
+      &lt;button class=&quot;danger&quot; onclick=&quot;stopInstance(&#x27;${instance.instance_id}&#x27;)&quot;&gt;Stop&lt;/button&gt;
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+async function startInstance(instanceId) {
+  try {
+    const data = await apiFetch(`${API_BASE}/api/ec2/instances/${instanceId}/start`, {
+      method: &quot;POST&quot;
+    });
+
+    setResult(data);
+    await loadInstances();
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function stopInstance(instanceId) {
+  try {
+    const data = await apiFetch(`${API_BASE}/api/ec2/instances/${instanceId}/stop`, {
+      method: &quot;POST&quot;
+    });
+
+    setResult(data);
+    await loadInstances();
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function loadBuckets() {
+  try {
+    const data = await apiFetch(`${API_BASE}/api/s3/buckets`);
+    renderBuckets(data.items);
+    setResult(data);
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function renderBuckets(buckets) {
+  const container = document.getElementById(&quot;bucket-list&quot;);
+  container.innerHTML = &quot;&quot;;
+
+  if (!buckets || buckets.length === 0) {
+    container.innerHTML = &quot;&lt;p&gt;조회된 S3 버킷이 없음&lt;/p&gt;&quot;;
+    return;
+  }
+
+  buckets.forEach(bucket =&gt; {
+    const div = document.createElement(&quot;div&quot;);
+    div.className = &quot;item&quot;;
+
+    div.innerHTML = `
+      &lt;div class=&quot;item-title&quot;&gt;${bucket.name}&lt;/div&gt;
+      &lt;div class=&quot;item-meta&quot;&gt;Created: ${bucket.creation_date}&lt;/div&gt;
+      &lt;button onclick=&quot;loadObjects(&#x27;${bucket.name}&#x27;)&quot;&gt;객체 목록 조회&lt;/button&gt;
+      &lt;button onclick=&quot;selectUploadBucket(&#x27;${bucket.name}&#x27;)&quot;&gt;업로드 버킷으로 선택&lt;/button&gt;
+      &lt;div id=&quot;objects-${bucket.name}&quot; class=&quot;list-box&quot;&gt;&lt;/div&gt;
+    `;
+
+    container.appendChild(div);
+  });
+}
+
+function selectUploadBucket(bucketName) {
+  document.getElementById(&quot;upload-bucket&quot;).value = bucketName;
+}
+
+async function loadObjects(bucketName) {
+  try {
+    const data = await apiFetch(`${API_BASE}/api/s3/buckets/${bucketName}/objects`);
+
+    const container = document.getElementById(`objects-${bucketName}`);
+    container.innerHTML = &quot;&quot;;
+
+    if (!data.items || data.items.length === 0) {
+      container.innerHTML = &quot;&lt;p&gt;객체가 없음&lt;/p&gt;&quot;;
+    } else {
+      data.items.forEach(obj =&gt; {
+        const p = document.createElement(&quot;p&quot;);
+        p.textContent = `${obj.key} (${obj.size} bytes)`;
+        container.appendChild(p);
+      });
+    }
+
+    setResult(data);
+
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+async function uploadFile() {
+  const bucketName = document.getElementById(&quot;upload-bucket&quot;).value;
+  const fileInput = document.getElementById(&quot;upload-file&quot;);
+
+  if (!bucketName) {
+    setResult({
+      success: false,
+      message: &quot;버킷 이름을 입력해야 함&quot;
+    });
+    return;
+  }
+
+  if (!fileInput.files || fileInput.files.length === 0) {
+    setResult({
+      success: false,
+      message: &quot;업로드할 파일을 선택해야 함&quot;
+    });
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append(&quot;file&quot;, fileInput.files[0]);
+
+  try {
+    const token = getToken();
+
+    const response = await fetch(`${API_BASE}/api/s3/buckets/${bucketName}/upload`, {
+      method: &quot;POST&quot;,
+      headers: {
+        &quot;Authorization&quot;: `Bearer ${token}`
+      },
+      body: formData
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      setResult({
+        success: false,
+        status: response.status,
+        detail: data.detail || data
+      });
+      return;
+    }
+
+    setResult(data);
+
+  } catch (error) {
+    setResult({
+      success: false,
+      message: error.message
+    });
+  }
+}
+
+window.addEventListener(&quot;load&quot;, () =&gt; {
+  const token = getToken();
+
+  if (token) {
+    loadMe();
+  } else {
+    showLogin();
+  }
+});</code></pre><hr id="773720e4-6f49-8274-9a32-81c6bbe854e2" dir="auto"/><h1 id="846720e4-6f49-8330-9877-019eb3022497" class="" dir="auto">21. 프론트엔드 테스트</h1><p id="7b6720e4-6f49-83d0-a13b-8117ecc007c4" class="" dir="auto">브라우저 접속:</p><pre id="4be720e4-6f49-8292-bdde-01e03a18c8f2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://127.0.0.1:8000/</code></pre><hr id="756720e4-6f49-8249-a42b-81024c1120b4" dir="auto"/><h2 id="99c720e4-6f49-829b-bc8c-01daa6ad68a9" class="" dir="auto">21.1 viewer 로그인</h2><pre id="af7720e4-6f49-8367-8e30-81ef3ba3b8f2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">username: viewer
+password: viewer123</code></pre><p id="00d720e4-6f49-8320-9b06-01ef6affec1f" class="" dir="auto">테스트:</p><pre id="d99720e4-6f49-83c4-8f44-0115459ae1d4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 목록 조회 → 성공
+EC2 Start → 실패
+EC2 Stop → 실패
+S3 버킷 목록 조회 → 성공
+S3 업로드 → 실패</code></pre><hr id="493720e4-6f49-831f-a97c-81e29657fc66" dir="auto"/><h2 id="aef720e4-6f49-8315-b84f-81493bb5726a" class="" dir="auto">21.2 operator 로그인</h2><pre id="57a720e4-6f49-83d1-823c-81ab6c94c5f4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">username: operator
+password: operator123</code></pre><p id="a1e720e4-6f49-8370-975e-81a6edae523f" class="" dir="auto">테스트:</p><pre id="7f2720e4-6f49-839e-9a7a-0109f0d78e0b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 목록 조회 → 성공
+EC2 Start → 성공
+EC2 Stop → 성공
+S3 버킷 목록 조회 → 성공
+S3 업로드 → 실패</code></pre><hr id="f64720e4-6f49-834e-b60f-81b992a289d0" dir="auto"/><h2 id="135720e4-6f49-8232-b0dc-81a4c4e8871e" class="" dir="auto">21.3 admin 로그인</h2><pre id="aa4720e4-6f49-82aa-a223-81d3055068d2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">username: admin
+password: admin123</code></pre><p id="d60720e4-6f49-8281-bf8a-01eaf9d3bf9a" class="" dir="auto">테스트:</p><pre id="93a720e4-6f49-82c0-9722-81d0805bf39a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 목록 조회 → 성공
+EC2 Start → 성공
+EC2 Stop → 성공
+S3 버킷 목록 조회 → 성공
+S3 업로드 → 성공</code></pre><hr id="094720e4-6f49-8388-8025-8171f2b88f59" dir="auto"/><h1 id="0da720e4-6f49-83e8-94a4-0138309f67f9" class="" dir="auto">22. 권한 실패가 발생하는 이유</h1><p id="b9f720e4-6f49-83ba-a08b-8188df01f5db" class="" dir="auto">예를 들어 viewer 사용자가 EC2 Stop을 누르면 다음 흐름으로 처리된다.</p><pre id="ab4720e4-6f49-8214-9ba4-8110938b8da3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">viewer 로그인
+  ↓
+JWT에 role=viewer 포함
+  ↓
+FastAPI가 viewer 확인
+  ↓
+app-viewer-role AssumeRole
+  ↓
+ec2.stop_instances 호출
+  ↓
+app-viewer-role에는 ec2:StopInstances 권한 없음
+  ↓
+UnauthorizedOperation 발생</code></pre><p id="b33720e4-6f49-82d8-ae24-015d28d461ba" class="" dir="auto">즉, 프론트엔드에서 버튼을 숨기지 않아도 AWS IAM Role이 최종적으로 권한을 막는다.</p><hr id="3c2720e4-6f49-82c9-a96f-8176a4d03541" dir="auto"/><h1 id="9c5720e4-6f49-823f-90df-01071c114456" class="" dir="auto">23. 수업 중 강조할 핵심 포인트</h1><h2 id="74c720e4-6f49-8240-a709-0154c984e4ce" class="" dir="auto">23.1 프론트엔드 버튼 제어는 보안이 아니다</h2><p id="891720e4-6f49-8386-a9d7-0146238fde20" class="" dir="auto">프론트엔드에서 viewer 사용자에게 Stop 버튼을 숨길 수 있다.</p><p id="ac0720e4-6f49-8200-af35-01d1daab3a69" class="" dir="auto">하지만 사용자가 개발자 도구나 curl로 직접 API를 호출할 수 있으므로, 프론트엔드 제어만으로는 보안이 되지 않는다.</p><p id="0c9720e4-6f49-8222-a417-016bf465a5d7" class="" dir="auto">최종 권한 제어는 반드시 백엔드와 IAM Role에서 이루어져야 한다.</p><hr id="308720e4-6f49-8262-bea7-81d2e6f142f9" dir="auto"/><h2 id="1f5720e4-6f49-83b5-9a52-01780fd7482c" class="" dir="auto">23.2 FastAPI는 AWS Access Key를 사용자에게 주지 않는다</h2><p id="8ef720e4-6f49-83ba-bc7a-817d737404e1" class="" dir="auto">브라우저에는 AWS Access Key가 전달되지 않는다.</p><p id="7dd720e4-6f49-8316-9ea3-8186096d60a9" class="" dir="auto">브라우저는 JWT만 가지고 있다.</p><pre id="081720e4-6f49-822f-b046-014837c56021" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">브라우저
+  - JWT 보관
+  - AWS Access Key 없음
+
+FastAPI
+  - AWS Profile 또는 Instance Role 사용
+  - sts:AssumeRole 호출
+  - 임시 자격 증명으로 AWS API 호출</code></pre><hr id="1ed720e4-6f49-82fc-916c-81b40867a0d4" dir="auto"/><h2 id="a85720e4-6f49-8295-afdb-01908447e734" class="" dir="auto">23.3 AssumeRole 이후에는 Role 권한만 적용된다</h2><p id="79b720e4-6f49-82ef-b228-0108e87f0f4b" class="" dir="auto">학생 IAM User가 관리자 권한을 가지고 있어도, <code>app-viewer-role</code>을 AssumeRole하면 viewer 권한만 적용된다.</p><pre id="883720e4-6f49-8393-a9a6-018eef22573d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AssumeRole 이전:
+  instructor IAM User 권한
+
+AssumeRole 이후:
+  app-viewer-role 권한</code></pre><hr id="671720e4-6f49-8362-89fc-0170dd3eef75" dir="auto"/><h1 id="9fb720e4-6f49-8226-98da-819ebebeceb6" class="" dir="auto">24. 실습 과제</h1><h2 id="e1c720e4-6f49-82c8-be34-811baf393395" class="" dir="auto">과제 1. 사용자별 권한 차이 테스트</h2><p id="f7d720e4-6f49-82ec-a425-81e7242e38b4" class="" dir="auto">다음 사용자로 로그인하여 결과를 표로 정리한다.</p><pre id="824720e4-6f49-83d0-aa98-01b351e90645" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">viewer
+operator
+admin</code></pre><p id="b55720e4-6f49-8319-bc38-012905edaf3d" class="" dir="auto">테스트 항목:</p><pre id="622720e4-6f49-8351-a272-010482c710ed" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. EC2 목록 조회
+2. EC2 시작
+3. EC2 중지
+4. S3 버킷 목록 조회
+5. S3 객체 목록 조회
+6. S3 파일 업로드</code></pre><p id="a09720e4-6f49-8367-acd5-01f1f00da137" class="" dir="auto">결과표 예시:</p><table id="83a720e4-6f49-83f5-902b-811599da0b15" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="108720e4-6f49-8343-9a2e-8166cef2b465" dir="ltr"><th id="WmP_" class="simple-table-header-color simple-table-header">사용자</th><th id="SF?B" class="simple-table-header-color simple-table-header">EC2 조회</th><th id="qH@V" class="simple-table-header-color simple-table-header">EC2 시작</th><th id="@G[;" class="simple-table-header-color simple-table-header">EC2 중지</th><th id="n;TD" class="simple-table-header-color simple-table-header">S3 조회</th><th id="Pm\h" class="simple-table-header-color simple-table-header">S3 업로드</th></tr></thead><tbody><tr id="42e720e4-6f49-8339-acde-81e0c45181ec" dir="ltr"><td id="WmP_" class="">viewer</td><td id="SF?B" class="">성공</td><td id="qH@V" class="">실패</td><td id="@G[;" class="">실패</td><td id="n;TD" class="">성공</td><td id="Pm\h" class="">실패</td></tr><tr id="8a3720e4-6f49-827e-b5aa-8187657cf088" dir="ltr"><td id="WmP_" class="">operator</td><td id="SF?B" class="">성공</td><td id="qH@V" class="">성공</td><td id="@G[;" class="">성공</td><td id="n;TD" class="">성공</td><td id="Pm\h" class="">실패</td></tr><tr id="537720e4-6f49-825b-9526-81f89e685803" dir="ltr"><td id="WmP_" class="">admin</td><td id="SF?B" class="">성공</td><td id="qH@V" class="">성공</td><td id="@G[;" class="">성공</td><td id="n;TD" class="">성공</td><td id="Pm\h" class="">성공</td></tr></tbody></table><hr id="c5e720e4-6f49-83e5-9ce8-8145d08e2f2a" dir="auto"/><h2 id="417720e4-6f49-83b5-bcbe-012e9c16a530" class="" dir="auto">과제 2. 권한 실패 원인 분석</h2><p id="f13720e4-6f49-83da-8e5d-81c83d217ebf" class="" dir="auto">viewer 사용자가 EC2 Stop을 실행했을 때 실패하는 이유를 설명한다.</p><p id="164720e4-6f49-8231-8903-81ab79468103" class="" dir="auto">포함해야 할 내용:</p><pre id="5d9720e4-6f49-8326-aaa7-014edd169e76" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 로그인 사용자의 role 값
+2. USER_ROLE_MAP에서 선택된 IAM Role
+3. AssumeRole 이후 AWS 인증 주체
+4. 해당 Role에 없는 IAM 권한
+5. 최종 오류 코드</code></pre><hr id="073720e4-6f49-836f-a06d-81d54138780a" dir="auto"/><h2 id="4a5720e4-6f49-8307-a6fb-0139952832c2" class="" dir="auto">과제 3. FastAPI API 하나 추가</h2><p id="92b720e4-6f49-82fa-a16c-814365d924e4" class="" dir="auto">다음 API 중 하나를 추가한다.</p><pre id="f00720e4-6f49-83f0-a6a8-010cbc905845" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. EC2 Reboot API
+2. S3 객체 삭제 API
+3. 현재 로그인 사용자의 AWS Role ARN 확인 API</code></pre><p id="997720e4-6f49-8226-8745-016f7bc0c9e6" class="" dir="auto">예를 들어 EC2 Reboot API를 추가한다면 admin만 가능해야 한다.</p><hr id="912720e4-6f49-82b7-b29f-81a9d8edcda8" dir="auto"/><h1 id="311720e4-6f49-823e-b7a0-81e5853d9ac2" class="" dir="auto">25. 최종 정리</h1><p id="ed8720e4-6f49-8273-9243-014de27f0eda" class="" dir="auto">이번 실습의 핵심은 다음이다.</p><pre id="044720e4-6f49-8357-9203-8137bb90ea91" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. MariaDB는 로그인 사용자와 role을 저장한다.
+2. FastAPI는 로그인 성공 시 JWT를 발급한다.
+3. 프론트엔드는 JWT를 저장하고 API 요청 시 전달한다.
+4. FastAPI는 JWT로 현재 사용자를 식별한다.
+5. 사용자 role에 따라 IAM Role ARN을 선택한다.
+6. FastAPI는 STS AssumeRole을 호출한다.
+7. EC2/S3 API는 AssumeRole로 받은 임시 자격 증명으로 호출한다.
+8. 권한 차이는 IAM Role의 Permission Policy로 결정된다.</code></pre><p id="fde720e4-6f49-8318-9aa7-81d57db212d7" class="" dir="auto">이 실습은 단순히 Python 문법이나 boto3 사용법을 배우는 것이 아니라, <strong>Python을 이용해 클라우드 운영 자동화 서비스를 구현하는 과정</strong>이다.</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

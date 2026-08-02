@@ -1,0 +1,773 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>3장. Docker 기본 명령어 (컨테이너 생명주기)</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="baf720e4-6f49-8258-a5b1-81ed7dd1ddbb" class="page sans"><header><h1 class="page-title" dir="auto">3장. Docker 기본 명령어 (컨테이너 생명주기)</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="d31720e4-6f49-820f-a008-015032f93b10" dir="auto"/><h2 id="8c5720e4-6f49-83e6-8d07-0100b92f28fb" class="" dir="auto">3장 학습 목표</h2><ul id="a9d720e4-6f49-8386-9443-01ee80f390fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 명령어의 <strong>대상(object)</strong> 개념을 이해한다.</li></ul><ul id="9fd720e4-6f49-8375-898e-01f1361ef1c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker run</code>이 내부적으로 수행하는 작업을 <strong>단계별로 설명</strong>할 수 있다.</li></ul><ul id="3a7720e4-6f49-82ce-bc15-019b74b04501" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너의 <strong>생성 → 실행 → 중지 → 삭제</strong> 흐름을 명령어로 제어할 수 있다.</li></ul><ul id="dc6720e4-6f49-82a3-b755-81fd9c0632c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">옵션에 따라 컨테이너 동작 방식이 <strong>어떻게 달라지는지</strong> 설명할 수 있다.</li></ul><hr id="5c6720e4-6f49-8389-a2e6-01afc2d17eb6" dir="auto"/><h2 id="fc8720e4-6f49-834e-943b-81334ec3dffc" class="" dir="auto">3.1 Docker 명령어 구조 이해</h2><h3 id="e5e720e4-6f49-83e6-bbbc-016afe3fb10c" class="" dir="auto">3.1.1 Docker 명령어의 기본 형식</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="3ad720e4-6f49-8234-98df-81b8ad4594aa" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker &lt;대상&gt; &lt;명령&gt; [옵션]</code></pre><h3 id="876720e4-6f49-823f-94a3-01b88df7b8fd" class="" dir="auto">대상(Object) 예시</h3><ul id="74e720e4-6f49-8253-9bd2-01d5160cad4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>container</code> (또는 생략)</li></ul><ul id="9bb720e4-6f49-83a9-9c12-817c63e549ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>image</code></li></ul><ul id="c21720e4-6f49-82ed-888f-01a74d0bfefa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>volume</code></li></ul><ul id="01f720e4-6f49-8382-a551-817a481b761f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>network</code></li></ul><p id="f8c720e4-6f49-8359-98ab-81db66043f0f" class="" dir="auto">예:</p><pre id="768720e4-6f49-8343-b5db-813a0cb1f9fd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker container ls
+docker image ls</code></pre><p id="dbb720e4-6f49-8291-85a0-81b081946f4b" class="" dir="auto">👉 실무에서는 <code>docker ps</code>, <code>docker images</code>처럼 <strong>container/image는 생략</strong>되는 경우가 많음</p><hr id="64f720e4-6f49-822e-b5da-019622d3e603" dir="auto"/><h3 id="37b720e4-6f49-82b6-9c13-018e6a478252" class="" dir="auto">3.1.2 자주 사용하는 대상별 명령</h3><table id="aa1720e4-6f49-831b-9278-81f7ada126ad" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="fdd720e4-6f49-829f-be02-01c5f6fa30fb" dir="ltr"><th id="`a&lt;|" class="simple-table-header-color simple-table-header">대상</th><th id="qxpn" class="simple-table-header-color simple-table-header">대표 명령</th></tr></thead><tbody><tr id="5a8720e4-6f49-82a3-9161-81c4f4376e9f" dir="ltr"><td id="`a&lt;|" class="">container</td><td id="qxpn" class="">run, ps, start, stop, rm</td></tr><tr id="815720e4-6f49-83c3-94c3-0189de49545d" dir="ltr"><td id="`a&lt;|" class="">image</td><td id="qxpn" class="">pull, ls, rm, inspect</td></tr><tr id="ae1720e4-6f49-83bf-9080-81585273ec12" dir="ltr"><td id="`a&lt;|" class="">volume</td><td id="qxpn" class="">create, ls, inspect</td></tr><tr id="7bd720e4-6f49-8317-bc1b-01e121336dd5" dir="ltr"><td id="`a&lt;|" class="">network</td><td id="qxpn" class="">ls, create</td></tr></tbody></table><hr id="cc5720e4-6f49-82e6-85a3-817661b44407" dir="auto"/><h2 id="958720e4-6f49-8277-9f76-81d3b795cf92" class="" dir="auto">3.2 docker run 완전 분해 (핵심)</h2><blockquote id="130720e4-6f49-83f9-ad2f-015b39d65323" class="" dir="auto"><code>docker run</code>은 단순 실행 명령이 아니다.<ul id="721720e4-6f49-8208-b900-8156803431c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">*여러 단계가 한 번에 수행되는 “복합 명령”**이다.</li></ul></blockquote><h3 id="290720e4-6f49-8353-9e2c-01bc59f56840" class="" dir="auto">3.2.1 docker run 내부 동작 흐름</h3><pre id="d3e720e4-6f49-8213-96b5-0178bd786253" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run ubuntu:22.04 bash</code></pre><p id="66a720e4-6f49-82e5-849a-01f9db180bfe" class="" dir="auto">실제로 수행되는 단계:</p><ol type="1" id="f7d720e4-6f49-835c-b71a-8142b52216e0" class="numbered-list" start="1" dir="auto"><li>이미지 존재 여부 확인 (<code>docker images</code>)</li></ol><ol type="1" id="816720e4-6f49-821d-a4e3-81c30d3f9e95" class="numbered-list" start="2" dir="auto"><li>없으면 Registry에서 pull</li></ol><ol type="1" id="13c720e4-6f49-83f7-bb83-81b852a146f8" class="numbered-list" start="3" dir="auto"><li>컨테이너 생성 (<code>docker create</code>)</li></ol><ol type="1" id="35f720e4-6f49-8332-a3d8-81f5d12e0661" class="numbered-list" start="4" dir="auto"><li>컨테이너 시작 (<code>docker start</code>)</li></ol><ol type="1" id="5c7720e4-6f49-83f7-9662-81884dcdfa61" class="numbered-list" start="5" dir="auto"><li>터미널 연결 (<code>docker attach</code>)</li></ol><p id="753720e4-6f49-837b-a647-81dd2347cff5" class="" dir="auto">👉 즉,</p><pre id="bea720e4-6f49-8369-8fb4-817d1abe04e3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">docker run = pull + create + start + attach</code></pre><hr id="f6d720e4-6f49-834a-94aa-018ec243332c" dir="auto"/><h3 id="c78720e4-6f49-83c8-bc81-81f5dc3e3f9c" class="" dir="auto">3.2.2 docker create vs docker start</h3><pre id="283720e4-6f49-820f-ae31-81838eb682f6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker create ubuntu:22.04
+docker start &lt;컨테이너ID&gt;</code></pre><ul id="6c8720e4-6f49-8214-a7f6-01839b4234ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>create</code> : 컨테이너 “틀”만 생성 (실행 ❌)</li></ul><ul id="d0f720e4-6f49-8234-8927-8120a09df9e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>start</code> : 이미 만들어진 컨테이너 실행</li></ul><p id="f06720e4-6f49-83ac-8870-01141988b2a3" class="" dir="auto">👉 운영 환경에서는 <strong>create / start를 분리</strong>해서 쓰는 경우도 많음</p><hr id="f84720e4-6f49-823c-982d-819505a52056" dir="auto"/><h2 id="da9720e4-6f49-8225-8ee5-016a8f1850eb" class="" dir="auto">3.3 컨테이너 목록 확인</h2><h3 id="b9d720e4-6f49-8284-b191-81d527152dd3" class="" dir="auto">3.3.1 실행 중인 컨테이너</h3><pre id="49a720e4-6f49-83d5-a3c3-01e205fb474f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker ps</code></pre><h3 id="44b720e4-6f49-836f-852c-0169016e3cd1" class="" dir="auto">3.3.2 전체 컨테이너</h3><pre id="58c720e4-6f49-831a-9e1c-01af8939b4a4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker ps -a</code></pre><h3 id="d3a720e4-6f49-833f-9892-01a8a082656c" class="" dir="auto">출력 컬럼 해설</h3><ul id="c9b720e4-6f49-8364-8b86-810851faf3c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>CONTAINER ID</code> : 컨테이너 고유 ID</li></ul><ul id="8ca720e4-6f49-82f6-8cea-011ba2ec101e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>IMAGE</code> : 사용 중인 이미지</li></ul><ul id="066720e4-6f49-832d-8ad3-8102592de30a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>COMMAND</code> : PID 1로 실행 중인 명령</li></ul><ul id="732720e4-6f49-826f-93be-017581622226" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>STATUS</code> : 실행/중지 상태</li></ul><ul id="40d720e4-6f49-8281-9992-01b39d39a6a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>PORTS</code> : 포트 매핑 정보</li></ul><ul id="bde720e4-6f49-838a-b431-01ea0bc7f1ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>NAMES</code> : 컨테이너 이름</li></ul><hr id="212720e4-6f49-820f-8ff1-010d55393616" dir="auto"/><h2 id="12a720e4-6f49-8202-8b71-815977612a8e" class="" dir="auto">3.4 컨테이너 실행 옵션 상세</h2><h3 id="e43720e4-6f49-8208-a605-018e02eb7413" class="" dir="auto">3.4.1 -it 옵션</h3><pre id="dde720e4-6f49-82c0-bb91-01cddb67efc8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -it ubuntu:22.04 bash</code></pre><ul id="312720e4-6f49-832b-8b73-81e7c675cd79" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>i</code> : 표준 입력 유지 (키보드 입력)</li></ul><ul id="25c720e4-6f49-830f-beb1-01655b10c2a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>t</code> : 터미널 형태 출력</li></ul><p id="710720e4-6f49-826b-b821-01b71e1f588a" class="" dir="auto">👉 쉘 기반 컨테이너는 거의 필수 옵션</p><hr id="05b720e4-6f49-8341-b299-81264acd5f05" dir="auto"/><h3 id="7ae720e4-6f49-83aa-ad18-811f01aa4166" class="" dir="auto">3.4.2 -d 옵션 (백그라운드 실행)</h3><pre id="4be720e4-6f49-8374-bebb-0175da2e1391" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d nginx</code></pre><ul id="aa9720e4-6f49-82c6-8a53-0117850562bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>d</code> : detached mode</li></ul><ul id="c1a720e4-6f49-8319-8be2-81778e6e370f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">터미널을 점유하지 않음</li></ul><ul id="932720e4-6f49-8250-8170-81df2ccbc02a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버형 컨테이너(웹/DB)에 필수</li></ul><hr id="527720e4-6f49-824c-b328-010f4e972fa3" dir="auto"/><h3 id="9af720e4-6f49-83b3-b894-8127106e7a4b" class="" dir="auto">3.4.3 --name 옵션</h3><pre id="238720e4-6f49-825a-9cce-01947a1d29a0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run --name web01 nginx</code></pre><ul id="891720e4-6f49-8320-b3d4-017d0806bf1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사람이 기억하기 쉬운 이름 부여</li></ul><ul id="040720e4-6f49-8314-9534-811c07c69240" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름 미지정 시 Docker가 랜덤 생성</li></ul><p id="67e720e4-6f49-8375-97dc-01c084846309" class="" dir="auto">👉 실무에서는 <strong>반드시 name 지정</strong> 권장</p><hr id="a02720e4-6f49-82e1-8bf6-81f47387e845" dir="auto"/><h3 id="6be720e4-6f49-83e8-bffd-81653d53dc44" class="" dir="auto">3.4.4 --rm 옵션</h3><pre id="65b720e4-6f49-82e9-ba93-01e711835cb4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run --rm ubuntu echo &quot;test&quot;</code></pre><ul id="828720e4-6f49-824a-bf47-01b27dc47d8c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 종료 시 자동 삭제</li></ul><ul id="b06720e4-6f49-83ac-841e-814673ef77e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트/일회성 작업에 적합</li></ul><hr id="e49720e4-6f49-822e-ab9e-013ee4caa5a7" dir="auto"/><h2 id="b5a720e4-6f49-82bc-ba4f-8193bf3b06be" class="" dir="auto">3.5 컨테이너 제어 명령</h2><h3 id="0d9720e4-6f49-825d-ae87-8114f21bf707" class="" dir="auto">3.5.1 컨테이너 중지</h3><pre id="211720e4-6f49-8209-93ab-81b6077dc1cf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker stop &lt;컨테이너ID|이름&gt;</code></pre><ul id="27b720e4-6f49-8356-8497-81984a496bf9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SIGTERM → 일정 시간 후 SIGKILL</li></ul><ul id="3d8720e4-6f49-82eb-b271-01536aa90ebf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정상 종료를 유도</li></ul><hr id="efc720e4-6f49-8218-af61-81d59b203ed7" dir="auto"/><h3 id="6b8720e4-6f49-82c1-bc8f-81b21c847192" class="" dir="auto">3.5.2 컨테이너 강제 종료</h3><pre id="e6d720e4-6f49-835d-a8d8-016b27435fb5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker kill &lt;컨테이너ID|이름&gt;</code></pre><ul id="348720e4-6f49-8214-9e1c-01dd7d9d5abe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">즉시 SIGKILL</li></ul><ul id="6d7720e4-6f49-8382-8581-01c90e174709" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 상황에서만 사용</li></ul><hr id="ffd720e4-6f49-8301-8c7b-81cecf3a2f28" dir="auto"/><h3 id="a3e720e4-6f49-82a1-8032-0165f242be76" class="" dir="auto">3.5.3 컨테이너 재시작</h3><pre id="932720e4-6f49-837a-affc-81c9046203ba" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker restart &lt;컨테이너ID|이름&gt;</code></pre><hr id="7ad720e4-6f49-82f6-aa5f-8103f6b3da8c" dir="auto"/><h2 id="047720e4-6f49-83a7-8bc3-81611b63c0a7" class="" dir="auto">3.6 컨테이너 삭제</h2><h3 id="3c2720e4-6f49-83b1-910f-8140315249fa" class="" dir="auto">3.6.1 중지된 컨테이너 삭제</h3><pre id="f9c720e4-6f49-8256-82b3-01930a0b147f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker rm &lt;컨테이너ID&gt;</code></pre><h3 id="073720e4-6f49-8236-b01e-0111ddc1fc71" class="" dir="auto">3.6.2 실행 중 컨테이너 삭제</h3><pre id="6c7720e4-6f49-83db-8ec0-01b96bd0d590" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker rm -f &lt;컨테이너ID&gt;</code></pre><p id="4fa720e4-6f49-833a-8a1f-017c1255bb9c" class="" dir="auto">👉 <code>-f</code>는 stop + rm</p><hr id="8e5720e4-6f49-83f4-acb5-814b7103f765" dir="auto"/><h2 id="67a720e4-6f49-83c2-bf8c-01a6edeba434" class="" dir="auto">3.7 컨테이너 내부 접근</h2><h3 id="95a720e4-6f49-8210-9042-01d438d70ca3" class="" dir="auto">3.7.1 docker attach</h3><pre id="90f720e4-6f49-83f7-8c07-81055173cba5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker attach &lt;컨테이너ID&gt;</code></pre><ul id="9fa720e4-6f49-82eb-ab44-018095703771" class="bulleted-list" dir="auto"><li style="list-style-type:disc">STDOUT/STDIN에 직접 연결</li></ul><ul id="eca720e4-6f49-8362-8dd7-012b40f7b422" class="bulleted-list" dir="auto"><li style="list-style-type:disc">쉘 종료 시 컨테이너도 종료될 수 있음</li></ul><hr id="9e1720e4-6f49-83d0-964a-0152bf3be683" dir="auto"/><h3 id="7c8720e4-6f49-8330-83d3-0182a9951701" class="" dir="auto">3.7.2 docker exec (권장)</h3><pre id="6e3720e4-6f49-8352-ac38-01eb905e0e3e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker exec -it &lt;컨테이너ID&gt; bash</code></pre><ul id="194720e4-6f49-8249-b572-0153d9dbd2be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 중인 컨테이너에 <strong>새 프로세스</strong>로 접속</li></ul><ul id="ecb720e4-6f49-824f-82c9-81187568fe4a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경에서 표준 방식</li></ul><p id="d65720e4-6f49-827c-8432-01de39a743ea" class="" dir="auto">👉 <strong>attach보다 exec를 권장</strong></p><hr id="e32720e4-6f49-834e-ad6c-818fcdd14e6b" dir="auto"/><h2 id="12a720e4-6f49-83b5-85e6-013fb84a7a4f" class="" dir="auto">3.8 컨테이너 로그 확인</h2><h3 id="7fb720e4-6f49-82f3-b57a-014d269a639c" class="" dir="auto">3.8.1 로그 조회</h3><pre id="d49720e4-6f49-8286-abd0-81686d566160" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker logs &lt;컨테이너ID&gt;</code></pre><h3 id="754720e4-6f49-8310-9e30-81813038bc64" class="" dir="auto">3.8.2 실시간 로그</h3><pre id="484720e4-6f49-821b-a9d8-0188b58ebbfd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker logs -f &lt;컨테이너ID&gt;</code></pre><hr id="149720e4-6f49-83fb-a189-818a9f448c97" dir="auto"/><h2 id="358720e4-6f49-8297-adcf-81c6a8025af4" class="" dir="auto">3.9 컨테이너 상태 확인</h2><h3 id="a1c720e4-6f49-82dc-857b-812c46c20786" class="" dir="auto">3.9.1 상세 정보</h3><pre id="64b720e4-6f49-83bd-8284-81d94e85720c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker inspect &lt;컨테이너ID&gt;</code></pre><ul id="aed720e4-6f49-829e-8d0e-01f78b1ccf9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON 형식</li></ul><ul id="a96720e4-6f49-8217-8014-01bc42ad01b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크, 마운트, PID, 리소스 설정 확인 가능</li></ul><hr id="1c3720e4-6f49-8266-aab8-814850a103aa" dir="auto"/><h3 id="9f2720e4-6f49-833e-b959-01345e7a77df" class="" dir="auto">3.9.2 리소스 사용량</h3><pre id="bb7720e4-6f49-8318-bf17-81993da35a12" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker stats</code></pre><p id="815720e4-6f49-82ab-9792-011dc4561039" class="" dir="auto">👉 CPU/메모리 실시간 확인</p><hr id="449720e4-6f49-8380-bc23-01692402c847" dir="auto"/><h2 id="495720e4-6f49-8252-a426-810c031d864b" class="" dir="auto">3.10 실습: 컨테이너 생명주기 전체 흐름</h2><h3 id="ee4720e4-6f49-825a-9a45-81d5076a8183" class="" dir="auto">실습 시나리오</h3><ol type="1" id="7d0720e4-6f49-828a-85f0-8158081efe3a" class="numbered-list" start="1" dir="auto"><li>ubuntu 컨테이너 생성</li></ol><ol type="1" id="a0d720e4-6f49-82f1-9378-818dcf131fce" class="numbered-list" start="2" dir="auto"><li>bash 실행</li></ol><ol type="1" id="33a720e4-6f49-83d4-a3ff-818a2094c66f" class="numbered-list" start="3" dir="auto"><li>백그라운드 실행</li></ol><ol type="1" id="b0c720e4-6f49-835f-9c08-01e8de8c9aaa" class="numbered-list" start="4" dir="auto"><li>exec로 접속</li></ol><ol type="1" id="486720e4-6f49-8215-9e01-81a98d7dd227" class="numbered-list" start="5" dir="auto"><li>로그 확인</li></ol><ol type="1" id="3f2720e4-6f49-8312-85d5-812fea2b3781" class="numbered-list" start="6" dir="auto"><li>중지</li></ol><ol type="1" id="a2a720e4-6f49-82dc-80cb-01ea60adf48a" class="numbered-list" start="7" dir="auto"><li>삭제</li></ol><pre id="cd2720e4-6f49-83f6-9ad7-81fdc0fe6526" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -dit --name test01 ubuntu:22.04 bash
+docker exec -it test01 bash
+exit
+docker stop test01
+docker rm test01</code></pre><hr id="78a720e4-6f49-83e7-84c4-81d1da149b00" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,854 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>WAF 로그를 Athena로 조회</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="392720e4-6f49-8256-ace7-013abba6dac4" class="page sans"><header><h1 class="page-title" dir="auto">WAF 로그를 Athena로 조회</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="d2a720e4-6f49-8325-a4e1-812f8a3d4770" class="" dir="auto">실습 목표</h2><p id="0e1720e4-6f49-837e-9b1e-81bdfb4cb920" class="" dir="auto">S3에 저장된 WAF 로그를 Athena에서 조회한다.</p><p id="71b720e4-6f49-82b5-b408-81e87be55ac2" class="" dir="auto">이번 실습에서 할 일은 딱 4단계다.</p><ol type="1" id="a60720e4-6f49-8274-9996-815f123b0bd0" class="numbered-list" start="1" dir="auto"><li>Athena에서 쿼리 결과 저장 위치 설정</li></ol><ol type="1" id="f67720e4-6f49-820e-91a8-01c92027bbd9" class="numbered-list" start="2" dir="auto"><li>Athena에서 데이터베이스 생성</li></ol><ol type="1" id="aa7720e4-6f49-82fe-87b9-81cb54636896" class="numbered-list" start="3" dir="auto"><li>WAF 로그 테이블 생성</li></ol><ol type="1" id="ef4720e4-6f49-8347-8899-816eba433f33" class="numbered-list" start="4" dir="auto"><li>SELECT 쿼리로 로그 조회</li></ol><p id="eb4720e4-6f49-83ff-ab77-01d5a1bd7421" class="" dir="auto">Athena에서 데이터베이스는 Query Editor에서 <code>CREATE DATABASE</code>로 만들고, 쿼리를 실행하려면 먼저 쿼리 결과 저장 위치를 S3에 지정해야 한다. </p><hr id="10f720e4-6f49-8240-9b26-018327920f25" dir="auto"/><h1 id="9c6720e4-6f49-8230-b315-01c354de0dab" class="" dir="auto">1. 실습 전 준비</h1><p id="3a0720e4-6f49-8297-a969-01bbddbe6be1" class="" dir="auto">이미 끝난 상태</p><ul id="518720e4-6f49-82dd-b2d5-01f71dfc8bec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF 로그 수집 설정 완료</li></ul><ul id="852720e4-6f49-8276-98a4-01c6b16f4f24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firehose로 S3 저장 완료</li></ul><ul id="e9b720e4-6f49-8387-9851-01fe53aa5edd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷에 로그 파일 존재</li></ul><p id="076720e4-6f49-835d-bacc-018834082275" class="" dir="auto">추가로 필요한 것</p><ul id="845720e4-6f49-8364-a715-811c4aa0b11c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Athena 사용 권한</li></ul><ul id="bde720e4-6f49-823c-8601-8175b78dae8a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Athena 결과 저장용 S3 버킷 또는 경로</li></ul><p id="0cc720e4-6f49-837b-a88c-0152a3622801" class="" dir="auto">예시</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="1d1720e4-6f49-83ef-b536-81333ecbcfec" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">WAF 로그 버킷: s3://my-waf-log-bucket/waf-logs/
+Athena 결과 버킷: s3://my-athena-result-bucket/</code></pre><hr id="232720e4-6f49-8203-8440-8148936e64b0" dir="auto"/><h1 id="434720e4-6f49-82ee-991e-8171cf6bfa2d" class="" dir="auto">2. 1단계 - Athena 열기</h1><p id="161720e4-6f49-83fc-bf1d-01c6e2eadcab" class="" dir="auto">AWS 콘솔에서 다음으로 이동한다.</p><pre id="87f720e4-6f49-8277-a0bb-81fc48e72d9c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS Console → Athena → Query editor</code></pre><p id="f0e720e4-6f49-83fd-8a9e-817a90cd6d4b" class="" dir="auto">처음 들어가면 Query Editor 화면이 보인다.</p><hr id="4f4720e4-6f49-83ab-a63a-816fef5dcb68" dir="auto"/><h1 id="e1f720e4-6f49-8366-b2a7-81cad9823c09" class="" dir="auto">3. 2단계 - Athena 결과 저장 위치 설정</h1><p id="14c720e4-6f49-8285-b60b-813334645bb9" class="" dir="auto">Athena는 쿼리 결과를 S3에 저장해야 한다.</p><p id="810720e4-6f49-82e1-9cd3-81cb7bf8ee0d" class="" dir="auto">이 설정이 안 되어 있으면 쿼리가 실행되지 않을 수 있다. Athena 콘솔에서는 Settings에서 Query result location을 지정하거나, Workgroup 설정이 이를 덮어쓸 수 있다.</p><h2 id="0fb720e4-6f49-831f-a0ac-81eab93b7302" class="" dir="auto">3.1 설정 메뉴 이동</h2><p id="44a720e4-6f49-8387-99f1-01bb4fdbb0e0" class="" dir="auto">Athena Query Editor 화면에서</p><ul id="3a4720e4-6f49-826d-8b01-812f60b447e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">우측 상단 또는 상단 메뉴의 <strong>Settings</strong></li></ul><ul id="12f720e4-6f49-820f-883d-01f8e49a902c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">또는 <strong>Edit settings</strong></li></ul><p id="c7f720e4-6f49-830e-91f1-81b69ba3310b" class="" dir="auto">으로 들어간다.</p><h2 id="b97720e4-6f49-821a-92d3-816e39928eed" class="" dir="auto">3.2 Query result location 입력</h2><p id="dfc720e4-6f49-82dd-bd19-81bf958b4d33" class="" dir="auto">예시</p><pre id="882720e4-6f49-82b3-819e-01e7de8b989a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://my-athena-result-bucket/</code></pre><p id="82e720e4-6f49-825c-a5e3-812e3a803555" class="" dir="auto">또는 폴더까지 지정 가능</p><pre id="6f3720e4-6f49-8294-b39e-01d3ecac487e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://my-athena-result-bucket/query-results/</code></pre><h2 id="990720e4-6f49-8241-b073-014e9093014f" class="" dir="auto">3.3 저장</h2><p id="5ec720e4-6f49-8244-859a-01905becfcbd" class="" dir="auto"><strong>Save</strong> 를 눌러 저장한다.</p><hr id="24f720e4-6f49-821a-a5b6-814ea979bd22" dir="auto"/><h1 id="1f3720e4-6f49-8203-8163-810de6e96582" class="" dir="auto">4. 3단계 - 데이터베이스 생성</h1><p id="55d720e4-6f49-82b4-a6cd-01f60d7a5d1d" class="" dir="auto">이제 Athena 안에 WAF 로그용 데이터베이스를 만든다.</p><h2 id="c93720e4-6f49-82b3-b8c0-81d9b4b7ff1c" class="" dir="auto">4.1 쿼리 입력</h2><p id="ed3720e4-6f49-8331-896b-01cd7ee51de4" class="" dir="auto">Athena Query Editor에 아래 SQL 입력</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" integrity="sha512-sijCOJblSCXYYmXdwvqV0tak8QJW5iy2yLB1wAbbLc3OOIueqymizRFWUS/mwKctnzPKpNdPJV3aK1zlDMJmXQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="4c2720e4-6f49-82a4-88c5-01a839e93990" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE DATABASE IF NOT EXISTS waf_logs_db;</code></pre><h2 id="2fd720e4-6f49-838b-a8f2-818499daea1c" class="" dir="auto">4.2 실행</h2><p id="477720e4-6f49-825b-9e64-01496811eac1" class="" dir="auto"><strong>Run</strong> 버튼 클릭</p><p id="94a720e4-6f49-8212-af02-81c55eb36852" class="" dir="auto">정상 실행되면 오류 없이 완료된다.</p><h2 id="a16720e4-6f49-83b6-b4dc-81ad7ce096bc" class="" dir="auto">4.3 데이터베이스 선택</h2><p id="072720e4-6f49-8252-b6be-81daf1946c04" class="" dir="auto">다음 SQL 실행</p><pre id="f94720e4-6f49-824b-a1eb-0171adc9c6ec" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">USE waf_logs_db;</code></pre><p id="d33720e4-6f49-8374-8283-81bb624b3940" class="" dir="auto">또는 왼쪽 데이터베이스 목록에서 <code>waf_logs_db</code> 를 직접 선택해도 된다.</p><h3 id="fbe720e4-6f49-8283-89ab-016d861f22b9" class="" dir="auto">설명</h3><p id="d38720e4-6f49-821d-bd58-01a56f51b8de" class="" dir="auto">여기서 만드는 데이터베이스는 <strong>실제 로그 파일 저장 공간이 아님</strong>.</p><p id="f49720e4-6f49-83db-aa22-812d1669ed9c" class="" dir="auto">실제 로그는 S3에 있고, Athena 데이터베이스는 <strong>테이블 메타데이터를 관리하는 논리 공간</strong>이다. </p><hr id="e37720e4-6f49-8304-a931-8143d50ff7cb" dir="auto"/><h1 id="a25720e4-6f49-82b9-a3b7-01d16662db12" class="" dir="auto">5. 4단계 - S3 로그 경로 확인</h1><p id="bfa720e4-6f49-8302-8b61-813cad790fb4" class="" dir="auto">이 단계가 중요하다.</p><p id="05a720e4-6f49-8354-b4a1-01981b4c62ea" class="" dir="auto">S3 콘솔에 들어가서 <strong>WAF 로그가 실제로 저장된 경로</strong>를 확인한다.</p><p id="c26720e4-6f49-824a-81d4-81be1f0cc4cd" class="" dir="auto">예를 들어 S3 안에 이런 식으로 로그가 있을 수 있다.</p><pre id="826720e4-6f49-833c-b49f-817a3d935eb3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://my-waf-log-bucket/waf-logs/</code></pre><p id="e88720e4-6f49-82c4-9ca4-010143bd0d3a" class="" dir="auto">또는</p><pre id="07a720e4-6f49-8290-bbe4-81933ab9df9b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://my-waf-log-bucket/AWSLogs/123456789012/WAFLogs/ap-northeast-2/my-webacl/</code></pre><h3 id="505720e4-6f49-83b1-a0fb-01d7a8e93a1f" class="" dir="auto">중요한 기준</h3><p id="858720e4-6f49-8396-bc7f-011d9a7c690e" class="" dir="auto">Athena 테이블의 <code>LOCATION</code> 은</p><p id="dc0720e4-6f49-82be-a554-01da7fe0aa9f" class="" dir="auto"><strong>로그 파일들이 계속 쌓이는 상위 경로</strong>를 지정하면 된다.</p><p id="c89720e4-6f49-83a5-a09e-01a91bc82ad1" class="" dir="auto">예를 들어 로그가 계속 아래에 쌓이면</p><pre id="e6a720e4-6f49-8290-aaad-01f4f80c5277" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://my-waf-log-bucket/waf-logs/2026/04/01/10/...</code></pre><p id="449720e4-6f49-82e5-8095-81d474efe6ca" class="" dir="auto">테이블 LOCATION은 이렇게 준다.</p><pre id="256720e4-6f49-8310-80f4-8175145f37e5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://my-waf-log-bucket/waf-logs/</code></pre><p id="cfd720e4-6f49-834b-8561-017309c8424f" class="" dir="auto">WAF 로그 테이블 생성 시 <code>LOCATION</code> 을 실제 로그 저장 S3 경로로 수정해서 사용.</p><hr id="840720e4-6f49-82f5-857e-013501cf8119" dir="auto"/><h1 id="cb2720e4-6f49-83b3-b828-013213fae2e3" class="" dir="auto">6. 5단계 - 최소 컬럼 버전 테이블 생성</h1><p id="a4d720e4-6f49-8206-b80d-01941078f0af" class="" dir="auto">처음 실습은 <strong>전체 컬럼을 다 넣지 말고</strong>,</p><p id="553720e4-6f49-8235-b30b-01c4e67901f7" class="" dir="auto">자주 보는 컬럼만 넣는 <strong>최소 버전 테이블</strong>로 시작하는 것이 가장 쉽다.</p><p id="24d720e4-6f49-82cb-ae1a-81ddf82ebc48" class="" dir="auto">아래 SQL에서 <code>LOCATION</code> 만 본인 S3 경로로 바꿔서 실행한다.</p><pre id="dcb720e4-6f49-8399-b970-81e4ba9ed1e9" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE EXTERNAL TABLE IF NOT EXISTS waf_logs_db.waf_logs_simple (
+  `timestamp` bigint,
+  formatversion int,
+  webaclid string,
+  terminatingruleid string,
+  terminatingruletype string,
+  action string,
+  httprequest struct&lt;
+    clientip:string,
+    country:string,
+    uri:string,
+    args:string,
+    httpversion:string,
+    httpmethod:string,
+    requestid:string
+  &gt;
+)
+ROW FORMAT SERDE &#x27;org.openx.data.jsonserde.JsonSerDe&#x27;
+LOCATION &#x27;s3://my-waf-log-bucket/waf-logs/&#x27;;</code></pre><h2 id="060720e4-6f49-8260-8f30-01bfd4b84656" class="" dir="auto">실행 방법</h2><ol type="1" id="062720e4-6f49-8332-b883-81eb5c49abbe" class="numbered-list" start="1" dir="auto"><li>Athena Query Editor에 붙여넣기</li></ol><ol type="1" id="48c720e4-6f49-826a-a3aa-01a7dfd86090" class="numbered-list" start="2" dir="auto"><li><code>LOCATION</code> 경로 수정</li></ol><ol type="1" id="956720e4-6f49-832d-9d3e-81a153dd64e9" class="numbered-list" start="3" dir="auto"><li><strong>Run</strong> 클릭</li></ol><h3 id="64f720e4-6f49-83f8-8a28-017e8b017ee7" class="" dir="auto">설명</h3><ul id="c6d720e4-6f49-828e-8283-016e98fe8aa2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>CREATE EXTERNAL TABLE</code><p id="c77720e4-6f49-8382-9c4b-812b6d5df7ff" class="" dir="auto">S3에 있는 파일을 외부 테이블처럼 읽겠다는 의미</p></li></ul><ul id="87b720e4-6f49-8361-ba15-81227b4fddb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>timestamp</code><p id="7f5720e4-6f49-8316-a4f8-81ceb027ce28" class="" dir="auto">로그 발생 시간</p></li></ul><ul id="c38720e4-6f49-83ed-9cb2-815261a4d483" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>action</code><p id="287720e4-6f49-8362-bbf8-8145b6240ddb" class="" dir="auto"><code>ALLOW</code>, <code>BLOCK</code>, <code>COUNT</code> 같은 처리 결과</p></li></ul><ul id="716720e4-6f49-8351-af1b-81340d88e7b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terminatingruleid</code><p id="523720e4-6f49-82bc-ac35-81e837ed6feb" class="" dir="auto">요청을 최종적으로 처리한 룰 ID</p></li></ul><ul id="f67720e4-6f49-8361-85fe-01f1e9c8a13e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>httprequest</code><p id="7c9720e4-6f49-8308-aab0-01cfb19571f4" class="" dir="auto">요청 IP, 국가, URI, 메서드 같은 실제 요청 정보</p></li></ul><p id="fa6720e4-6f49-82c8-a1d4-01a7caf1dc41" class="" dir="auto">Athena의 WAF 로그 예제는 OpenX JSON SerDe를 사용하며, WAF 로그 테이블 예제는 v1/v2 모두에 사용할 수 있게 설계되어 있다. </p><hr id="37a720e4-6f49-83a2-b886-0162cc178655" dir="auto"/><h1 id="268720e4-6f49-8221-a5be-01ed84f561d0" class="" dir="auto">7. 6단계 - 테이블 생성 확인</h1><p id="1df720e4-6f49-83ff-8611-8105726a4970" class="" dir="auto">테이블이 만들어졌는지 확인한다.</p><p id="89a720e4-6f49-8325-9a4a-01c6cd92a1a9" class="" dir="auto">왼쪽 목록에서</p><ul id="c72720e4-6f49-826f-98cb-013582953258" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Database: <code>waf_logs_db</code></li></ul><ul id="785720e4-6f49-8220-af7e-814690975a82" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Table: <code>waf_logs_simple</code></li></ul><p id="155720e4-6f49-82de-a434-016de6b4eafd" class="" dir="auto">가 보이면 성공이다.</p><p id="b58720e4-6f49-832d-8ea5-811fd8fadfd8" class="" dir="auto">또는 SQL로 확인할 수도 있다.</p><pre id="d82720e4-6f49-83b4-bece-81818a2579de" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SHOW TABLES IN waf_logs_db;</code></pre><hr id="b56720e4-6f49-83f6-a7f2-018ab4776cb1" dir="auto"/><h1 id="008720e4-6f49-8373-9228-01e60914a4c7" class="" dir="auto">8. 7단계 - 로그가 읽히는지 바로 확인</h1><p id="c82720e4-6f49-8329-b1f1-01446c74bace" class="" dir="auto">가장 먼저 이 쿼리를 실행한다.</p><pre id="f4e720e4-6f49-835f-885e-01aca1bbf652" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT *
+FROM waf_logs_db.waf_logs_simple
+LIMIT 10;</code></pre><h2 id="a42720e4-6f49-8276-875b-81c497359b24" class="" dir="auto">정상일 때</h2><ul id="5ba720e4-6f49-822b-a1d7-01bc25c6cbc3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과가 1건 이상 보임</li></ul><ul id="69f720e4-6f49-827a-b30b-81bc7f58cc52" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>timestamp</code></li></ul><ul id="e78720e4-6f49-83a6-9191-011efca6771e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>action</code></li></ul><ul id="3fb720e4-6f49-83aa-ac96-817f195a02c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terminatingruleid</code></li></ul><ul id="111720e4-6f49-8386-9cc1-810486932330" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>httprequest</code></li></ul><p id="49d720e4-6f49-8390-b960-819559014be2" class="" dir="auto">컬럼이 출력됨</p><h2 id="b82720e4-6f49-8385-b4d6-81937f7b4c33" class="" dir="auto">안 보일 때 확인할 것</h2><ul id="371720e4-6f49-830f-b0db-812ee8cde2cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">LOCATION 경로가 맞는지</li></ul><ul id="32a720e4-6f49-820f-8ae9-01f8b40f9ce5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3에 실제 로그 파일이 있는지</li></ul><ul id="ad5720e4-6f49-82ff-af26-01207979f20b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Athena 결과 저장 위치 설정이 됐는지</li></ul><ul id="dce720e4-6f49-8213-822e-8143bd9ac52e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다른 리전에서 Athena를 보고 있지 않은지</li></ul><hr id="67d720e4-6f49-831c-b008-015f653c4373" dir="auto"/><h1 id="7bf720e4-6f49-826c-ba03-81aaba98fd64" class="" dir="auto">9. 8단계 - 사람이 읽기 쉬운 형태로 조회</h1><p id="530720e4-6f49-822f-9691-81538500f1f7" class="" dir="auto"><code>timestamp</code> 는 밀리초 기준이라 그대로 보면 불편하다.</p><p id="fdd720e4-6f49-821f-ac2f-01e4e38abf42" class="" dir="auto">그래서 시간을 변환해서 본다.</p><pre id="a74720e4-6f49-821f-a9ce-815ea2c4ae9a" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  from_unixtime(&quot;timestamp&quot;/1000) AS event_time,
+  action,
+  terminatingruleid,
+  httprequest.clientip,
+  httprequest.country,
+  httprequest.httpmethod,
+  httprequest.uri
+FROM waf_logs_db.waf_logs_simple
+LIMIT 20;</code></pre><h2 id="4b6720e4-6f49-8369-966a-810ffe4a0fa2" class="" dir="auto">이 쿼리에서 보는 것</h2><ul id="219720e4-6f49-8225-a982-0152d452eb94" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>event_time</code> : 사람이 읽을 수 있는 시간</li></ul><ul id="0d5720e4-6f49-830b-a239-817b8f23c682" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>action</code> : 허용/차단 여부</li></ul><ul id="a40720e4-6f49-8312-8733-010b9f4069ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terminatingruleid</code> : 어떤 룰이 처리했는지</li></ul><ul id="988720e4-6f49-8340-84e5-818329b23282" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>clientip</code> : 요청 보낸 IP</li></ul><ul id="0f2720e4-6f49-8218-a063-01742fafd0b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>country</code> : 요청 국가</li></ul><ul id="4d6720e4-6f49-82a1-855c-01018f06bf4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>uri</code> : 요청 경로</li></ul><hr id="11f720e4-6f49-82f1-a5a8-01130098175e" dir="auto"/><h1 id="5c2720e4-6f49-83be-b4a5-012881776012" class="" dir="auto">10. 9단계 - 차단된 요청만 보기</h1><p id="bfb720e4-6f49-83fa-9290-013e3588cb79" class="" dir="auto">이제 실무에서 가장 많이 보는 <code>BLOCK</code> 요청만 따로 조회한다.</p><pre id="1f4720e4-6f49-82f3-844d-81066b50fa94" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  from_unixtime(&quot;timestamp&quot;/1000) AS event_time,
+  action,
+  terminatingruleid,
+  httprequest.clientip,
+  httprequest.country,
+  httprequest.uri
+FROM waf_logs_db.waf_logs_simple
+WHERE action = &#x27;BLOCK&#x27;
+ORDER BY &quot;timestamp&quot; DESC
+LIMIT 50;</code></pre><h2 id="c40720e4-6f49-82f1-9998-016347445ce3" class="" dir="auto">확인 포인트</h2><ul id="cf1720e4-6f49-82f8-b865-819b3041de1f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누가 차단됐는지</li></ul><ul id="4ed720e4-6f49-8278-9749-0152284760a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 URI에 접근했는지</li></ul><ul id="062720e4-6f49-8315-8f9a-01343d127d1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 룰이 차단했는지</li></ul><hr id="dbd720e4-6f49-82e6-8a8a-811fa19c5fb4" dir="auto"/><h1 id="d95720e4-6f49-8267-9961-8103aa701aac" class="" dir="auto">11. 10단계 - 가장 많이 차단된 IP 보기</h1><pre id="229720e4-6f49-82eb-a362-01d28b38726b" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  httprequest.clientip AS client_ip,
+  COUNT(*) AS block_count
+FROM waf_logs_db.waf_logs_simple
+WHERE action = &#x27;BLOCK&#x27;
+GROUP BY httprequest.clientip
+ORDER BY block_count DESC
+LIMIT 20;</code></pre><h2 id="c65720e4-6f49-83cf-b464-81aaf958502a" class="" dir="auto">확인 포인트</h2><ul id="900720e4-6f49-824b-b971-810949be19b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반복적으로 공격하는 IP가 있는지</li></ul><ul id="73f720e4-6f49-830f-87ed-81ef020342a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 IP가 비정상적으로 많은 요청을 보내는지</li></ul><hr id="9dd720e4-6f49-8240-8953-010b7802c0a7" dir="auto"/><h1 id="981720e4-6f49-82e4-8961-01934764987e" class="" dir="auto">12. 11단계 - 많이 공격받는 URI 보기</h1><pre id="14b720e4-6f49-838c-99e9-016c5f4a447c" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  httprequest.uri AS request_uri,
+  COUNT(*) AS blocked_count
+FROM waf_logs_db.waf_logs_simple
+WHERE action = &#x27;BLOCK&#x27;
+GROUP BY httprequest.uri
+ORDER BY blocked_count DESC
+LIMIT 20;</code></pre><h2 id="6d2720e4-6f49-820a-bac7-8128030acf00" class="" dir="auto">확인 포인트</h2><ul id="c56720e4-6f49-83b2-a465-815a632944f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/login</code></li></ul><ul id="55e720e4-6f49-82b5-bfa5-8125343fa475" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/admin</code></li></ul><ul id="ba9720e4-6f49-83f6-8760-817ddf76de0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/wp-login.php</code></li></ul><p id="614720e4-6f49-832a-b5f2-8162bf346529" class="" dir="auto">이런 경로가 많이 보이는지 확인한다.</p><hr id="129720e4-6f49-8380-a160-0180f2b4f567" dir="auto"/><h1 id="39f720e4-6f49-8273-9866-01bbc31d5b48" class="" dir="auto">13. 12단계 - 국가별 차단 요청 보기</h1><pre id="b89720e4-6f49-820d-8844-01dfc5ee4807" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  httprequest.country AS country,
+  COUNT(*) AS blocked_count
+FROM waf_logs_db.waf_logs_simple
+WHERE action = &#x27;BLOCK&#x27;
+GROUP BY httprequest.country
+ORDER BY blocked_count DESC
+LIMIT 20;</code></pre><hr id="18b720e4-6f49-8325-a9d6-010c7be62a13" dir="auto"/><h1 id="4ca720e4-6f49-82c5-aa6e-810b477effd5" class="" dir="auto">14. 가장 많이 발생하는 실수</h1><h2 id="26b720e4-6f49-8204-bcd4-01005c8e8bd1" class="" dir="auto">14.1 테이블은 생성됐는데 조회 결과가 없음</h2><p id="2c8720e4-6f49-8353-87cb-01d45a54b87e" class="" dir="auto">원인</p><ul id="029720e4-6f49-83be-9409-018e02fde2ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 경로 잘못 입력</li></ul><ul id="ba1720e4-6f49-832e-99ac-01ac00cd0704" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상위 폴더가 너무 위거나 너무 아래임</li></ul><ul id="ded720e4-6f49-8312-abc1-81ac53daa2f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 로그가 아직 없음</li></ul><p id="e04720e4-6f49-824c-97b6-01fb2e3f8153" class="" dir="auto">조치</p><ul id="aaa720e4-6f49-82e2-bcd2-01d1dff81c40" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 콘솔에서 실제 로그 파일 경로 다시 확인</li></ul><ul id="ee9720e4-6f49-8264-8287-81aff2335b43" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>LOCATION</code> 수정 후 테이블 다시 생성</li></ul><h2 id="9e1720e4-6f49-837c-ade3-811e0e79614b" class="" dir="auto">14.2 <code>NULL</code> 이 많이 보임</h2><p id="301720e4-6f49-839d-a75a-81b3b30577db" class="" dir="auto">원인</p><ul id="086720e4-6f49-832c-98ab-01b5ed44afc5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 로그 JSON 구조와 컬럼 구조가 일부 다름</li></ul><ul id="32f720e4-6f49-82bd-84f4-81101393b61d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 로그에 그 값이 없음</li></ul><h2 id="42d720e4-6f49-82af-a362-013750594155" class="" dir="auto">14.3 쿼리가 실행 안 됨</h2><p id="bf3720e4-6f49-83b5-b239-019d79dd2e81" class="" dir="auto">원인</p><ul id="cba720e4-6f49-821b-a391-0116a64bb0e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Athena 결과 저장 위치 미설정</li></ul><ul id="372720e4-6f49-8372-8cec-01dfccbd9db7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Workgroup 설정이 덮어씀</li></ul><ul id="62a720e4-6f49-83d3-b8a9-01187a369277" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 권한 부족</li></ul><p id="cea720e4-6f49-821e-9d63-01beb53ad206" class="" dir="auto">Athena는 쿼리 실행 전에 결과 저장 위치가 필요하고, 경우에 따라 Workgroup 설정이 클라이언트 설정을 override할 수 있다. </p><hr id="898720e4-6f49-8336-9e4b-01c0e3687488" dir="auto"/><h1 id="884720e4-6f49-8369-80c0-01f2958f91ce" class="" dir="auto">15. 명령 모음</h1><p id="0a7720e4-6f49-8229-89c8-81bbeb43f852" class="" dir="auto">학생이 따라하기 쉽게 최소 명령만 다시 모으면 아래 4개다.</p><h2 id="e8d720e4-6f49-828d-8e66-8112eb085bc2" class="" dir="auto">1) 데이터베이스 생성</h2><pre id="7b6720e4-6f49-82bf-b50d-81868fc02897" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE DATABASE IF NOT EXISTS waf_logs_db;</code></pre><h2 id="342720e4-6f49-8274-9551-81b4aa6d9844" class="" dir="auto">2) 데이터베이스 선택</h2><pre id="834720e4-6f49-82b4-a573-81a34fadd6d7" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">USE waf_logs_db;</code></pre><h2 id="e90720e4-6f49-83ba-b855-8133439cfcbe" class="" dir="auto">3) 테이블 생성</h2><pre id="406720e4-6f49-8314-8f21-81ff60550680" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE EXTERNAL TABLE IF NOT EXISTS waf_logs_db.waf_logs_simple (
+  `timestamp` bigint,
+  formatversion int,
+  webaclid string,
+  terminatingruleid string,
+  terminatingruletype string,
+  action string,
+  httprequest struct&lt;
+    clientip:string,
+    country:string,
+    uri:string,
+    args:string,
+    httpversion:string,
+    httpmethod:string,
+    requestid:string
+  &gt;
+)
+ROW FORMAT SERDE &#x27;org.openx.data.jsonserde.JsonSerDe&#x27;
+LOCATION &#x27;s3://my-waf-log-bucket/waf-logs/&#x27;;</code></pre><h2 id="e15720e4-6f49-82f1-a1f3-815cc4fd9272" class="" dir="auto">4) 조회</h2><pre id="bb2720e4-6f49-839e-97be-013dbf7c98bb" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  from_unixtime(&quot;timestamp&quot;/1000) AS event_time,
+  action,
+  terminatingruleid,
+  httprequest.clientip,
+  httprequest.country,
+  httprequest.uri
+FROM waf_logs_db.waf_logs_simple
+LIMIT 20;</code></pre><hr id="78d720e4-6f49-8399-b1b1-815bffef9113" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

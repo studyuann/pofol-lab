@@ -1,0 +1,772 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>6장 비용 최적화와 엣지 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="94b720e4-6f49-82f3-a3a0-01032ab1f740" class="page sans"><header><h1 class="page-title" dir="auto">6장 비용 최적화와 엣지 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="5a7720e4-6f49-83ec-a4c9-01cd4c52f423" dir="auto"/><h1 id="1ea720e4-6f49-82a1-8336-812e540014fb" class="" dir="auto">6.1 비용 최적화와 엣지 설계를 함께 보는 이유</h1><p id="e29720e4-6f49-82a3-93d8-014b509ee7fe" class="" dir="auto">아키텍처 설계에서는 성능, 가용성, 보안만 강조되기 쉬움.</p><p id="a3c720e4-6f49-8279-8355-8176cdf03898" class="" dir="auto">하지만 실제 운영에서는 아무리 구조가 좋아도 비용이 통제되지 않으면 지속 가능한 아키텍처라고 보기 어려움.</p><p id="1ae720e4-6f49-826f-9d0a-01dce6e45894" class="" dir="auto">반대로 비용만 줄이려고 하다가 성능과 안정성이 무너지면 그것도 좋은 설계가 아님.</p><p id="b8f720e4-6f49-8224-93a3-815807d4f251" class="" dir="auto">엣지 아키텍처도 비슷함.</p><p id="e03720e4-6f49-82a8-934d-0194d2f2e184" class="" dir="auto">CloudFront 같은 엣지 서비스를 쓰면 사용자 경험이 좋아질 수 있지만, 무조건 붙인다고 끝나는 것은 아님.</p><p id="e22720e4-6f49-83ff-8e15-81b11a220ff6" class="" dir="auto">어떤 콘텐츠를 어디까지 캐시할지, 원본 부하를 어떻게 줄일지, 어떤 요청은 원본으로 보내야 할지, 어떤 보안 기능을 앞단에서 처리할지를 함께 봐야 함.</p><p id="b6e720e4-6f49-8327-9aae-01c2ec0ff910" class="" dir="auto">즉, 이 장의 핵심은 다음과 같음.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23b720e4-6f49-83fd-a132-8129482e60cf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">좋은 아키텍처는 성능만 좋은 것이 아니라
+비용까지 통제 가능해야 하며,
+사용자 접점 품질도 함께 고려해야 한다.</code></pre><hr id="fac720e4-6f49-834e-81df-812b4a3ef70a" dir="auto"/><h1 id="ba6720e4-6f49-83bf-9c64-8167ec4f987f" class="" dir="auto">6.2 비용 최적화의 의미</h1><p id="d44720e4-6f49-821d-a059-01cc93dcf842" class="" dir="auto">비용 최적화는 단순히 예산을 줄이는 활동이 아님.</p><p id="3fb720e4-6f49-834c-b8e1-014bdde5afb1" class="" dir="auto">필요한 성능과 가용성을 유지하면서, 불필요한 낭비를 줄이고, 구조적으로 효율적인 선택을 하는 것이 핵심임.</p><p id="ecf720e4-6f49-8267-be9e-81d2ee8e412e" class="" dir="auto">즉, 비용 최적화는 다음 질문에 답하는 과정임.</p><ul id="614720e4-6f49-833e-8f79-816b661e3308" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 리소스는 정말 항상 켜져 있어야 하는가</li></ul><ul id="9d7720e4-6f49-8216-bec7-81be91045a73" class="bulleted-list" dir="auto"><li style="list-style-type:disc">더 작은 단위로 확장 가능한가</li></ul><ul id="4ac720e4-6f49-8204-bc11-01ae8d6ce75e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리형 서비스를 쓰는 편이 운영비까지 포함해 더 유리한가</li></ul><ul id="8d9720e4-6f49-8365-acb6-016214474664" class="bulleted-list" dir="auto"><li style="list-style-type:disc">저장소 계층을 분리할 수 있는가</li></ul><ul id="312720e4-6f49-83e0-b9be-81e56da7d0c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">캐시를 두면 원본 비용을 줄일 수 있는가</li></ul><ul id="61b720e4-6f49-83b8-ac74-01b90269ba49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">트래픽을 더 가까운 곳에서 처리하면 원본 부하를 줄일 수 있는가</li></ul><p id="bc5720e4-6f49-82ec-bace-01afd39d0a64" class="" dir="auto">즉, 비용 최적화는 “싸게 만들기”가 아니라</p><p id="8a9720e4-6f49-825d-934d-81282db57392" class="" dir="auto"><strong>구조적으로 낭비를 줄이는 설계 활동</strong>임.</p><hr id="fea720e4-6f49-8221-9689-81ccab63a0ef" dir="auto"/><h1 id="444720e4-6f49-83b8-ace5-81ff90c43d02" class="" dir="auto">6.3 비용이 증가하는 대표 원인</h1><p id="2f3720e4-6f49-8315-ac31-016e598980a5" class="" dir="auto">AWS 비용은 단순히 리소스를 많이 써서만 증가하는 것이 아님.</p><p id="d91720e4-6f49-825a-80c3-01e7149b841c" class="" dir="auto">설계가 비효율적일 때도 비용이 빠르게 증가할 수 있음.</p><p id="f8e720e4-6f49-8382-8b18-81fdcae7e079" class="" dir="auto">대표적인 원인은 다음과 같음.</p><h3 id="cb3720e4-6f49-82ff-940a-01f464d6621d" class="" dir="auto">1. 과도한 리소스 프로비저닝</h3><p id="a9b720e4-6f49-831e-ac0e-01491c0d2b56" class="" dir="auto">실제 필요보다 큰 인스턴스를 계속 유지하는 경우임.</p><h3 id="a1a720e4-6f49-8393-a800-0135df9dd74d" class="" dir="auto">2. 사용하지 않는 리소스 방치</h3><p id="85d720e4-6f49-828b-8d09-8111462c4e2c" class="" dir="auto">중지하지 않은 개발 서버, 연결 해제된 볼륨, 미사용 스냅샷, 사용하지 않는 Elastic IP 등이 여기에 해당함.</p><h3 id="72f720e4-6f49-83e8-8e59-81dac2cdadd9" class="" dir="auto">3. 무분별한 데이터 저장</h3><p id="95c720e4-6f49-8236-8f41-81c4d4647906" class="" dir="auto">모든 데이터를 고성능, 고비용 스토리지에 장기간 보관하는 경우임.</p><h3 id="fc2720e4-6f49-823b-a802-018ecb45255d" class="" dir="auto">4. 네트워크 경로 비효율</h3><p id="6cf720e4-6f49-82ee-8af5-81e876a398e6" class="" dir="auto">굳이 NAT를 거치지 않아도 되는 트래픽이 NAT를 통과하거나, 캐시 없이 원본까지 반복 호출되는 경우임.</p><h3 id="234720e4-6f49-83f2-b4c7-017f4cf49d8e" class="" dir="auto">5. 수동 고정 확장 구조</h3><p id="53d720e4-6f49-8228-8622-81da7ad7b033" class="" dir="auto">항상 최대 트래픽을 기준으로 서버 수를 고정 운영하는 경우임.</p><p id="398720e4-6f49-82eb-acc7-01843915f377" class="" dir="auto">즉, 비용은 단순 사용량 문제가 아니라</p><p id="664720e4-6f49-8334-98d9-819aa7d7e232" class="" dir="auto"><strong>아키텍처 선택의 결과</strong>이기도 함.</p><hr id="555720e4-6f49-82fc-801f-0197ea59b036" dir="auto"/><h1 id="f14720e4-6f49-821e-8ad0-010a96a3c633" class="" dir="auto">6.4 비용 최적화의 핵심 원칙</h1><p id="b5a720e4-6f49-83ff-8481-8114799be05e" class="" dir="auto">고급 설계 관점에서 비용 최적화는 몇 가지 원칙으로 정리할 수 있음.</p><h3 id="66b720e4-6f49-83d3-9a9b-019e717548c4" class="" dir="auto">1. 필요에 따라 확장하고 줄일 수 있어야 함</h3><p id="b44720e4-6f49-82c6-a745-01ed9eacca42" class="" dir="auto">Auto Scaling, 서버리스, 컨테이너 기반 확장 구조가 여기에 해당함.</p><h3 id="147720e4-6f49-839b-a57a-01cea66f6621" class="" dir="auto">2. 계층별로 다른 비용 전략을 가져가야 함</h3><p id="920720e4-6f49-82f3-8d33-01af2f27ff58" class="" dir="auto">컴퓨팅, 저장소, 데이터베이스, 네트워크는 비용 특성이 다름.</p><h3 id="b47720e4-6f49-82eb-baaf-8192067618c6" class="" dir="auto">3. 사용 패턴을 반영해야 함</h3><p id="22c720e4-6f49-8378-b4bc-81d398e6ff58" class="" dir="auto">24시간 항상 켜져 있는 워크로드와 간헐적으로 사용하는 워크로드는 다른 방식으로 설계해야 함.</p><h3 id="a4a720e4-6f49-8386-a14f-8171b23b681f" class="" dir="auto">4. 운영 비용까지 함께 봐야 함</h3><p id="2cc720e4-6f49-83a3-96ee-813dbf08939c" class="" dir="auto">직접 관리하는 구조가 단순히 인스턴스 비용만 싸다고 해서 전체적으로 저렴한 것은 아닐 수 있음.</p><h3 id="334720e4-6f49-82b0-9419-81586a2bdbb6" class="" dir="auto">5. 사용자 경험과 비용의 균형을 맞춰야 함</h3><p id="99b720e4-6f49-835a-86f0-818ca0d95779" class="" dir="auto">비용만 줄이다가 성능 저하가 심하면 전체적으로 손해가 될 수 있음.</p><p id="ad9720e4-6f49-824b-93e0-01f86e3e9314" class="" dir="auto">즉, 비용 최적화는 단순히 리소스를 줄이는 것이 아니라</p><p id="1c8720e4-6f49-821d-a33b-81e5ff2ef923" class="" dir="auto"><strong>구조와 운영 방식 전체를 조정하는 일</strong>임.</p><hr id="e59720e4-6f49-82c8-bb7d-81660983985d" dir="auto"/><h1 id="66c720e4-6f49-83cb-8643-8196d5ef7dd2" class="" dir="auto">6.5 AWS 비용은 어떻게 구성되는가</h1><p id="68d720e4-6f49-826f-a36f-81991718c1ab" class="" dir="auto">비용을 최적화하려면 먼저 어떤 항목에서 비용이 발생하는지 이해해야 함.</p><p id="aa6720e4-6f49-83a7-ad37-01c0f69a7e7e" class="" dir="auto">대표적으로 다음 영역이 중요함.</p><ul id="980720e4-6f49-83c1-b2d9-81ad3551f402" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컴퓨팅 비용</li></ul><ul id="634720e4-6f49-8271-a367-011bc74bb981" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스토리지 비용</li></ul><ul id="a77720e4-6f49-83cf-8b4c-81ca6177db7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 전송 비용</li></ul><ul id="370720e4-6f49-82d8-ac9e-8130b85d15f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터베이스 비용</li></ul><ul id="0e7720e4-6f49-8229-9516-01828e431231" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리형 서비스 비용</li></ul><ul id="13a720e4-6f49-8275-8278-01e691235e20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 및 모니터링 비용</li></ul><p id="bbd720e4-6f49-82b1-af04-817a9081feb4" class="" dir="auto">이때 중요한 점은 단순히 서비스 이름만 보는 것이 아니라</p><p id="2d8720e4-6f49-82c9-9ce8-011e775ff5dd" class="" dir="auto"><strong>워크로드 성격에 따라 어떤 축의 비용이 커지는지</strong>를 보는 것임.</p><p id="2e8720e4-6f49-82c7-961c-01071d6a203d" class="" dir="auto">예를 들어</p><ul id="9d3720e4-6f49-82e7-9787-01a5d183d4b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 애플리케이션은 컴퓨팅과 데이터 전송 비용이 중요할 수 있음</li></ul><ul id="cb1720e4-6f49-83d3-9a18-0169903c4af7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 중심 구조는 스토리지와 데이터베이스 비용이 중요할 수 있음</li></ul><ul id="0df720e4-6f49-838d-b1df-01285e0d2d64" class="bulleted-list" dir="auto"><li style="list-style-type:disc">글로벌 서비스는 CloudFront와 데이터 전송 최적화가 중요할 수 있음</li></ul><p id="001720e4-6f49-8371-9441-0124f536d9d6" class="" dir="auto">즉, 비용 최적화는 서비스별이 아니라 <strong>워크로드별</strong>로 접근해야 함.</p><hr id="e52720e4-6f49-82cc-804a-81fc04a10042" dir="auto"/><h1 id="b06720e4-6f49-821c-ad8f-01ba80e6f315" class="" dir="auto">6.6 컴퓨팅 비용 최적화</h1><p id="5b5720e4-6f49-822e-ba88-01440fdab869" class="" dir="auto">컴퓨팅 계층은 대부분의 아키텍처에서 비용 비중이 큼.</p><p id="9fd720e4-6f49-82a6-b3c1-81bdc0fed58c" class="" dir="auto">따라서 컴퓨팅 비용을 구조적으로 최적화하는 것이 중요함.</p><p id="f53720e4-6f49-822e-b6c7-81caad135db8" class="" dir="auto">대표 방법</p><h3 id="f81720e4-6f49-83f9-b9d2-8178575507f0" class="" dir="auto">1. 인스턴스 크기 적정화</h3><p id="c96720e4-6f49-824a-a78d-81fa2d58b836" class="" dir="auto">실제 CPU, 메모리 사용량을 보고 과도한 크기를 줄임.</p><h3 id="27d720e4-6f49-82fd-a073-81e09b6d4930" class="" dir="auto">2. Auto Scaling 활용</h3><p id="3ee720e4-6f49-83a9-84b1-01816a1a3b80" class="" dir="auto">필요할 때만 확장하고, 한가할 때는 줄임.</p><h3 id="b1a720e4-6f49-8324-9772-017941380426" class="" dir="auto">3. 관리형 실행 모델 고려</h3><p id="1d2720e4-6f49-82df-a3d7-01019dffb52f" class="" dir="auto">Lambda, Fargate 같은 구조가 특정 워크로드에서는 더 유리할 수 있음.</p><h3 id="c98720e4-6f49-8303-a968-01cc88f9e1f1" class="" dir="auto">4. 사용 패턴에 맞는 요금 모델 선택</h3><p id="973720e4-6f49-83f1-a0a9-010bd63c1373" class="" dir="auto">항상 실행되는 리소스와 간헐적 리소스를 구분해서 봐야 함.</p><p id="088720e4-6f49-820c-b2b2-81a0904ba470" class="" dir="auto">즉, 컴퓨팅 비용은 서버 수만이 아니라</p><p id="cb7720e4-6f49-820b-873a-816adca12d88" class="" dir="auto"><strong>확장 방식과 실행 모델 선택</strong>에 크게 좌우됨.</p><hr id="43c720e4-6f49-8344-b91d-01e3be24d450" dir="auto"/><h1 id="2f1720e4-6f49-8363-be02-81818e6545f6" class="" dir="auto">6.7 스토리지 비용 최적화</h1><p id="f2e720e4-6f49-8221-8d92-81b83dfad227" class="" dir="auto">스토리지는 쉽게 쌓이고 오래 남기 쉬워서, 시간이 갈수록 비용 누적 효과가 큼.</p><p id="057720e4-6f49-8365-9fb2-818c4ed9f66a" class="" dir="auto">특히 로그, 백업, 정적 파일, 데이터 적재가 많은 구조에서는 스토리지 전략이 매우 중요함.</p><p id="d52720e4-6f49-8244-8e75-01544811ac61" class="" dir="auto">대표 방법</p><h3 id="2f7720e4-6f49-828f-995a-815c286d87d3" class="" dir="auto">1. 저장소 유형 구분</h3><p id="797720e4-6f49-8398-a176-0137a80a8820" class="" dir="auto">EBS, S3, EFS, 아카이브 스토리지는 서로 비용 구조가 다름.</p><h3 id="751720e4-6f49-828f-ab44-0199e35cb2dc" class="" dir="auto">2. 수명주기 기반 계층화</h3><p id="85e720e4-6f49-8278-9606-810c513bc4e1" class="" dir="auto">자주 쓰는 데이터와 오래된 데이터를 같은 클래스에 둘 필요가 없음.</p><h3 id="30a720e4-6f49-8364-bcea-81bb25e2d10c" class="" dir="auto">3. 불필요한 복제와 중복 저장 점검</h3><p id="742720e4-6f49-827a-b075-011966174802" class="" dir="auto">필요하지 않은 스냅샷, 버전, 장기 보관 데이터를 정리해야 함.</p><h3 id="293720e4-6f49-8311-aa2b-81d370caa4ea" class="" dir="auto">4. 객체 저장소 적극 활용</h3><p id="f77720e4-6f49-8200-8879-01ed2456561c" class="" dir="auto">정적 파일이나 공유 파일 성격이 강한 데이터는 로컬 디스크보다 객체 저장소가 적합할 수 있음.</p><p id="f7b720e4-6f49-826e-bf99-81d170274e17" class="" dir="auto">즉, 스토리지 비용 최적화는</p><p id="853720e4-6f49-837f-aa7b-0142f5f43a1c" class="" dir="auto"><strong>무엇을 어디에 얼마나 오래 저장하는가</strong>를 설계하는 문제임.</p><hr id="d6b720e4-6f49-83a4-9e68-011fb380b81d" dir="auto"/><h1 id="839720e4-6f49-8295-b1db-81703196b07c" class="" dir="auto">6.8 데이터 전송 비용 최적화</h1><p id="30e720e4-6f49-82be-9047-81c2a1c198d5" class="" dir="auto">AWS 비용에서 자주 간과되지만, 실제로는 큰 비중을 차지할 수 있는 것이 데이터 전송 비용임.</p><p id="285720e4-6f49-8236-a86e-017ca7f39626" class="" dir="auto">특히 다음 상황에서 중요함.</p><ul id="942720e4-6f49-836e-abee-81e1743d9cb0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인터넷으로 나가는 트래픽이 많을 때</li></ul><ul id="7b6720e4-6f49-8286-b34f-019a81946b29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 계층 간 데이터 이동이 많을 때</li></ul><ul id="e6e720e4-6f49-82bc-a633-01b95fd6f8f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">캐시 없이 원본까지 반복 호출될 때</li></ul><ul id="f8a720e4-6f49-82aa-83e4-01c200727a62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAT Gateway를 통해 대량 트래픽이 나갈 때</li></ul><p id="925720e4-6f49-8330-a224-0138c6b337af" class="" dir="auto">데이터 전송 비용을 줄이기 위한 대표적인 방법</p><h3 id="189720e4-6f49-83ef-897d-818081de9f76" class="" dir="auto">1. CloudFront 사용</h3><p id="18d720e4-6f49-8385-8a70-810a7a71b7a3" class="" dir="auto">정적 콘텐츠와 반복 요청을 엣지에서 처리해 원본과 인터넷 송신 부담을 줄일 수 있음.</p><h3 id="4a5720e4-6f49-8206-a7f6-817813b0ac3f" class="" dir="auto">2. VPC Endpoint 활용</h3><p id="e78720e4-6f49-8352-aca4-01f57002e60a" class="" dir="auto">S3 같은 AWS 서비스 접근 시 불필요한 NAT 경로를 줄일 수 있음.</p><h3 id="722720e4-6f49-83b8-9da4-81ccaa3f7948" class="" dir="auto">3. 캐시 구조 도입</h3><p id="ac8720e4-6f49-82f9-b7de-81cb4d677791" class="" dir="auto">원본 호출 횟수를 줄이면 데이터 전송과 원본 부하를 함께 줄일 수 있음.</p><p id="d9c720e4-6f49-8368-84c6-013d15860cff" class="" dir="auto">즉, 데이터 전송 비용은 성능 구조와 밀접하게 연결되어 있음.</p><hr id="eb5720e4-6f49-822d-9053-0178a6dfa6da" dir="auto"/><h1 id="817720e4-6f49-838d-b84e-018b53688854" class="" dir="auto">6.9 비용 관리 도구가 필요한 이유</h1><p id="2f4720e4-6f49-826d-bbb4-0171ab441698" class="" dir="auto">좋은 구조를 만들었더라도 비용을 보지 않으면 문제를 늦게 발견하게 됨.</p><p id="0cb720e4-6f49-82dd-b81e-818ba01e5c30" class="" dir="auto">비용은 실시간 리소스 상태처럼 눈에 바로 보이지 않기 때문에, 별도의 가시화 도구가 중요함.</p><p id="f6e720e4-6f49-8254-8d47-013c79d0346e" class="" dir="auto">비용 관리 도구가 필요한 이유</p><ul id="58d720e4-6f49-823b-8127-017a0dd7ef1b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 서비스가 비용을 많이 쓰는지 파악</li></ul><ul id="f74720e4-6f49-8373-8226-01eb1bc7ee40" class="bulleted-list" dir="auto"><li style="list-style-type:disc">급격한 비용 증가 탐지</li></ul><ul id="d80720e4-6f49-835b-ae85-01396dda54db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경별, 계정별 비용 구분</li></ul><ul id="1ec720e4-6f49-833f-93f3-01e3e95ca9a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기적인 비용 추세 분석</li></ul><ul id="90f720e4-6f49-8373-adc4-019334db0cc3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예산 초과 위험 관리</li></ul><p id="85b720e4-6f49-8306-a744-017ccfaf88ea" class="" dir="auto">즉, 비용 관리 도구는 단순 회계 기능이 아니라</p><p id="3f2720e4-6f49-83c9-85c6-81b0780d3d34" class="" dir="auto"><strong>아키텍처 피드백 도구</strong>라고 볼 수 있음.</p><hr id="8f3720e4-6f49-83af-9616-016eacc33f79" dir="auto"/><h1 id="53b720e4-6f49-8312-a28e-01c1237a7567" class="" dir="auto">6.10 Cost Explorer의 의미</h1><p id="0fc720e4-6f49-83ed-9378-01c862dbd248" class="" dir="auto">Cost Explorer는 비용을 시각적으로 분석하고 추세를 파악하는 대표적인 도구임.</p><p id="bb1720e4-6f49-82dd-8608-01e306ce1144" class="" dir="auto">다음 같은 질문에 답하는 데 유용함.</p><ul id="c28720e4-6f49-83b6-84f7-0139dd9fd939" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이번 달 비용이 왜 늘었는가</li></ul><ul id="b00720e4-6f49-835f-b934-01d056d21e67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 서비스가 가장 많은 비용을 차지하는가</li></ul><ul id="4dc720e4-6f49-8323-80b9-019496924ede" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 계정 또는 태그의 비용은 얼마인가</li></ul><ul id="e21720e4-6f49-83df-9cb5-810b0b8fdb8d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">과거와 비교했을 때 증가 원인이 무엇인가</li></ul><p id="158720e4-6f49-82c1-8219-818f2996ad21" class="" dir="auto">즉, Cost Explorer는 단순히 총액만 보는 것이 아니라</p><p id="4db720e4-6f49-83eb-ba1c-011ee6c2b756" class="" dir="auto"><strong>비용의 구조를 분석하는 도구</strong>임.</p><hr id="04b720e4-6f49-825d-86c7-01acbeab3e75" dir="auto"/><h1 id="777720e4-6f49-83cf-b5bb-81ef3056676c" class="" dir="auto">6.11 AWS Budgets의 의미</h1><p id="0f3720e4-6f49-83d5-a66a-81d644d649b7" class="" dir="auto">Budgets는 비용과 사용량에 대한 기준선을 두고, 일정 수준에 도달하면 알림을 받도록 하는 기능임.</p><p id="f18720e4-6f49-8237-8193-01c5e6f14f5c" class="" dir="auto">이 기능이 중요한 이유는 다음과 같음.</p><ul id="242720e4-6f49-82e9-bdc5-01cab13b5131" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용 문제를 월말이 아니라 중간에 감지 가능</li></ul><ul id="a08720e4-6f49-83b5-8beb-01f3b5baf6e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발/실험 환경의 과도한 사용을 빨리 발견 가능</li></ul><ul id="b5b720e4-6f49-83df-9f99-01e63dd10ac6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">팀별 예산 통제 가능</li></ul><ul id="b0f720e4-6f49-8390-b64e-818ddee0828c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 리소스 이상 징후를 조기에 파악 가능</li></ul><p id="5da720e4-6f49-8237-979d-81ff660b2a87" class="" dir="auto">즉, Budgets는 비용을 줄이는 도구라기보다</p><p id="772720e4-6f49-82c3-9644-811ccda270f2" class="" dir="auto"><strong>비용 이상 징후를 빨리 발견하는 통제 장치</strong>임.</p><hr id="c25720e4-6f49-821b-858d-818d3164826b" dir="auto"/><h1 id="3df720e4-6f49-83b6-aba2-0107b77ee245" class="" dir="auto">6.12 태그와 비용 가시성의 관계</h1><p id="147720e4-6f49-831b-b1c3-8113174f9f4e" class="" dir="auto">비용 최적화는 리소스를 보는 일인 동시에, 리소스를 분류하는 일이기도 함.</p><p id="a8c720e4-6f49-83cd-bd27-01264f9e5c2b" class="" dir="auto">이때 중요한 것이 태그 전략임.</p><p id="e54720e4-6f49-83d6-815e-812f256790bd" class="" dir="auto">예를 들어 다음 기준으로 비용을 나눠 볼 수 있음.</p><ul id="e98720e4-6f49-8230-a0c5-01ebe24d354a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Environment = Prod / Dev / Test</li></ul><ul id="9b0720e4-6f49-8350-96af-01a5e3702683" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Project = 서비스명</li></ul><ul id="bf5720e4-6f49-82c9-9b83-0153265538be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Owner = 담당 조직</li></ul><ul id="283720e4-6f49-82ae-a733-81f8267c969c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CostCenter = 비용 회계 구분</li></ul><p id="9d8720e4-6f49-83e5-9d65-01c1d8a074a5" class="" dir="auto">이런 태그가 없다면 비용을 서비스별, 팀별, 목적별로 분석하기 어려움.</p><p id="fb5720e4-6f49-82db-84e3-018dff3f6292" class="" dir="auto">즉, 비용 최적화는 아키텍처 설계뿐 아니라 <strong>분류 체계 설계</strong>와도 연결됨.</p><hr id="be3720e4-6f49-820d-9802-81a1cfd8a297" dir="auto"/><h1 id="e11720e4-6f49-82c8-a0e4-01ad13458231" class="" dir="auto">6.13 비용 최적화에서 관리형 서비스가 가지는 의미</h1><p id="121720e4-6f49-8302-9055-01bd1643cc0a" class="" dir="auto">직접 EC2를 운영하는 방식이 겉으로는 단순하고 저렴해 보일 수 있음.</p><p id="d90720e4-6f49-8215-a315-81b35040a2cf" class="" dir="auto">하지만 다음을 함께 고려해야 함.</p><ul id="d96720e4-6f49-8297-9fb4-0190f8f38c13" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패치 운영</li></ul><ul id="1e8720e4-6f49-8245-a5f9-011956c1af99" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 대응</li></ul><ul id="115720e4-6f49-8326-b38e-012176564a26" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 구성</li></ul><ul id="9e9720e4-6f49-830e-8d87-81900b0c67b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장 자동화</li></ul><ul id="b94720e4-6f49-821a-beed-01271316fdf7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 관리</li></ul><ul id="b24720e4-6f49-822d-8844-01015b06d963" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인력 운영 비용</li></ul><p id="942720e4-6f49-8235-b2f0-818a830edaa7" class="" dir="auto">즉, 단순 리소스 비용만 보면 직접 운영이 싸 보일 수 있어도</p><p id="143720e4-6f49-839c-bf63-0139b71b58ab" class="" dir="auto">전체 운영 비용까지 보면 관리형 서비스가 더 유리할 수 있음.</p><p id="956720e4-6f49-8374-82c4-815e23ae7c7f" class="" dir="auto">예를 들어</p><ul id="339720e4-6f49-820b-8f48-0106bad47791" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Fargate</li></ul><ul id="143720e4-6f49-82b3-b7ce-81bf4498ca86" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda</li></ul><ul id="449720e4-6f49-8204-9ed6-01e67c99fa04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS</li></ul><ul id="f18720e4-6f49-835f-bdc4-01138e71f43c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="e33720e4-6f49-839b-9ec1-019fba77e838" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront</li></ul><p id="96d720e4-6f49-831b-865d-01716d4b587a" class="" dir="auto">같은 서비스는 운영 부담을 줄이는 대신 사용량 기반 비용 구조를 가짐.</p><p id="337720e4-6f49-82e6-abae-81218838cfb8" class="" dir="auto">따라서 비용 최적화는 단순 인프라 비용이 아니라 <strong>총 소유 비용(TCO)</strong> 관점으로 봐야 함.</p><hr id="52c720e4-6f49-8371-abc1-010fe6215c59" dir="auto"/><h1 id="26d720e4-6f49-82b9-acd6-81e019523dff" class="" dir="auto">6.14 엣지 아키텍처의 의미</h1><p id="543720e4-6f49-8284-a444-0174c052119a" class="" dir="auto">엣지 아키텍처는 사용자와 가까운 위치에서 성능, 가용성, 보안을 개선하는 구조를 의미함.</p><p id="42c720e4-6f49-8243-b83c-01049e525e7e" class="" dir="auto">클라우드 서비스는 보통 리전 중심으로 배치되지만, 사용자는 다양한 지역에서 접속하므로 사용자 경험은 네트워크 거리와 응답 방식에 따라 크게 달라질 수 있음.</p><p id="43a720e4-6f49-8337-9fe0-01a2618eb49d" class="" dir="auto">엣지 아키텍처가 필요한 이유는 다음과 같음.</p><ul id="8e7720e4-6f49-83c8-8990-01f35bd87981" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전 세계 사용자에게 더 빠른 응답 제공</li></ul><ul id="788720e4-6f49-8299-9e67-81fed241c579" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원본 서버 부하 감소</li></ul><ul id="3a4720e4-6f49-82fb-bf8a-017c463e4ecc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 콘텐츠 전송 최적화</li></ul><ul id="5c1720e4-6f49-8333-ac78-8187724431d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">엣지에서 보안 통제 가능</li></ul><ul id="88c720e4-6f49-8301-87a1-81664a2a46e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 접점 품질 향상</li></ul><p id="a47720e4-6f49-8232-bf0c-017deb357c78" class="" dir="auto">즉, 엣지 아키텍처는 단순 성능 보강 기능이 아니라</p><p id="006720e4-6f49-8287-a41d-01d1ac8ad05e" class="" dir="auto"><strong>사용자 접점 최적화 계층</strong>임.</p><hr id="d46720e4-6f49-82a1-b8cf-01b0f481dd4a" dir="auto"/><h1 id="da8720e4-6f49-83d6-9217-01e931a3dce4" class="" dir="auto">6.15 CloudFront 개요</h1><p id="e19720e4-6f49-824e-930a-01c17d4dc13f" class="" dir="auto">CloudFront는 AWS의 CDN(Content Delivery Network) 서비스임.</p><p id="d91720e4-6f49-839a-b6c3-01f3917da0cc" class="" dir="auto">사용자와 가까운 엣지 로케이션에서 콘텐츠를 캐시하고 전달해 원본 서버까지의 거리를 줄이는 역할을 함.</p><p id="f0c720e4-6f49-8320-b6dd-0147d02dd79c" class="" dir="auto">즉, CloudFront의 핵심은 다음과 같음.</p><pre id="50b720e4-6f49-8285-be79-81d067f59ad7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">반복 요청되는 콘텐츠를 사용자 가까운 위치에서 전달해
+지연시간을 줄이고 원본 부하를 낮춘다.</code></pre><p id="9f2720e4-6f49-82ad-a5f9-012b227bd079" class="" dir="auto">CloudFront는 특히 다음 구조에서 자주 사용됨.</p><ul id="955720e4-6f49-8340-9ac7-81eca63c7a6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 기반 정적 콘텐츠 배포</li></ul><ul id="04b720e4-6f49-823d-b40c-0138ca33f81f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB 앞단 웹 콘텐츠 가속</li></ul><ul id="21c720e4-6f49-8370-8e8a-013508c6862d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API 전송 최적화 일부</li></ul><ul id="1f9720e4-6f49-83ab-8777-814d12b809da" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다운로드 파일 배포</li></ul><ul id="99a720e4-6f49-83e6-94cf-011c762ed0d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지, CSS, JavaScript 전달</li></ul><hr id="329720e4-6f49-836a-a9be-010acb82ad84" dir="auto"/><h1 id="cd8720e4-6f49-82da-98c2-8178270c8e05" class="" dir="auto">6.16 CDN이 왜 중요한가</h1><p id="d42720e4-6f49-82b4-aca9-81fa1ecdb34b" class="" dir="auto">CDN이 중요한 이유는 단순히 빠르기 때문만은 아님.</p><p id="f1c720e4-6f49-82cd-a24f-8153bc73b834" class="" dir="auto">다음과 같은 구조적 이점이 있음.</p><h3 id="8cd720e4-6f49-822f-a5f2-011b5c6e9db2" class="" dir="auto">1. 사용자 지연시간 감소</h3><p id="9d7720e4-6f49-8293-b22a-0126e6e966d7" class="" dir="auto">원본까지 직접 가지 않고 가까운 엣지에서 응답 가능함.</p><h3 id="66c720e4-6f49-83a3-9d90-8119aea1c948" class="" dir="auto">2. 원본 부하 감소</h3><p id="c98720e4-6f49-824b-bd03-813f4689150d" class="" dir="auto">같은 파일을 반복 요청할 때 원본 서버까지 도달하지 않아도 됨.</p><h3 id="e67720e4-6f49-829b-b926-81c7d9d2adae" class="" dir="auto">3. 트래픽 분산</h3><p id="6d9720e4-6f49-8250-bd9f-01b38297f826" class="" dir="auto">대규모 요청을 원본이 직접 모두 처리하지 않게 됨.</p><h3 id="332720e4-6f49-821e-8edc-811f52fbb711" class="" dir="auto">4. 보안 구조 강화</h3><p id="63a720e4-6f49-8350-8db7-0110f116a92a" class="" dir="auto">CloudFront 앞단에 WAF, Shield를 붙여 엣지에서 요청 통제가 가능함.</p><p id="1b8720e4-6f49-8236-baee-01d67160742f" class="" dir="auto">즉, CloudFront는 성능 가속기이면서 동시에</p><p id="5b2720e4-6f49-823a-9053-01645f0aa59d" class="" dir="auto"><strong>비용 절감과 보안 강화에도 기여하는 구조 요소</strong>임.</p><hr id="3f4720e4-6f49-8353-8c18-8196ea8eb942" dir="auto"/><h1 id="0cd720e4-6f49-8228-9834-0150ffc227ac" class="" dir="auto">6.17 CloudFront의 기본 구조</h1><p id="ded720e4-6f49-82f8-9918-8113089e2da3" class="" dir="auto">CloudFront를 이해할 때 중요한 개념은 다음과 같음.</p><ul id="d73720e4-6f49-835c-90df-81f3fef1a372" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Distribution</li></ul><ul id="44c720e4-6f49-82a2-80ac-815804e32654" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Origin</li></ul><ul id="89d720e4-6f49-82ff-b679-01ae9926c814" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Edge Location</li></ul><ul id="c8a720e4-6f49-83a3-9669-01675808f986" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cache</li></ul><ul id="04d720e4-6f49-83d8-91a3-01d94330124b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Behavior</li></ul><hr id="812720e4-6f49-83be-b918-8142ddb9a03e" dir="auto"/><h2 id="d05720e4-6f49-83e9-96ba-017b03b7fe0b" class="" dir="auto">6.17.1 Distribution</h2><p id="856720e4-6f49-824a-87d5-01ffd96ced3d" class="" dir="auto">CloudFront 배포 단위 전체를 의미함.</p><p id="7f8720e4-6f49-82ae-a685-810ca512bea0" class="" dir="auto">어떤 원본을 사용할지, 어떤 경로를 어떻게 캐시할지, 어떤 정책을 적용할지 포함한 전체 구성임.</p><hr id="edb720e4-6f49-83c6-910d-016fe5fdefaa" dir="auto"/><h2 id="c6c720e4-6f49-8359-a5de-01dab923c511" class="" dir="auto">6.17.2 Origin</h2><p id="483720e4-6f49-82cc-9cf6-01dd2f3f0e04" class="" dir="auto">CloudFront가 콘텐츠를 가져오는 원본 위치임.</p><p id="dd4720e4-6f49-82f3-86ae-01e171bdc3cf" class="" dir="auto">대표 예</p><ul id="737720e4-6f49-825f-bbcd-013353e13234" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="3f9720e4-6f49-83e8-86eb-010b506535e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB</li></ul><ul id="574720e4-6f49-83b7-aec0-01d3a98e99e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 웹 서버</li></ul><ul id="b13720e4-6f49-82db-ba13-01a41d039763" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway</li></ul><p id="e76720e4-6f49-8241-a7d8-0105035a274e" class="" dir="auto">즉, CloudFront는 원본을 대체하는 것이 아니라</p><p id="b99720e4-6f49-833b-8f68-81455e22994f" class="" dir="auto"><strong>원본 앞단에서 캐시와 전달 최적화를 수행하는 계층</strong>임.</p><hr id="5fa720e4-6f49-838c-bedb-81a1ee6b05d6" dir="auto"/><h2 id="3f6720e4-6f49-839e-bb21-81df51330367" class="" dir="auto">6.17.3 Edge Location</h2><p id="bc8720e4-6f49-8292-b4b3-01edf45208c8" class="" dir="auto">사용자와 가까운 위치에서 콘텐츠를 전달하는 글로벌 접점임.</p><p id="e32720e4-6f49-8221-a5e3-01c72b9d6c52" class="" dir="auto">반복되는 요청은 이 위치들에서 캐시를 활용해 더 빠르게 처리할 수 있음.</p><hr id="b11720e4-6f49-833e-97f0-0146be016eb4" dir="auto"/><h2 id="45e720e4-6f49-82ce-8b86-01ebeb693d97" class="" dir="auto">6.17.4 Behavior</h2><p id="c53720e4-6f49-8366-8843-0170476505e3" class="" dir="auto">경로별로 캐시 정책, 원본, 보안 정책, 요청 처리 정책을 다르게 적용하는 설정임.</p><p id="616720e4-6f49-8249-9e9b-01ac76424afb" class="" dir="auto">예를 들어</p><ul id="807720e4-6f49-83e7-98bb-017c7c3541d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/images/*</code> 는 강하게 캐시</li></ul><ul id="0f4720e4-6f49-83a0-ba30-01d182c11bcb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/api/*</code> 는 캐시 없이 원본 전달</li></ul><p id="941720e4-6f49-83d8-8e58-8106f492d093" class="" dir="auto">같이 설계할 수 있음.</p><p id="f53720e4-6f49-821e-9b8c-817575c92b9f" class="" dir="auto">즉, CloudFront는 모든 콘텐츠를 똑같이 처리하는 서비스가 아니라</p><p id="405720e4-6f49-8209-a50c-018f9f31e89a" class="" dir="auto"><strong>경로와 요청 유형에 따라 동작을 다르게 설계하는 서비스</strong>임.</p><hr id="cdc720e4-6f49-8312-94a7-81aeff8c2def" dir="auto"/><h1 id="dc4720e4-6f49-834a-910a-0126b0314be7" class="" dir="auto">6.18 CloudFront와 비용 최적화의 관계</h1><p id="a46720e4-6f49-82e2-9ae2-01c4236d6684" class="" dir="auto">CloudFront는 비용이 추가되는 서비스처럼 보일 수 있음.</p><p id="098720e4-6f49-82f8-b390-81ece19e9034" class="" dir="auto">하지만 전체 구조로 보면 비용을 줄이는 방향으로 작동할 수도 있음.</p><p id="ab0720e4-6f49-82c4-b640-01d9ed459b26" class="" dir="auto">대표 이유는 다음과 같음.</p><h3 id="60f720e4-6f49-8317-b507-8164ea8c2ae4" class="" dir="auto">1. 원본 서버 요청 감소</h3><p id="580720e4-6f49-83b0-a763-81204612e0dd" class="" dir="auto">같은 정적 파일을 원본이 반복 처리하지 않게 됨.</p><h3 id="4f8720e4-6f49-837c-9a81-0157b690a896" class="" dir="auto">2. ALB/EC2 부하 감소</h3><p id="210720e4-6f49-82ca-a087-01f2fadd2459" class="" dir="auto">웹 서버 수를 무작정 늘리지 않아도 될 수 있음.</p><h3 id="7f7720e4-6f49-83a0-bc13-011e8b1a5d2e" class="" dir="auto">3. 데이터 전송 효율 개선</h3><p id="c22720e4-6f49-839a-a3d8-016bd1b039e7" class="" dir="auto">전송 구조를 더 최적화할 수 있음.</p><h3 id="515720e4-6f49-8376-9c4b-81dab03abe7d" class="" dir="auto">4. 보안 처리 앞단화</h3><p id="716720e4-6f49-8386-be5a-819cb46dbf6f" class="" dir="auto">원본까지 도달하는 악성 요청 일부를 줄일 수 있음.</p><p id="886720e4-6f49-83fe-aa44-81f86f8f7e19" class="" dir="auto">즉, CloudFront는 단순 추가 비용이 아니라</p><p id="7b0720e4-6f49-83e4-8142-013b5a05c668" class="" dir="auto"><strong>원본 인프라 비용과 사용자 경험을 함께 조정하는 도구</strong>임.</p><hr id="72d720e4-6f49-82a8-9c26-81a863d2685f" dir="auto"/><h1 id="e9a720e4-6f49-83c7-9b97-01a69a6f8475" class="" dir="auto">6.19 S3와 CloudFront 조합이 중요한 이유</h1><p id="892720e4-6f49-834f-9367-0129120d003a" class="" dir="auto">정적 파일을 EC2 로컬 디스크에 두는 구조는 확장성과 운영성 측면에서 불리할 수 있음.</p><p id="18f720e4-6f49-83bf-a861-01d0e7e8642b" class="" dir="auto">반면 S3와 CloudFront를 조합하면 다음 장점이 있음.</p><ul id="e5c720e4-6f49-8225-8e5c-01b3effcdfb7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 파일을 EC2와 분리 가능</li></ul><ul id="2c8720e4-6f49-82bc-9ff2-815f6e1b5c48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 저장과 웹 전달을 역할별로 분리 가능</li></ul><ul id="2eb720e4-6f49-8266-b799-818f7a64ab52" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전 세계 사용자에게 더 빠른 응답 가능</li></ul><ul id="5af720e4-6f49-82d7-b062-815b64a5de0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원본 서버 부하 감소</li></ul><ul id="135720e4-6f49-8323-932a-012398c3d2b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 단순화</li></ul><p id="db7720e4-6f49-8257-8459-811ff7efedde" class="" dir="auto">즉, 이 조합은 단순 정적 호스팅을 넘어서</p><p id="fd5720e4-6f49-82c5-aebe-01609a186385" class="" dir="auto"><strong>멀티 티어 아키텍처에서 파일 계층을 분리하는 대표 패턴</strong>임.</p><hr id="92e720e4-6f49-82b2-80d3-81144ebfc260" dir="auto"/><h1 id="9f0720e4-6f49-82cb-85b6-8158e14d24f9" class="" dir="auto">6.20 엣지 아키텍처와 보안의 관계</h1><p id="406720e4-6f49-837c-8b53-01c297112029" class="" dir="auto">엣지 아키텍처는 성능만의 주제가 아님.</p><p id="6a1720e4-6f49-8293-b788-817b703b8663" class="" dir="auto">사용자 접점에서 요청을 처리한다는 의미는, 곧 보안 통제를 앞단에서 적용할 수 있다는 뜻이기도 함.</p><p id="194720e4-6f49-837a-8806-81c569b2df80" class="" dir="auto">대표 조합</p><ul id="058720e4-6f49-8267-9918-814793516e68" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront</li></ul><ul id="533720e4-6f49-8236-8d6a-8106c4f5d41f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF</li></ul><ul id="b29720e4-6f49-8305-8893-81c3db451982" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shield</li></ul><p id="633720e4-6f49-8285-9ad2-0172b0b518af" class="" dir="auto">이 구조를 사용하면</p><ul id="5b8720e4-6f49-8370-bddd-0134037ae3d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비정상 요청을 앞단에서 필터링 가능</li></ul><ul id="ef4720e4-6f49-837c-9e58-811b6214543e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원본 애플리케이션 노출 축소 가능</li></ul><ul id="b41720e4-6f49-8200-b8a3-01460e090900" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대량 공격 완충 가능</li></ul><ul id="b1d720e4-6f49-8248-b585-01b955437008" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPS 종료 및 전달 구조 관리 가능</li></ul><p id="fe6720e4-6f49-82d6-bbd6-011fd77cef43" class="" dir="auto">즉, 엣지 설계는 성능 최적화와 보안 최적화가 함께 가는 영역임.</p><hr id="94e720e4-6f49-8379-abd6-81368e39b2a7" dir="auto"/><h1 id="dc2720e4-6f49-8367-a44f-81e321fdfed2" class="" dir="auto">6.21 비용과 성능 사이의 균형</h1><p id="596720e4-6f49-823e-9d7c-81ac94d89293" class="" dir="auto">비용 최적화와 엣지 아키텍처를 함께 설명할 때 중요한 점은</p><p id="36d720e4-6f49-825a-b5e5-8147617f5ab5" class="" dir="auto"><strong>무조건 싸거나 무조건 빠른 것이 정답이 아니라는 것</strong>임.</p><p id="e6a720e4-6f49-82eb-8f67-0194b69e141c" class="" dir="auto">예를 들어</p><ul id="732720e4-6f49-820f-bb01-0120f41d742d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 것을 캐시하면 동적 콘텐츠 품질 문제가 생길 수 있음</li></ul><ul id="0e4720e4-6f49-8298-b60d-81aebcf6942d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 요청을 원본으로 보내면 성능과 비용이 나빠질 수 있음</li></ul><ul id="4f3720e4-6f49-8351-bb73-019c06907feb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">너무 작은 인스턴스만 쓰면 오히려 장애와 성능 저하가 생길 수 있음</li></ul><ul id="574720e4-6f49-82cc-90f9-815b6af123ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리형 서비스를 무조건 피하면 운영 부담이 커질 수 있음</li></ul><p id="ebc720e4-6f49-8342-8fcf-01918f463395" class="" dir="auto">즉, 좋은 설계는 항상 <strong>균형점</strong>을 찾는 과정임.</p><p id="ab8720e4-6f49-838b-83b5-814f1c9933dc" class="" dir="auto">이 장에서는 그 균형점을 다음처럼 봐야 함.</p><ul id="f44720e4-6f49-82fe-b90e-81b64b549f7c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">성능 요구사항</li></ul><ul id="bd2720e4-6f49-837f-870c-815e40ed037f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 위치</li></ul><ul id="40b720e4-6f49-83c4-abd1-81be93fba600" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 패턴</li></ul><ul id="a3d720e4-6f49-83bf-8e5b-016f7ce7a8f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 부담</li></ul><ul id="f59720e4-6f49-8238-9cb4-018ebbaf0ace" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용 한계</li></ul><hr id="4d9720e4-6f49-8398-bd24-8168850dcbb3" dir="auto"/><h1 id="371720e4-6f49-82ae-9542-01c9b6168fb9" class="" dir="auto">6.22 비용 최적화 관점에서 자주 하는 실수</h1><h3 id="581720e4-6f49-839a-b314-8188322c8e77" class="" dir="auto">1. 작은 인스턴스가 항상 유리하다고 생각함</h3><p id="468720e4-6f49-82bf-af05-01d1f562ab15" class="" dir="auto">너무 작은 리소스는 성능 문제를 일으켜 오히려 더 많은 확장 비용을 만들 수 있음.</p><h3 id="7af720e4-6f49-82a8-983d-81186741f898" class="" dir="auto">2. 캐시 없이 원본만 확장함</h3><p id="1df720e4-6f49-83f2-8f18-015914cb73ba" class="" dir="auto">원본 서버를 늘리는 것만으로는 비효율적일 수 있음.</p><h3 id="f91720e4-6f49-839b-a823-01566cbc6b25" class="" dir="auto">3. 저장소 계층화를 하지 않음</h3><p id="760720e4-6f49-8346-8010-81101c8aa339" class="" dir="auto">오래된 데이터를 계속 비싼 저장소에 두는 경우가 많음.</p><h3 id="d3a720e4-6f49-8242-b40d-81d90343f8c0" class="" dir="auto">4. 개발/실험 환경을 상시 켜 둠</h3><p id="83e720e4-6f49-8278-956a-81671e93a002" class="" dir="auto">운영 외 환경의 낭비가 누적될 수 있음.</p><h3 id="faa720e4-6f49-828a-a4ca-017adc1725ad" class="" dir="auto">5. 태그 없이 비용을 보려 함</h3><p id="690720e4-6f49-8348-9cf5-01ccdfde119c" class="" dir="auto">원인을 찾기 어려워짐.</p><p id="633720e4-6f49-82b9-8c3c-810545e37868" class="" dir="auto">즉, 비용 최적화는 도구 문제가 아니라</p><p id="da1720e4-6f49-8294-99fd-815b06869165" class="" dir="auto"><strong>설계와 운영 습관의 문제</strong>이기도 함.</p><hr id="481720e4-6f49-82ab-ba1f-81d24bf4909f" dir="auto"/><h1 id="62f720e4-6f49-836c-9653-017d2b3dc6fc" class="" dir="auto">6.23 엣지 설계에서 자주 하는 실수</h1><h3 id="70e720e4-6f49-8248-8fdf-01774b9fc778" class="" dir="auto">1. 캐시 정책 없이 CloudFront만 붙임</h3><p id="7ce720e4-6f49-82a7-bfc0-0149c489766f" class="" dir="auto">효과가 제한적일 수 있음.</p><h3 id="c5f720e4-6f49-8250-9c6a-01835b81d23c" class="" dir="auto">2. 동적 요청과 정적 요청을 구분하지 않음</h3><p id="173720e4-6f49-82d4-9369-81bb20fc02e9" class="" dir="auto">모든 요청에 같은 정책을 적용하면 비효율적임.</p><h3 id="a06720e4-6f49-821a-bc4b-0115f700866e" class="" dir="auto">3. 원본 서버를 계속 직접 노출함</h3><p id="58b720e4-6f49-8378-abbf-81eb7a3e0205" class="" dir="auto">엣지 보호 구조의 이점을 살리지 못할 수 있음.</p><h3 id="615720e4-6f49-8358-aea8-0180d2e2e30c" class="" dir="auto">4. WAF와 CloudFront를 별개로 생각함</h3><p id="139720e4-6f49-821f-ae8b-010c6dcc2d32" class="" dir="auto">보안과 성능을 함께 설계해야 함.</p><p id="ad6720e4-6f49-8307-90e3-01414537998b" class="" dir="auto">즉, 엣지 아키텍처도 서비스 추가가 아니라</p><p id="400720e4-6f49-82b0-b199-014fbb066a10" class="" dir="auto"><strong>경로별 정책 설계</strong>가 핵심임.</p><hr id="811720e4-6f49-835a-9d29-81a4e27fe9eb" dir="auto"/><h1 id="c1e720e4-6f49-82d1-ab20-815070894fe4" class="" dir="auto">6.24 비용 최적화와 멀티 계정 구조의 관계</h1><p id="358720e4-6f49-83cd-99c7-01a101658e67" class="" dir="auto">멀티 계정 구조는 비용 가시성과도 매우 밀접하게 연결됨.</p><p id="bee720e4-6f49-8267-b170-01d2385920ab" class="" dir="auto">계정을 적절히 나누면 다음이 쉬워짐.</p><ul id="83f720e4-6f49-8304-85cc-81000f91fccf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영과 비운영 비용 구분</li></ul><ul id="0ab720e4-6f49-833a-af3b-810da1da17f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로젝트별 비용 분리</li></ul><ul id="179720e4-6f49-8387-9d82-81c782194ed5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조직별 책임 부여</li></ul><ul id="9a6720e4-6f49-836d-bfcb-81c00973a6f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 서비스 비용 식별</li></ul><p id="14a720e4-6f49-82b1-9daf-8149c18f6448" class="" dir="auto">즉, 비용 최적화는 단일 계정 안에서만 보는 것이 아니라</p><p id="2c0720e4-6f49-82c2-a0b2-019b0c882311" class="" dir="auto"><strong>계정 구조와 태그 구조를 함께 설계해야 효과적</strong>임.</p><hr id="8fa720e4-6f49-8379-a63d-01584e85a35b" dir="auto"/><h1 id="286720e4-6f49-8274-975d-01eeb7e93352" class="" dir="auto">6.25 비용 최적화와 컨테이너 / 서버리스의 관계</h1><p id="db4720e4-6f49-8221-a807-81196d55349b" class="" dir="auto">이전 장에서 다룬 컨테이너 플랫폼과도 연결됨.</p><p id="6b9720e4-6f49-82ae-b1fa-01f6a0a9323a" class="" dir="auto">예를 들어</p><ul id="571720e4-6f49-83ac-89dd-01be7976278a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Fargate는 서버 운영 부담을 줄일 수 있음</li></ul><ul id="dba720e4-6f49-83f0-8214-01ce9ebe5076" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ECS 기반 App Tier는 수평 확장 구조와 잘 맞음</li></ul><ul id="054720e4-6f49-82b1-898c-817820a9ac24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda는 간헐적 요청 워크로드에 유리할 수 있음</li></ul><p id="b65720e4-6f49-83df-9f17-813afd991c22" class="" dir="auto">즉, 비용 최적화는 단순히 EC2 크기를 줄이는 것이 아니라</p><p id="a45720e4-6f49-829e-92d5-010c60f54502" class="" dir="auto"><strong>실행 모델 자체를 바꾸는 선택</strong>과도 연결됨.</p><hr id="875720e4-6f49-831b-8d85-81476952e427" dir="auto"/><h1 id="6fa720e4-6f49-8280-96d4-819c2053ec61" class="" dir="auto">6.26 설계 시 핵심 질문</h1><p id="b47720e4-6f49-83dd-aab5-815800f17a73" class="" dir="auto">이 장에서는 다음 질문이 중요함.</p><h3 id="eeb720e4-6f49-82d6-a3f7-814ac4847327" class="" dir="auto">1. 어떤 비용이 가장 많이 발생할 것인가</h3><p id="265720e4-6f49-83d9-81df-817caa76be07" class="" dir="auto">컴퓨팅, 저장소, 전송, DB 중 무엇이 핵심 축인지 먼저 봐야 함.</p><h3 id="c99720e4-6f49-8330-8b3b-011386bafad7" class="" dir="auto">2. 반복 요청을 원본까지 보낼 필요가 있는가</h3><p id="26a720e4-6f49-8223-ae82-01f6e801010d" class="" dir="auto">캐시 가능성을 검토해야 함.</p><h3 id="c62720e4-6f49-83d1-9813-81dba37e6013" class="" dir="auto">3. 항상 켜 둘 필요가 있는 리소스와 아닌 리소스를 구분했는가</h3><p id="302720e4-6f49-82c5-9a1c-81eb7a02d55c" class="" dir="auto">고정 비용과 탄력 비용을 나눠 봐야 함.</p><h3 id="ded720e4-6f49-8200-9bc2-812f8975327a" class="" dir="auto">4. 사용자 위치에 따른 지연시간 차이를 고려했는가</h3><p id="1f3720e4-6f49-833d-b893-01ccf50abd2e" class="" dir="auto">글로벌 서비스에서는 엣지 구조가 중요함.</p><h3 id="a86720e4-6f49-821b-8711-0108202aa105" class="" dir="auto">5. 비용 절감이 운영 복잡도를 과도하게 키우지는 않는가</h3><p id="601720e4-6f49-829e-bfdd-01399d031455" class="" dir="auto">단순 인프라 비용만으로 판단하면 안 됨.</p><p id="491720e4-6f49-83df-b0e9-01e8ac2cd7d5" class="" dir="auto">즉, 좋은 설계는 비용을 줄이는 동시에</p><p id="47f720e4-6f49-8261-9281-8127e8c4175d" class="" dir="auto"><strong>운영 가능성과 사용자 경험을 유지하는 방향</strong>이어야 함.</p><hr id="553720e4-6f49-82b0-adae-01cadf8043e6" dir="auto"/><h1 id="ebd720e4-6f49-83cb-aa60-0120681a7792" class="" dir="auto">6.27 전체 아키텍처 관점에서의 의미</h1><p id="90b720e4-6f49-83e1-bc52-0100a8c83161" class="" dir="auto">비용 최적화와 엣지 설계는 전체 멀티 티어 구조의 마지막 조정 단계가 아님.</p><p id="62b720e4-6f49-82b8-be18-01904bd507d5" class="" dir="auto">오히려 처음부터 함께 고려해야 하는 요소임.</p><p id="639720e4-6f49-8217-bd9a-01d22823832b" class="" dir="auto">예를 들어</p><ul id="0c3720e4-6f49-8233-adb7-01adf0ba7d56" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Web Tier는 CloudFront로 원본 부하를 줄일 수 있음</li></ul><ul id="639720e4-6f49-83c6-9c5b-81d749f044ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">App Tier는 Fargate나 Auto Scaling으로 탄력 운영 가능함</li></ul><ul id="353720e4-6f49-82a7-b333-8149f8ce6033" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Data Tier는 캐시와 저장소 계층화로 비용을 낮출 수 있음</li></ul><ul id="2af720e4-6f49-82f5-8cf4-81e583849450" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크는 엔드포인트와 캐시로 전송 비용을 조정할 수 있음</li></ul><p id="fef720e4-6f49-838c-a948-01ab13da8c7d" class="" dir="auto">즉, 비용과 엣지는 부가 기능이 아니라</p><p id="ea7720e4-6f49-83e4-bf69-81b6b761d830" class="" dir="auto"><strong>전체 아키텍처 품질을 완성하는 핵심 축</strong>임.</p><hr id="b3e720e4-6f49-833b-a40f-01b7d133176c" dir="auto"/><h1 id="b4c720e4-6f49-8220-9ea0-81a0e84c2eaa" class="" dir="auto">6.28 장 요약</h1><p id="f64720e4-6f49-834c-897b-016a0e11ab95" class="" dir="auto">이번 장에서 학습한 핵심 내용</p><ul id="84e720e4-6f49-83f8-9962-810a142ebd26" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용 최적화의 의미</li></ul><ul id="bbf720e4-6f49-8224-8c43-01f628ec5f58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용 증가의 대표 원인</li></ul><ul id="4c3720e4-6f49-83ee-888f-0100375545eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컴퓨팅, 스토리지, 전송 비용 최적화 관점</li></ul><ul id="24d720e4-6f49-833e-b3de-019001fefa5f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용 관리 도구의 필요성</li></ul><ul id="54c720e4-6f49-83eb-b28b-01c3250a5d2e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cost Explorer와 Budgets의 의미</li></ul><ul id="061720e4-6f49-82fd-acf9-0107c3b395c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그와 비용 가시성의 관계</li></ul><ul id="4a5720e4-6f49-82c3-8f14-01d914c61871" class="bulleted-list" dir="auto"><li style="list-style-type:disc">엣지 아키텍처의 의미</li></ul><ul id="4d0720e4-6f49-82ca-b470-81bfda1ae735" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront의 역할과 구조</li></ul><ul id="2b0720e4-6f49-83a9-b4fc-0147a143d699" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CDN이 중요한 이유</li></ul><ul id="65c720e4-6f49-820b-bd34-8162c77a032d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront와 비용 최적화의 관계</li></ul><ul id="216720e4-6f49-838f-9dea-81ee0a99c1f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3와 CloudFront 조합의 의미</li></ul><ul id="b81720e4-6f49-823a-8f2b-81cbf9ec7e01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">엣지 설계와 보안의 관계</li></ul><ul id="098720e4-6f49-8321-8528-01924681fc64" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용과 성능 사이의 균형</li></ul><ul id="16f720e4-6f49-82fd-953f-015822f8f1b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설계 시 핵심 질문</li></ul><hr id="49e720e4-6f49-8399-a94e-81577c864334" dir="auto"/><h1 id="b98720e4-6f49-839e-ab0f-81865754ed62" class="" dir="auto">6.29 한 줄 정리</h1><pre id="5e3720e4-6f49-82d1-a137-811c7ea3592a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">비용 최적화는 단순히 리소스를 줄이는 일이 아니라,
+컴퓨팅, 저장소, 네트워크, 사용자 접점 구조를 함께 조정해서
+성능과 운영성을 유지하면서 낭비를 줄이는 설계 활동이다.</code></pre><hr id="eb2720e4-6f49-8335-a194-8133e63f6fab" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,1058 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Lambda + DynamoDB 연동 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="e3b720e4-6f49-82c7-afaa-01df9c6f27d3" class="page sans"><header><h1 class="page-title" dir="auto">Lambda + DynamoDB 연동 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="867720e4-6f49-825e-bfce-0128bc9e9756" class="" dir="auto">실습 목표</h2><ul id="19e720e4-6f49-830b-baab-81f9fdf927c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB 테이블 생성</li></ul><ul id="c1d720e4-6f49-83ff-b7af-01c4d40e5236" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda에서 DynamoDB 데이터 저장 (PUT)</li></ul><ul id="ee3720e4-6f49-83e2-bcab-81efa6c3974a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda에서 DynamoDB 데이터 조회 (GET)</li></ul><ul id="7a0720e4-6f49-83c9-9baa-01ec329213b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway를 통한 CRUD 작업</li></ul><hr id="4e3720e4-6f49-82ca-82ea-81fbef2f2e2a" dir="auto"/><h2 id="f83720e4-6f49-8210-8a92-8183961d30f1" class="" dir="auto">실습 1: DynamoDB 테이블 생성</h2><h3 id="9e2720e4-6f49-82fd-ac62-812608de4a10" class="" dir="auto">1.1 테이블 만들기</h3><ol type="1" id="ce3720e4-6f49-82db-b33e-0190fffc0be3" class="numbered-list" start="1" dir="auto"><li>AWS Console에서 <strong>DynamoDB</strong> 서비스로 이동</li></ol><ol type="1" id="679720e4-6f49-8356-8c42-8158666050f6" class="numbered-list" start="2" dir="auto"><li><strong>테이블 만들기</strong> 클릭</li></ol><ol type="1" id="d9c720e4-6f49-82de-94a7-010e4986c493" class="numbered-list" start="3" dir="auto"><li>다음 정보 입력:<ul id="37f720e4-6f49-83d8-83a1-010354427704" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>테이블 이름</strong>: <code>Users</code></li></ul><ul id="166720e4-6f49-829d-9f57-81c19b49f146" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>파티션 키</strong>: <code>userId</code> (문자열)</li></ul><ul id="1cb720e4-6f49-8331-ade9-81a4a5b189fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>테이블 설정</strong>: 기본 설정 사용</li></ul></li></ol><ol type="1" id="efb720e4-6f49-8386-834a-81aa635ad588" class="numbered-list" start="4" dir="auto"><li><strong>테이블 만들기</strong> 클릭</li></ol><ol type="1" id="051720e4-6f49-8330-ab15-818f71616f2d" class="numbered-list" start="5" dir="auto"><li>테이블 상태가 <strong>활성</strong>이 될 때까지 대기 (약 1분)</li></ol><h3 id="297720e4-6f49-82ba-b8a9-811f33feb065" class="" dir="auto">1.2 테이블 ARN 확인</h3><ol type="1" id="444720e4-6f49-839b-ab34-01d822cac465" class="numbered-list" start="1" dir="auto"><li>생성된 <code>Users</code> 테이블 클릭</li></ol><ol type="1" id="2d8720e4-6f49-8201-9c70-013927cd1463" class="numbered-list" start="2" dir="auto"><li><strong>일반 정보</strong> 탭에서 <strong>ARN</strong> 복사<ul id="289720e4-6f49-821d-b721-019022eb48a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예: <code>arn:aws:dynamodb:ap-northeast-2:123456789012:table/Users</code></li></ul></li></ol><ol type="1" id="19c720e4-6f49-8345-a8a1-811158be09e1" class="numbered-list" start="3" dir="auto"><li>메모장에 저장 (나중에 IAM 권한 설정에 사용)</li></ol><hr id="f8c720e4-6f49-83e4-98ef-81114e7ef5d0" dir="auto"/><h2 id="39c720e4-6f49-8347-ac73-01d49eb32f41" class="" dir="auto">실습 2: Lambda 함수에 DynamoDB 권한 부여</h2><h3 id="8d5720e4-6f49-83ef-8579-01e992b65226" class="" dir="auto">2.1 IAM 역할 수정</h3><ol type="1" id="12b720e4-6f49-82fa-bbef-81fce9c08111" class="numbered-list" start="1" dir="auto"><li><strong>Lambda</strong> 콘솔로 이동</li></ol><ol type="1" id="e32720e4-6f49-83a6-b197-01c82f3a71f8" class="numbered-list" start="2" dir="auto"><li><code>HelloWorldFunction</code> 함수 선택</li></ol><ol type="1" id="9a6720e4-6f49-83ff-9481-0191c9cfd1b5" class="numbered-list" start="3" dir="auto"><li><strong>구성</strong> 탭 → <strong>권한</strong> 클릭</li></ol><ol type="1" id="2f9720e4-6f49-826b-9af4-01383277f42a" class="numbered-list" start="4" dir="auto"><li><strong>역할 이름</strong> 클릭 (새 탭에서 IAM 콘솔 열림)</li></ol><ol type="1" id="2b1720e4-6f49-8341-abd9-01fd9fe11a8a" class="numbered-list" start="5" dir="auto"><li><strong>권한 추가</strong> → <strong>인라인 정책 생성</strong> 클릭</li></ol><ol type="1" id="279720e4-6f49-8361-bf2d-01be52f7e06b" class="numbered-list" start="6" dir="auto"><li><strong>JSON</strong> 탭 선택</li></ol><ol type="1" id="5ba720e4-6f49-8321-82cf-013bac6106d1" class="numbered-list" start="7" dir="auto"><li>다음 정책 입력:</li></ol><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="304720e4-6f49-83fd-ab70-016562b7ffcf" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Action&quot;: [
+        &quot;dynamodb:PutItem&quot;,
+        &quot;dynamodb:GetItem&quot;,
+        &quot;dynamodb:UpdateItem&quot;,
+        &quot;dynamodb:DeleteItem&quot;,
+        &quot;dynamodb:Scan&quot;,
+        &quot;dynamodb:Query&quot;
+      ],
+      &quot;Resource&quot;: &quot;arn:aws:dynamodb:ap-northeast-2:*:table/Users&quot;
+    }
+  ]
+}
+</code></pre><ol type="1" id="452720e4-6f49-8296-ad38-01d971ca4b0e" class="numbered-list" start="1" dir="auto"><li><strong>정책 검토</strong> 클릭</li></ol><ol type="1" id="37d720e4-6f49-8360-80dc-81e80b868243" class="numbered-list" start="2" dir="auto"><li>정책 이름: <code>DynamoDBAccessPolicy</code></li></ol><ol type="1" id="37d720e4-6f49-8326-b978-811b0b51c904" class="numbered-list" start="3" dir="auto"><li><strong>정책 생성</strong> 클릭</li></ol><hr id="058720e4-6f49-82c8-8dba-81aa754f54f3" dir="auto"/><h2 id="ff2720e4-6f49-826b-b74c-810fa02631d6" class="" dir="auto">실습 3: Lambda 함수 코드 작성</h2><h3 id="55c720e4-6f49-82db-8104-01b221a2a95e" class="" dir="auto">3.1 사용자 관리 API 코드</h3><p id="041720e4-6f49-83b7-8c2c-01958b619191" class="" dir="auto">Lambda 함수의 코드를 다음으로 교체:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="25b720e4-6f49-8286-b5bf-817ab259bb62" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+import boto3
+from decimal import Decimal
+from datetime import datetime
+
+# DynamoDB 클라이언트 초기화
+dynamodb = boto3.resource(&#x27;dynamodb&#x27;)
+table = dynamodb.Table(&#x27;Users&#x27;)
+
+# Decimal을 JSON으로 변환하기 위한 헬퍼 클래스
+class DecimalEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)
+        return super(DecimalEncoder, self).default(obj)
+
+def lambda_handler(event, context):
+    print(&quot;Received event:&quot;, json.dumps(event))
+
+    http_method = event.get(&#x27;httpMethod&#x27;)
+    path = event.get(&#x27;path&#x27;, &#x27;&#x27;)
+
+    try:
+        # 라우팅
+        if http_method == &#x27;POST&#x27; and path == &#x27;/users&#x27;:
+            return create_user(event)
+        elif http_method == &#x27;GET&#x27; and path == &#x27;/users&#x27;:
+            return get_all_users(event)
+        elif http_method == &#x27;GET&#x27; and path.startswith(&#x27;/users/&#x27;):
+            return get_user(event)
+        elif http_method == &#x27;PUT&#x27; and path.startswith(&#x27;/users/&#x27;):
+            return update_user(event)
+        elif http_method == &#x27;DELETE&#x27; and path.startswith(&#x27;/users/&#x27;):
+            return delete_user(event)
+        else:
+            return response(400, {&#x27;error&#x27;: &#x27;Unsupported route&#x27;})
+
+    except Exception as e:
+        print(f&quot;Error: {str(e)}&quot;)
+        return response(500, {&#x27;error&#x27;: str(e)})
+
+# 사용자 생성
+def create_user(event):
+    body = json.loads(event.get(&#x27;body&#x27;, &#x27;{}&#x27;))
+
+    user_id = body.get(&#x27;userId&#x27;)
+    name = body.get(&#x27;name&#x27;)
+    email = body.get(&#x27;email&#x27;)
+
+    if not user_id or not name or not email:
+        return response(400, {&#x27;error&#x27;: &#x27;userId, name, email are required&#x27;})
+
+    item = {
+        &#x27;userId&#x27;: user_id,
+        &#x27;name&#x27;: name,
+        &#x27;email&#x27;: email,
+        &#x27;createdAt&#x27;: datetime.now().isoformat()
+    }
+
+    table.put_item(Item=item)
+
+    return response(201, {
+        &#x27;message&#x27;: &#x27;User created successfully&#x27;,
+        &#x27;user&#x27;: item
+    })
+
+# 모든 사용자 조회
+def get_all_users(event):
+    result = table.scan()
+    users = result.get(&#x27;Items&#x27;, [])
+
+    return response(200, {
+        &#x27;count&#x27;: len(users),
+        &#x27;users&#x27;: users
+    })
+
+# 특정 사용자 조회
+def get_user(event):
+    path = event.get(&#x27;path&#x27;, &#x27;&#x27;)
+    user_id = path.split(&#x27;/&#x27;)[-1]
+
+    result = table.get_item(Key={&#x27;userId&#x27;: user_id})
+
+    if &#x27;Item&#x27; not in result:
+        return response(404, {&#x27;error&#x27;: &#x27;User not found&#x27;})
+
+    return response(200, {&#x27;user&#x27;: result[&#x27;Item&#x27;]})
+
+# 사용자 정보 수정
+def update_user(event):
+    path = event.get(&#x27;path&#x27;, &#x27;&#x27;)
+    user_id = path.split(&#x27;/&#x27;)[-1]
+
+    body = json.loads(event.get(&#x27;body&#x27;, &#x27;{}&#x27;))
+    name = body.get(&#x27;name&#x27;)
+    email = body.get(&#x27;email&#x27;)
+
+    if not name and not email:
+        return response(400, {&#x27;error&#x27;: &#x27;At least one field (name or email) is required&#x27;})
+
+    # 업데이트할 필드 구성
+    update_expression = &quot;SET &quot;
+    expression_values = {}
+
+    if name:
+        update_expression += &quot;name = :name, &quot;
+        expression_values[&#x27;:name&#x27;] = name
+    if email:
+        update_expression += &quot;email = :email, &quot;
+        expression_values[&#x27;:email&#x27;] = email
+
+    update_expression = update_expression.rstrip(&#x27;, &#x27;)
+
+    table.update_item(
+        Key={&#x27;userId&#x27;: user_id},
+        UpdateExpression=update_expression,
+        ExpressionAttributeValues=expression_values
+    )
+
+    return response(200, {
+        &#x27;message&#x27;: &#x27;User updated successfully&#x27;,
+        &#x27;userId&#x27;: user_id
+    })
+
+# 사용자 삭제
+def delete_user(event):
+    path = event.get(&#x27;path&#x27;, &#x27;&#x27;)
+    user_id = path.split(&#x27;/&#x27;)[-1]
+
+    table.delete_item(Key={&#x27;userId&#x27;: user_id})
+
+    return response(200, {
+        &#x27;message&#x27;: &#x27;User deleted successfully&#x27;,
+        &#x27;userId&#x27;: user_id
+    })
+
+# HTTP 응답 생성 헬퍼 함수
+def response(status_code, body):
+    return {
+        &#x27;statusCode&#x27;: status_code,
+        &#x27;headers&#x27;: {
+            &#x27;Content-Type&#x27;: &#x27;application/json&#x27;,
+            &#x27;Access-Control-Allow-Origin&#x27;: &#x27;*&#x27;,
+            &#x27;Access-Control-Allow-Methods&#x27;: &#x27;GET,POST,PUT,DELETE,OPTIONS&#x27;,
+            &#x27;Access-Control-Allow-Headers&#x27;: &#x27;Content-Type&#x27;
+        },
+        &#x27;body&#x27;: json.dumps(body, cls=DecimalEncoder)
+    }
+</code></pre><p id="f05720e4-6f49-83bd-a04e-01c1d7339502" class="" dir="auto"><strong>Deploy</strong> 버튼 클릭하여 저장</p><hr id="bc5720e4-6f49-833e-8a8b-81572081d88a" dir="auto"/><h2 id="fed720e4-6f49-83cf-96c5-01bff19ec675" class="" dir="auto">실습 4: API Gateway 라우트 추가</h2><h3 id="c71720e4-6f49-825f-ac21-01fae4470dee" class="" dir="auto">4.1 /users 리소스 생성</h3><ol type="1" id="a51720e4-6f49-8260-9f3d-81caa6244cae" class="numbered-list" start="1" dir="auto"><li>API Gateway 콘솔에서 <code>HelloWorldAPI</code> 선택</li></ol><ol type="1" id="ea3720e4-6f49-83d4-af40-01c57d423480" class="numbered-list" start="2" dir="auto"><li><strong>작업</strong> → <strong>리소스 생성</strong> 클릭</li></ol><ol type="1" id="50d720e4-6f49-8212-aa62-817317a68cf1" class="numbered-list" start="3" dir="auto"><li>설정:<ul id="168720e4-6f49-8213-861a-01e7195a86c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>리소스 이름</strong>: <code>users</code></li></ul><ul id="21f720e4-6f49-837f-9b86-81403349d140" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>리소스 경로</strong>: <code>/users</code></li></ul></li></ol><ol type="1" id="454720e4-6f49-83b8-84ef-018d2ffe12d9" class="numbered-list" start="4" dir="auto"><li><strong>리소스 생성</strong> 클릭</li></ol><h3 id="8c0720e4-6f49-8325-8493-81928e5f811b" class="" dir="auto">4.2 /users에 메서드 추가</h3><h3 id="339720e4-6f49-820b-bf00-81d2a685cc8f" class="" dir="auto">POST 메서드 (사용자 생성)</h3><ol type="1" id="a93720e4-6f49-83c3-b008-0172777717a7" class="numbered-list" start="1" dir="auto"><li><code>/users</code> 리소스 선택</li></ol><ol type="1" id="9c4720e4-6f49-8227-8058-81c2e697bfa4" class="numbered-list" start="2" dir="auto"><li><strong>작업</strong> → <strong>메서드 생성</strong> → <strong>POST</strong></li></ol><ol type="1" id="797720e4-6f49-831d-8cf3-017e35eadd38" class="numbered-list" start="3" dir="auto"><li>설정:<ul id="872720e4-6f49-83c2-b8a7-019322a8ecc2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 프록시 통합 사용: ✅</li></ul><ul id="e78720e4-6f49-8378-910a-81c525a14f0e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 함수: <code>HelloWorldFunction</code></li></ul></li></ol><ol type="1" id="097720e4-6f49-8272-9b66-011b7d78ce1f" class="numbered-list" start="4" dir="auto"><li><strong>저장</strong> → <strong>확인</strong></li></ol><h3 id="a78720e4-6f49-820a-abed-012c0c426b8f" class="" dir="auto">GET 메서드 (전체 조회)</h3><ol type="1" id="2af720e4-6f49-8211-8e86-8139e0d7b055" class="numbered-list" start="1" dir="auto"><li><code>/users</code> 리소스 선택</li></ol><ol type="1" id="49e720e4-6f49-82a9-b23a-010bf294ca69" class="numbered-list" start="2" dir="auto"><li><strong>작업</strong> → <strong>메서드 생성</strong> → <strong>GET</strong></li></ol><ol type="1" id="39b720e4-6f49-83d7-b72d-01697e13307e" class="numbered-list" start="3" dir="auto"><li>동일하게 Lambda 연동</li></ol><ol type="1" id="c81720e4-6f49-82e2-bf2d-014240c6280c" class="numbered-list" start="4" dir="auto"><li><strong>저장</strong> → <strong>확인</strong></li></ol><h3 id="539720e4-6f49-82d1-aba4-0143be878171" class="" dir="auto">4.3 /users/{userId} 리소스 생성</h3><ol type="1" id="923720e4-6f49-834d-a02d-8169571f3615" class="numbered-list" start="1" dir="auto"><li><code>/users</code> 리소스 선택</li></ol><ol type="1" id="44f720e4-6f49-8297-ae22-016e40bfed5d" class="numbered-list" start="2" dir="auto"><li><strong>작업</strong> → <strong>리소스 생성</strong></li></ol><ol type="1" id="02c720e4-6f49-8308-af1f-0142a2c46a3b" class="numbered-list" start="3" dir="auto"><li>설정:<ul id="d3e720e4-6f49-8303-bba2-817a11e269e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>리소스 이름</strong>: <code>user</code></li></ul><ul id="fff720e4-6f49-8281-ba24-81581ba52a2b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>리소스 경로</strong>: <code>{userId}</code> (중괄호 포함!)</li></ul></li></ol><ol type="1" id="c35720e4-6f49-8254-8c66-014bb2c14742" class="numbered-list" start="4" dir="auto"><li><strong>리소스 생성</strong> 클릭</li></ol><h3 id="df9720e4-6f49-83e0-9785-01956590d0bf" class="" dir="auto">4.4 /{userId}에 메서드 추가</h3><p id="5f6720e4-6f49-8370-9cfe-018aca0ff927" class="" dir="auto">동일한 방법으로 다음 메서드 추가:</p><ul id="c94720e4-6f49-83bf-85fa-81e862f6a85f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>GET</strong> (특정 사용자 조회)</li></ul><ul id="9ac720e4-6f49-8376-8ab6-8186436a4570" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>PUT</strong> (사용자 수정)</li></ul><ul id="52d720e4-6f49-829f-ab8d-81f47e8d8f34" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>DELETE</strong> (사용자 삭제)</li></ul><p id="272720e4-6f49-82b3-bc8f-81c70d781490" class="" dir="auto">모두 Lambda 프록시 통합으로 <code>HelloWorldFunction</code> 연결</p><h3 id="b52720e4-6f49-833c-b87b-01f7e9a5273e" class="" dir="auto">4.5 CORS 활성화</h3><ol type="1" id="f8e720e4-6f49-8246-abab-01035efd3d73" class="numbered-list" start="1" dir="auto"><li><code>/users</code> 리소스 선택</li></ol><ol type="1" id="139720e4-6f49-827f-907d-813279acbe3b" class="numbered-list" start="2" dir="auto"><li><strong>작업</strong> → <strong>CORS 활성화</strong></li></ol><ol type="1" id="b4d720e4-6f49-8288-b874-01a09af98e15" class="numbered-list" start="3" dir="auto"><li><strong>CORS를 활성화하고 기존의 CORS 헤더를 대체</strong> 클릭</li></ol><ol type="1" id="fc3720e4-6f49-8283-988b-01c4100c789b" class="numbered-list" start="4" dir="auto"><li><code>/{userId}</code> 리소스에도 동일하게 CORS 활성화</li></ol><h3 id="cd1720e4-6f49-8390-a8f7-01483f561278" class="" dir="auto">4.6 API 배포</h3><ol type="1" id="c8c720e4-6f49-8263-bbb6-01059118c146" class="numbered-list" start="1" dir="auto"><li><strong>작업</strong> → <strong>API 배포</strong></li></ol><ol type="1" id="f82720e4-6f49-8322-9398-8142c7b20e71" class="numbered-list" start="2" dir="auto"><li>배포 스테이지: <code>dev</code></li></ol><ol type="1" id="515720e4-6f49-825c-a698-81717be58b28" class="numbered-list" start="3" dir="auto"><li><strong>배포</strong> 클릭</li></ol><hr id="cdd720e4-6f49-8344-a40c-01ea2444b083" dir="auto"/><h2 id="1df720e4-6f49-833b-b13b-01cd876c97c7" class="" dir="auto">실습 5: API 테스트</h2><h3 id="a55720e4-6f49-83a6-ba53-81b97c699c28" class="" dir="auto">5.1 사용자 생성 (POST)</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="53b720e4-6f49-8385-a64e-012d1feb5b2b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -X POST https://YOUR-API-URL/dev/users \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{
+    &quot;userId&quot;: &quot;user001&quot;,
+    &quot;name&quot;: &quot;홍길동&quot;,
+    &quot;email&quot;: &quot;hong@example.com&quot;
+  }&#x27;
+</code></pre><p id="e2c720e4-6f49-83ba-94a8-819263be337c" class="" dir="auto"><strong>기대 출력:</strong></p><pre id="003720e4-6f49-823a-b040-0128d3edcaae" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;message&quot;: &quot;User created successfully&quot;,
+  &quot;user&quot;: {
+    &quot;userId&quot;: &quot;user001&quot;,
+    &quot;name&quot;: &quot;홍길동&quot;,
+    &quot;email&quot;: &quot;hong@example.com&quot;,
+    &quot;createdAt&quot;: &quot;2025-09-30T10:30:00.123456&quot;
+  }
+}
+</code></pre><h3 id="766720e4-6f49-8262-8bfa-0137eb3c9495" class="" dir="auto">5.2 추가 사용자 생성</h3><pre id="e89720e4-6f49-8267-822d-815bdcd6b7c1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># 사용자 2
+curl -X POST https://YOUR-API-URL/dev/users \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{
+    &quot;userId&quot;: &quot;user002&quot;,
+    &quot;name&quot;: &quot;김철수&quot;,
+    &quot;email&quot;: &quot;kim@example.com&quot;
+  }&#x27;
+
+# 사용자 3
+curl -X POST https://YOUR-API-URL/dev/users \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{
+    &quot;userId&quot;: &quot;user003&quot;,
+    &quot;name&quot;: &quot;이영희&quot;,
+    &quot;email&quot;: &quot;lee@example.com&quot;
+  }&#x27;
+</code></pre><h3 id="fac720e4-6f49-8257-8eb9-01bc9454bf10" class="" dir="auto">5.3 전체 사용자 조회 (GET)</h3><pre id="191720e4-6f49-8278-88ba-01f74465df8c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl https://YOUR-API-URL/dev/users
+</code></pre><p id="024720e4-6f49-831b-ad7c-818f0dd4fa2e" class="" dir="auto"><strong>기대 출력:</strong></p><pre id="b1c720e4-6f49-8210-b4e4-01d7447fc841" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;count&quot;: 3,
+  &quot;users&quot;: [
+    {
+      &quot;userId&quot;: &quot;user001&quot;,
+      &quot;name&quot;: &quot;홍길동&quot;,
+      &quot;email&quot;: &quot;hong@example.com&quot;,
+      &quot;createdAt&quot;: &quot;2025-09-30T10:30:00.123456&quot;
+    },
+    {
+      &quot;userId&quot;: &quot;user002&quot;,
+      &quot;name&quot;: &quot;김철수&quot;,
+      &quot;email&quot;: &quot;kim@example.com&quot;,
+      &quot;createdAt&quot;: &quot;2025-09-30T10:31:00.123456&quot;
+    },
+    {
+      &quot;userId&quot;: &quot;user003&quot;,
+      &quot;name&quot;: &quot;이영희&quot;,
+      &quot;email&quot;: &quot;lee@example.com&quot;,
+      &quot;createdAt&quot;: &quot;2025-09-30T10:32:00.123456&quot;
+    }
+  ]
+}
+</code></pre><h3 id="523720e4-6f49-83ab-aa52-81891f239de9" class="" dir="auto">5.4 특정 사용자 조회 (GET)</h3><pre id="f02720e4-6f49-8274-8139-01cdce862c83" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl https://YOUR-API-URL/dev/users/user001
+</code></pre><p id="7d5720e4-6f49-83de-a09f-01592f023871" class="" dir="auto"><strong>기대 출력:</strong></p><pre id="843720e4-6f49-8262-b699-81a1aed67956" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;user&quot;: {
+    &quot;userId&quot;: &quot;user001&quot;,
+    &quot;name&quot;: &quot;홍길동&quot;,
+    &quot;email&quot;: &quot;hong@example.com&quot;,
+    &quot;createdAt&quot;: &quot;2025-09-30T10:30:00.123456&quot;
+  }
+}
+</code></pre><h3 id="b97720e4-6f49-8288-980c-81978629372b" class="" dir="auto">5.5 사용자 정보 수정 (PUT)</h3><pre id="fa9720e4-6f49-839f-a93a-81d542e73c8c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -X PUT https://YOUR-API-URL/dev/users/user001 \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{
+    &quot;name&quot;: &quot;홍길동(수정)&quot;,
+    &quot;email&quot;: &quot;newhong@example.com&quot;
+  }&#x27;
+</code></pre><p id="4ca720e4-6f49-8260-84e2-815f2a56044b" class="" dir="auto"><strong>기대 출력:</strong></p><pre id="09f720e4-6f49-83e8-9c8e-0162d56224ab" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;message&quot;: &quot;User updated successfully&quot;,
+  &quot;userId&quot;: &quot;user001&quot;
+}
+</code></pre><h3 id="83d720e4-6f49-83ee-a7f0-81113e6828e0" class="" dir="auto">5.6 사용자 삭제 (DELETE)</h3><pre id="289720e4-6f49-8240-9388-81f69c3e03de" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -X DELETE https://YOUR-API-URL/dev/users/user003
+</code></pre><p id="451720e4-6f49-83b1-9982-8179df3caddc" class="" dir="auto"><strong>기대 출력:</strong></p><pre id="20b720e4-6f49-8367-8d07-81d657e8a302" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;message&quot;: &quot;User deleted successfully&quot;,
+  &quot;userId&quot;: &quot;user003&quot;
+}
+</code></pre><hr id="fc7720e4-6f49-82ee-8863-81e669287e99" dir="auto"/><h2 id="5cc720e4-6f49-822d-a76b-81286dcdfff1" class="" dir="auto">실습 6: DynamoDB 콘솔에서 확인</h2><h3 id="fb0720e4-6f49-8265-b912-81325665d30a" class="" dir="auto">6.1 데이터 확인</h3><ol type="1" id="e2b720e4-6f49-825e-8d16-01d543cf520b" class="numbered-list" start="1" dir="auto"><li>DynamoDB 콘솔로 이동</li></ol><ol type="1" id="3e0720e4-6f49-8349-948c-81afb3fa0100" class="numbered-list" start="2" dir="auto"><li><code>Users</code> 테이블 선택</li></ol><ol type="1" id="1a2720e4-6f49-835f-abba-01be01d128d4" class="numbered-list" start="3" dir="auto"><li><strong>항목 탐색</strong> 클릭</li></ol><ol type="1" id="bd6720e4-6f49-8385-ad70-81ff714828d6" class="numbered-list" start="4" dir="auto"><li><strong>Scan</strong> 실행</li></ol><ol type="1" id="832720e4-6f49-837e-9e60-0111b1263897" class="numbered-list" start="5" dir="auto"><li>저장된 사용자 데이터 확인</li></ol><h3 id="dc4720e4-6f49-836e-a4fa-81321ead9a01" class="" dir="auto">6.2 수동으로 데이터 추가</h3><ol type="1" id="71d720e4-6f49-8208-b644-015450fccdc0" class="numbered-list" start="1" dir="auto"><li><strong>항목 생성</strong> 클릭</li></ol><ol type="1" id="d0e720e4-6f49-83ea-abf8-01e6f7f8380f" class="numbered-list" start="2" dir="auto"><li>JSON 형식으로 입력:</li></ol><pre id="52f720e4-6f49-8384-88f2-81b3a262352a" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;userId&quot;: &quot;user999&quot;,
+  &quot;name&quot;: &quot;테스트유저&quot;,
+  &quot;email&quot;: &quot;test@example.com&quot;,
+  &quot;createdAt&quot;: &quot;2025-09-30T12:00:00&quot;
+}
+</code></pre><ol type="1" id="db3720e4-6f49-830e-85e3-814eec2d739e" class="numbered-list" start="1" dir="auto"><li><strong>항목 생성</strong> 클릭</li></ol><ol type="1" id="54a720e4-6f49-826b-bafe-811ffa33a0cf" class="numbered-list" start="2" dir="auto"><li>API로 조회해서 확인</li></ol><hr id="d86720e4-6f49-822a-ad47-81652a5ade76" dir="auto"/><h2 id="e28720e4-6f49-824a-90e9-813016094c11" class="" dir="auto">실습 7: 에러 처리 테스트</h2><h3 id="854720e4-6f49-8342-b9ee-0124cac3e928" class="" dir="auto">7.1 필수 필드 누락</h3><pre id="6ea720e4-6f49-83c1-85d3-816e91369b62" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -X POST https://YOUR-API-URL/dev/users \
+  -H &quot;Content-Type: application/json&quot; \
+  -d &#x27;{&quot;name&quot;: &quot;홍길동&quot;}&#x27;
+</code></pre><p id="1fd720e4-6f49-8278-bafe-81da87f55cf6" class="" dir="auto"><strong>기대 출력:</strong></p><pre id="2f1720e4-6f49-83a9-a93a-013a75a55e27" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;error&quot;: &quot;userId, name, email are required&quot;
+}
+</code></pre><h3 id="fca720e4-6f49-831c-b60a-01932ef2ce71" class="" dir="auto">7.2 존재하지 않는 사용자 조회</h3><pre id="a5c720e4-6f49-8235-862d-814a2c402cca" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl https://YOUR-API-URL/dev/users/nonexistent
+</code></pre><p id="a79720e4-6f49-8357-a5a8-810340210fba" class="" dir="auto"><strong>기대 출력:</strong></p><pre id="60f720e4-6f49-832e-a1e6-8155a3b5612e" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;error&quot;: &quot;User not found&quot;
+}
+</code></pre><hr id="f49720e4-6f49-8253-afc7-015324280319" dir="auto"/><h2 id="cd9720e4-6f49-82e5-bdd0-01f3a569a884" class="" dir="auto">실습 8: CloudWatch 로그 확인</h2><h3 id="4ab720e4-6f49-830b-af08-01bbfad9edac" class="" dir="auto">8.1 로그 보기</h3><ol type="1" id="b09720e4-6f49-8325-ad78-81eb01e79fc7" class="numbered-list" start="1" dir="auto"><li>Lambda 콘솔에서 함수 선택</li></ol><ol type="1" id="eeb720e4-6f49-8333-83ce-01bc2b08ad6e" class="numbered-list" start="2" dir="auto"><li><strong>모니터링</strong> 탭</li></ol><ol type="1" id="3c3720e4-6f49-82d0-9cde-015fafe617c5" class="numbered-list" start="3" dir="auto"><li><strong>CloudWatch에서 로그 보기</strong> 클릭</li></ol><ol type="1" id="984720e4-6f49-82d7-a7eb-815226866e32" class="numbered-list" start="4" dir="auto"><li>최근 로그 스트림 선택</li></ol><ol type="1" id="c1f720e4-6f49-82db-abec-813747cb41d2" class="numbered-list" start="5" dir="auto"><li>다음 항목 확인:<ul id="f3d720e4-6f49-833a-a06b-813517aac5f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 이벤트</li></ul><ul id="fce720e4-6f49-82de-a066-81400362faf8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB 작업 로그</li></ul><ul id="10b720e4-6f49-83b2-bba4-8169bcf7e964" class="bulleted-list" dir="auto"><li style="list-style-type:disc">에러 로그 (있다면)</li></ul></li></ol><hr id="6e2720e4-6f49-8358-8b10-8115aae93224" dir="auto"/><h2 id="ff2720e4-6f49-825b-95a3-81c571319999" class="" dir="auto">🎯 주요 개념 정리</h2><h3 id="df6720e4-6f49-827c-be5c-01dbc400eabe" class="" dir="auto">DynamoDB 기본 용어</h3><ul id="128720e4-6f49-82e8-97f8-012fcb1847c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>테이블(Table)</strong>: 데이터를 저장하는 컬렉션</li></ul><ul id="dd1720e4-6f49-8297-a44e-81d100f4095f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>항목(Item)</strong>: 하나의 레코드 (행)</li></ul><ul id="e67720e4-6f49-8239-91ca-01e63f6ee43d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>속성(Attribute)</strong>: 필드 (열)</li></ul><ul id="7ed720e4-6f49-82ce-9575-018770af1221" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>파티션 키(Partition Key)</strong>: 고유 식별자 (userId)</li></ul><h3 id="aa5720e4-6f49-8396-a2da-0101deb2d46c" class="" dir="auto">DynamoDB 작업</h3><ul id="1c5720e4-6f49-822c-bf68-81097afb801a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>PutItem</strong>: 데이터 저장/덮어쓰기</li></ul><ul id="748720e4-6f49-835e-94bd-8191e78067bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>GetItem</strong>: 특정 항목 조회 (파티션 키로)</li></ul><ul id="b79720e4-6f49-834f-a906-01d358f1e546" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Scan</strong>: 전체 테이블 스캔 (비효율적, 데이터 많으면 주의)</li></ul><ul id="73f720e4-6f49-8347-8881-01ffd052cf14" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Query</strong>: 조건으로 검색</li></ul><ul id="73a720e4-6f49-822d-8994-01a3fbbf7f27" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>UpdateItem</strong>: 항목 수정</li></ul><ul id="16d720e4-6f49-82d0-a59a-01b6a1ddced0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>DeleteItem</strong>: 항목 삭제</li></ul><h3 id="a7f720e4-6f49-8335-ae9f-019f8fd66c97" class="" dir="auto">Lambda에서 boto3 사용</h3><pre id="730720e4-6f49-8337-8ccf-0148568c8424" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+# DynamoDB 리소스 (추천)
+dynamodb = boto3.resource(&#x27;dynamodb&#x27;)
+table = dynamodb.Table(&#x27;테이블명&#x27;)
+
+# 또는 클라이언트 (저수준 API)
+dynamodb = boto3.client(&#x27;dynamodb&#x27;)
+</code></pre><hr id="02c720e4-6f49-82a3-9be0-01ee524afc9d" dir="auto"/><h2 id="08c720e4-6f49-82c8-99d2-0140a1e30cc3" class="" dir="auto">🚀 추가 개선 사항</h2><h3 id="8bf720e4-6f49-826e-bf02-0177ca23108d" class="" dir="auto">1. 페이지네이션 추가</h3><p id="0b3720e4-6f49-83ce-80b0-81798acd1454" class="" dir="auto">대량 데이터 조회 시 필요:</p><pre id="9b8720e4-6f49-8309-a6cb-818659531ed0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def get_all_users(event):
+    last_key = event.get(&#x27;queryStringParameters&#x27;, {}).get(&#x27;lastKey&#x27;)
+
+    if last_key:
+        result = table.scan(ExclusiveStartKey={&#x27;userId&#x27;: last_key})
+    else:
+        result = table.scan(Limit=10)
+
+    return response(200, {
+        &#x27;users&#x27;: result[&#x27;Items&#x27;],
+        &#x27;lastKey&#x27;: result.get(&#x27;LastEvaluatedKey&#x27;)
+    })
+</code></pre><h3 id="17e720e4-6f49-82e3-ae30-815b783f8e8e" class="" dir="auto">2. 입력 검증 강화</h3><p id="75d720e4-6f49-823b-b5d4-811ec3f0c125" class="" dir="auto">이메일 형식 검증:</p><pre id="598720e4-6f49-83ba-b106-810a9f3d2198" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import re
+
+def is_valid_email(email):
+    pattern = r&#x27;^[\w\.-]+@[\w\.-]+\.\w+$&#x27;
+    return re.match(pattern, email) is not None
+</code></pre><h3 id="596720e4-6f49-820b-a539-81bf1def27e8" class="" dir="auto">3. 중복 체크</h3><p id="b0b720e4-6f49-8333-874f-010623f7d70a" class="" dir="auto">동일한 userId로 재생성 방지:</p><pre id="9cc720e4-6f49-828f-88db-817c4e42ed69" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">table.put_item(
+    Item=item,
+    ConditionExpression=&#x27;attribute_not_exists(userId)&#x27;
+)
+</code></pre><hr id="31e720e4-6f49-83d9-928e-81c6eb067c54" dir="auto"/><h2 id="66d720e4-6f49-82ac-9340-8164cb0e3eb4" class="" dir="auto">정리</h2><ol type="1" id="746720e4-6f49-8204-af5d-81a944eb6e49" class="numbered-list" start="1" dir="auto"><li><strong>DynamoDB 테이블 삭제</strong>:<ul id="12a720e4-6f49-8216-9923-81120602f526" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB 콘솔 → Users 테이블 → 테이블 삭제</li></ul></li></ol><ol type="1" id="52a720e4-6f49-829f-8d7f-814f97502d68" class="numbered-list" start="2" dir="auto"><li><strong>Lambda 함수 권한 제거</strong>:<ul id="cab720e4-6f49-82b4-b220-010cfd7edb51" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 콘솔 → 역할 → 인라인 정책 삭제</li></ul></li></ol><ol type="1" id="92f720e4-6f49-826d-b8cc-01ed37d46b6a" class="numbered-list" start="3" dir="auto"><li><strong>API Gateway 리소스 삭제</strong>:<ul id="8bc720e4-6f49-83b8-9cd4-01ccf391f749" class="bulleted-list" dir="auto"><li style="list-style-type:disc">/users 리소스 삭제 → API 재배포</li></ul></li></ol><hr id="cb7720e4-6f49-83d4-9be2-019b20e7f40e" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

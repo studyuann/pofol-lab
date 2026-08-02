@@ -1,0 +1,781 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>4장 AWS 컴퓨팅 아키텍처 (EC2, 인스턴스 스토리지, 요금 옵션)</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="50a720e4-6f49-83c8-9041-019d6c68b49b" class="page sans"><header><h1 class="page-title" dir="auto">4장 AWS 컴퓨팅 아키텍처 (EC2, 인스턴스 스토리지, 요금 옵션)</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="380720e4-6f49-83a3-8c35-81ac8966dd93" dir="auto"/><h1 id="8bf720e4-6f49-8325-aef5-81982b43f196" class="" dir="auto">4.1 컴퓨팅 서비스 개요</h1><p id="a3f720e4-6f49-83cb-a03c-810a2e8db91f" class="" dir="auto">AWS에서 컴퓨팅 서비스는 애플리케이션을 실제로 실행하는 역할을 담당함.</p><p id="127720e4-6f49-824c-b2aa-01577e7c0b9b" class="" dir="auto">사용자가 웹 브라우저로 접속하거나, API를 호출하거나, 데이터 처리를 요청하면 결국 어딘가에서 연산이 수행되어야 하는데, 그 연산을 담당하는 계층이 컴퓨팅 계층임.</p><p id="83b720e4-6f49-83ce-ab5d-81698a576d29" class="" dir="auto">AWS의 대표적인 컴퓨팅 서비스</p><table id="d45720e4-6f49-836a-b610-017194d206aa" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="3f0720e4-6f49-833b-9618-01b7e4a1cd12" dir="ltr"><th id="{jIO" class="simple-table-header-color simple-table-header">서비스</th><th id="ABm`" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="c87720e4-6f49-8309-8c51-0174774d73ef" dir="ltr"><td id="{jIO" class="">EC2</td><td id="ABm`" class="">가상 서버</td></tr><tr id="084720e4-6f49-8381-a273-810c9219094f" dir="ltr"><td id="{jIO" class="">Lambda</td><td id="ABm`" class="">서버리스 함수 실행</td></tr><tr id="530720e4-6f49-82ad-871f-81f24e055ac9" dir="ltr"><td id="{jIO" class="">ECS</td><td id="ABm`" class="">컨테이너 오케스트레이션</td></tr><tr id="a6b720e4-6f49-820f-a42f-819f5aad899e" dir="ltr"><td id="{jIO" class="">EKS</td><td id="ABm`" class="">Kubernetes 관리형 서비스</td></tr><tr id="f41720e4-6f49-825a-8ed9-81cca42d7bf4" dir="ltr"><td id="{jIO" class="">Elastic Beanstalk</td><td id="ABm`" class="">애플리케이션 배포 자동화</td></tr></tbody></table><p id="9ef720e4-6f49-83c4-b454-0155f0039bf8" class="" dir="auto">이 장에서는 그중 가장 기본이 되는 <strong>Amazon EC2</strong>를 중심으로 학습함.</p><hr id="21e720e4-6f49-83b8-a0d5-01e8e1d89dbb" dir="auto"/><h1 id="8cb720e4-6f49-8289-b10d-015cf0e33278" class="" dir="auto">4.2 Amazon EC2 개요</h1><p id="70f720e4-6f49-8331-8d39-01a15553828a" class="" dir="auto">Amazon EC2는 <strong>Elastic Compute Cloud</strong>의 약자이며, AWS에서 제공하는 가상 서버 서비스임.</p><p id="ca6720e4-6f49-8296-a4ab-0158c8afc808" class="" dir="auto">온프레미스에서 서버를 운영할 때는 다음과 같은 과정이 필요했음.</p><ul id="924720e4-6f49-83af-bafe-81a5e490d1cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 장비 구매</li></ul><ul id="7ff720e4-6f49-8312-a170-81402833ab68" class="bulleted-list" dir="auto"><li style="list-style-type:disc">랙 설치</li></ul><ul id="f82720e4-6f49-83cf-b0f7-01c0fc3d35fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전원 연결</li></ul><ul id="b9a720e4-6f49-8380-8e73-0138a6160ded" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 연결</li></ul><ul id="499720e4-6f49-8248-89b2-01c96d8cf51d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영체제 설치</li></ul><ul id="d6b720e4-6f49-8239-92f2-81f7480d3418" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 설정</li></ul><ul id="34a720e4-6f49-837d-a866-8143fcf87cb4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 대응</li></ul><p id="f06720e4-6f49-83f0-9a62-017801b0b4d4" class="" dir="auto">AWS에서는 이러한 물리적 작업 없이 몇 번의 클릭 또는 명령어만으로 서버를 생성할 수 있음.</p><p id="5c0720e4-6f49-8280-9f0b-81a328eac8a9" class="" dir="auto">즉, EC2는 <strong>필요한 만큼 빠르게 생성하고 제거할 수 있는 가상 컴퓨팅 자원</strong>임.</p><p id="692720e4-6f49-8330-a41b-81925fbfb79c" class="" dir="auto">EC2의 핵심 특징</p><ul id="4e6720e4-6f49-839f-adb8-813d90796b57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">몇 분 안에 서버 생성 가능</li></ul><ul id="bd9720e4-6f49-82b0-afbb-01ff6475c77c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요할 때만 사용 가능</li></ul><ul id="c5f720e4-6f49-83d2-b965-811aed9adda0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다양한 CPU / 메모리 사양 선택 가능</li></ul><ul id="668720e4-6f49-8261-9977-81f949095fb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹, VPC와 연동 가능</li></ul><ul id="4dc720e4-6f49-83c4-8b03-018a2db01cf3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling 및 Load Balancer와 결합 가능</li></ul><hr id="e9c720e4-6f49-8289-8f7a-811b08c70f2d" dir="auto"/><h1 id="ea2720e4-6f49-832b-98ae-01b2a23939fe" class="" dir="auto">4.3 EC2의 주요 구성 요소</h1><p id="4fc720e4-6f49-83ce-ace4-0127ee239723" class="" dir="auto">EC2 인스턴스를 생성할 때는 단순히 서버 이름만 정하는 것이 아니라 여러 요소를 함께 결정해야 함.</p><p id="463720e4-6f49-83f5-9095-811b8a0d6301" class="" dir="auto">EC2 주요 구성 요소</p><ul id="a46720e4-6f49-8236-b85b-816fd13aba00" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AMI</li></ul><ul id="7be720e4-6f49-82eb-b3a9-01934b95f5fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Instance Type</li></ul><ul id="f1d720e4-6f49-837e-9336-81afb38f20ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Key Pair</li></ul><ul id="27e720e4-6f49-8321-9139-81ba843d6ed0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC / Subnet</li></ul><ul id="8cb720e4-6f49-833e-92e3-01853a7c5695" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group</li></ul><ul id="c90720e4-6f49-83a9-8e31-014b664576a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Storage</li></ul><ul id="9b7720e4-6f49-8231-9ba5-810cd5e5a340" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Role</li></ul><ul id="4f9720e4-6f49-8261-8aff-815021c736a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">User Data</li></ul><hr id="e1a720e4-6f49-83fd-bf48-8179cfa79297" dir="auto"/><h2 id="f3d720e4-6f49-82f6-a6f6-01d3d2ff1f72" class="" dir="auto">4.3.1 AMI</h2><p id="e4b720e4-6f49-825d-ad9e-8125b6519a3d" class="" dir="auto">AMI는 <strong>Amazon Machine Image</strong>의 약자임.</p><p id="cb9720e4-6f49-835c-82fa-01d4f37f154c" class="" dir="auto">쉽게 말하면 EC2 인스턴스를 만들기 위한 <strong>운영체제 템플릿</strong>임.</p><p id="2d8720e4-6f49-8363-8774-01df2ccac449" class="" dir="auto">예</p><ul id="4b6720e4-6f49-83bb-ab2d-01bab520fcf1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon Linux</li></ul><ul id="306720e4-6f49-8297-a979-81524670dd12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ubuntu</li></ul><ul id="9cb720e4-6f49-83e6-83f3-011562d43f04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Red Hat Enterprise Linux</li></ul><ul id="a55720e4-6f49-82bd-8c4c-81986b54646f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Windows Server</li></ul><p id="65f720e4-6f49-8237-9ec0-8171bbd2a613" class="" dir="auto">AMI에는 다음 정보가 포함될 수 있음.</p><ul id="4a9720e4-6f49-8274-9458-817afe9d876d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영체제</li></ul><ul id="ee8720e4-6f49-82ad-ac2a-01d450730b2d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 패키지</li></ul><ul id="e51720e4-6f49-82c3-beea-81638b658614" class="bulleted-list" dir="auto"><li style="list-style-type:disc">초기 설정</li></ul><ul id="124720e4-6f49-82e4-9f99-8185220bb2c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 환경</li></ul><p id="0d0720e4-6f49-83ee-aae3-818971e67a48" class="" dir="auto">즉, AMI는 “빈 서버를 어떤 모습으로 시작할 것인가”를 결정하는 이미지 파일이라고 보면 됨.</p><p id="38f720e4-6f49-8255-88f3-81ad40b999a1" class="" dir="auto">예를 들어</p><ul id="379720e4-6f49-8349-9479-818074ee2190" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon Linux AMI 선택 → 리눅스 서버 생성</li></ul><ul id="e62720e4-6f49-826f-a163-817d4b528b83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Windows Server AMI 선택 → 윈도우 서버 생성</li></ul><hr id="a1c720e4-6f49-8322-9b3b-015ef82a68d7" dir="auto"/><h2 id="a12720e4-6f49-835c-8468-016bf84df6e7" class="" dir="auto">4.3.2 Instance Type</h2><p id="a0c720e4-6f49-82b6-98f5-81455f01929f" class="" dir="auto">Instance Type은 EC2 인스턴스의 <strong>하드웨어 사양</strong>을 의미함.</p><p id="70e720e4-6f49-8292-83ee-8136a37a6c18" class="" dir="auto">여기에는 CPU, 메모리, 네트워크 성능 등이 포함됨.</p><p id="43e720e4-6f49-827c-9f46-01b3e51a1eb5" class="" dir="auto">예</p><ul id="686720e4-6f49-83e3-b7a8-016d0c15e2ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">t3.micro</li></ul><ul id="346720e4-6f49-8278-a331-8152c11516bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">t3.small</li></ul><ul id="72b720e4-6f49-8203-84a8-01f4244426e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">m5.large</li></ul><ul id="523720e4-6f49-82ef-b228-817fd1a0d9e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">c6i.large</li></ul><ul id="715720e4-6f49-8246-9d3f-012a9b01c228" class="bulleted-list" dir="auto"><li style="list-style-type:disc">r6i.large</li></ul><p id="053720e4-6f49-83b7-a1f9-819257baa92f" class="" dir="auto">이 이름은 아무 의미 없이 붙은 것이 아니라 일정한 규칙이 있음.</p><p id="bd4720e4-6f49-82f1-aa88-01923b929c41" class="" dir="auto">예를 들어 <code>t3.micro</code>를 보면</p><ul id="791720e4-6f49-8287-a114-817294736721" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>t</code> : 인스턴스 패밀리</li></ul><ul id="25f720e4-6f49-83b9-bbf2-817d8334f819" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>3</code> : 세대</li></ul><ul id="ab2720e4-6f49-82e3-a85c-019fe4d7f565" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>micro</code> : 크기</li></ul><p id="445720e4-6f49-8342-b872-81f9c1e03b47" class="" dir="auto">즉, 인스턴스 타입은 “어떤 계열의 서버를 어느 정도 크기로 쓸 것인가”를 정하는 값임.</p><hr id="631720e4-6f49-8219-a7e4-01a26f1a2750" dir="auto"/><h2 id="bef720e4-6f49-8205-bea2-0149edb8d8a4" class="" dir="auto">4.3.3 Key Pair</h2><p id="616720e4-6f49-83ef-877f-8185d8eb47bc" class="" dir="auto">Key Pair는 Linux 인스턴스에 SSH로 접속할 때 사용하는 공개키 / 개인키 쌍임.</p><p id="37c720e4-6f49-83a0-89c3-81f72437bc15" class="" dir="auto">구성</p><ul id="df9720e4-6f49-82d7-bc3a-01ee4989c1bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public Key : AWS가 EC2 내부에 저장</li></ul><ul id="1a4720e4-6f49-82f2-9680-01e8cfe4ab02" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Key : 사용자가 보관</li></ul><p id="f94720e4-6f49-8204-a65b-81bb98bce905" class="" dir="auto">접속 예</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="999720e4-6f49-8356-9aa7-81bb60e123d0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh-i mykey.pem ec2-user@&lt;Public-IP&gt;</code></pre><p id="08f720e4-6f49-833d-b367-01e4fd34536d" class="" dir="auto">중요한 점</p><ul id="750720e4-6f49-82eb-864e-01e57974d025" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>.pem</code> 파일은 재다운로드 불가능한 경우가 많음</li></ul><ul id="3a4720e4-6f49-836c-ba14-0185302db07a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분실하면 접속 복구가 번거로움</li></ul><ul id="ac6720e4-6f49-8333-9d65-01819fe4cde6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습 환경에서는 학생별로 별도 키를 관리하는 것이 좋음</li></ul><hr id="d71720e4-6f49-8358-b2aa-8199db445a95" dir="auto"/><h2 id="4b1720e4-6f49-8258-a33c-01c28eec07cb" class="" dir="auto">4.3.4 Security Group</h2><p id="200720e4-6f49-8228-9e31-811dc1e9b420" class="" dir="auto">Security Group은 인스턴스 수준의 가상 방화벽임.</p><p id="fdc720e4-6f49-820a-937f-01773f911c98" class="" dir="auto">예</p><ul id="91c720e4-6f49-827b-81c0-81ee809722ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH 허용</li></ul><ul id="248720e4-6f49-82a6-b77e-815019b94f60" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP 허용</li></ul><ul id="8db720e4-6f49-8373-8ca0-81c8a3922c80" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPS 허용</li></ul><p id="7db720e4-6f49-82bb-a6a1-813d6ed73dc6" class="" dir="auto">예시 규칙</p><table id="38f720e4-6f49-8311-9075-81c7da1e4460" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="62d720e4-6f49-8328-8821-810c5c1bee3e" dir="ltr"><th id="JVG^" class="simple-table-header-color simple-table-header">방향</th><th id="\\&lt;N" class="simple-table-header-color simple-table-header">프로토콜</th><th id="&lt;KO&gt;" class="simple-table-header-color simple-table-header">포트</th><th id="N?vY" class="simple-table-header-color simple-table-header">소스</th></tr></thead><tbody><tr id="030720e4-6f49-8333-adb2-01a837d75c75" dir="ltr"><td id="JVG^" class="">Inbound</td><td id="\\&lt;N" class="">TCP</td><td id="&lt;KO&gt;" class="">22</td><td id="N?vY" class="">내 IP</td></tr><tr id="365720e4-6f49-8201-917a-818e920a3e85" dir="ltr"><td id="JVG^" class="">Inbound</td><td id="\\&lt;N" class="">TCP</td><td id="&lt;KO&gt;" class="">80</td><td id="N?vY" class="">0.0.0.0/0</td></tr><tr id="ccd720e4-6f49-8381-a9e7-0164e646cc39" dir="ltr"><td id="JVG^" class="">Inbound</td><td id="\\&lt;N" class="">TCP</td><td id="&lt;KO&gt;" class="">443</td><td id="N?vY" class="">0.0.0.0/0</td></tr></tbody></table><p id="601720e4-6f49-838d-bf70-817b17e3395c" class="" dir="auto">Security Group은 <strong>Stateful</strong> 특성을 가짐.</p><p id="6d0720e4-6f49-82e5-af48-01bf0c6cb72f" class="" dir="auto">즉, 들어오는 요청을 허용하면 그에 대한 응답은 별도 규칙 없이 허용됨.</p><hr id="6a2720e4-6f49-8323-88ed-015b165a209f" dir="auto"/><h2 id="54f720e4-6f49-82fc-a6fb-81ad0dd52013" class="" dir="auto">4.3.5 User Data</h2><p id="9df720e4-6f49-828e-9c55-01df65ff6811" class="" dir="auto">User Data는 인스턴스가 <strong>최초 부팅될 때 자동으로 실행할 스크립트</strong>임.</p><p id="773720e4-6f49-8379-85af-012e075ed55b" class="" dir="auto">예를 들어 웹 서버를 생성하면서 Apache를 자동 설치할 수 있음.</p><p id="3ea720e4-6f49-8231-b8ec-819f6b397b46" class="" dir="auto">예시</p><pre id="5ed720e4-6f49-826a-8378-811cb0eb4e70" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+yum update-y
+yum install-y httpd
+systemctl enable httpd
+systemctlstart httpd
+echo&quot;&lt;h1&gt;Hello EC2&lt;/h1&gt;&quot; &gt; /var/www/html/index.html</code></pre><p id="2ba720e4-6f49-8219-9a0d-016f146e11dc" class="" dir="auto">이 스크립트를 넣고 EC2를 생성하면, 인스턴스가 부팅되면서 자동으로 웹 서버를 설치하고 시작함.</p><p id="f25720e4-6f49-82fa-ad3d-010ac843158a" class="" dir="auto">즉, User Data는 서버 초기 설정을 자동화하는 매우 중요한 기능임.</p><hr id="a11720e4-6f49-826b-9903-81760e332dd6" dir="auto"/><h1 id="754720e4-6f49-8265-9d83-01973ec3b236" class="" dir="auto">4.4 EC2 인스턴스 타입 분류</h1><p id="949720e4-6f49-839f-921b-01bdadd8ed4f" class="" dir="auto">EC2 인스턴스는 용도에 따라 여러 패밀리로 나뉨.</p><hr id="2bb720e4-6f49-82ec-9186-01394a142094" dir="auto"/><h2 id="13c720e4-6f49-837a-bd82-015bfb90daf6" class="" dir="auto">4.4.1 범용 인스턴스 (General Purpose)</h2><p id="ad0720e4-6f49-8357-9e64-81528c7e395f" class="" dir="auto">범용 인스턴스는 CPU와 메모리가 비교적 균형 있게 제공되는 타입임.</p><p id="5e0720e4-6f49-838b-b9f1-0104f4f40321" class="" dir="auto">대표 예</p><ul id="e1e720e4-6f49-8245-b624-81b2e4a69c5e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">t3</li></ul><ul id="0fa720e4-6f49-83b5-ab26-816be1d86197" class="bulleted-list" dir="auto"><li style="list-style-type:disc">t4g</li></ul><ul id="ad4720e4-6f49-82ea-bfd4-01777b8c6ff4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">m5</li></ul><ul id="409720e4-6f49-833b-ab02-8122ba2c360a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">m6i</li></ul><p id="d01720e4-6f49-8205-8c0d-81acd4df07ab" class="" dir="auto">주요 용도</p><ul id="689720e4-6f49-829e-9bb2-81886c8a70d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일반 웹 서버</li></ul><ul id="bc1720e4-6f49-8237-a6df-01680c264b06" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발 서버</li></ul><ul id="c20720e4-6f49-8262-a996-81c49cce3908" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 서버</li></ul><ul id="e72720e4-6f49-8358-881d-811577b3e286" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중소 규모 애플리케이션 서버</li></ul><p id="655720e4-6f49-8338-a70c-817075e225c8" class="" dir="auto">특징</p><ul id="f17720e4-6f49-8393-9dd9-0174c5348a68" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가장 많이 사용됨</li></ul><ul id="c53720e4-6f49-8382-85c2-81943b318b4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습 환경에서 적합함</li></ul><ul id="604720e4-6f49-8351-866b-0107e1a29b4f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">성능과 비용의 균형이 좋음</li></ul><hr id="a10720e4-6f49-821d-9429-818809dc5092" dir="auto"/><h2 id="650720e4-6f49-8244-92c9-81a84ea6ec5b" class="" dir="auto">4.4.2 컴퓨팅 최적화 인스턴스 (Compute Optimized)</h2><p id="712720e4-6f49-8281-a681-81d3537af400" class="" dir="auto">CPU 성능이 중요한 워크로드에 적합함.</p><p id="bc4720e4-6f49-8212-bd6c-8108742153e1" class="" dir="auto">대표 예</p><ul id="312720e4-6f49-82f8-8157-019042e240b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">c5</li></ul><ul id="d7f720e4-6f49-8340-8b1b-0198094ba3d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">c6i</li></ul><p id="be8720e4-6f49-83fd-b1e3-812b8bd1fc08" class="" dir="auto">주요 용도</p><ul id="6ff720e4-6f49-827f-9ea1-8156fc0650ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대규모 연산</li></ul><ul id="65d720e4-6f49-8360-87aa-81c63eeda56a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">게임 서버</li></ul><ul id="22e720e4-6f49-8316-99b3-015303d56993" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배치 처리</li></ul><ul id="92a720e4-6f49-8297-bba3-0195792ec933" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고성능 웹 계층</li></ul><hr id="6cc720e4-6f49-829b-809a-0125c150af0a" dir="auto"/><h2 id="e92720e4-6f49-83e6-af8c-010d4c26e2ab" class="" dir="auto">4.4.3 메모리 최적화 인스턴스 (Memory Optimized)</h2><p id="758720e4-6f49-8256-99f8-01ef8e97ebf8" class="" dir="auto">메모리가 중요한 워크로드에 적합함.</p><p id="52d720e4-6f49-8212-8010-01a315591379" class="" dir="auto">대표 예</p><ul id="cba720e4-6f49-8327-bdb4-816bc74bff4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">r5</li></ul><ul id="b80720e4-6f49-82ed-8fff-81f242218491" class="bulleted-list" dir="auto"><li style="list-style-type:disc">r6i</li></ul><p id="33f720e4-6f49-8337-8981-01e2d057e39d" class="" dir="auto">주요 용도</p><ul id="93b720e4-6f49-82fa-b9c3-81f993657313" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대용량 캐시</li></ul><ul id="d2c720e4-6f49-82d0-bd67-01c52e589753" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인메모리 DB</li></ul><ul id="fc3720e4-6f49-83f2-94b5-01cfd33e832d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분석 시스템</li></ul><hr id="b5a720e4-6f49-8319-acb4-01e5695c8450" dir="auto"/><h2 id="567720e4-6f49-8373-8b3f-81cc638c119f" class="" dir="auto">4.4.4 스토리지 최적화 인스턴스 (Storage Optimized)</h2><p id="bde720e4-6f49-839c-bf6e-81a50c5b1525" class="" dir="auto">디스크 I/O 성능이 중요한 환경에서 사용함.</p><p id="b9c720e4-6f49-828a-9b23-81926f6915b9" class="" dir="auto">대표 예</p><ul id="67f720e4-6f49-8287-88f7-01d1bb3412ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">i3</li></ul><ul id="590720e4-6f49-8232-9d3c-014a2aa4be72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">i4i</li></ul><p id="fb7720e4-6f49-83ac-8026-81beff09c57e" class="" dir="auto">주요 용도</p><ul id="e04720e4-6f49-828c-818b-0139db19ac56" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고성능 데이터 처리</li></ul><ul id="eee720e4-6f49-82c9-8049-8114cbd964a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로컬 NVMe 저장이 중요한 경우</li></ul><hr id="039720e4-6f49-8331-bd13-817f1a58038b" dir="auto"/><h1 id="fe1720e4-6f49-8375-a974-010253e845f6" class="" dir="auto">4.5 버스트 가능한 인스턴스</h1><p id="6f0720e4-6f49-83a5-a755-81d2ae1c8e4c" class="" dir="auto"><code>t</code> 계열 인스턴스는 <strong>버스트 가능한 인스턴스</strong>임.</p><p id="6aa720e4-6f49-83ba-bd97-010ebccc9c5b" class="" dir="auto">예</p><ul id="51b720e4-6f49-8288-a525-01e9ef1999d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">t2.micro</li></ul><ul id="a86720e4-6f49-82a2-b9d1-8197d60298e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">t3.micro</li></ul><ul id="a2c720e4-6f49-8307-a1c7-811f2253e526" class="bulleted-list" dir="auto"><li style="list-style-type:disc">t3.small</li></ul><p id="cc9720e4-6f49-8376-a8fd-819459336e5e" class="" dir="auto">이 타입은 평소에는 낮은 CPU를 사용하다가, 필요할 때 일시적으로 CPU 성능을 높일 수 있음.</p><p id="71b720e4-6f49-829d-82b4-01844d338324" class="" dir="auto">즉, 항상 높은 CPU가 필요한 서버가 아니라</p><ul id="543720e4-6f49-8370-9e26-817288f9a1ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습용 서버</li></ul><ul id="825720e4-6f49-82d9-92e0-81d60f6156a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발용 서버</li></ul><ul id="557720e4-6f49-82fc-9ce1-8154946524fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소규모 웹 서버</li></ul><p id="de8720e4-6f49-83c8-abd9-81ba9dd510da" class="" dir="auto">같은 환경에 적합함.</p><p id="e0b720e4-6f49-83c7-ac33-81193253b7fa" class="" dir="auto">교육 과정에서는 주로 <code>t3.micro</code> 또는 <code>t3.small</code>을 많이 사용함.</p><hr id="3e2720e4-6f49-83bc-a797-0174cc440202" dir="auto"/><h1 id="07e720e4-6f49-837d-8d9d-8123c8ee8e85" class="" dir="auto">4.6 EC2 스토리지 개요</h1><p id="ba8720e4-6f49-8238-b92b-0169d245ee87" class="" dir="auto">EC2는 서버 자체만으로 끝나지 않고, 스토리지와 함께 동작함.</p><p id="379720e4-6f49-82e8-ac32-8113ac87bfff" class="" dir="auto">AWS에서 EC2와 연결되는 대표적인 스토리지는 다음과 같음.</p><table id="7cb720e4-6f49-8303-bed2-813082441b6e" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="d41720e4-6f49-8236-9bd6-81f6e6ae9f52" dir="ltr"><th id="_TXJ" class="simple-table-header-color simple-table-header">스토리지</th><th id="zW&lt;X" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="6f7720e4-6f49-831c-ac7d-81e25fae9e56" dir="ltr"><td id="_TXJ" class="">EBS</td><td id="zW&lt;X" class="">네트워크 기반 블록 스토리지</td></tr><tr id="7bd720e4-6f49-82c1-89d2-01ab98f8ca44" dir="ltr"><td id="_TXJ" class="">Instance Store</td><td id="zW&lt;X" class="">물리 서버에 직접 연결된 임시 스토리지</td></tr><tr id="46e720e4-6f49-83fb-8287-8148cde76aa1" dir="ltr"><td id="_TXJ" class="">EFS</td><td id="zW&lt;X" class="">여러 인스턴스가 공유 가능한 파일 스토리지</td></tr><tr id="227720e4-6f49-8361-9000-813197bfd0cf" dir="ltr"><td id="_TXJ" class="">S3</td><td id="zW&lt;X" class="">객체 스토리지, EC2 외부 저장소</td></tr></tbody></table><p id="fca720e4-6f49-82ec-8bb2-012aab52f0f9" class="" dir="auto">이 장에서는 EC2와 직접 관련이 깊은 <strong>EBS와 Instance Store</strong>를 중심으로 설명함.</p><hr id="02e720e4-6f49-83b2-93eb-01bf0ece2305" dir="auto"/><h1 id="7cc720e4-6f49-82c9-97e4-013cf55ec5fe" class="" dir="auto">4.7 EBS 개요</h1><p id="37b720e4-6f49-83b4-9b90-813597a1be16" class="" dir="auto">EBS는 <strong>Elastic Block Store</strong>의 약자임.</p><p id="686720e4-6f49-8383-9559-01e190d6364b" class="" dir="auto">EC2에 연결해서 사용하는 블록 스토리지임.</p><p id="efb720e4-6f49-8318-ac73-01d96d72237f" class="" dir="auto">온프레미스에서 말하면 서버에 연결된 디스크와 비슷한 개념이지만, 실제로는 AWS 내부 네트워크를 통해 연결되는 독립된 스토리지 서비스임.</p><p id="634720e4-6f49-8269-adeb-016d0b7c2c7e" class="" dir="auto">EBS 특징</p><ul id="7a4720e4-6f49-8342-8e6b-81e02b3f0829" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2와 분리된 저장소</li></ul><ul id="527720e4-6f49-83b5-b869-014bbdf37879" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스를 종료해도 볼륨 유지 가능</li></ul><ul id="4ce720e4-6f49-8203-8e88-81b4fd22fcf6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스냅샷 생성 가능</li></ul><ul id="925720e4-6f49-83ba-b3a7-01bc3498c913" class="bulleted-list" dir="auto"><li style="list-style-type:disc">성능 옵션 선택 가능</li></ul><ul id="c68720e4-6f49-8204-88e5-8147db6648b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영체제 디스크로 주로 사용</li></ul><p id="2d7720e4-6f49-8333-8f03-010b0af809c4" class="" dir="auto">즉, EC2가 “컴퓨터 본체”라면 EBS는 “하드디스크” 역할을 함.</p><hr id="fa7720e4-6f49-8325-9651-8176a9feb7ab" dir="auto"/><h2 id="5c5720e4-6f49-8303-9379-01f22dcbb523" class="" dir="auto">4.7.1 EBS 볼륨 유형</h2><p id="7df720e4-6f49-837c-b1b2-81638ceea1fa" class="" dir="auto">대표적인 EBS 유형</p><table id="a91720e4-6f49-82e3-a0c0-813a1b71dd89" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="d46720e4-6f49-822e-a413-817b1bb53934" dir="ltr"><th id="hesu" class="simple-table-header-color simple-table-header">유형</th><th id="ZY@M" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="79b720e4-6f49-822f-9fe4-81316afc2cb8" dir="ltr"><td id="hesu" class="">gp3</td><td id="ZY@M" class="">범용 SSD, 가장 많이 사용</td></tr><tr id="e3f720e4-6f49-821c-a539-0126e6a5aa4d" dir="ltr"><td id="hesu" class="">gp2</td><td id="ZY@M" class="">이전 세대 범용 SSD</td></tr><tr id="519720e4-6f49-8256-91cb-014e5312b347" dir="ltr"><td id="hesu" class="">io1 / io2</td><td id="ZY@M" class="">고성능 IOPS 필요 시</td></tr><tr id="80e720e4-6f49-82f5-ac1f-81c02a77d8cd" dir="ltr"><td id="hesu" class="">st1</td><td id="ZY@M" class="">처리량 중심 HDD</td></tr><tr id="e71720e4-6f49-8370-97a8-0165c9683954" dir="ltr"><td id="hesu" class="">sc1</td><td id="ZY@M" class="">저비용 HDD</td></tr></tbody></table><p id="a32720e4-6f49-8367-864b-81475588ed0f" class="" dir="auto">실습용 / 일반 서버에서는 보통 <code>gp3</code>를 사용하면 됨.</p><hr id="13a720e4-6f49-8368-8658-0106e1657367" dir="auto"/><h2 id="e02720e4-6f49-8283-b833-811fd4bf200b" class="" dir="auto">4.7.2 EBS의 장점</h2><ul id="3ec720e4-6f49-83d6-a412-0123860c5806" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 중지 후 다시 시작해도 데이터 유지됨</li></ul><ul id="7db720e4-6f49-8321-abdb-818b3c33f027" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스냅샷 생성으로 백업 가능</li></ul><ul id="b82720e4-6f49-82bb-a98e-816b0b90c222" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영체제 루트 디스크로 사용 가능</li></ul><hr id="29f720e4-6f49-824a-b5a0-81946063b63a" dir="auto"/><h1 id="7bf720e4-6f49-82d6-8f7c-810bb1c231c2" class="" dir="auto">4.8 Instance Store 개요</h1><ul id="06b720e4-6f49-83e3-80ab-81ce735f3b8a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">용량 증설 가능</li></ul><p id="90a720e4-6f49-8220-a165-01cd98f2db5d" class="" dir="auto">Instance Store는 EC2가 실행되는 물리 호스트에 직접 연결된 로컬 디스크임.</p><p id="ff4720e4-6f49-8327-a8c6-016f7ad2e7c4" class="" dir="auto">특징</p><ul id="cb7720e4-6f49-829d-bdf1-01b9d0b440a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">매우 빠름</li></ul><ul id="12d720e4-6f49-8307-b9d5-8136ad271349" class="bulleted-list" dir="auto"><li style="list-style-type:disc">임시 데이터 저장에 적합</li></ul><ul id="e6b720e4-6f49-834a-8578-81ff36388fbe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 중지 / 종료 시 데이터 유실 가능</li></ul><ul id="b6d720e4-6f49-8337-9b73-015512f175ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">영구 저장소로 부적합</li></ul><p id="69e720e4-6f49-82f1-8feb-01d42ef90224" class="" dir="auto">즉, Instance Store는 빠르지만 <strong>휘발성 저장소</strong>라는 점이 핵심임.</p><p id="a76720e4-6f49-836e-b1fa-8142d1d179b7" class="" dir="auto">주요 용도</p><ul id="52e720e4-6f49-8358-a7af-8108a7e19c54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">캐시</li></ul><ul id="d23720e4-6f49-822c-bc4e-013dcfefef77" class="bulleted-list" dir="auto"><li style="list-style-type:disc">임시 파일</li></ul><ul id="194720e4-6f49-829d-9d61-813cd433aa5b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버퍼 데이터</li></ul><ul id="584720e4-6f49-8395-b360-01aa9e36efed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일시적 처리 데이터</li></ul><hr id="e7b720e4-6f49-82e0-8b1a-0109ae0859cb" dir="auto"/><h2 id="1f0720e4-6f49-828c-9653-014a2ee5e776" class="" dir="auto">4.8.1 EBS와 Instance Store 비교</h2><table id="35f720e4-6f49-8375-9a1c-814c1c50f212" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="d69720e4-6f49-833e-8be1-81d365d2839a" dir="ltr"><th id=";u^j" class="simple-table-header-color simple-table-header">항목</th><th id="O;=D" class="simple-table-header-color simple-table-header">EBS</th><th id="RgQQ" class="simple-table-header-color simple-table-header">Instance Store</th></tr></thead><tbody><tr id="b51720e4-6f49-8397-afb8-81457a9117cb" dir="ltr"><td id=";u^j" class="">저장 위치</td><td id="O;=D" class="">네트워크 기반</td><td id="RgQQ" class="">물리 호스트 로컬</td></tr><tr id="c6d720e4-6f49-8218-9261-015e8d5edb89" dir="ltr"><td id=";u^j" class="">영속성</td><td id="O;=D" class="">유지 가능</td><td id="RgQQ" class="">인스턴스 종료/중지 시 유실 가능</td></tr><tr id="8cc720e4-6f49-83e9-9695-01a992be8934" dir="ltr"><td id=";u^j" class="">백업</td><td id="O;=D" class="">스냅샷 가능</td><td id="RgQQ" class="">별도 백업 필요</td></tr><tr id="9f7720e4-6f49-8277-a671-813bf124d538" dir="ltr"><td id=";u^j" class="">용도</td><td id="O;=D" class="">운영체제, 데이터 저장</td><td id="RgQQ" class="">캐시, 임시 데이터</td></tr></tbody></table><hr id="987720e4-6f49-8374-81d9-81e6757c1adc" dir="auto"/><h1 id="739720e4-6f49-82aa-afcf-0179ab185ada" class="" dir="auto">4.9 EC2 네트워크와 IP 주소</h1><p id="fd3720e4-6f49-829f-ab93-8165863e3dc1" class="" dir="auto">EC2 인스턴스는 VPC 내부에서 실행되므로 네트워크 정보가 함께 부여됨.</p><p id="25e720e4-6f49-82f3-af30-81dc1ed1af53" class="" dir="auto">주요 개념</p><ul id="329720e4-6f49-83bc-8961-011f3df805e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private IP</li></ul><ul id="b2d720e4-6f49-8372-85c3-81f3936c61e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public IP</li></ul><ul id="ff5720e4-6f49-83d3-897a-817f3e27d706" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Elastic IP</li></ul><hr id="15f720e4-6f49-8267-bd05-81dbce708d01" dir="auto"/><h2 id="077720e4-6f49-8203-aa26-81214f4e1a58" class="" dir="auto">4.9.1 Private IP</h2><p id="29e720e4-6f49-820f-821c-81ff4d0049d5" class="" dir="auto">VPC 내부 통신용 IP 주소임.</p><p id="82f720e4-6f49-82d5-a55d-01a41fe4f385" class="" dir="auto">같은 VPC 내 다른 인스턴스나 RDS와 통신할 때 사용함.</p><p id="330720e4-6f49-821f-90b6-01c79adf51ab" class="" dir="auto">예</p><pre id="df1720e4-6f49-830c-b54f-819cc0d7dd58" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">10.0.1.25</code></pre><hr id="abe720e4-6f49-8364-a8ce-810721142e7e" dir="auto"/><h2 id="f56720e4-6f49-83fa-89ed-81113b15977e" class="" dir="auto">4.9.2 Public IP</h2><p id="6d6720e4-6f49-824c-9216-01fac6707748" class="" dir="auto">인터넷과 통신하기 위한 IP 주소임.</p><p id="167720e4-6f49-8323-8a19-812c781bbb22" class="" dir="auto">Public Subnet에 인스턴스를 배치하고 Public IP를 할당하면 외부에서 접속 가능함.</p><p id="44c720e4-6f49-82ce-85fd-81b0cda92262" class="" dir="auto">주의</p><ul id="204720e4-6f49-82b1-a39e-81940a26080a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 중지 후 시작 시 Public IP가 바뀔 수 있음</li></ul><hr id="de8720e4-6f49-8331-a7ae-01fa7fd2af32" dir="auto"/><h2 id="93d720e4-6f49-827e-83a2-81448e49fc1e" class="" dir="auto">4.9.3 Elastic IP</h2><p id="712720e4-6f49-83d2-928c-01fb1c65c45c" class="" dir="auto">고정 공인 IP 주소임.</p><p id="18b720e4-6f49-8396-9b9f-81b133c4529e" class="" dir="auto">AWS 계정에 할당해 두고 특정 인스턴스에 연결함.</p><p id="2b8720e4-6f49-8252-99c2-813889696008" class="" dir="auto">용도</p><ul id="62d720e4-6f49-82f8-a91c-01a80981ea08" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고정 IP 필요 시</li></ul><ul id="b83720e4-6f49-83d3-b8a6-017cd47758f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 시스템에서 화이트리스트 등록이 필요한 경우</li></ul><p id="9df720e4-6f49-8200-85c4-0114813d7435" class="" dir="auto">
+</p><hr id="d55720e4-6f49-83a9-8d10-81c2f629811f" dir="auto"/><h1 id="b0d720e4-6f49-8364-832e-01e40195122d" class="" dir="auto">4.10 EC2 상태 변화</h1><p id="961720e4-6f49-8336-8827-0132b1da73d8" class="" dir="auto">EC2는 여러 상태를 가짐.</p><table id="7ba720e4-6f49-8354-97b5-01109f10a2fa" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="8e9720e4-6f49-8335-a4ab-811c614a79e6" dir="ltr"><th id="?PvG" class="simple-table-header-color simple-table-header">상태</th><th id="a}e&lt;" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="3b6720e4-6f49-83b5-96a2-81801eff5f56" dir="ltr"><td id="?PvG" class="">pending</td><td id="a}e&lt;" class="">생성 중</td></tr><tr id="f41720e4-6f49-8227-92b2-015aafadf1dd" dir="ltr"><td id="?PvG" class="">running</td><td id="a}e&lt;" class="">실행 중</td></tr><tr id="8cb720e4-6f49-837e-afe7-01dce6b0d2d8" dir="ltr"><td id="?PvG" class="">stopping</td><td id="a}e&lt;" class="">중지 중</td></tr><tr id="d5f720e4-6f49-82df-914b-01c35edbf24a" dir="ltr"><td id="?PvG" class="">stopped</td><td id="a}e&lt;" class="">중지됨</td></tr><tr id="516720e4-6f49-824e-9254-81dbbfa732fb" dir="ltr"><td id="?PvG" class="">shutting-down</td><td id="a}e&lt;" class="">종료 중</td></tr><tr id="bcb720e4-6f49-8332-994c-01c3b9c267dd" dir="ltr"><td id="?PvG" class="">terminated</td><td id="a}e&lt;" class="">종료됨</td></tr></tbody></table><p id="946720e4-6f49-8280-a0f0-8141507283ac" class="" dir="auto">중요한 점</p><ul id="475720e4-6f49-83a7-a303-814c954fe549" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>stopped</code> 상태는 디스크(EBS)는 유지되지만 서버는 꺼져 있음</li></ul><ul id="73b720e4-6f49-8311-9da5-814c8c1c0836" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terminated</code> 상태는 인스턴스가 삭제된 상태임</li></ul><ul id="9ab720e4-6f49-83cc-b2b6-81e6e4110bb0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">종료 시 EBS 삭제 옵션이 켜져 있으면 루트 볼륨도 함께 삭제될 수 있음</li></ul><hr id="045720e4-6f49-8361-8045-814cb5d6e314" dir="auto"/><h1 id="fa7720e4-6f49-837b-b146-819730d90bbe" class="" dir="auto">4.11 EC2 요금 옵션</h1><p id="8ac720e4-6f49-8285-ba82-01f610f52632" class="" dir="auto">EC2는 사양뿐 아니라 <strong>구매 방식</strong>도 중요함.</p><p id="f02720e4-6f49-8336-9d8f-8185ab7ec05d" class="" dir="auto">같은 인스턴스 타입이라도 어떤 요금 옵션을 선택하느냐에 따라 비용 구조가 달라짐.</p><p id="9d5720e4-6f49-835e-aca4-0124d192db59" class="" dir="auto">대표적인 요금 옵션</p><ul id="4cc720e4-6f49-82fc-9b30-018cf447a2bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">On-Demand</li></ul><ul id="e55720e4-6f49-83ba-b9f2-81c18a913bea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Reserved Instances</li></ul><ul id="b4f720e4-6f49-8395-84ba-01305f0b5fbf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Savings Plans</li></ul><ul id="ca5720e4-6f49-8398-8211-01fe6d17492c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Spot Instances</li></ul><ul id="362720e4-6f49-83ee-9a04-819e930c0623" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dedicated Hosts / Dedicated Instances</li></ul><hr id="a40720e4-6f49-8356-870f-010189beec66" dir="auto"/><h2 id="e3e720e4-6f49-82ce-aae0-0164f1c61a3b" class="" dir="auto">4.11.1 On-Demand</h2><p id="d18720e4-6f49-8231-83e3-01ddef0d9fe6" class="" dir="auto">가장 기본적인 과금 방식임.</p><p id="6db720e4-6f49-8263-9cab-017b39cf6e8f" class="" dir="auto">필요할 때 생성하고 사용한 만큼 비용을 지불함.</p><p id="9ac720e4-6f49-829a-beeb-81bc56acc4aa" class="" dir="auto">특징</p><ul id="63f720e4-6f49-824e-b098-011a216e1f72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">약정 없음</li></ul><ul id="13c720e4-6f49-831c-8c1a-011dd3ec3faf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가장 유연함</li></ul><ul id="d8f720e4-6f49-832c-a582-01ed54f63d50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단기 실습 및 테스트에 적합</li></ul><ul id="80a720e4-6f49-82b2-ac29-01c1b79585a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기 사용 시 상대적으로 비쌈</li></ul><p id="2a7720e4-6f49-8212-839a-815444c4f019" class="" dir="auto">교육 환경에서는 가장 많이 사용하는 방식임.</p><hr id="a5a720e4-6f49-83e7-8ddb-01ac040875c2" dir="auto"/><h2 id="469720e4-6f49-83b7-bd79-01724e92e8b0" class="" dir="auto">4.11.2 Reserved Instances</h2><p id="d2b720e4-6f49-82db-bba5-81859382b318" class="" dir="auto">1년 또는 3년 약정을 통해 비용을 절감하는 방식임.</p><p id="ad3720e4-6f49-826a-88c8-010423594c31" class="" dir="auto">특징</p><ul id="ce3720e4-6f49-82b2-a912-01d8f205a898" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기 운영에 적합</li></ul><ul id="f49720e4-6f49-82b8-96da-01d07e793583" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용량이 일정한 서버에 유리</li></ul><ul id="6d4720e4-6f49-83fc-a276-0114e8f4e6b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">On-Demand 대비 할인 가능</li></ul><p id="4ac720e4-6f49-82f8-b77e-018791416372" class="" dir="auto">적합한 예</p><ul id="bdd720e4-6f49-83ab-a48c-819ca743552b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">24시간 항상 실행되는 운영 웹 서버</li></ul><ul id="843720e4-6f49-8310-9753-01acbc2ec951" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고정적인 DB 서버</li></ul><hr id="e49720e4-6f49-8228-bcde-019086cc8846" dir="auto"/><h2 id="62f720e4-6f49-83bf-816b-01d98eac3fbb" class="" dir="auto">4.11.3 Savings Plans</h2><p id="c3e720e4-6f49-8268-b572-81062e1e3ded" class="" dir="auto">일정 금액 또는 사용량을 약정해서 할인받는 방식임.</p><p id="d53720e4-6f49-8221-99bb-01a1f6cdd170" class="" dir="auto">특징</p><ul id="e97720e4-6f49-82b9-819f-817f88e934f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RI보다 유연한 경우가 많음</li></ul><ul id="e2d720e4-6f49-8204-b8d1-81848dce5f4f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 외 일부 컴퓨팅 서비스까지 적용 가능</li></ul><ul id="e0f720e4-6f49-8326-a75a-8114f8e8032f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기 운영에서 비용 절감 효과가 큼</li></ul><hr id="8c6720e4-6f49-82b3-bf04-019c07a2cb66" dir="auto"/><h2 id="c2b720e4-6f49-82c6-ac5c-819c1103ba77" class="" dir="auto">4.11.4 Spot Instances</h2><p id="922720e4-6f49-8208-9e71-01173a883017" class="" dir="auto">AWS의 남는 자원을 매우 저렴하게 사용하는 방식임.</p><p id="39b720e4-6f49-82dd-8d6d-815b944976ff" class="" dir="auto">특징</p><ul id="e35720e4-6f49-82f6-9eb0-812eef366857" class="bulleted-list" dir="auto"><li style="list-style-type:disc">매우 저렴함</li></ul><ul id="fbe720e4-6f49-8327-8b9c-019d6634a800" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 사정에 따라 언제든 회수될 수 있음</li></ul><ul id="8a8720e4-6f49-821b-ba72-01f6d3c1ef7f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중단 허용 가능한 작업에 적합</li></ul><p id="789720e4-6f49-828c-87ab-0194bb88cb2c" class="" dir="auto">적합한 예</p><ul id="961720e4-6f49-83e5-890b-81bcfd53b292" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배치 처리</li></ul><ul id="132720e4-6f49-821a-bfd5-81e234cc3e18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 환경</li></ul><ul id="5cc720e4-6f49-83e1-b654-81703b946fce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">렌더링 작업</li></ul><ul id="c62720e4-6f49-82ce-8d2b-014eb7deed8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비핵심 워크로드</li></ul><p id="b94720e4-6f49-82fe-bb61-81f342bc9f5d" class="" dir="auto">부적합한 예</p><ul id="7ba720e4-6f49-8273-b502-018c0d8f7fc3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중요한 운영 DB</li></ul><ul id="f89720e4-6f49-83b2-8e91-8118fd1055a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세션 유지가 중요한 단일 서버</li></ul><hr id="2b1720e4-6f49-82e1-9d61-81ab7dcf501b" dir="auto"/><h2 id="736720e4-6f49-83ac-bc41-81494cab31f5" class="" dir="auto">4.11.5 요금 옵션 비교</h2><table id="af4720e4-6f49-837f-b04d-013c8a1850a6" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="e8a720e4-6f49-83fd-b4d5-81f738d2d592" dir="ltr"><th id="Rbr=" class="simple-table-header-color simple-table-header">옵션</th><th id="?na@" class="simple-table-header-color simple-table-header">장점</th><th id="KQKF" class="simple-table-header-color simple-table-header">단점</th><th id="iPtd" class="simple-table-header-color simple-table-header">적합한 환경</th></tr></thead><tbody><tr id="9cb720e4-6f49-8352-a7cc-812599682cdb" dir="ltr"><td id="Rbr=" class="">On-Demand</td><td id="?na@" class="">유연함</td><td id="KQKF" class="">비용 높음</td><td id="iPtd" class="">실습, 테스트</td></tr><tr id="db4720e4-6f49-83b4-a673-018248066e60" dir="ltr"><td id="Rbr=" class="">Reserved</td><td id="?na@" class="">할인 큼</td><td id="KQKF" class="">약정 필요</td><td id="iPtd" class="">장기 운영</td></tr><tr id="79f720e4-6f49-8303-9a18-8122a1cab6df" dir="ltr"><td id="Rbr=" class="">Savings Plans</td><td id="?na@" class="">유연한 할인</td><td id="KQKF" class="">약정 필요</td><td id="iPtd" class="">장기 컴퓨팅</td></tr><tr id="0d9720e4-6f49-822e-8df4-81f0d612fd53" dir="ltr"><td id="Rbr=" class="">Spot</td><td id="?na@" class="">매우 저렴</td><td id="KQKF" class="">중단 가능</td><td id="iPtd" class="">배치, 일시 작업</td></tr></tbody></table><hr id="a2b720e4-6f49-83ca-8959-81ef4f5db960" dir="auto"/><h1 id="94d720e4-6f49-832d-9cb3-0151b20d4d15" class="" dir="auto">4.12 EC2 운영 시 고려사항</h1><p id="632720e4-6f49-8270-bc7b-017359edbf8f" class="" dir="auto">EC2는 단순히 만들고 끝나는 서비스가 아님.</p><p id="5a1720e4-6f49-8202-8631-01e66ac80611" class="" dir="auto">실제 운영에서는 다음 항목을 반드시 고려해야 함.</p><hr id="6e8720e4-6f49-83b9-9f97-011e45abd41a" dir="auto"/><h2 id="36a720e4-6f49-829b-abd8-8139d35b1ed6" class="" dir="auto">4.12.1 단일 EC2의 한계</h2><p id="068720e4-6f49-825e-9c77-81648940fa94" class="" dir="auto">한 대의 EC2만 운영하면 다음 문제가 있음.</p><ul id="121720e4-6f49-831d-a249-018620a3409e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 시 서비스 중단</li></ul><ul id="a50720e4-6f49-8235-8001-017e9fe94aaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장 한계</li></ul><ul id="2f3720e4-6f49-83d7-a885-816f12be1c27" class="bulleted-list" dir="auto"><li style="list-style-type:disc">수동 운영 필요</li></ul><ul id="9de720e4-6f49-8236-be89-817261e493df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패치 관리 부담</li></ul><p id="255720e4-6f49-8336-9eca-815d06d6d589" class="" dir="auto">따라서 실제 운영 환경에서는 보통 다음과 같이 구성함.</p><ul id="550720e4-6f49-82c3-96af-81afa2d36198" class="bulleted-list" dir="auto"><li style="list-style-type:disc">앞단에 ALB 배치</li></ul><ul id="40a720e4-6f49-82d7-ac42-8157c8f2e575" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling Group 구성</li></ul><ul id="ba2720e4-6f49-8258-8a1c-01157239df0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다중 AZ 배치</li></ul><ul id="aa7720e4-6f49-83f0-9747-81b6e3a5eee5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS / ElastiCache 연계</li></ul><p id="025720e4-6f49-8293-8b11-810b82281ebb" class="" dir="auto">즉, EC2는 독립적으로 보기보다 <strong>아키텍처의 일부로 이해해야 함.</strong></p><hr id="784720e4-6f49-82ce-8d3b-01a6977470e5" dir="auto"/><h2 id="bcf720e4-6f49-8377-bb0a-012bfe241e84" class="" dir="auto">4.12.2 보안 고려사항</h2><ul id="0f0720e4-6f49-832d-af27-01320d4effba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH는 필요한 IP만 허용</li></ul><ul id="05a720e4-6f49-828b-b0ff-018b468a2573" class="bulleted-list" dir="auto"><li style="list-style-type:disc">0.0.0.0/0으로 22번 포트 전면 개방 지양</li></ul><ul id="c12720e4-6f49-8332-8673-8140da4f51c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Role 사용</li></ul><ul id="002720e4-6f49-8225-9642-016f88f2b64b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Access Key를 인스턴스에 직접 저장하지 않음</li></ul><ul id="080720e4-6f49-825c-be03-0197e439f7e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OS 패치 수행</li></ul><ul id="0d4720e4-6f49-821f-8b01-0136850155c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch / SSM 연계 고려</li></ul><hr id="33b720e4-6f49-836f-8fa0-019a63895e53" dir="auto"/><h2 id="54a720e4-6f49-825f-acc3-01309df7af08" class="" dir="auto">4.12.3 비용 고려사항</h2><ul id="813720e4-6f49-8327-a0d4-810a9124bef9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요 없는 인스턴스는 중지 또는 종료</li></ul><ul id="e6e720e4-6f49-838b-9cc0-011f2b510f6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EBS 미사용 볼륨 정리</li></ul><ul id="151720e4-6f49-8348-8d83-016b367d9c04" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Elastic IP 미사용 자원 정리</li></ul><ul id="347720e4-6f49-83ad-8189-01da2e06f4bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">과도한 인스턴스 타입 사용 지양</li></ul><hr id="1dd720e4-6f49-823c-9643-81ec6526fa6d" dir="auto"/><h1 id="4e4720e4-6f49-829e-a08e-8184346d1d5b" class="" dir="auto">4.13 실습 : EC2 웹 서버 생성</h1><p id="ed8720e4-6f49-8234-895b-016f26d06322" class="" dir="auto">실습 목표</p><ul id="e91720e4-6f49-839e-996f-01e46daa2cbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 인스턴스를 생성함</li></ul><ul id="9f8720e4-6f49-82e3-9ec7-01c053557edd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹을 구성함</li></ul><ul id="c38720e4-6f49-82a1-a178-81096f9280de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">User Data로 웹 서버를 자동 설치함</li></ul><ul id="f71720e4-6f49-82c0-aa84-01e8a1d043b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브라우저에서 웹 페이지 접속을 확인함</li></ul><hr id="b23720e4-6f49-823f-8400-815b342ebc19" dir="auto"/><h2 id="576720e4-6f49-8253-8466-01be2ff7d711" class="" dir="auto">4.13.1 사전 준비</h2><p id="4e1720e4-6f49-82e8-92c7-8157d6660948" class="" dir="auto">필요 자원</p><ul id="167720e4-6f49-8281-aa5e-8154a35b85dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">3장에서 생성한 VPC</li></ul><ul id="e4d720e4-6f49-829e-ab94-81ad8b90af60" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public Subnet</li></ul><ul id="52c720e4-6f49-832a-872b-01a8ad04b550" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway</li></ul><ul id="006720e4-6f49-839c-8c2e-01d83f48231c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public Route Table</li></ul><hr id="e82720e4-6f49-8373-8288-01d83fd8ccb0" dir="auto"/><h2 id="f63720e4-6f49-8394-9301-0149334ce196" class="" dir="auto">4.13.2 보안 그룹 생성</h2><p id="c8e720e4-6f49-8322-a6ad-019510224ae2" class="" dir="auto">EC2 콘솔 또는 VPC 콘솔에서 생성함.</p><p id="4e2720e4-6f49-8207-9d4c-8109bd731271" class="" dir="auto">이름</p><pre id="1c7720e4-6f49-83d6-9759-015fc99cc804" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-sg-web</code></pre><p id="75b720e4-6f49-8357-a9e9-01f2b284de00" class="" dir="auto">Inbound Rules</p><table id="98a720e4-6f49-8234-ae0c-81b978e75abf" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="41f720e4-6f49-827b-98a1-011b6f247216" dir="ltr"><th id="JR__" class="simple-table-header-color simple-table-header">타입</th><th id="}?Cs" class="simple-table-header-color simple-table-header">프로토콜</th><th id="{lPm" class="simple-table-header-color simple-table-header">포트</th><th id="dCwq" class="simple-table-header-color simple-table-header">소스</th></tr></thead><tbody><tr id="a8e720e4-6f49-82b4-adec-01fa59f3099b" dir="ltr"><td id="JR__" class="">SSH</td><td id="}?Cs" class="">TCP</td><td id="{lPm" class="">22</td><td id="dCwq" class="">내 IP</td></tr><tr id="dd5720e4-6f49-8206-859c-81fb7ee3155d" dir="ltr"><td id="JR__" class="">HTTP</td><td id="}?Cs" class="">TCP</td><td id="{lPm" class="">80</td><td id="dCwq" class="">0.0.0.0/0</td></tr></tbody></table><p id="7d8720e4-6f49-833a-811d-81152234a947" class="" dir="auto">설명</p><ul id="206720e4-6f49-83fe-92ff-013d75d17266" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSH는 관리자 접속용</li></ul><ul id="6cc720e4-6f49-83c7-8ec0-0124cd4b36fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP는 웹 접속 테스트용</li></ul><ul id="96c720e4-6f49-83e9-a52a-813e806e0a00" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습에서는 HTTPS보다 HTTP부터 확인하는 것이 편함</li></ul><hr id="84e720e4-6f49-8340-ab41-01526c65da62" dir="auto"/><h2 id="577720e4-6f49-8212-9924-818895cfcf90" class="" dir="auto">4.13.3 Key Pair 생성</h2><p id="3a0720e4-6f49-83b2-808c-0190efac702f" class="" dir="auto">EC2 콘솔에서 Key Pair를 생성함.</p><p id="408720e4-6f49-8217-9217-01798cd62ff0" class="" dir="auto">이름</p><pre id="742720e4-6f49-8366-8c57-81bfce72a004" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-key</code></pre><p id="540720e4-6f49-8347-a94b-81aa6d14e444" class="" dir="auto">형식</p><pre id="6ba720e4-6f49-8337-b729-818bbab40c76" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">.pem</code></pre><p id="005720e4-6f49-835c-82fe-816d1fe9fd2f" class="" dir="auto">주의</p><ul id="824720e4-6f49-83a8-9361-81ea909da5e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다운로드한 개인키는 안전한 위치에 보관</li></ul><ul id="4d4720e4-6f49-83c1-bed5-0105b6ba93a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리눅스/macOS에서는 권한 조정 필요</li></ul><pre id="d37720e4-6f49-82bc-b979-01adb4958351" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">chmod400 이니셜-key.pem</code></pre><p id="3be720e4-6f49-828b-ba60-012e820920fb" class="" dir="auto">이 명령은 개인키 파일의 권한을 소유자 읽기 전용으로 제한하는 명령임.</p><p id="acb720e4-6f49-83c9-abec-8123eb8763a8" class="" dir="auto">SSH는 개인키 파일의 권한이 너무 넓으면 보안상 위험하다고 판단하여 접속을 거부할 수 있음.</p><p id="ec1720e4-6f49-83fc-9b2b-817c6f2aecd8" class="" dir="auto">따라서 <code>.pem</code> 파일을 사용할 때는 보통 먼저 <code>chmod 400</code>으로 권한을 제한함.</p><hr id="316720e4-6f49-837e-ab2c-81b9d0edf2b3" dir="auto"/><h2 id="1c0720e4-6f49-8327-9f33-01c9cb0fd311" class="" dir="auto">4.13.4 EC2 인스턴스 생성</h2><p id="f14720e4-6f49-82fc-b3a4-01c5f6e2d95f" class="" dir="auto">EC2 콘솔 → Instances → Launch instances</p><p id="df9720e4-6f49-838e-8bda-0122d19a8ee3" class="" dir="auto">설정 예</p><table id="535720e4-6f49-82d0-9fe7-8114e3f2d471" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="036720e4-6f49-8359-b565-01db9cc61116" dir="ltr"><th id="k[QE" class="simple-table-header-color simple-table-header">항목</th><th id="zhIw" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="88d720e4-6f49-82e0-b1bc-81842138a7be" dir="ltr"><td id="k[QE" class="">Name</td><td id="zhIw" class="">이니셜-ec2-web</td></tr><tr id="151720e4-6f49-83e2-82d3-0169a8c29702" dir="ltr"><td id="k[QE" class="">AMI</td><td id="zhIw" class="">Amazon Linux 2023</td></tr><tr id="086720e4-6f49-82a3-872b-0103db222d4d" dir="ltr"><td id="k[QE" class="">Instance Type</td><td id="zhIw" class="">t3.micro</td></tr><tr id="c92720e4-6f49-831b-8c45-81ff343e6d43" dir="ltr"><td id="k[QE" class="">Key Pair</td><td id="zhIw" class="">이니셜-key</td></tr><tr id="cbd720e4-6f49-8263-9871-817a74dd1d6f" dir="ltr"><td id="k[QE" class="">VPC</td><td id="zhIw" class="">이니셜-vpc-main</td></tr><tr id="d8d720e4-6f49-838f-9909-8167ed011880" dir="ltr"><td id="k[QE" class="">Subnet</td><td id="zhIw" class="">이니셜-subnet-public-a</td></tr><tr id="91b720e4-6f49-8296-bf4f-01223f8a210e" dir="ltr"><td id="k[QE" class="">Auto-assign Public IP</td><td id="zhIw" class="">Enable</td></tr><tr id="e6e720e4-6f49-8333-aa37-0112068c741b" dir="ltr"><td id="k[QE" class="">Security Group</td><td id="zhIw" class="">이니셜-sg-web</td></tr></tbody></table><hr id="878720e4-6f49-833e-86ef-81b91617a2c4" dir="auto"/><h2 id="9c7720e4-6f49-8267-9eb8-8171b18d5b51" class="" dir="auto">4.13.5 User Data 입력</h2><p id="444720e4-6f49-8281-ac35-81a85e49cf77" class="" dir="auto">Advanced details에서 User Data에 아래 스크립트를 입력함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="de4720e4-6f49-821b-b892-016dfc733aff" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+dnf update -y
+dnf install -y httpd
+systemctl enable httpd
+systemctlstart httpd
+echo&quot;&lt;h1&gt;Welcome to EC2 Web Server&lt;/h1&gt;&quot; &gt; /var/www/html/index.html</code></pre><h3 id="c37720e4-6f49-82c5-8baf-811f25c5b819" class="" dir="auto">명령어 설명</h3><h3 id="075720e4-6f49-8398-a5fc-8129ddfc623b" class="" dir="auto"><code>#!/bin/bash</code></h3><p id="c5d720e4-6f49-8249-a300-814ab98b0599" class="" dir="auto">이 스크립트를 bash 셸로 실행하라는 의미임.</p><p id="0b7720e4-6f49-839e-a6a5-01074f3cca59" class="" dir="auto">리눅스 스크립트의 첫 줄에 자주 들어가는 선언문임.</p><h3 id="54a720e4-6f49-83a0-85da-81f0b4314f42" class="" dir="auto"><code>dnf update -y</code></h3><p id="bb9720e4-6f49-8318-8483-815f4a682c35" class="" dir="auto">설치된 패키지 목록과 패키지를 최신 상태로 업데이트함.</p><ul id="249720e4-6f49-833b-a88b-81e9e596d81c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>y</code> 옵션은 중간에 확인 질문이 나왔을 때 자동으로 yes를 입력하는 역할을 함.</li></ul><h3 id="300720e4-6f49-83dd-920a-01666f7c068f" class="" dir="auto"><code>dnf install -y httpd</code></h3><p id="c04720e4-6f49-8203-8654-810660c69136" class="" dir="auto">Apache 웹 서버 패키지인 <code>httpd</code>를 설치함.</p><p id="4e1720e4-6f49-8212-aee3-81c5b9d466ef" class="" dir="auto">Amazon Linux 2023 계열에서는 패키지 관리 도구로 <code>dnf</code>를 사용함.</p><h3 id="748720e4-6f49-821b-8bff-81b854ad5fce" class="" dir="auto"><code>systemctl enable httpd</code></h3><p id="e28720e4-6f49-8238-9e1a-810ab0ae5d02" class="" dir="auto">부팅할 때 Apache가 자동 실행되도록 설정함.</p><p id="6cf720e4-6f49-82d4-8bdc-0108c7c9432c" class="" dir="auto">즉, 서버를 재부팅해도 웹 서버가 다시 올라오게 만듦.</p><h3 id="e16720e4-6f49-8223-b4e8-819aa3f3f0eb" class="" dir="auto"><code>systemctl start httpd</code></h3><p id="22c720e4-6f49-82fe-857f-8140bd89d0d7" class="" dir="auto">지금 즉시 Apache 서비스를 실행함.</p><h3 id="a25720e4-6f49-834e-a9bc-012c1c35059d" class="" dir="auto"><code>echo &quot;&lt;h1&gt;Welcome to EC2 Web Server&lt;/h1&gt;&quot; &gt; /var/www/html/index.html</code></h3><p id="930720e4-6f49-8265-9561-01122bd2c640" class="" dir="auto">웹 서버의 기본 문서 경로에 HTML 파일을 생성함.</p><p id="1e7720e4-6f49-82e1-a8f5-017d9b925598" class="" dir="auto">브라우저에서 해당 EC2의 IP로 접속하면 이 문장이 표시됨.</p><hr id="0e3720e4-6f49-8358-a656-017870718fa4" dir="auto"/><h2 id="a2f720e4-6f49-8397-9476-01eff30cb8d9" class="" dir="auto">4.13.6 접속 확인</h2><p id="8c6720e4-6f49-82a9-a210-81563ca67cc6" class="" dir="auto">인스턴스가 Running 상태가 된 뒤, Public IPv4 주소를 복사해 브라우저에서 접속함.</p><p id="c8a720e4-6f49-8354-bc0f-01aa22edf594" class="" dir="auto">예</p><pre id="e2e720e4-6f49-8392-bd1a-818a4f257d23" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://43.x.x.x</code></pre><p id="bab720e4-6f49-8208-b79d-01be96bb49a9" class="" dir="auto">정상 동작 시 아래와 비슷한 문구가 표시됨.</p><pre id="c6b720e4-6f49-8392-a1f1-015c5023a581" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Welcome to EC2 Web Server</code></pre><hr id="fd8720e4-6f49-839d-8413-017a9562aaa8" dir="auto"/><h1 id="680720e4-6f49-8246-944e-019fef796236" class="" dir="auto">4.14 실습 : SSH 접속</h1><p id="f60720e4-6f49-8347-a1cb-01a37c3dca19" class="" dir="auto">Linux / macOS / WSL 환경에서 실행</p><pre id="740720e4-6f49-830b-bb9d-01643c6152d0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh -i 이니셜-key.pem ec2-user@&lt;EC2-Public-IP&gt;</code></pre><p id="3e7720e4-6f49-82f0-b923-01211f233f33" class="" dir="auto">예</p><pre id="89c720e4-6f49-839e-bc86-0166f34d2fc1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh -i kyt-key.pem ec2-user@43.201.10.10</code></pre><h3 id="64f720e4-6f49-8354-a44c-01a7850b0fa2" class="" dir="auto">명령어 설명</h3><h3 id="4cd720e4-6f49-820f-9835-81af126b85b7" class="" dir="auto"><code>ssh</code></h3><p id="d0b720e4-6f49-8301-b719-0161b121dc56" class="" dir="auto">원격 서버에 안전하게 접속하기 위한 Secure Shell 명령어임.</p><h3 id="0a4720e4-6f49-8399-be56-01079f5a6b24" class="" dir="auto"><code>-i 이니셜-key.pem</code></h3><p id="6b6720e4-6f49-83d7-9ea7-011cda105901" class="" dir="auto">접속 시 사용할 개인키 파일을 지정함.</p><p id="5d9720e4-6f49-822a-ac86-81367555240e" class="" dir="auto">AWS EC2는 비밀번호 방식보다 키 기반 인증을 많이 사용함.</p><h3 id="9f8720e4-6f49-8266-8111-8160a7c82a8e" class="" dir="auto"><code>ec2-user</code></h3><p id="98c720e4-6f49-834c-bfb3-01bf2a7cd7fe" class="" dir="auto">Amazon Linux 계열의 기본 로그인 계정임.</p><p id="f88720e4-6f49-83e2-8d98-011d8257af0d" class="" dir="auto">Ubuntu AMI를 썼다면 기본 계정은 보통 <code>ubuntu</code>임.</p><h3 id="518720e4-6f49-82d4-92b3-81ffa7025d04" class="" dir="auto"><code>@&lt;EC2-Public-IP&gt;</code></h3><p id="19f720e4-6f49-839a-9e96-8155631dab89" class="" dir="auto">접속 대상 서버의 공인 IP 주소를 지정함.</p><hr id="f1f720e4-6f49-83c5-89b2-01cc654e46c6" dir="auto"/><h2 id="19b720e4-6f49-825b-ba15-01050993232e" class="" dir="auto">4.14.1 웹 서버 동작 확인 명령</h2><p id="c83720e4-6f49-82bb-beb5-01ed554cc82f" class="" dir="auto">SSH 접속 후 아래 명령으로 상태를 확인함.</p><pre id="ca3720e4-6f49-82ab-86c7-01498b1ce804" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">systemctl status httpd</code></pre><p id="316720e4-6f49-839c-9fd3-812cd41187c6" class="" dir="auto">이 명령은 Apache 서비스 상태를 확인하는 명령임.</p><p id="0d4720e4-6f49-837d-b0a5-01abccebf8b0" class="" dir="auto">확인 포인트</p><ul id="ca0720e4-6f49-83ac-8aae-81696a519b0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">active (running) 상태인지 확인</li></ul><ul id="67b720e4-6f49-839b-b8de-81e595b8a5fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비정상 종료되었는지 확인</li></ul><ul id="400720e4-6f49-8302-84f8-81961ac057a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">에러 메시지가 있는지 확인</li></ul><p id="5d1720e4-6f49-8389-aa1c-0142d1310ed8" class="" dir="auto">추가 확인</p><pre id="75e720e4-6f49-82e7-b066-01bf8beb8e9e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl localhost</code></pre><p id="f39720e4-6f49-83dc-99fc-013aaeb61eac" class="" dir="auto">이 명령은 자기 자신 서버의 웹 서버에 HTTP 요청을 보내는 명령임.</p><p id="091720e4-6f49-836a-b9ec-01c339196a16" class="" dir="auto">브라우저 없이도 웹 페이지 응답을 텍스트로 확인할 수 있음.</p><p id="666720e4-6f49-8306-bf6a-8130cc66930b" class="" dir="auto">정상 동작 시</p><pre id="2b9720e4-6f49-82d7-b557-017b8547eb10" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&lt;h1&gt;Welcome to EC2 Web Server&lt;/h1&gt;</code></pre><p id="310720e4-6f49-8275-a69b-014a5bdc4268" class="" dir="auto">가 출력됨.</p><hr id="016720e4-6f49-8234-b6eb-81ffea3d9600" dir="auto"/><h1 id="7e7720e4-6f49-82ba-9c7e-01fdd27fc2ac" class="" dir="auto">4.15 AWS CLI로 EC2 조회 실습</h1><p id="d4c720e4-6f49-835e-8b39-016dfa063ef2" class="" dir="auto">CLI로 인스턴스 정보를 조회할 수 있음.</p><hr id="ded720e4-6f49-82e6-b906-81715611b50c" dir="auto"/><h2 id="067720e4-6f49-83bd-8249-014d8d5e10ff" class="" dir="auto">4.15.1 인스턴스 목록 조회</h2><pre id="b25720e4-6f49-83dc-92c5-81c856f0e1ce" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws ec2 describe-instances</code></pre><p id="d1a720e4-6f49-8232-8b78-814255ed951a" class="" dir="auto">이 명령은 계정 내 EC2 인스턴스의 상세 정보를 JSON 형식으로 반환함.</p><p id="372720e4-6f49-83b7-bbce-81d3cbd0c71b" class="" dir="auto">출력 내용이 매우 많기 때문에 처음 보면 복잡할 수 있음.</p><p id="e98720e4-6f49-83dd-b50c-01874b0f43b1" class="" dir="auto">포함되는 정보 예</p><ul id="f49720e4-6f49-820e-b993-81d0cac3213c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">InstanceId</li></ul><ul id="6a5720e4-6f49-82b6-bbad-817f21ebba70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">InstanceType</li></ul><ul id="208720e4-6f49-833f-b296-01c919ba2d70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PrivateIpAddress</li></ul><ul id="8eb720e4-6f49-83a0-8faa-01d867fd6e7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PublicIpAddress</li></ul><ul id="0b2720e4-6f49-8365-8e36-81d9ec0eb772" class="bulleted-list" dir="auto"><li style="list-style-type:disc">State</li></ul><ul id="4ea720e4-6f49-82ef-8901-81cb559dc032" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SecurityGroups</li></ul><ul id="86a720e4-6f49-831a-866e-81a0a56ffaa6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SubnetId</li></ul><ul id="953720e4-6f49-8201-a8dd-81c7e8cb58a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VpcId</li></ul><hr id="57e720e4-6f49-8245-893f-01fb11877629" dir="auto"/><h2 id="2ef720e4-6f49-839c-bfb2-812a35956774" class="" dir="auto">4.15.2 실행 중인 인스턴스만 조회</h2><pre id="bd6720e4-6f49-83a2-acb8-817dd298226c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws ec2 describe-instances \
+--filters&quot;Name=instance-state-name,Values=running&quot;</code></pre><h3 id="65a720e4-6f49-83b2-9bb7-01897ed7287a" class="" dir="auto">명령어 설명</h3><h3 id="631720e4-6f49-8322-ab1e-01fc67dbd7c0" class="" dir="auto"><code>--filters</code></h3><p id="7e6720e4-6f49-82bd-a619-81783028eae3" class="" dir="auto">조건을 걸어 필요한 결과만 조회하는 옵션임.</p><h3 id="b66720e4-6f49-83d0-9adb-01dd0006d7c9" class="" dir="auto"><code>&quot;Name=instance-state-name,Values=running&quot;</code></h3><p id="b72720e4-6f49-8229-953c-01ebb184f035" class="" dir="auto">인스턴스 상태가 <code>running</code>인 것만 조회하겠다는 의미임.</p><p id="e85720e4-6f49-8267-8856-01d267f3933b" class="" dir="auto">즉, 이 명령은 전체 인스턴스 중 현재 실행 중인 서버만 필터링해서 보여줌.</p><hr id="79a720e4-6f49-836f-9d6e-0149640018da" dir="auto"/><h2 id="795720e4-6f49-8334-86cd-01d91917951f" class="" dir="auto">4.15.3 특정 항목만 간단히 조회</h2><pre id="4fb720e4-6f49-83e4-b559-0127f0e125f3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws ec2 describe-instances \
+--query &quot;Reservations[*].Instances[*].[InstanceId,InstanceType,PrivateIpAddress,PublicIpAddress,State.Name]&quot; \
+--output table</code></pre><h3 id="922720e4-6f49-83f8-a565-812e1e4aaa24" class="" dir="auto">명령어 설명</h3><h3 id="94a720e4-6f49-82f4-809f-81efad22a3ed" class="" dir="auto"><code>--query</code></h3><p id="1f1720e4-6f49-8356-9f50-01872f7ceaac" class="" dir="auto">JMESPath 문법을 사용해서 원하는 필드만 추출함.</p><h3 id="346720e4-6f49-8232-a53c-01d184c67f6d" class="" dir="auto"><code>Reservations[*].Instances[*]</code></h3><p id="95a720e4-6f49-8269-b562-01676d3b229a" class="" dir="auto">AWS EC2 응답 JSON 구조에서 인스턴스 목록이 위치한 경로임.</p><h3 id="890720e4-6f49-8212-af5b-816378dc99fa" class="" dir="auto"><code>[InstanceId,InstanceType,PrivateIpAddress,PublicIpAddress,State.Name]</code></h3><p id="455720e4-6f49-823d-941d-818cf2746d1c" class="" dir="auto">표시할 항목만 선택함.</p><h3 id="ef4720e4-6f49-82c9-a7a9-01cd5c49197c" class="" dir="auto"><code>--output table</code></h3><p id="c90720e4-6f49-82bf-a588-81ee7202e085" class="" dir="auto">결과를 JSON 대신 표 형식으로 출력함.</p><p id="e2f720e4-6f49-83dc-9059-0174aa598483" class="" dir="auto">이 명령은 실습 중 인스턴스 상태를 빠르게 확인할 때 매우 유용함.</p><hr id="a59720e4-6f49-83a6-b3f3-81411f7e3323" dir="auto"/><h1 id="c85720e4-6f49-83ac-ac1e-01b9bd68bd95" class="" dir="auto">4.16 EC2 구매 옵션 설계 관점 정리</h1><p id="a27720e4-6f49-8325-bcaa-81eb3f95b16e" class="" dir="auto">실무에서 인스턴스 선택은 단순히 “싸면 좋다”가 아니라 워크로드 특성을 보고 결정해야 함.</p><hr id="7e1720e4-6f49-8374-8429-81db02d2b566" dir="auto"/><h2 id="866720e4-6f49-821e-8bef-81c27089a5d6" class="" dir="auto">4.16.1 교육용 / 실습용 환경</h2><p id="584720e4-6f49-8257-84a5-01df4e94e9b4" class="" dir="auto">추천 방식</p><ul id="0a0720e4-6f49-8320-9fba-81755dd110cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">On-Demand</li></ul><ul id="1c7720e4-6f49-8228-ad97-81fca38cd1d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">t3.micro 또는 t3.small</li></ul><p id="f39720e4-6f49-83c4-b41b-01e5b994d45c" class="" dir="auto">이유</p><ul id="453720e4-6f49-83c6-a6e9-01ffbd54573f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">유연하게 생성 / 삭제 가능</li></ul><ul id="0bf720e4-6f49-82f9-89e7-813fe058317d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">약정이 필요 없음</li></ul><ul id="f5e720e4-6f49-831a-9d95-01a1b9573104" class="bulleted-list" dir="auto"><li style="list-style-type:disc">학생별 실습 환경에 적합</li></ul><hr id="360720e4-6f49-838b-ac6f-019dd671f9af" dir="auto"/><h2 id="095720e4-6f49-83d0-b8e0-0194a83b6667" class="" dir="auto">4.16.2 운영 웹 서버</h2><p id="20b720e4-6f49-8305-bd78-8114d07b98ca" class="" dir="auto">추천 방식</p><ul id="18c720e4-6f49-828c-8222-01e4b86e8dac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Reserved Instances 또는 Savings Plans</li></ul><ul id="af1720e4-6f49-8316-9374-01e93645bcfd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">m 계열 또는 적절한 범용 인스턴스</li></ul><p id="15d720e4-6f49-8345-aaef-81d35224481d" class="" dir="auto">이유</p><ul id="194720e4-6f49-831f-abae-01d20b3fc475" class="bulleted-list" dir="auto"><li style="list-style-type:disc">항상 켜져 있는 서버라 할인 효과 큼</li></ul><ul id="9b8720e4-6f49-8224-bf3f-81745becf46d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기 예측 가능한 사용량에 적합</li></ul><hr id="b44720e4-6f49-837b-8616-01b7d8a2cc43" dir="auto"/><h2 id="b8d720e4-6f49-8337-84b5-01bc8fb96790" class="" dir="auto">4.16.3 배치 처리 / 일시 작업</h2><p id="bbb720e4-6f49-82b5-b59b-8185eb8f3c1f" class="" dir="auto">추천 방식</p><ul id="067720e4-6f49-825d-ae8b-81904acf8fbd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Spot Instance</li></ul><p id="f9e720e4-6f49-8226-8885-810f496e8f90" class="" dir="auto">이유</p><ul id="d15720e4-6f49-8224-a667-013529dc06b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용 절감 효과 큼</li></ul><ul id="d2c720e4-6f49-832d-9172-81c9de214de1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중단되어도 다시 실행 가능한 작업에 적합</li></ul><hr id="cd6720e4-6f49-83ee-a3cf-81169507a452" dir="auto"/><h1 id="458720e4-6f49-82b3-9e85-819b72eec191" class="" dir="auto">4.17 EC2 아키텍처 관점 핵심 정리</h1><p id="bfa720e4-6f49-8212-8284-01e571142809" class="" dir="auto">EC2를 아키텍처 관점에서 보면 다음이 중요함.</p><h3 id="2de720e4-6f49-8373-8aca-81a0543808f4" class="" dir="auto">1. EC2 한 대는 아키텍처가 아님</h3><p id="3a5720e4-6f49-83df-913a-8194dd9aef39" class="" dir="auto">단일 서버는 장애에 취약함.</p><p id="1ef720e4-6f49-82d5-a71a-816ef67d1a23" class="" dir="auto">운영 환경에서는 Load Balancer, Auto Scaling, Multi AZ와 결합해야 함.</p><h3 id="2eb720e4-6f49-8222-9d20-01f93ccd54a8" class="" dir="auto">2. 스토리지를 구분해서 봐야 함</h3><ul id="d98720e4-6f49-83fb-b2d7-0131dd01ab3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OS 디스크와 데이터 디스크</li></ul><ul id="223720e4-6f49-8359-b4bd-81a4a39ee5ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">영구 저장소와 임시 저장소</li></ul><ul id="98e720e4-6f49-8210-b7b8-81f89f4977e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EBS와 Instance Store 차이</li></ul><h3 id="18f720e4-6f49-8205-be83-811efac4aed9" class="" dir="auto">3. 비용과 성능을 함께 고려해야 함</h3><ul id="2b8720e4-6f49-8304-b8fe-81cab6cbfd20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">무조건 큰 인스턴스가 좋은 것이 아님</li></ul><ul id="189720e4-6f49-837f-b618-81f60c699cea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">워크로드에 맞는 타입을 선택해야 함</li></ul><h3 id="850720e4-6f49-825a-b8ab-81b7352b75e2" class="" dir="auto">4. 네트워크와 보안이 같이 따라와야 함</h3><ul id="841720e4-6f49-826a-9bdd-0120b013a82a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public / Private Subnet 구분</li></ul><ul id="5e9720e4-6f49-8205-b3ab-811e9f36898a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹 최소 허용</li></ul><ul id="5b1720e4-6f49-8299-9fba-01a509d1df20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Role 활용</li></ul><hr id="11d720e4-6f49-8370-b0a8-81c66cd2167a" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

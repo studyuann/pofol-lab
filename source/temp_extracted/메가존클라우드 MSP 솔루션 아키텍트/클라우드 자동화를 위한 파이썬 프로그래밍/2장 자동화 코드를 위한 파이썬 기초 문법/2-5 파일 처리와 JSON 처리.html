@@ -1,0 +1,934 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>2-5. 파일 처리와 JSON 처리</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="c4f720e4-6f49-8295-87d3-0150bc0987d0" class="page sans"><header><h1 class="page-title" dir="auto">2-5. 파일 처리와 JSON 처리</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="05a720e4-6f49-831d-b8a6-813c72199259" class="" dir="auto">학습 목표</h2><ul id="633720e4-6f49-8201-9556-01ccb38a4608" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 처리의 의미를 설명할 수 있다.</li></ul><ul id="b20720e4-6f49-836c-8de4-01eac3885461" class="bulleted-list" dir="auto"><li style="list-style-type:disc">텍스트 파일을 생성하고 내용을 저장할 수 있다.</li></ul><ul id="987720e4-6f49-8206-a856-017a02efeaee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">텍스트 파일을 읽고 줄 단위로 처리할 수 있다.</li></ul><ul id="247720e4-6f49-8287-86a2-8124176c4491" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>with open()</code> 구문의 의미를 설명할 수 있다.</li></ul><ul id="787720e4-6f49-82e4-b16c-01b09ab9afa9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON 형식의 의미를 설명할 수 있다.</li></ul><ul id="afd720e4-6f49-82bb-9bb3-81655f1deba3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python 딕셔너리와 JSON의 관계를 이해할 수 있다.</li></ul><ul id="9d6720e4-6f49-8399-9084-81f5d3826316" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>json.dump()</code>와 <code>json.load()</code>를 사용해 JSON 파일을 저장하고 읽을 수 있다.</li></ul><ul id="e43720e4-6f49-8319-a4c1-01a0ea30039d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 코드에서 설정 파일과 결과 파일을 다루는 기본 구조를 작성할 수 있다.</li></ul><hr id="870720e4-6f49-839e-828a-01a01f7e59e4" dir="auto"/><h2 id="5eb720e4-6f49-82a0-b471-015d4d16ff0c" class="" dir="auto">주요 키워드</h2><ul id="26d720e4-6f49-83c0-966f-0123094be2ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 처리</li></ul><ul id="027720e4-6f49-8372-9290-0168648d8fd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">open</li></ul><ul id="87e720e4-6f49-82e5-bcf5-81d5a43be72f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">read</li></ul><ul id="b69720e4-6f49-833a-8621-81346f873d3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">write</li></ul><ul id="b33720e4-6f49-82a8-81bd-81cfaf2510ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">with</li></ul><ul id="3ad720e4-6f49-82cd-a077-0113331b78b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">encoding</li></ul><ul id="043720e4-6f49-8365-93ad-01208d38c3bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON</li></ul><ul id="410720e4-6f49-83f4-b5c9-01f376767b8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">json.dump</li></ul><ul id="b28720e4-6f49-8395-9254-01231dd16e4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">json.load</li></ul><ul id="43b720e4-6f49-8230-842e-01cb782b0cbb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정 파일</li></ul><ul id="bb7720e4-6f49-8275-82ae-0137716fff7e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과 저장</li></ul><hr id="a9c720e4-6f49-8347-9aca-01a0d640b077" dir="auto"/><h2 id="b02720e4-6f49-8341-95e8-01f20341b58d" class="" dir="auto">1. 파일 처리가 왜 필요한가</h2><p id="7f9720e4-6f49-8239-a080-010152b1da5c" class="" dir="auto">자동화 코드에서는 실행 결과를 화면에만 보여주는 경우도 있지만, 실제로는 파일로 저장하는 경우가 매우 많다.</p><p id="a5e720e4-6f49-83f4-b356-01fb95733af7" class="" dir="auto">예를 들면 다음과 같은 경우가 있다.</p><ul id="c41720e4-6f49-8271-8b73-01c728852057" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조회한 인스턴스 목록을 텍스트 파일로 저장</li></ul><ul id="a3a720e4-6f49-8256-bc10-0154006be917" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 분석 결과를 파일로 저장</li></ul><ul id="0c5720e4-6f49-82ec-8144-81ef464f6d93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정값을 JSON 파일로 분리</li></ul><ul id="d16720e4-6f49-827c-aed1-81b639c577f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">챗봇이 참고할 운영 정보를 텍스트 파일로 저장</li></ul><ul id="420720e4-6f49-82f9-b21c-81da08d141b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 결과를 다음 단계에서 다시 사용하기 위해 파일로 남김</li></ul><p id="4f3720e4-6f49-8266-992d-81ea9ae8bddf" class="" dir="auto">즉, 자동화 코드에서 파일 처리는 기본 기능에 가깝다.</p><hr id="29b720e4-6f49-8279-a3c3-01014520abef" dir="auto"/><h2 id="732720e4-6f49-83b0-86bb-81c261324efa" class="" dir="auto">2. 파일 열기: open()</h2><p id="a99720e4-6f49-8278-bdf1-811322fe85d8" class="" dir="auto">파이썬에서 파일을 열 때는 <code>open()</code>을 사용한다.</p><p id="dbe720e4-6f49-83b9-b021-815fa0f7c5de" class="" dir="auto">기본 형태는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="e7b720e4-6f49-837c-a332-81cd8f3ebc69" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">open(&quot;파일이름&quot;, &quot;모드&quot;)</code></pre><p id="cf8720e4-6f49-8349-bd01-816ded808a28" class="" dir="auto">예를 들면 다음과 같다.</p><pre id="198720e4-6f49-8200-a029-816501a9379c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">open(&quot;sample.txt&quot;, &quot;w&quot;)</code></pre><p id="b6f720e4-6f49-824d-bb4e-812316106b24" class="" dir="auto">여기서 <code>&quot;w&quot;</code>는 쓰기 모드이다.</p><p id="d4d720e4-6f49-839d-b9c7-014c17df3e58" class="" dir="auto">하지만 실제로는 <code>open()</code>만 단독으로 쓰기보다 <code>with open()</code> 구조를 많이 사용한다.</p><p id="57c720e4-6f49-83fb-b2b0-01ba1b58ddcd" class="" dir="auto">이유는 파일을 사용한 뒤 자동으로 닫아주기 때문이다.</p><hr id="9cd720e4-6f49-83cb-ad6d-01d0ce5fb63f" dir="auto"/><h2 id="053720e4-6f49-8269-a75a-01a723f3a387" class="" dir="auto">3. with open() 구조</h2><p id="8ab720e4-6f49-83a4-9bac-813adf054270" class="" dir="auto">기본 구조는 다음과 같다.</p><pre id="bc1720e4-6f49-8267-a5d3-8104052c813c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;sample.txt&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+    file.write(&quot;hello\n&quot;)</code></pre><p id="c53720e4-6f49-8223-8872-01939eb7cf9a" class="" dir="auto">이 구조를 해석하면 다음과 같다.</p><ul id="c45720e4-6f49-82cb-87f3-819b977f833c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;sample.txt&quot;</code> 파일을 연다.</li></ul><ul id="cdb720e4-6f49-8206-89d8-813157149151" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;w&quot;</code> 모드로 연다.</li></ul><ul id="9b8720e4-6f49-821a-ab58-01a5a4370def" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>utf-8</code> 인코딩을 사용한다.</li></ul><ul id="733720e4-6f49-8230-a8ee-010d741f6975" class="bulleted-list" dir="auto"><li style="list-style-type:disc">열린 파일을 <code>file</code>이라는 이름으로 사용한다.</li></ul><ul id="417720e4-6f49-83d7-8aa6-819c61e07edf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">들여쓰기된 코드가 끝나면 파일을 자동으로 닫는다.</li></ul><p id="46a720e4-6f49-8262-a8a8-01b35c6b9d7d" class="" dir="auto">자동화 코드에서는 이 방식이 표준처럼 사용된다.</p><hr id="bf5720e4-6f49-8270-af95-01a9336e6baa" dir="auto"/><h2 id="d34720e4-6f49-83f4-b966-81480657ead6" class="" dir="auto">4. 파일 모드 이해</h2><p id="c46720e4-6f49-825c-bf43-017279dc6f40" class="" dir="auto">파일을 열 때 사용하는 대표적인 모드는 다음과 같다.</p><h3 id="e57720e4-6f49-827f-88e3-01c687375a74" class="" dir="auto"><code>&quot;r&quot;</code></h3><p id="d0b720e4-6f49-8310-ae05-01adfc77a96f" class="" dir="auto">읽기 모드이다.</p><p id="f03720e4-6f49-831a-a26c-810328988918" class="" dir="auto">파일이 반드시 존재해야 한다.</p><h3 id="ee7720e4-6f49-82a7-a48d-012b7cba3602" class="" dir="auto"><code>&quot;w&quot;</code></h3><p id="3b5720e4-6f49-8201-a392-01b3d1d75a0f" class="" dir="auto">쓰기 모드이다.</p><p id="da9720e4-6f49-83c2-a94d-01a407ff5e37" class="" dir="auto">파일이 없으면 새로 만들고, 파일이 있으면 기존 내용을 덮어쓴다.</p><h3 id="f11720e4-6f49-82c4-bd43-016e0dab0ffb" class="" dir="auto"><code>&quot;a&quot;</code></h3><p id="f36720e4-6f49-8353-90ab-015678a7e5d2" class="" dir="auto">추가 모드이다.</p><p id="2c4720e4-6f49-83dc-a836-81cd270b47e5" class="" dir="auto">기존 파일의 끝에 내용을 이어서 쓴다.</p><hr id="e5d720e4-6f49-8397-9fce-011abb0a8140" dir="auto"/><h2 id="ce4720e4-6f49-8317-acf0-81774ed37a0b" class="" dir="auto">5. 텍스트 파일 쓰기</h2><p id="a6d720e4-6f49-8213-8fef-01a027b1eb9a" class="" dir="auto">다음 코드는 텍스트 파일을 만들고 내용을 저장한다.</p><pre id="6b4720e4-6f49-8361-97a5-01d2413396f6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;sample.txt&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+    file.write(&quot;hello python\n&quot;)
+    file.write(&quot;cloud automation\n&quot;)</code></pre><p id="c45720e4-6f49-8294-bfd9-81d69b7aa81c" class="" dir="auto">실행 후 <code>sample.txt</code> 파일을 열어 보면 아래 내용이 저장되어 있다.</p><pre id="5ac720e4-6f49-83d4-9b7f-81c881f30c1f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hello python
+cloud automation</code></pre><p id="6e6720e4-6f49-8391-810e-81a6f6f282e7" class="" dir="auto">여기서 <code>\n</code>은 줄바꿈 문자이다.</p><p id="d3b720e4-6f49-83da-abdd-818f66093cda" class="" dir="auto">이 문자가 없으면 한 줄에 이어서 써진다.</p><hr id="4c5720e4-6f49-832c-a910-019d2b5163a9" dir="auto"/><h2 id="9d8720e4-6f49-83af-a0d9-81a8e6a9bc29" class="" dir="auto">실습 1. 텍스트 파일 생성하기</h2><p id="057720e4-6f49-82a8-84b2-817014e54d15" class="" dir="auto">파일명: <code>write_text.py</code></p><pre id="a95720e4-6f49-82d7-b03e-0185dbaf2f3e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;services.txt&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+    file.write(&quot;EC2\n&quot;)
+    file.write(&quot;S3\n&quot;)
+    file.write(&quot;IAM\n&quot;)
+    file.write(&quot;Bedrock\n&quot;)
+
+print(&quot;services.txt 파일 저장 완료&quot;)</code></pre><h3 id="6d1720e4-6f49-836e-99d3-81b85ab4cf9e" class="" dir="auto">확인할 내용</h3><ul id="e2a720e4-6f49-83c0-9e27-814456673a78" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 후 <code>services.txt</code> 파일이 생성되는지 확인한다.</li></ul><ul id="81a720e4-6f49-8267-9184-01c0896bf2b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 안에 줄 단위로 데이터가 저장되는지 확인한다.</li></ul><hr id="620720e4-6f49-83ea-aba4-01b9a7c9a240" dir="auto"/><h2 id="e49720e4-6f49-83ef-a7a8-014ee9f18f50" class="" dir="auto">6. 텍스트 파일 읽기</h2><p id="55e720e4-6f49-82cb-ab33-8149a9ed6d26" class="" dir="auto">이제 저장한 파일을 다시 읽어보자.</p><pre id="485720e4-6f49-82a2-8663-01ae72a82fbc" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;sample.txt&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    content = file.read()
+
+print(content)</code></pre><p id="02a720e4-6f49-822c-b19c-81664d99e1b5" class="" dir="auto">실행 결과</p><pre id="b8e720e4-6f49-83d2-a777-817135aba8e9" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">hello python
+cloud automation</code></pre><p id="000720e4-6f49-8314-ae16-0100514d48b5" class="" dir="auto"><code>read()</code>는 파일 전체 내용을 한 번에 문자열로 읽어온다.</p><hr id="d60720e4-6f49-83a7-a95c-8139068c1e9a" dir="auto"/><h2 id="ddc720e4-6f49-83cd-95ee-01c1180ad8c0" class="" dir="auto">7. 줄 단위로 읽기</h2><p id="6f8720e4-6f49-8222-8661-01e733911192" class="" dir="auto">로그 파일이나 목록 파일은 줄 단위로 읽는 경우가 많다.</p><p id="4f4720e4-6f49-836c-be48-019c1d64dba9" class="" dir="auto">이때는 반복문을 사용한다.</p><pre id="2fd720e4-6f49-821c-805e-8160d30bd9ff" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;sample.txt&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        print(line)</code></pre><p id="91a720e4-6f49-82d4-ab06-015f4af64289" class="" dir="auto">그런데 이 방식은 줄 끝에 줄바꿈 문자가 남아 있고 print() 함수에 의해 빈 줄이 추가된다.</p><p id="975720e4-6f49-8390-8db8-814e0d4bb528" class="" dir="auto">그래서 보통 <code>strip()</code>을 함께 사용한다.</p><p id="a3b720e4-6f49-8203-a2f8-81d09b3c4126" class="" dir="auto"><code>strip()</code>은 문자열 양쪽 끝의 공백 문자, 줄바꿈 문자 등을 제거한다.</p><pre id="4fe720e4-6f49-82f5-8de4-0187157152ff" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;sample.txt&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        print(line.strip())</code></pre><p id="7b0720e4-6f49-8254-9325-01aa20e74c07" class="" dir="auto">실행 결과</p><pre id="1c7720e4-6f49-831d-8d94-810f45aae6c0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">hello python
+cloud automation</code></pre><p id="de3720e4-6f49-82a5-a185-018871e0732b" class="" dir="auto"><code>strip()</code>은 문자열 앞뒤의 공백과 줄바꿈을 제거한다.</p><hr id="bb4720e4-6f49-837b-9585-8176aab4b22c" dir="auto"/><h2 id="8b3720e4-6f49-83d7-9eaf-017b6be2c9ec" class="" dir="auto">실습 2. 파일 읽기</h2><p id="7b4720e4-6f49-83af-acbd-01da2cb45070" class="" dir="auto">파일명: <code>read_text.py</code></p><pre id="557720e4-6f49-8269-b98d-817e0b60c511" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;services.txt&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        print(f&quot;service: {line.strip()}&quot;)</code></pre><h3 id="449720e4-6f49-8393-882c-811783e8bef0" class="" dir="auto">확인할 내용</h3><ul id="98b720e4-6f49-8262-8edb-815a2263f129" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 내용을 한 줄씩 읽는지 확인한다.</li></ul><ul id="546720e4-6f49-83c7-a289-010fdb3fce23" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>strip()</code>을 사용했을 때 출력 형식이 깔끔해지는지 확인한다.</li></ul><hr id="e33720e4-6f49-834c-8d22-01fc3645ba32" dir="auto"/><h2 id="a03720e4-6f49-8256-a636-0193c5095aab" class="" dir="auto">8. 파일에 결과를 저장하는 이유</h2><p id="961720e4-6f49-8392-bf04-01dd06588fd3" class="" dir="auto">자동화 코드에서는 화면 출력도 중요하지만, 결과를 파일로 남기는 것이 더 중요할 때가 많다.</p><p id="21f720e4-6f49-831a-8330-812d90d1a536" class="" dir="auto">예를 들면 다음과 같은 경우가 있다.</p><ul id="134720e4-6f49-8248-bfc4-018462d70ee5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 조회 결과를 보관</li></ul><ul id="4ab720e4-6f49-82cc-8d92-8137e9f6f5ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">에러 목록을 텍스트 파일로 저장</li></ul><ul id="29d720e4-6f49-82dc-a051-0131112f17c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 분석 결과를 나중에 다시 열어봄</li></ul><ul id="5cf720e4-6f49-823f-a6f4-818466427880" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다른 사람이 결과를 확인할 수 있도록 파일로 공유</li></ul><p id="269720e4-6f49-82f1-922f-01f305fad281" class="" dir="auto">즉, 파일 저장은 자동화 결과를 <strong>휘발되지 않게 남기는 작업</strong>이라고 볼 수 있다.</p><hr id="073720e4-6f49-83e4-ba02-816c63eb08a7" dir="auto"/><h2 id="ae7720e4-6f49-82b7-a723-815461fe2e62" class="" dir="auto">9. 추가 모드로 이어쓰기</h2><p id="57e720e4-6f49-82ca-bf23-01eca6c859f4" class="" dir="auto">기존 파일 뒤에 내용을 더 추가하려면 <code>&quot;a&quot;</code> 모드를 사용한다.</p><pre id="cee720e4-6f49-82a7-af81-81f6627e48c7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;history.txt&quot;, &quot;a&quot;, encoding=&quot;utf-8&quot;) as file:
+    file.write(&quot;first record\n&quot;)</code></pre><p id="aa2720e4-6f49-8202-b6e0-8181caca0ba5" class="" dir="auto">한 번 더 실행하면 같은 파일 뒤에 다시 이어서 기록된다.</p><pre id="843720e4-6f49-8295-91a1-816f2b1ea130" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;history.txt&quot;, &quot;a&quot;, encoding=&quot;utf-8&quot;) as file:
+    file.write(&quot;second record\n&quot;)</code></pre><p id="74e720e4-6f49-82c4-a4a6-81ec9fedb916" class="" dir="auto">이 방식은 로그를 남길 때 자주 사용된다.</p><hr id="cb5720e4-6f49-828d-923d-817c1a7365bd" dir="auto"/><h2 id="415720e4-6f49-83f8-8117-81253702a3bb" class="" dir="auto">실습 3. 실행 결과 이어쓰기</h2><p id="e31720e4-6f49-83e1-ab85-019dccb8e44c" class="" dir="auto">파일명: <code>append_text.py</code></p><pre id="578720e4-6f49-8223-a23d-011a39fdeffd" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from datetime import datetime
+
+now = datetime.now()
+
+with open(&quot;run_history.txt&quot;, &quot;a&quot;, encoding=&quot;utf-8&quot;) as file:
+    file.write(f&quot;프로그램 실행 시간: {now}\n&quot;)
+
+print(&quot;실행 시간이 run_history.txt에 기록되었습니다.&quot;)</code></pre><h3 id="2f1720e4-6f49-826a-86e2-81bf70a2e753" class="" dir="auto">확인할 내용</h3><ul id="a49720e4-6f49-8213-b736-8194d63f1ac2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 번 실행했을 때 내용이 누적되는지 확인한다.</li></ul><ul id="6b3720e4-6f49-83ad-b59d-816a29d4cb64" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;w&quot;</code> 모드와 <code>&quot;a&quot;</code> 모드 차이를 확인한다.</li></ul><hr id="2fb720e4-6f49-8260-a654-81a36da8c28f" dir="auto"/><h1 id="f49720e4-6f49-8324-b55d-8101a01e555d" class="" dir="auto">10. JSON이란 무엇인가</h1><p id="139720e4-6f49-8399-964e-01f7c3393f30" class="" dir="auto">JSON(JavaScript Object Notation)은 데이터를 저장하거나 전송할 때 사용하는 <strong>경량의 데이터 교환 형식</strong>으로 한다. 원래 자바스크립트 언어에서 파생되었으나, 현재는 언어와 관계없이 거의 모든 프로그래밍 환경에서 표준적으로 사용된다.</p><p id="89c720e4-6f49-835c-b3c8-81615e0394d6" class="" dir="auto">주요 특징과 구조는 다음과 같다.</p><h3 id="7d5720e4-6f49-82d6-8196-012a18a1c684" class="" dir="auto">1. JSON의 핵심 특징</h3><ul id="bfa720e4-6f49-82d6-8cbc-814766ca2dfc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>텍스트 기반</strong>: 사람이 읽고 쓰기 쉽고, 기계가 분석하고 생성하기에도 용이하다.</li></ul><ul id="e6e720e4-6f49-8270-a62c-01b68793c94b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>독립성</strong>: 특정 프로그래밍 언어에 종속되지 않아, 서로 다른 언어로 작성된 시스템 간에 데이터를 주고받을 때 유리하다.</li></ul><ul id="d04720e4-6f49-8357-aa6f-0102438b5362" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>가독성</strong>: XML과 같은 다른 형식에 비해 구조가 단순하여 데이터의 양이 상대적으로 적고 명확하다.</li></ul><h3 id="1be720e4-6f49-8229-b4fd-81490a6d87f6" class="" dir="auto">2. JSON의 기본 구조</h3><p id="a15720e4-6f49-8335-b2bf-810a35b72dd7" class="" dir="auto">JSON은 기본적으로 이름(Key)과 값(Value)의 쌍으로 이루어져 있으며, 두 가지 주요 구조를 가진다.</p><ul id="23b720e4-6f49-8370-a81c-01b5e1d573c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>객체(Object)</strong>: 중괄호 <code>{ }</code>로 감싸며, <code>key: value</code> 형태의 집합으로 한다.</li></ul><ul id="742720e4-6f49-82cc-a988-81ccb682bdf4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>배열(Array)</strong>: 대괄호 <code>[ ]</code>로 감싸며, 값들의 순서 있는 목록으로 한다.</li></ul><h3 id="1fc720e4-6f49-824b-a47f-811e8cc07ef8" class="" dir="auto">3. 사용 가능한 데이터 타입</h3><p id="e13720e4-6f49-82b0-8111-01584c6b5eb9" class="" dir="auto">JSON 내에서는 다음과 같은 데이터 형식을 사용할 수 있다.</p><ul id="5f3720e4-6f49-83ad-a818-81d4485e99c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>숫자(Number)</strong>: 정수 또는 실수</li></ul><ul id="1a5720e4-6f49-8373-9f7a-01b677190dc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>문자열(String)</strong>: 반드시 큰따옴표(<code>&quot; &quot;</code>)를 사용해야 함</li></ul><ul id="2b2720e4-6f49-83ed-b509-0114dcf8eb57" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>불리언(Boolean)</strong>: <code>true</code> 또는 <code>false</code></li></ul><ul id="7f9720e4-6f49-83a2-a7fd-81172a948b2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>배열(Array)</strong>: <code>[ ]</code></li></ul><ul id="90a720e4-6f49-83b7-a19b-818858ccd2ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>객체(Object)</strong>: <code>{ }</code></li></ul><ul id="848720e4-6f49-838b-92b7-81444aebb5a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>널(Null)</strong>: 빈 값을 의미하는 <code>null</code></li></ul><h3 id="9f3720e4-6f49-8337-be3b-812c66ed51bb" class="" dir="auto">4. 활용 사례</h3><ul id="07f720e4-6f49-836b-af08-812fcfa4497d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>웹 API</strong>: 서버와 클라이언트(브라우저, 모바일 앱) 간에 데이터를 주고받을 때 가장 많이 사용된다.</li></ul><ul id="237720e4-6f49-8265-814f-8198f80d834f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>설정 파일</strong>: 프로그램의 환경 설정(예: <code>package.json</code>, <code>tsconfig.json</code>)을 정의할 때 사용된다.</li></ul><ul id="8a5720e4-6f49-830b-a7cc-01f06dce02ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>NoSQL 데이터베이스</strong>: MongoDB와 같은 데이터베이스는 데이터를 JSON과 유사한 형태로 저장한다.</li></ul><p id="f39720e4-6f49-8398-bc1b-0140be43a20d" class="" dir="auto">JSON은 텍스트 기반 형식이며, 사람도 읽을 수 있고 프로그램도 다루기 쉽다.</p><p id="f40720e4-6f49-8349-a127-01f684d93105" class="" dir="auto">예를 들어 아래는 JSON 형태의 데이터이다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="9f6720e4-6f49-836b-bd3d-81451aeb0c7a" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;name&quot;: &quot;홍길동&quot;,
+  &quot;age&quot;: 30,
+  &quot;isStudent&quot;: false,
+  &quot;hobbies&quot;: [&quot;독서&quot;, &quot;코딩&quot;],
+  &quot;address&quot;: {
+    &quot;city&quot;: &quot;서울&quot;,
+    &quot;zipcode&quot;: &quot;12345&quot;
+  }
+}</code></pre><pre id="567720e4-6f49-830c-a050-81812b19b350" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;region&quot;: &quot;ap-northeast-2&quot;,
+  &quot;profile&quot;: &quot;lab&quot;,
+  &quot;service&quot;: &quot;ec2&quot;
+}</code></pre><p id="8c1720e4-6f49-8249-bd38-015847f45861" class="" dir="auto">파이썬 딕셔너리와 매우 비슷하게 생겼다.</p><p id="c78720e4-6f49-820c-a77f-01033ec0bf65" class="" dir="auto">실제로 JSON과 파이썬 딕셔너리는 매우 밀접한 관계가 있다.</p><hr id="ea3720e4-6f49-83bb-bd89-81e0c79503cc" dir="auto"/><h2 id="30b720e4-6f49-83a7-b2da-01b877fef4ee" class="" dir="auto">11. Python 딕셔너리와 JSON의 관계</h2><p id="010720e4-6f49-822a-b64b-817b54755a5e" class="" dir="auto">파이썬에서는 보통 JSON 데이터를 딕셔너리 형태로 다룬다.</p><p id="9c2720e4-6f49-8337-9b75-01577c5ca037" class="" dir="auto">예를 들어 파이썬 딕셔너리는 아래와 같다.</p><pre id="445720e4-6f49-8237-93b2-01b711fbb560" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">config = {
+    &quot;region&quot;: &quot;ap-northeast-2&quot;,
+    &quot;profile&quot;: &quot;lab&quot;,
+    &quot;service&quot;: &quot;ec2&quot;
+}</code></pre><p id="fb3720e4-6f49-8316-946d-813e7c568a1a" class="" dir="auto">이 딕셔너리를 JSON 파일로 저장할 수 있다.</p><p id="5c7720e4-6f49-82bb-85a0-81224f4fe789" class="" dir="auto">그리고 다시 파일에서 읽으면 다시 딕셔너리로 가져올 수 있다.</p><p id="3e1720e4-6f49-8254-9436-016efae59fc8" class="" dir="auto">즉,</p><ul id="2fa720e4-6f49-837d-a24b-8127aba1bc67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python 안에서는 딕셔너리</li></ul><ul id="81f720e4-6f49-82a5-a8c2-817631884e7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일로 저장할 때는 JSON</li></ul><p id="276720e4-6f49-822e-bdde-8105781e9a15" class="" dir="auto">이라는 흐름으로 이해하면 된다.</p><hr id="b08720e4-6f49-8330-ad70-01d9af2f66b1" dir="auto"/><h2 id="15f720e4-6f49-8315-9b1e-010b18379707" class="" dir="auto">12. json 모듈 가져오기</h2><p id="859720e4-6f49-83e0-bf26-81ea5ffd34f7" class="" dir="auto">JSON을 다루기 위해서는 <code>json</code> 모듈을 가져와야 한다.</p><pre id="013720e4-6f49-8395-a740-81486c974f18" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json</code></pre><p id="5b6720e4-6f49-83ca-94ff-0190dd212c79" class="" dir="auto">이 모듈은 Python 표준 모듈이므로 별도 설치 없이 바로 사용할 수 있다.</p><hr id="0c6720e4-6f49-8323-9ace-81a31cf104ee" dir="auto"/><h2 id="533720e4-6f49-83fe-8689-01c88efc672a" class="" dir="auto">13. JSON 파일 저장: json.dump()</h2><p id="be3720e4-6f49-83f1-945f-81d3d9685021" class="" dir="auto">파이썬 딕셔너리를 JSON 파일로 저장할 때는 <code>json.dump()</code>를 사용한다.</p><pre id="215720e4-6f49-82e1-b105-8138261e445a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+config = {
+    &quot;region&quot;: &quot;ap-northeast-2&quot;,
+    &quot;profile&quot;: &quot;lab&quot;,
+    &quot;service&quot;: &quot;ec2&quot;
+}
+
+with open(&quot;config.json&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+    json.dump(config, file, ensure_ascii=False, indent=2)</code></pre><p id="3bb720e4-6f49-8292-bb3c-81b2479c1d32" class="" dir="auto">여기서 중요한 옵션은 다음과 같다.</p><h3 id="ea4720e4-6f49-8230-9739-01fa1ed7b6b2" class="" dir="auto"><code>ensure_ascii=False</code></h3><p id="847720e4-6f49-834f-8e01-81379837c234" class="" dir="auto">한글이 깨지지 않도록 한다.</p><h3 id="e10720e4-6f49-82ea-bedd-810b860b9064" class="" dir="auto"><code>indent=2</code></h3><p id="a09720e4-6f49-8298-8005-81001f8f1ced" class="" dir="auto">들여쓰기를 적용해 사람이 읽기 좋게 만든다.</p><p id="008720e4-6f49-8322-9de0-01dcabec32e7" class="" dir="auto">실행 후 <code>config.json</code> 파일 내용은 아래처럼 저장된다.</p><pre id="d49720e4-6f49-82b7-b1ab-0100331139ec" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;region&quot;: &quot;ap-northeast-2&quot;,
+  &quot;profile&quot;: &quot;lab&quot;,
+  &quot;service&quot;: &quot;ec2&quot;
+}</code></pre><hr id="15c720e4-6f49-8266-b0bf-8172420e1eb3" dir="auto"/><h2 id="fb6720e4-6f49-82cc-8812-01285a16062d" class="" dir="auto">실습 4. JSON 파일 저장</h2><p id="648720e4-6f49-82e2-a74a-8183a48c3e42" class="" dir="auto">파일명: <code>write_json.py</code></p><pre id="956720e4-6f49-82e4-babd-81f8a9dcbdd7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+check_result = {
+    &quot;server_name&quot;: &quot;web-01&quot;,
+    &quot;ip_address&quot;: &quot;192.168.10.21&quot;,
+    &quot;status&quot;: &quot;running&quot;,
+    &quot;cpu_usage&quot;: 37.5,
+    &quot;memory_usage&quot;: 68.2,
+    &quot;disk_usage&quot;: 54.8
+}
+
+with open(&quot;server_check.json&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+    json.dump(check_result, file, ensure_ascii=False, indent=2)
+
+print(&quot;server_check.json 저장 완료&quot;)</code></pre><h3 id="b44720e4-6f49-826a-ba9b-0150bc6ff19f" class="" dir="auto">확인할 내용</h3><ul id="b0d720e4-6f49-82e0-a8ce-014039c52415" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>config.json</code> 파일이 생성되는지 확인한다.</li></ul><ul id="9c4720e4-6f49-834c-a5d8-01c6381c0560" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 내용을 직접 열어 들여쓰기 구조를 확인한다.</li></ul><hr id="d83720e4-6f49-8348-b424-815ad2adecd4" dir="auto"/><h2 id="d10720e4-6f49-8296-9bba-018b8fcc3f0c" class="" dir="auto">14. JSON 파일 읽기: json.load()</h2><p id="b41720e4-6f49-83ec-adea-017bcd136289" class="" dir="auto">JSON 파일을 다시 읽어올 때는 <code>json.load()</code>를 사용한다.</p><pre id="bd4720e4-6f49-839d-8773-01a06e34c72b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+with open(&quot;config.json&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    config = json.load(file)
+
+print(config)
+print(config[&quot;region&quot;])
+print(config[&quot;profile&quot;])
+print(config[&quot;service&quot;])</code></pre><p id="311720e4-6f49-83ee-a499-813cb31234db" class="" dir="auto">실행 결과 예시</p><pre id="4ea720e4-6f49-83e7-b8ea-01759732329d" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">{&#x27;region&#x27;: &#x27;ap-northeast-2&#x27;, &#x27;profile&#x27;: &#x27;lab&#x27;, &#x27;service&#x27;: &#x27;ec2&#x27;}
+ap-northeast-2
+lab
+ec2</code></pre><p id="5df720e4-6f49-8356-b81b-81a8d85d64b9" class="" dir="auto">즉, JSON 파일을 읽으면 Python 딕셔너리로 돌아온다.</p><hr id="29f720e4-6f49-8227-ace8-8168e633d55a" dir="auto"/><h2 id="f19720e4-6f49-8280-93b7-8152b30184ef" class="" dir="auto">실습 5. JSON 파일 읽기</h2><p id="e1c720e4-6f49-82fc-be35-018a3527eae7" class="" dir="auto">파일명: <code>read_json.py</code></p><pre id="d22720e4-6f49-83e5-8758-817644a5a832" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+with open(&quot;config.json&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    config = json.load(file)
+
+print(f&quot;region: {config[&#x27;region&#x27;]}&quot;)
+print(f&quot;profile: {config[&#x27;profile&#x27;]}&quot;)
+print(f&quot;service: {config[&#x27;service&#x27;]}&quot;)</code></pre><h3 id="895720e4-6f49-82fa-98b6-81583ea4cf20" class="" dir="auto">확인할 내용</h3><ul id="f7b720e4-6f49-823f-aeee-01300622749c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON 파일을 읽은 뒤 딕셔너리처럼 값을 꺼낼 수 있는지 확인한다.</li></ul><ul id="b06720e4-6f49-8286-b6eb-816baedadb96" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정 파일을 코드와 분리하는 방식에 익숙해진다.</li></ul><hr id="176720e4-6f49-83e1-ba19-816919667bb0" dir="auto"/><h2 id="336720e4-6f49-835c-ab45-01d83f6665ff" class="" dir="auto">15. 리스트가 포함된 JSON 구조</h2><p id="b21720e4-6f49-83c9-a3ca-01c6490e99c5" class="" dir="auto">JSON은 딕셔너리만 저장하는 것이 아니라 리스트도 포함할 수 있다.</p><pre id="792720e4-6f49-820c-bb21-81b23f61b4d7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+config_data = {
+    &quot;region&quot;: &quot;ap-northeast-2&quot;,
+    &quot;profile&quot;: &quot;lab&quot;,
+    &quot;services&quot;: [&quot;ec2&quot;, &quot;s3&quot;, &quot;iam&quot;]
+}
+
+with open(&quot;lab_config.json&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+    json.dump(config_data, file, ensure_ascii=False, indent=2)</code></pre><p id="eb3720e4-6f49-82ba-ad01-813a93c86e9f" class="" dir="auto">이 파일은 다음처럼 읽을 수 있다.</p><pre id="2c3720e4-6f49-8311-8717-013f881414e3" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+with open(&quot;lab_config.json&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    config = json.load(file)
+
+print(config[&quot;region&quot;])
+for service in config[&quot;services&quot;]:
+    print(service)</code></pre><p id="1f8720e4-6f49-8209-8453-81e12953f385" class="" dir="auto">즉, JSON 안에서도 리스트와 딕셔너리 구조가 함께 등장할 수 있다.</p><hr id="711720e4-6f49-82e6-b9fa-81d845152242" dir="auto"/><h2 id="f95720e4-6f49-83fd-afc3-8167a9531622" class="" dir="auto">실습 6. 리스트 포함 JSON 처리</h2><p id="99f720e4-6f49-83b6-b44f-8149dcd7547c" class="" dir="auto">파일명: <code>json_list_example.py</code></p><pre id="7e1720e4-6f49-83a8-b31a-01240b74d59d" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+config_data = {
+    &quot;region&quot;: &quot;ap-northeast-2&quot;,
+    &quot;profile&quot;: &quot;lab&quot;,
+    &quot;services&quot;: [&quot;ec2&quot;, &quot;s3&quot;, &quot;iam&quot;, &quot;bedrock&quot;]
+}
+
+with open(&quot;lab_config.json&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+    json.dump(config_data, file, ensure_ascii=False, indent=2)
+
+with open(&quot;lab_config.json&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    loaded_config = json.load(file)
+
+print(f&quot;region: {loaded_config[&#x27;region&#x27;]}&quot;)
+print(f&quot;profile: {loaded_config[&#x27;profile&#x27;]}&quot;)
+
+for service in loaded_config[&quot;services&quot;]:
+    print(f&quot;service: {service}&quot;)</code></pre><h3 id="288720e4-6f49-82f6-b2e8-815fa3d4d2ec" class="" dir="auto">확인할 내용</h3><ul id="f53720e4-6f49-8207-ac6b-01ca8c8021b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON 파일 안에 리스트를 넣을 수 있는지 확인한다.</li></ul><ul id="c2a720e4-6f49-8274-bd81-01fef50e8796" class="bulleted-list" dir="auto"><li style="list-style-type:disc">읽은 뒤 반복문으로 처리할 수 있는지 확인한다.</li></ul><hr id="7cb720e4-6f49-82b9-93af-81ea16adb9ec" dir="auto"/><h2 id="0f5720e4-6f49-83f8-828f-01f57c106aad" class="" dir="auto">16. 자동화 코드에서 설정 파일을 따로 두는 이유</h2><p id="dd8720e4-6f49-82b7-a8fe-01f44992c743" class="" dir="auto">자동화 코드에서는 아래 값들이 자주 바뀐다.</p><ul id="b1d720e4-6f49-832e-ad81-0133de85ff7b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전</li></ul><ul id="c42720e4-6f49-830f-846f-81b1a9b2439f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로필 이름</li></ul><ul id="398720e4-6f49-82c4-9a4b-81a4eaa7034d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 이름</li></ul><ul id="245720e4-6f49-8214-b374-81b3271dbeef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상 파일 이름</li></ul><ul id="449720e4-6f49-8245-a7bb-814ede4dcb42" class="bulleted-list" dir="auto"><li style="list-style-type:disc">출력 파일 이름</li></ul><p id="716720e4-6f49-8390-84e5-812afb5ff9b8" class="" dir="auto">이런 값을 코드 안에 직접 써도 되지만, 설정 파일로 따로 빼두면 더 편리하다.</p><p id="695720e4-6f49-835f-b77c-0119dcef29f3" class="" dir="auto">예를 들어 코드 안에서 직접 쓰는 경우는 다음과 같다.</p><pre id="2d0720e4-6f49-83ee-88b7-01f13d51aaf7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">region = &quot;ap-northeast-2&quot;
+profile = &quot;lab&quot;</code></pre><p id="da1720e4-6f49-83d3-983d-81e704d2f1aa" class="" dir="auto">하지만 설정 파일을 사용하면 아래처럼 바꿀 수 있다.</p><pre id="e6e720e4-6f49-837b-9827-81b910be924f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+with open(&quot;config.json&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    config = json.load(file)
+
+region = config[&quot;region&quot;]
+profile = config[&quot;profile&quot;]</code></pre><p id="e68720e4-6f49-82da-8587-814300cabd39" class="" dir="auto">이렇게 하면 나중에 지역이나 프로필을 바꾸고 싶을 때 코드가 아니라 설정 파일만 수정하면 된다.</p><hr id="14c720e4-6f49-83e4-a145-810c7d6c666a" dir="auto"/><h2 id="ed5720e4-6f49-827b-97c4-81d9eee62504" class="" dir="auto">17. 자동화 스타일 설정 파일 실습</h2><p id="255720e4-6f49-8339-ab32-8147ff0c27a8" class="" dir="auto">파일명: <code>config_reader.py</code></p><h3 id="63b720e4-6f49-825f-8f8b-01829f5f316f" class="" dir="auto">먼저 <code>data/config.json</code> 파일 생성</h3><pre id="d27720e4-6f49-83ef-8799-81074acb4340" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;region&quot;: &quot;ap-northeast-2&quot;,
+  &quot;profile&quot;: &quot;lab&quot;,
+  &quot;service&quot;: &quot;ec2&quot;,
+  &quot;output_file&quot;: &quot;result.txt&quot;
+}</code></pre><h3 id="6e0720e4-6f49-836f-b917-01a5f568083b" class="" dir="auto">Python 코드</h3><pre id="253720e4-6f49-83b8-92cb-01e16f4ad253" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import json
+
+with open(&quot;data/config.json&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    config = json.load(file)
+
+print(&quot;설정 파일 읽기 완료&quot;)
+print(f&quot;region: {config[&#x27;region&#x27;]}&quot;)
+print(f&quot;profile: {config[&#x27;profile&#x27;]}&quot;)
+print(f&quot;service: {config[&#x27;service&#x27;]}&quot;)
+print(f&quot;output file: {config[&#x27;output_file&#x27;]}&quot;)</code></pre><p id="643720e4-6f49-8397-b10e-01c5225d895f" class="" dir="auto">설정값을 JSON 파일로 분리해두면 코드가 더 깔끔해진다.</p><hr id="478720e4-6f49-82ea-8049-8110020d963f" dir="auto"/><h2 id="07f720e4-6f49-82c1-9f38-012f9bbf3013" class="" dir="auto">18. 결과를 파일로 저장하는 자동화 스타일 예제</h2><p id="3de720e4-6f49-820f-b8a8-81c787c3bb39" class="" dir="auto">이제 간단한 자동화 결과를 파일로 저장해보자.</p><p id="2d2720e4-6f49-8254-8906-8120316ea587" class="" dir="auto">파일명: <code>data/save_report.py</code></p><pre id="09e720e4-6f49-82f2-8a54-81a9699491fe" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">instances = [
+    {&quot;Name&quot;: &quot;web-1&quot;, &quot;State&quot;: &quot;running&quot;},
+    {&quot;Name&quot;: &quot;db-1&quot;, &quot;State&quot;: &quot;stopped&quot;},
+    {&quot;Name&quot;: &quot;app-1&quot;, &quot;State&quot;: &quot;running&quot;}
+]
+
+with open(&quot;data/instance_report.txt&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+    for instance in instances:
+        line = f&quot;name={instance[&#x27;Name&#x27;]}, state={instance[&#x27;State&#x27;]}\n&quot;
+        file.write(line)
+
+print(&quot;instance_report.txt 저장 완료&quot;)</code></pre><p id="6a9720e4-6f49-821a-b7fb-817f7eb149d3" class="" dir="auto">실행 후 <code>instance_report.txt</code> 파일에는 아래처럼 저장된다.</p><pre id="c2d720e4-6f49-8379-b988-8174a68d435b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">name=web-1, state=running
+name=db-1, state=stopped
+name=app-1, state=running</code></pre><p id="9b7720e4-6f49-83da-91ec-01f5dd9904c6" class="" dir="auto">이 구조는 자동화 결과 보고서를 만들 때 많이 사용된다.</p><hr id="c5d720e4-6f49-82b0-a749-017d40c449a1" dir="auto"/><h2 id="23a720e4-6f49-82b9-b2d4-8114a96040d8" class="" dir="auto">19. 로그 파일 읽기 스타일 예제</h2><p id="2e8720e4-6f49-83b9-86c2-8197b5aeae33" class="" dir="auto">다음은 간단한 로그 파일을 줄 단위로 읽는 예제이다.</p><p id="0c1720e4-6f49-839a-a2b8-811560c2ec64" class="" dir="auto">먼저 <code>data/app.log</code> 파일 내용이 아래와 같다고 가정하자.</p><pre id="22c720e4-6f49-82b0-8b4e-01ee8da0a71b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">INFO service started
+ERROR database connection failed
+INFO retry started
+ERROR timeout occurred</code></pre><p id="72d720e4-6f49-83ec-ad51-0167c1be0bca" class="" dir="auto">Python 코드:</p><pre id="851720e4-6f49-824e-ab4f-81755d1895b0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with open(&quot;data/app.log&quot;, &quot;r&quot;, encoding=&quot;utf-8&quot;) as file:
+    for line in file:
+        if &quot;ERROR&quot; in line:
+            print(line.strip())</code></pre><p id="930720e4-6f49-82a9-8747-01038f7d6dca" class="" dir="auto">실행 결과</p><pre id="6b2720e4-6f49-826f-9e39-816da22471f2" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">ERROR database connection failed
+ERROR timeout occurred</code></pre><p id="3ed720e4-6f49-823b-8cd8-8130a30eab2c" class="" dir="auto">이 구조는 이후 로그 분석 자동화 실습의 가장 기본이 된다.</p><h4 id="8fe720e4-6f49-821d-9d83-81b7c355367c" class="" dir="auto">- <code>read()</code> : 전체 내용을 한 번에 읽기</h4><p id="feb720e4-6f49-8332-ab37-01e5d92e6996" class="" dir="auto">파일의 데이터 전부를 메모리에 한꺼번에 올리는 방식으로 한다.</p><ul id="3c7720e4-6f49-8309-92af-8180117779d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>특징</strong>: 파일 내용이 하나의 긴 문자열(String)로 반환된다.</li></ul><ul id="ec8720e4-6f49-83d6-9250-018b745adf8c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>장점</strong>: 파일 크기가 작을 때 처리가 매우 빠르고 간편하다.</li></ul><ul id="526720e4-6f49-8298-9275-81045e84e514" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>단점</strong>: 파일 크기가 수 GB(기가바이트) 단위로 클 경우, 컴퓨터의 RAM(메모리)이 부족하여 프로그램이 멈추거나 <strong>Memory Error</strong>가 발생할 수 있다.</li></ul><h4 id="3b6720e4-6f49-82a8-a47a-01eeee5e6c0c" class="" dir="auto">- 줄 단위 읽기 (<code>readline()</code> 또는 <code>for</code> 루프) : 한 줄씩 읽기</h4><p id="d75720e4-6f49-8325-b556-814b66257f57" class="" dir="auto">파일을 한 줄씩 순차적으로 읽어 들이는 방식으로 한다.</p><ul id="b5d720e4-6f49-82eb-8726-81745cf79e0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>특징</strong>: 현재 읽고 있는 줄만 메모리에 머물고, 처리가 끝나면 다음 줄로 넘어간다.</li></ul><ul id="2ed720e4-6f49-839e-bbc0-81538a3579b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>장점</strong>: 파일 크기가 아무리 커도 메모리를 거의 차지하지 않아 매우 안전하다. 대용량 로그 파일을 분석할 때 필수적인 방식이다.</li></ul><ul id="b38720e4-6f49-83cb-bc6a-016565741b03" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>단점</strong>: 파일 전체를 대상으로 하는 작업(예: 전체 텍스트 교체) 시에는 코드가 조금 더 복잡해질 수 있다.</li></ul><hr id="9db720e4-6f49-830f-9934-81a52ed9ebf5" dir="auto"/><h2 id="d6e720e4-6f49-8234-a792-01de2cea83e0" class="" dir="auto">20. 정리</h2><ul id="0ae720e4-6f49-83ff-a0f3-01f301af57df" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>with open()</code>으로 파일을 안전하게 열고 닫을 수 있다.</li></ul><ul id="4c2720e4-6f49-82b1-a66d-01b81112b81f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;w&quot;</code>는 쓰기, <code>&quot;r&quot;</code>은 읽기, <code>&quot;a&quot;</code>는 추가 모드이다.</li></ul><ul id="ff0720e4-6f49-8276-bc1c-01429f9a0b61" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>read()</code>는 파일 전체를 읽고, 반복문은 줄 단위로 읽을 때 사용한다.</li></ul><ul id="2ab720e4-6f49-8253-bb5c-0148a70cb3cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>strip()</code>은 줄바꿈과 공백을 제거할 때 유용하다.</li></ul><ul id="730720e4-6f49-83b1-9e7a-81664d245d39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON은 설정 파일과 결과 파일에 많이 사용된다.</li></ul><ul id="4c3720e4-6f49-8289-88c5-8163a18a3538" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python에서는 JSON을 주로 딕셔너리와 리스트 구조로 다룬다.</li></ul><ul id="6f3720e4-6f49-82c1-a111-01e67f396e77" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>json.dump()</code>는 저장, <code>json.load()</code>는 읽기에 사용한다.</li></ul><ul id="363720e4-6f49-82ea-b08a-01fd6b19962f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 코드에서는 설정값을 JSON 파일로 분리하고, 결과를 텍스트나 JSON 파일로 저장하는 구조가 자주 사용된다.</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

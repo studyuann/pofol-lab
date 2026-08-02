@@ -1,0 +1,788 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>8장. 컨테이너 로그 관리</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="cda720e4-6f49-8235-9e70-019a403981a0" class="page sans"><header><h1 class="page-title" dir="auto">8장. 컨테이너 로그 관리</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="d1c720e4-6f49-820a-87c9-81a3536cc0b0" dir="auto"/><h2 id="d0f720e4-6f49-82eb-b72f-01e97fb41e6e" class="" dir="auto">docker logs · stdout/stderr · logging driver</h2><h2 id="60e720e4-6f49-8207-9748-81d72f3e67b1" class="" dir="auto">8장 학습 목표</h2><ul id="e1f720e4-6f49-83ab-87f2-01bf922e6508" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 로그가 <strong>어디에, 어떻게 기록되는지</strong> 설명할 수 있다.</li></ul><ul id="842720e4-6f49-838e-a262-81ebaad33ca6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker logs</code> 명령의 동작 원리를 이해한다.</li></ul><ul id="c9f720e4-6f49-8208-a499-81a3eb55e63b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">stdout / stderr 기반 로그 설계의 의미를 이해한다.</li></ul><ul id="aac720e4-6f49-823f-b659-0120fa117c2b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker logging driver의 개념과 역할을 설명할 수 있다.</li></ul><ul id="da0720e4-6f49-833e-a41a-81c451a6c4a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경에서 <strong>컨테이너 로그 설계 원칙</strong>을 말할 수 있다.</li></ul><hr id="027720e4-6f49-82cb-a0c1-01cfee1259bc" dir="auto"/><h2 id="40c720e4-6f49-8361-a16f-81c71454397e" class="" dir="auto">8.1 컨테이너 로그의 기본 개념</h2><h3 id="f7b720e4-6f49-82a6-9084-01e423420a8a" class="" dir="auto">8.1.1 전통적인 서버 로그 방식</h3><p id="d65720e4-6f49-8266-bdf5-8184c73ca214" class="" dir="auto">기존 서버 환경에서는 보통 다음과 같은 방식이었다.</p><ul id="282720e4-6f49-8260-9d50-0164933fcaec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션이 로그 파일 직접 생성</li></ul><ul id="f65720e4-6f49-83e6-91e4-8198babc788a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/var/log/*.log</code> 형태로 저장</li></ul><ul id="f51720e4-6f49-8350-be70-81b24823d402" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 로테이션(logrotate) 필요</li></ul><ul id="347720e4-6f49-8309-8b1a-01a3c296e158" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 단위 로그 관리</li></ul><hr id="649720e4-6f49-824e-aff9-01f2ef258196" dir="auto"/><h3 id="c3b720e4-6f49-8309-9e2a-81bb230dd3cf" class="" dir="auto">8.1.2 컨테이너 환경에서의 근본적 변화</h3><p id="fde720e4-6f49-83e9-900e-813d1b379288" class="" dir="auto">컨테이너 환경에서는 전제가 달라진다.</p><ul id="c9b720e4-6f49-83dd-ae5e-817700bc6870" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너는 <strong>언제든지 삭제/재생성</strong></li></ul><ul id="6f8720e4-6f49-836c-8a01-0111f3911ad1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 내부 파일은 영구하지 않음</li></ul><ul id="f1d720e4-6f49-8329-9fca-01cdeaa3514f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 수가 많아질수록 로그 파일 관리 불가</li></ul><p id="2a9720e4-6f49-83f2-8bfd-81a57cc1b7c0" class="" dir="auto">👉 그래서 컨테이너 환경에서는:</p><blockquote id="cd5720e4-6f49-8220-8a92-012f787f6865" class="" dir="auto"><strong>“로그는 파일이 아니라 스트림이다.”</strong></blockquote><hr id="f1d720e4-6f49-8376-a28a-81864b30f41a" dir="auto"/><h2 id="a96720e4-6f49-8231-ad40-8187ec66a1b1" class="" dir="auto">8.2 stdout / stderr 기반 로그 모델</h2><figure id="948720e4-6f49-82ff-b683-0187adb95ecb" class="image" data-notion-image="https://www.atatus.com/blog/content/images/2024/02/docker-logging--3-.png" dir="ltr"><a href="https://www.atatus.com/blog/content/images/2024/02/docker-logging--3-.png"><img src="https://www.atatus.com/blog/content/images/2024/02/docker-logging--3-.png"/></a></figure><h3 id="cbf720e4-6f49-82fc-a4ad-81e77a5839f9" class="" dir="auto">8.2.1 컨테이너 로그의 기본 원칙</h3><p id="d6f720e4-6f49-8343-9383-810161378b0a" class="" dir="auto">컨테이너 애플리케이션은:</p><ul id="3d3720e4-6f49-82fe-a41b-810b2631a527" class="bulleted-list" dir="auto"><li style="list-style-type:disc">표준 출력(stdout)</li></ul><ul id="bea720e4-6f49-82d9-800d-81f0e9aeef21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">표준 에러(stderr)</li></ul><p id="c10720e4-6f49-823c-8fa6-012f42c712cb" class="" dir="auto">로 로그를 출력해야 한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="2cd720e4-6f49-83de-af8a-81e0f9cf904d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">애플리케이션
+   ↓
+stdout / stderr
+   ↓
+Docker logging driver
+   ↓
+docker logs / 외부 로그 시스템</code></pre><hr id="ff8720e4-6f49-82dd-a000-01276b6af0b5" dir="auto"/><h3 id="e69720e4-6f49-82fd-9ff8-01b55533ece5" class="" dir="auto">8.2.2 왜 파일 로그를 쓰지 않는가?</h3><p id="57e720e4-6f49-83dc-bddd-0109b46200c2" class="" dir="auto">컨테이너 내부 파일 로그의 문제점:</p><ul id="135720e4-6f49-8341-b085-8160ccd76f71" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 삭제 시 로그 소실</li></ul><ul id="e95720e4-6f49-8348-91d2-0196a7ed93ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Volume 연결 없으면 영구 저장 ❌</li></ul><ul id="465720e4-6f49-82ce-b3e1-018a70d4412a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 수집 시스템 연동 어려움</li></ul><p id="c8f720e4-6f49-83b1-8162-016961e5983f" class="" dir="auto">👉 <strong>stdout/stderr 로그가 컨테이너 철학에 맞다</strong></p><hr id="530720e4-6f49-82f6-ba1e-012a9e6c477d" dir="auto"/><h2 id="b99720e4-6f49-829b-8086-81a337414134" class="" dir="auto">8.3 docker logs 명령</h2><h3 id="262720e4-6f49-82ed-8bae-01b8f7010204" class="" dir="auto">8.3.1 기본 사용법</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="e16720e4-6f49-821f-abfe-81e59b5a4bf9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker logs &lt;컨테이너명&gt;</code></pre><ul id="8c5720e4-6f49-83c9-a411-0191d81a35ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">stdout + stderr 출력</li></ul><ul id="bb8720e4-6f49-823c-a972-01f796dfd824" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 내부 파일을 읽는 게 아님</li></ul><ul id="dbf720e4-6f49-83aa-9483-814267c05d91" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 데몬이 수집한 로그를 출력</li></ul><hr id="fa6720e4-6f49-834b-a046-810924c6650e" dir="auto"/><h3 id="ce5720e4-6f49-8279-8e63-8114829e4869" class="" dir="auto">8.3.2 실시간 로그 확인</h3><pre id="0fa720e4-6f49-8379-a01d-01a144ebc2dc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker logs -f &lt;컨테이너명&gt;</code></pre><ul id="98e720e4-6f49-8366-b9a3-01de4cd0c91c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>f</code> : follow</li></ul><ul id="da8720e4-6f49-83f4-8142-01bc5b57f6c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">tail -f와 유사</li></ul><hr id="06e720e4-6f49-8262-8cdf-81166ada01f8" dir="auto"/><h3 id="47b720e4-6f49-8348-bde5-8125adaa7145" class="" dir="auto">8.3.3 로그 범위 제한 (운영에서 매우 중요)</h3><pre id="173720e4-6f49-827f-90fd-81d6e1e5a06e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker logs --tail 100 &lt;컨테이너명&gt;
+docker logs --since 10m &lt;컨테이너명&gt;
+docker logs --until 2026-02-09T10:00:00 &lt;컨테이너명&gt;</code></pre><p id="5b6720e4-6f49-826e-ab44-8189185bf17b" class="" dir="auto">👉 장애 시 <strong>로그 범위를 줄이는 능력</strong>이 핵심</p><hr id="971720e4-6f49-8240-a9d8-81c9d730854a" dir="auto"/><h3 id="ca8720e4-6f49-8270-be9b-81715bea9b0b" class="" dir="auto">8.3.4 타임스탬프 포함</h3><pre id="335720e4-6f49-838b-91a9-81fc5ca76a7c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker logs -t &lt;컨테이너명&gt;</code></pre><hr id="ca5720e4-6f49-83ab-aa15-81ed232e7ab4" dir="auto"/><h2 id="c34720e4-6f49-827a-85e5-81c619fc0ec4" class="" dir="auto">8.4 Logging Driver 개념</h2><h3 id="ab1720e4-6f49-828a-ba48-81d94c15bd4b" class="" dir="auto">8.4.1 Logging Driver란?</h3><p id="60a720e4-6f49-828b-94d0-815f43d8cadd" class="" dir="auto">Docker는 컨테이너 로그를 <strong>어디에, 어떤 방식으로 저장할지</strong>를 <strong>logging driver</strong>로 결정한다.</p><hr id="593720e4-6f49-82c5-b95f-0141e27559ec" dir="auto"/><h3 id="59b720e4-6f49-82a4-8f09-81aad4836755" class="" dir="auto">8.4.2 기본 logging driver</h3><pre id="983720e4-6f49-8371-80ee-814269890a5f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">json-file</code></pre><ul id="3f8720e4-6f49-8242-9dab-018609d5a07e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본값</li></ul><ul id="134720e4-6f49-82c6-852d-01a8f63ad612" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/var/lib/docker/containers/.../*.log</code></li></ul><ul id="482720e4-6f49-8286-bbe2-81f02bac2347" class="bulleted-list" dir="auto"><li style="list-style-type:disc">docker logs 명령 사용 가능</li></ul><hr id="50b720e4-6f49-838a-b00d-81e31184504f" dir="auto"/><h3 id="350720e4-6f49-8254-b3b7-81a76af7e020" class="" dir="auto">8.4.3 주요 logging driver 종류</h3><table id="2f9720e4-6f49-82d5-8b38-0168cd0ee228" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="159720e4-6f49-83fe-a6ae-81ed4fe8ee9e" dir="ltr"><th id="nGe=" class="simple-table-header-color simple-table-header">Driver</th><th id="RXe@" class="simple-table-header-color simple-table-header">설명</th><th id="_}W_" class="simple-table-header-color simple-table-header">docker logs</th></tr></thead><tbody><tr id="076720e4-6f49-8300-ae4d-01d130d937f3" dir="ltr"><td id="nGe=" class="">json-file</td><td id="RXe@" class="">로컬 JSON 파일</td><td id="_}W_" class="">⭕</td></tr><tr id="83a720e4-6f49-82cb-95a8-814815142e45" dir="ltr"><td id="nGe=" class="">local</td><td id="RXe@" class="">성능 개선된 로컬</td><td id="_}W_" class="">⭕</td></tr><tr id="90e720e4-6f49-82d2-a105-01c651e49e99" dir="ltr"><td id="nGe=" class="">syslog</td><td id="RXe@" class="">syslog 서버 전송</td><td id="_}W_" class="">❌</td></tr><tr id="831720e4-6f49-83da-862a-81bbfcfe2eee" dir="ltr"><td id="nGe=" class="">journald</td><td id="RXe@" class="">systemd journal</td><td id="_}W_" class="">❌</td></tr><tr id="13a720e4-6f49-838d-aea8-81ef781345e7" dir="ltr"><td id="nGe=" class="">fluentd</td><td id="RXe@" class="">로그 수집기 연동</td><td id="_}W_" class="">❌</td></tr><tr id="fa6720e4-6f49-83de-a0f4-01bfa97e0069" dir="ltr"><td id="nGe=" class="">awslogs</td><td id="RXe@" class="">CloudWatch Logs</td><td id="_}W_" class="">❌</td></tr></tbody></table><p id="ec2720e4-6f49-82b7-a27b-816ce4acec2d" class="" dir="auto">👉 logging driver에 따라</p><p id="4ad720e4-6f49-8365-8f1e-015c1bbbbaf9" class="" dir="auto"><strong>docker logs 사용 가능 여부가 달라진다</strong></p><hr id="dba720e4-6f49-8332-8bb4-01f82df9f343" dir="auto"/><h2 id="5a2720e4-6f49-82f2-a00c-81b5733049ab" class="" dir="auto">8.5 Logging Driver 확인 및 설정</h2><h3 id="87e720e4-6f49-82a1-91b5-81276eee0de1" class="" dir="auto">8.5.1 현재 설정 확인</h3><pre id="be9720e4-6f49-83ad-ad7b-81a6898e6f2c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker info | grep -i logging</code></pre><hr id="536720e4-6f49-8368-ac52-01f095fc3a28" dir="auto"/><h3 id="ef4720e4-6f49-8217-8fef-0182c707e042" class="" dir="auto">8.5.2 컨테이너별 logging driver 지정</h3><pre id="867720e4-6f49-8266-8870-81aa0cb3ab3b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d \
+  --log-driver=json-file \
+  nginx</code></pre><hr id="b66720e4-6f49-8330-8628-8116b265267f" dir="auto"/><h3 id="3d7720e4-6f49-83d3-8810-814531dd7932" class="" dir="auto">8.5.3 로그 옵션 설정</h3><pre id="e7c720e4-6f49-8392-8a0d-81335d044d61" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">--log-opt max-size=10m
+--log-opt max-file=3</code></pre><p id="cf9720e4-6f49-8374-bef4-81d0f26c5d34" class="" dir="auto">👉 로그 무한 증가 방지 (필수)</p><hr id="4a5720e4-6f49-8348-8f77-813805f5ee21" dir="auto"/><h2 id="f01720e4-6f49-8240-bb63-8109299bbe80" class="" dir="auto">8.6 로그 로테이션 (중요)</h2><h3 id="f88720e4-6f49-83e9-9668-818a8f08a7d0" class="" dir="auto">8.6.1 왜 필요한가?</h3><ul id="d3f720e4-6f49-83da-9c37-011c34e183b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">json-file 로그는 계속 누적</li></ul><ul id="058720e4-6f49-83a6-b846-01be97c4b899" class="bulleted-list" dir="auto"><li style="list-style-type:disc">디스크 고갈 위험</li></ul><hr id="0f5720e4-6f49-835e-80c5-815b49089dbe" dir="auto"/><h3 id="a6a720e4-6f49-820f-b182-81800d62d568" class="" dir="auto">8.6.2 json-file 로테이션 설정 예</h3><pre id="db2720e4-6f49-831c-8b01-018f9d42eeb7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d \
+  --log-driver=json-file \
+  --log-opt max-size=10m \
+  --log-opt max-file=5 \
+  nginx</code></pre><hr id="b2a720e4-6f49-8221-b1ca-018495a1f704" dir="auto"/><h3 id="3d2720e4-6f49-8214-84e8-811b08dfbca5" class="" dir="auto">8.6.3 데몬 전체 설정 (운영 표준)</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="a8b720e4-6f49-8233-bbb4-01fefe52126e" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;log-driver&quot;: &quot;json-file&quot;,
+  &quot;log-opts&quot;: {
+    &quot;max-size&quot;: &quot;10m&quot;,
+    &quot;max-file&quot;: &quot;5&quot;
+  }
+}</code></pre><p id="663720e4-6f49-823e-bd68-01b77f526c6b" class="" dir="auto">경로:</p><pre id="de8720e4-6f49-83bb-a5a1-81f1f1b8acac" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">/etc/docker/daemon.json</code></pre><p id="eb7720e4-6f49-82a1-8475-8120f20a8631" class="" dir="auto">👉 운영 서버에서는 <strong>반드시 설정</strong></p><hr id="553720e4-6f49-82c5-8127-0191a7e58147" dir="auto"/><h2 id="5f0720e4-6f49-823a-8350-0146065abb52" class="" dir="auto">8.7 컨테이너 로그 설계 원칙 (운영 관점)</h2><h3 id="a10720e4-6f49-834f-8f71-81a939164e88" class="" dir="auto">원칙 1</h3><ul id="df4720e4-6f49-82cb-bc6e-8118193ac6f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션은 <strong>stdout/stderr로만 로그 출력</strong></li></ul><hr id="8f0720e4-6f49-8246-a56c-81c7b9407f6f" dir="auto"/><h3 id="532720e4-6f49-82fd-a5ae-015fdcffaccb" class="" dir="auto">원칙 2</h3><ul id="b93720e4-6f49-82cd-ba9d-01ff89eda729" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 내부에 로그 파일 생성 ❌</li></ul><hr id="c6f720e4-6f49-839a-beab-013597b708dd" dir="auto"/><h3 id="38f720e4-6f49-8270-876d-0190da804542" class="" dir="auto">원칙 3</h3><ul id="177720e4-6f49-829d-bc00-81fa0dbefaba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 수집은 Docker 외부 시스템에서 수행<ul id="d81720e4-6f49-82d1-90f6-8174dc2f2875" class="bulleted-list" dir="auto"><li style="list-style-type:circle">ELK</li></ul><ul id="5a0720e4-6f49-8390-b557-01807de64634" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Fluentd</li></ul><ul id="994720e4-6f49-8290-bb24-011350e62084" class="bulleted-list" dir="auto"><li style="list-style-type:circle">CloudWatch Logs 등</li></ul></li></ul><hr id="7a7720e4-6f49-833a-9d7d-81a2b5790179" dir="auto"/><h3 id="20a720e4-6f49-8305-b14a-0166a937f071" class="" dir="auto">원칙 4</h3><ul id="63e720e4-6f49-832f-ba88-81d0f6c6024f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">docker logs는 <strong>운영자가 즉시 확인하는 1차 도구</strong></li></ul><hr id="708720e4-6f49-8267-b61d-811263819c14" dir="auto"/><h2 id="aba720e4-6f49-83a0-b99e-81661a6756dc" class="" dir="auto">8.8 운영 장애 분석 흐름</h2><ol type="1" id="19f720e4-6f49-824d-aa71-01b5e452d241" class="numbered-list" start="1" dir="auto"><li><code>docker ps</code> → 문제 컨테이너 확인</li></ol><ol type="1" id="265720e4-6f49-82ae-aa84-0108532bd47b" class="numbered-list" start="2" dir="auto"><li><code>docker logs --tail 100</code> → 최근 로그</li></ol><ol type="1" id="812720e4-6f49-833f-b6a5-810d0a961161" class="numbered-list" start="3" dir="auto"><li><code>docker logs --since 5m</code> → 장애 구간</li></ol><ol type="1" id="bc6720e4-6f49-8384-b184-011d4d78b155" class="numbered-list" start="4" dir="auto"><li>필요 시 logging system 연동</li></ol><hr id="31b720e4-6f49-8305-a1ae-813dc8b6523b" dir="auto"/><h2 id="9dd720e4-6f49-83b8-9e9a-811f05f636fb" class="" dir="auto">8장 핵심 정리</h2><ul id="a61720e4-6f49-83f2-baa4-8156d44ee572" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 로그는 <strong>stdout/stderr 스트림</strong></li></ul><ul id="ef7720e4-6f49-8227-a71e-01f37f9d872f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">docker logs는 파일을 읽는 게 아니다</li></ul><ul id="390720e4-6f49-825a-b401-01a944973be5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">logging driver에 따라 동작 방식 달라짐</li></ul><ul id="f99720e4-6f49-82c5-82cd-81e1c8007007" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 서버에서는 <strong>로그 로테이션 필수</strong></li></ul><ul id="bc2720e4-6f49-836e-8acf-014ab64cd1e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그는 “남기는 것”보다 “버리는 것”이 더 중요</li></ul><hr id="07d720e4-6f49-8362-8da4-81063f4f2b51" dir="auto"/><figure id="47b720e4-6f49-824b-a773-01c91e14d3ac" class="link-to-page"><a href="8%EC%9E%A5%20%EC%BB%A8%ED%85%8C%EC%9D%B4%EB%84%88%20%EB%A1%9C%EA%B7%B8%20%EA%B4%80%EB%A6%AC/%EB%A1%9C%EA%B7%B8%20%ED%86%B5%ED%95%A9%20%EA%B4%80%EB%A6%AC%20%EC%8B%9C%EC%8A%A4%ED%85%9C%20%EA%B5%AC%EC%B6%95%20(Syslog%20%EA%B8%B0%EB%B0%98)%2047b720e46f49824ba77301c91e14d3ac.html" data-notion-page-id="47b720e4-6f49-824b-a773-01c91e14d3ac" data-notion-space-id="56e9dfa9-059a-473f-a2ad-357c52ceb825">로그 통합 관리 시스템 구축 (Syslog 기반)</a></figure></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

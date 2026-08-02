@@ -1,0 +1,844 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>AWS WAF 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="d58720e4-6f49-820c-92f7-01b3cdf7f330" class="page sans"><header><h1 class="page-title" dir="auto">AWS WAF 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="955720e4-6f49-83bc-927f-0110cb8220c0" dir="auto"/><h1 id="63f720e4-6f49-827c-bc8c-81331915b5a2" class="" dir="auto">1. 실습 개요</h1><p id="d1d720e4-6f49-8363-b3ca-8123d41a79c6" class="" dir="auto">이 실습에서는 AWS WAF를 생성하고, 웹 애플리케이션에 연결한 뒤 다양한 차단 규칙을 적용해 본다.</p><p id="913720e4-6f49-82b0-af28-8109f87af3de" class="" dir="auto">또한 SQL Injection 공격 패턴을 탐지하는 관리형 규칙을 적용하고, WAF Logging을 통해 차단 로그를 확인한다.</p><p id="7b7720e4-6f49-8321-9324-8198ff8cabf3" class="" dir="auto">이 실습을 통해 다음 내용을 확인할 수 있다.</p><ul id="756720e4-6f49-8214-bd3a-818c68264154" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS WAF Web ACL 생성</li></ul><ul id="6a1720e4-6f49-823c-99dc-8107bd2924f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF를 Application Load Balancer 또는 CloudFront에 연결</li></ul><ul id="525720e4-6f49-837f-b6a4-817a944fcb5b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 IP 차단</li></ul><ul id="d93720e4-6f49-82b3-bd10-01f90ec05bb6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 국가(Geolocation) 차단</li></ul><ul id="4c2720e4-6f49-831e-b9da-01be795e680d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQL Injection 공격 탐지 및 차단</li></ul><ul id="e1d720e4-6f49-8322-9a25-81e1d75c132c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF Logging 구성 및 로그 확인</li></ul><hr id="af0720e4-6f49-8365-883e-01494dc07b3f" dir="auto"/><h1 id="33e720e4-6f49-8208-89ab-01d5fa9b7ac9" class="" dir="auto">2. 실습 목표</h1><p id="242720e4-6f49-8290-b93e-81922da5d9f9" class="" dir="auto">실습 목표는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="6c8720e4-6f49-8352-84e7-01f941c46666" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. AWS WAF Web ACL을 생성할 수 있다.
+2. WAF Rule을 이용해 특정 IP를 차단할 수 있다.
+3. Geolocation Match를 이용해 특정 국가를 차단할 수 있다.
+4. AWS Managed Rules를 이용해 SQL Injection 공격을 탐지 및 차단할 수 있다.
+5. WAF Logging을 통해 요청 로그와 차단 로그를 분석할 수 있다.</code></pre><hr id="2d7720e4-6f49-83dc-89b7-816d0fc9df60" dir="auto"/><h1 id="005720e4-6f49-83f2-8e26-811902bda418" class="" dir="auto">3. 실습 환경</h1><p id="6af720e4-6f49-83a4-8fe9-01e755c43166" class="" dir="auto">실습 환경 예시는 다음과 같다.</p><pre id="05f720e4-6f49-82fe-963c-812b3de08783" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 브라우저
+   │
+   ▼
+Application Load Balancer
+   │
+   ▼
+EC2 Web Server</code></pre><p id="502720e4-6f49-83fd-9b58-01698f954246" class="" dir="auto">또는 다음 구조도 가능하다.</p><pre id="5d3720e4-6f49-8230-b86f-0187c36c67c1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 브라우저
+   │
+   ▼
+CloudFront
+   │
+   ▼
+ALB 또는 S3 Origin</code></pre><p id="871720e4-6f49-82b3-8689-81bbe21edbc9" class="" dir="auto">이번 실습에서는 보통 <strong>ALB 앞단에 WAF를 연결하는 방식</strong>으로 진행하면 이해하기 쉽다.</p><hr id="c36720e4-6f49-8226-820b-81f2b8d30e02" dir="auto"/><h1 id="332720e4-6f49-83e8-8d0a-815300858da2" class="" dir="auto">4. WAF 기본 이해</h1><h2 id="3ad720e4-6f49-83c6-8016-011d38d86870" class="" dir="auto">4.1 AWS WAF란</h2><p id="b2a720e4-6f49-823c-b9e6-815aaa7f41eb" class="" dir="auto">AWS WAF는 웹 애플리케이션으로 들어오는 HTTP/HTTPS 요청을 검사해서</p><p id="321720e4-6f49-8255-b08e-81065b509cbd" class="" dir="auto">허용하거나 차단하는 보안 서비스다.</p><p id="68e720e4-6f49-82d9-9fa8-018dea604c5d" class="" dir="auto">WAF는 다음과 같은 공격에 대응할 때 많이 사용한다.</p><ul id="f4e720e4-6f49-8278-9962-812c87d4a6ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQL Injection</li></ul><ul id="d5b720e4-6f49-83f6-9115-01b32938e03e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cross Site Scripting(XSS)</li></ul><ul id="317720e4-6f49-83db-999d-8176636914dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">악성 IP 접근</li></ul><ul id="c3d720e4-6f49-83db-8bc1-81c12c6ff1fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 국가에서의 접근</li></ul><ul id="67c720e4-6f49-83e2-be3c-01c34394b32d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비정상적인 패턴의 웹 요청</li></ul><p id="7c7720e4-6f49-834a-afdd-8181083c4ddc" class="" dir="auto">즉, 네트워크 방화벽처럼 포트 단위로 제어하는 것이 아니라</p><p id="fd1720e4-6f49-83ee-8f4b-01ba89d58ba1" class="" dir="auto"><strong>웹 요청 자체를 분석해서 제어하는 보안 계층</strong>이다.</p><hr id="39e720e4-6f49-83fe-8a62-01a68d97597e" dir="auto"/><h2 id="ebd720e4-6f49-82b2-998c-81a3f4ea03c9" class="" dir="auto">4.2 WAF의 핵심 구성요소</h2><p id="2b3720e4-6f49-8265-8b23-81d542ff848f" class="" dir="auto">AWS WAF에서 중요한 구성요소는 다음과 같다.</p><h3 id="f50720e4-6f49-82b9-b680-017517de5459" class="" dir="auto">Web ACL</h3><p id="faf720e4-6f49-82c8-9973-01b15aee1ce0" class="" dir="auto">여러 개의 Rule을 묶어서 보호 대상(ALB, CloudFront 등)에 연결하는 단위다.</p><pre id="b6d720e4-6f49-8281-98a4-01cdf3d6a5a9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Web ACL = Rule들의 집합</code></pre><h3 id="a20720e4-6f49-8253-b862-0117d2934230" class="" dir="auto">Rule</h3><p id="25c720e4-6f49-82a5-9d87-813d6247f5d5" class="" dir="auto">트래픽을 검사하는 개별 조건이다.</p><p id="ae4720e4-6f49-8273-8f0c-813017d113e1" class="" dir="auto">예</p><ul id="bcb720e4-6f49-825b-b7d3-8159e554095b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 IP 차단</li></ul><ul id="491720e4-6f49-8328-afe3-01bc242c7be7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 국가 차단</li></ul><ul id="7ec720e4-6f49-82f9-aadf-01047d5ac982" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQL Injection 탐지</li></ul><ul id="dab720e4-6f49-8204-821e-01c22498dc6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 횟수 제한</li></ul><h3 id="f55720e4-6f49-83f6-9718-0156764598b9" class="" dir="auto">Rule Action</h3><p id="5c2720e4-6f49-83e0-a5c2-81de7a30514b" class="" dir="auto">Rule에 매칭되었을 때 수행할 동작이다.</p><ul id="126720e4-6f49-82fb-91e1-0164a9addfd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Allow</li></ul><ul id="cb9720e4-6f49-83cc-bed3-81dd4d9f523f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Block</li></ul><ul id="d04720e4-6f49-8202-b5b2-01b5fb570bcd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Count</li></ul><ul id="315720e4-6f49-82f5-8b39-814146c785ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CAPTCHA</li></ul><ul id="4ad720e4-6f49-839e-b064-812c536df5e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Challenge</li></ul><p id="55e720e4-6f49-83a5-a7a1-81fc63b00c81" class="" dir="auto">실습에서는 주로 <strong>Block</strong>과 <strong>Count</strong>를 사용한다.</p><hr id="abf720e4-6f49-822f-b8f4-81274fdfd743" dir="auto"/><h1 id="4f1720e4-6f49-8271-8317-015481959a30" class="" dir="auto">5. 실습 사전 준비</h1><p id="dcd720e4-6f49-83cd-8fb5-818e339a286b" class="" dir="auto">다음 리소스가 준비되어 있어야 한다.</p><pre id="359720e4-6f49-834f-8b36-01da85d8f18d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. VPC
+2. Public Subnet
+3. EC2 Web Server
+4. Application Load Balancer
+5. ALB Target Group
+6. 테스트 가능한 웹 페이지</code></pre><p id="97e720e4-6f49-8276-82db-81569b77b252" class="" dir="auto">테스트용 웹 서버는 매우 단순해도 된다.</p><p id="88a720e4-6f49-83df-8ed4-01d190de69f4" class="" dir="auto">예</p><pre id="065720e4-6f49-83ea-b2c5-01298d347fbe" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&lt;html&gt;
+&lt;head&gt;&lt;title&gt;WAF Test&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+&lt;h1&gt;AWS WAF Test Page&lt;/h1&gt;
+&lt;p&gt;This is a test page.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre><p id="3dd720e4-6f49-8277-9001-01c0b662ce4a" class="" dir="auto">EC2에 Apache 또는 Nginx를 올려두고 ALB 뒤에 연결해두면 된다.</p><hr id="57c720e4-6f49-82a2-af67-811c570937dd" dir="auto"/><h1 id="632720e4-6f49-834e-af5e-81ecf8d93160" class="" dir="auto">6. 실습 1. AWS WAF Web ACL 생성</h1><hr id="369720e4-6f49-82a3-adcf-819efa70a376" dir="auto"/><h2 id="f3b720e4-6f49-8277-85d4-81165cdc181a" class="" dir="auto">6.1 WAF 콘솔 이동</h2><p id="f15720e4-6f49-8214-b309-816dc2f324b2" class="" dir="auto">AWS 콘솔에서 다음으로 이동한다.</p><pre id="49d720e4-6f49-8382-a68e-018a5e6ac78f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS Console → WAF &amp; Shield</code></pre><p id="7c3720e4-6f49-8298-be69-01a1e260028c" class="" dir="auto">왼쪽 메뉴에서 다음을 선택한다.</p><pre id="018720e4-6f49-8227-9ed8-816647eaa19a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Web ACLs</code></pre><p id="185720e4-6f49-826b-a65f-817dba1122fb" class="" dir="auto">그리고 다음 버튼을 클릭한다.</p><pre id="efb720e4-6f49-82a4-aa62-81fa1e8dfecf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Create web ACL</code></pre><hr id="274720e4-6f49-8286-90fb-81852640264c" dir="auto"/><h2 id="427720e4-6f49-835f-a6fd-819f6fb01461" class="" dir="auto">6.2 Web ACL 기본 설정</h2><p id="356720e4-6f49-82d9-b4f6-81e1846cc861" class="" dir="auto">다음 값을 입력한다.</p><h3 id="688720e4-6f49-8286-a83d-0149eead526f" class="" dir="auto">이름</h3><pre id="e89720e4-6f49-837f-b95f-81c70bba1b2e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">my-waf-lab</code></pre><h3 id="03f720e4-6f49-8382-9f4d-81fcdcafb529" class="" dir="auto">리전</h3><p id="50f720e4-6f49-8284-a341-81dd4c0f219c" class="" dir="auto">ALB에 연결하는 경우에는 <strong>ALB가 있는 동일 리전</strong>을 선택해야 한다.</p><p id="6a2720e4-6f49-83a3-85cd-01376544f20c" class="" dir="auto">예</p><pre id="ef6720e4-6f49-83e7-9767-81ec1b3e980c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Asia Pacific (Seoul)</code></pre><p id="fb0720e4-6f49-825a-becd-81cd3da4af0b" class="" dir="auto">CloudFront에 연결하는 경우에는 전역 서비스이므로 별도 범위 개념이 다르다.</p><p id="66f720e4-6f49-834c-a6f1-01dd8ad8a9ee" class="" dir="auto">이번 실습은 ALB 기준으로 진행한다.</p><h3 id="aa3720e4-6f49-83c8-bcfc-812954cbaf40" class="" dir="auto">리소스 유형</h3><pre id="3ac720e4-6f49-823b-9931-81a8bcff83d4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Regional resources</code></pre><h3 id="ed2720e4-6f49-837d-a0a7-01ce7b615d73" class="" dir="auto">연결 대상 리소스</h3><p id="5b5720e4-6f49-820d-9e38-014f762eecd1" class="" dir="auto">보호할 ALB를 선택한다.</p><p id="dfd720e4-6f49-837a-8061-816091dfb088" class="" dir="auto">예</p><pre id="1f9720e4-6f49-836b-8114-81c86adce19b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">my-alb</code></pre><hr id="c40720e4-6f49-838b-9d00-81a82558e5b1" dir="auto"/><h2 id="f87720e4-6f49-82e9-99a0-014fb5173d6f" class="" dir="auto">6.3 기본 동작(Default action) 설정</h2><p id="252720e4-6f49-83da-a3d4-013c6d741869" class="" dir="auto">기본 동작은 특별한 Rule에 걸리지 않은 요청을 어떻게 처리할 것인지 정하는 값이다.</p><p id="722720e4-6f49-82e1-93fe-81c57d0b7c47" class="" dir="auto">보통 다음처럼 설정한다.</p><pre id="428720e4-6f49-83d5-a9f8-8102c5866e88" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Default action: Allow</code></pre><p id="e4c720e4-6f49-83d7-875c-0104f4461b15" class="" dir="auto">의미는 다음과 같다.</p><ul id="218720e4-6f49-8236-bb91-01ac64267858" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특별히 차단 룰에 걸리지 않으면 허용</li></ul><ul id="04a720e4-6f49-8263-9028-813a838c9e83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요한 보안 조건에 해당하는 요청만 선별적으로 차단</li></ul><p id="4f9720e4-6f49-8378-8000-01e86be1e2c2" class="" dir="auto">실무에서도 대부분 이 구조를 많이 사용한다.</p><hr id="848720e4-6f49-82ea-aa95-81ec762f3c6f" dir="auto"/><h1 id="9ab720e4-6f49-82be-aee7-01ef5ca787a7" class="" dir="auto">7. 실습 2. 특정 IP 차단</h1><hr id="fac720e4-6f49-8200-bd8e-015e6bdf2726" dir="auto"/><h2 id="634720e4-6f49-8243-a759-8175f8448184" class="" dir="auto">7.1 IP 차단 방식 이해</h2><p id="918720e4-6f49-8200-b6b2-018be6a8be0f" class="" dir="auto">특정 IP 또는 IP 대역에서 오는 요청을 차단하려면</p><p id="a9e720e4-6f49-8243-8e5a-0196a6650121" class="" dir="auto">먼저 <strong>IP set</strong>을 만든 뒤 Rule에서 참조하는 방식으로 구성한다.</p><p id="1c9720e4-6f49-8381-a25e-01b17d76fc14" class="" dir="auto">즉 구조는 다음과 같다.</p><pre id="e27720e4-6f49-833e-9daf-815083ee77b1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IP Set 생성
+   ▼
+Rule에서 IP Set 참조
+   ▼
+매칭되면 Block</code></pre><hr id="2f4720e4-6f49-83cd-939b-0111c2dbbcbe" dir="auto"/><h2 id="efa720e4-6f49-82a4-9555-01897bd2f2e0" class="" dir="auto">7.2 IP Set 생성</h2><p id="247720e4-6f49-8261-8d9e-81dc44a83860" class="" dir="auto">WAF 콘솔에서 다음으로 이동한다.</p><pre id="17e720e4-6f49-82d2-a563-815ae30433e6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IP sets → Create IP set</code></pre><p id="7fc720e4-6f49-8297-bd37-01ca50ef201f" class="" dir="auto">다음 값을 설정한다.</p><h3 id="71e720e4-6f49-82c1-acb6-816876ef4b0c" class="" dir="auto">이름</h3><pre id="7eb720e4-6f49-836d-815e-014dff7b1fd0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">blocked-ip-set</code></pre><h3 id="6f4720e4-6f49-8326-a51b-01284deacb42" class="" dir="auto">Region</h3><p id="d8f720e4-6f49-82f0-8a27-0135d5527a5f" class="" dir="auto">Web ACL과 동일한 리전 선택</p><h3 id="e33720e4-6f49-83bc-8788-010bd67ebff7" class="" dir="auto">IP version</h3><pre id="f75720e4-6f49-8352-83e6-8197184c0363" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IPv4</code></pre><h3 id="8be720e4-6f49-82e7-bc8c-81915a895443" class="" dir="auto">IP addresses</h3><p id="412720e4-6f49-8297-af0c-81df1aad585c" class="" dir="auto">예를 들어 차단할 IP가 다음과 같다고 가정한다.</p><pre id="128720e4-6f49-83b5-96ef-81c8fdeca8d5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">203.0.113.10/32</code></pre><p id="edb720e4-6f49-82fb-ba4d-012951256082" class="" dir="auto">단일 IP를 차단할 때 <code>/32</code>를 사용한다.</p><ul id="379720e4-6f49-83df-bd1c-01b88846d509" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/32</code> = 정확히 1개의 IP</li></ul><ul id="7f7720e4-6f49-8226-bd28-019df9568dd4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>/24</code> = 대역 차단</li></ul><p id="0f7720e4-6f49-826c-8cea-81fe6f45f80e" class="" dir="auto">예시</p><pre id="325720e4-6f49-8363-a981-8171525e9adf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">203.0.113.0/24</code></pre><p id="c88720e4-6f49-82b4-8dd8-01c46cc6c8dc" class="" dir="auto">이 경우 <code>203.0.113.0 ~ 203.0.113.255</code> 전체 대역을 차단하게 된다.</p><p id="edd720e4-6f49-825a-9b8a-0127b9984049" class="" dir="auto">생성 후 저장한다.</p><hr id="cec720e4-6f49-82f6-87a7-016d0f6207af" dir="auto"/><h2 id="ac6720e4-6f49-822e-80f0-01a82a2ea5f1" class="" dir="auto">7.3 Web ACL에 IP 차단 Rule 추가</h2><p id="1aa720e4-6f49-835e-a872-81846cb4027b" class="" dir="auto">이제 다시 Web ACL로 이동해서 Rule을 추가한다.</p><pre id="d21720e4-6f49-83ff-9528-01d43bb05f1d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Web ACLs → my-waf-lab → Add rules → Add my own rules and rule groups</code></pre><p id="871720e4-6f49-82e3-bc65-81f325e0bffa" class="" dir="auto">Rule 설정은 다음과 같이 한다.</p><h3 id="a7b720e4-6f49-836b-9d9e-010ac734b737" class="" dir="auto">Rule name</h3><pre id="4ad720e4-6f49-8264-8322-8136ce3aa6f0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">block-specific-ip</code></pre><h3 id="e8d720e4-6f49-83a0-a83f-817217ee2b58" class="" dir="auto">Type</h3><pre id="ad4720e4-6f49-838d-b3d5-010eac3779f4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IP set</code></pre><h3 id="fac720e4-6f49-8338-b26f-014b7dc09398" class="" dir="auto">IP set 선택</h3><pre id="35b720e4-6f49-821a-b9e1-0131674702ac" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">blocked-ip-set</code></pre><h3 id="27c720e4-6f49-8368-b37b-81add0e0bc06" class="" dir="auto">Action</h3><pre id="e5d720e4-6f49-82c5-91cc-0184b4af73d8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Block</code></pre><p id="0c0720e4-6f49-82f1-90ac-01cf26779aed" class="" dir="auto">저장 후 Web ACL에 추가한다.</p><hr id="6c2720e4-6f49-8238-8e41-0191f0756dd4" dir="auto"/><h2 id="d77720e4-6f49-8201-bca2-81ddb3cb2869" class="" dir="auto">7.4 동작 확인</h2><p id="6a7720e4-6f49-8296-a3d6-01e3628168c6" class="" dir="auto">차단 대상 IP에서 ALB URL로 접속하면</p><p id="03e720e4-6f49-83c1-ac1c-8160850ea75c" class="" dir="auto">정상 페이지 대신 차단 응답이 발생해야 한다.</p><p id="92f720e4-6f49-823a-8103-81502e6ce49c" class="" dir="auto">브라우저 또는 curl로 테스트할 수 있다.</p><p id="9aa720e4-6f49-8347-801e-812865867967" class="" dir="auto">예</p><pre id="910720e4-6f49-8340-b96b-813360fb8f02" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl http://ALB-DNS-이름</code></pre><p id="5ac720e4-6f49-82f7-bba5-0197c42eee42" class="" dir="auto">차단되면 일반적으로 다음과 유사한 응답이 나타난다.</p><pre id="a21720e4-6f49-82b0-8cb4-0149ed4cf4dc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">403 Forbidden</code></pre><hr id="a8e720e4-6f49-83aa-89a4-01efbe82670d" dir="auto"/><h2 id="d19720e4-6f49-82dd-b5d3-01c5c9f6dcd0" class="" dir="auto">7.5 설명 포인트</h2><p id="7c1720e4-6f49-83d3-ae17-017477e24435" class="" dir="auto">이 부분에서 반드시 짚어야 할 내용은 다음과 같다.</p><ul id="c72720e4-6f49-821d-b9f2-01e6b22f20e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group은 IP 차단이 가능하지만 웹 요청 내용은 분석하지 않음</li></ul><ul id="a05720e4-6f49-82e4-9843-816fb7f0073c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF는 HTTP/HTTPS 레이어에서 동작함</li></ul><ul id="77f720e4-6f49-82df-a4a2-018dc3ac3dce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 악성 IP, 스캐너 IP, 알려진 공격자 IP 차단에 유용함</li></ul><hr id="c5c720e4-6f49-8216-9e0e-8109e3b3e88f" dir="auto"/><h1 id="3d0720e4-6f49-8229-8e48-0166997ea04e" class="" dir="auto">8. 실습 3. 특정 국가 차단(Geolocation)</h1><hr id="49d720e4-6f49-82e7-a556-0138aacf325c" dir="auto"/><h2 id="2a4720e4-6f49-8350-84d8-017eb0873170" class="" dir="auto">8.1 Geolocation Match 개념</h2><p id="c15720e4-6f49-8389-b70e-01ec021d1017" class="" dir="auto">Geolocation Match는 요청이 들어온 <strong>클라이언트 IP의 국가 정보</strong>를 기준으로 매칭한다.</p><p id="10a720e4-6f49-832f-8f5b-01e05917c8ba" class="" dir="auto">즉 다음처럼 동작한다.</p><pre id="8b7720e4-6f49-82ab-aa85-01ab8b07bb13" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">클라이언트 요청
+   ▼
+IP 기반 국가 판별
+   ▼
+지정 국가이면 Block</code></pre><p id="dd9720e4-6f49-8314-95ef-01e461e2eb22" class="" dir="auto">예를 들어 한국만 서비스하고 싶다면</p><p id="bdc720e4-6f49-82f3-9fae-0143f1667755" class="" dir="auto">특정 국가를 차단하거나 반대로 허용 정책을 세울 수도 있다.</p><p id="c8f720e4-6f49-82bb-b196-016dffb53535" class="" dir="auto">이번 실습에서는 <strong>특정 국가 차단</strong>을 진행한다.</p><hr id="cf9720e4-6f49-826d-9c7d-01503147b691" dir="auto"/><h2 id="727720e4-6f49-820f-8dd9-812a83609525" class="" dir="auto">8.2 Geolocation Rule 생성</h2><p id="7cd720e4-6f49-82d6-a586-013a8c0bfe62" class="" dir="auto">Web ACL로 이동해서 Rule을 추가한다.</p><pre id="e0c720e4-6f49-8274-a57c-81307ee90b19" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Web ACLs → my-waf-lab → Add rules → Add my own rules and rule groups</code></pre><p id="667720e4-6f49-8283-b60d-81ba6fb324ee" class="" dir="auto">다음과 같이 설정한다.</p><h3 id="8de720e4-6f49-83a2-9734-016938ae176e" class="" dir="auto">Rule name</h3><pre id="e88720e4-6f49-825d-a671-0118c78bd25d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">block-country</code></pre><h3 id="651720e4-6f49-82bc-878b-811650a72216" class="" dir="auto">Inspect</h3><pre id="8a3720e4-6f49-82e5-bc03-01a63dee12eb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Originates from a country in</code></pre><h3 id="b8f720e4-6f49-828d-956c-81b98293e00a" class="" dir="auto">Country codes</h3><p id="566720e4-6f49-839c-8bcb-8106b5ec6fde" class="" dir="auto">예시</p><pre id="5ad720e4-6f49-825b-8111-01638c0d8db3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CN
+RU</code></pre><p id="15e720e4-6f49-8253-86a9-0191a4e173c6" class="" dir="auto">또는 콘솔에서 국가명을 직접 선택할 수 있다.</p><h3 id="c60720e4-6f49-82b6-9d44-019ae67dc4be" class="" dir="auto">Action</h3><pre id="fda720e4-6f49-8278-b658-015041adb586" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Block</code></pre><p id="614720e4-6f49-83ce-8453-01e2f0ceb0d9" class="" dir="auto">추가 후 저장한다.</p><hr id="c35720e4-6f49-8242-97b9-81eddc56e83e" dir="auto"/><h2 id="c0b720e4-6f49-829b-b3f3-81d8870972d8" class="" dir="auto">8.3 동작 설명</h2><p id="eb4720e4-6f49-8321-a19f-018879b39cc5" class="" dir="auto">이 Rule은 선택한 국가에서 들어오는 요청을 차단한다.</p><p id="88f720e4-6f49-82f5-af0f-8199545d78b2" class="" dir="auto">예</p><pre id="434720e4-6f49-82c7-a630-81999a2f9259" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">중국에서 들어오는 요청 → Block
+러시아에서 들어오는 요청 → Block
+그 외 국가 요청 → 다른 룰 검사 또는 기본 허용</code></pre><hr id="373720e4-6f49-82ef-957b-013ba5bc698e" dir="auto"/><h2 id="a6a720e4-6f49-8255-914c-015376eab1a7" class="" dir="auto">8.4 설명 포인트</h2><p id="4c4720e4-6f49-8273-8b83-0168456971c4" class="" dir="auto">국가 차단은 다음 상황에서 자주 사용된다.</p><ul id="f81720e4-6f49-82b9-baf2-01cbd93733fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 대상 국가가 제한된 경우</li></ul><ul id="4f0720e4-6f49-82fd-b1cb-81e6e9c47fbf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 지역에서의 공격 비율이 매우 높은 경우</li></ul><ul id="dd4720e4-6f49-82c7-9cbf-01f35ad167dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해외 접근 자체를 최소화하고 싶은 경우</li></ul><p id="ea9720e4-6f49-83af-88bc-01783f1b1be4" class="" dir="auto">다만 반드시 설명해야 할 점이 있다.</p><h3 id="52f720e4-6f49-83ed-99f2-01de2df8a1c5" class="" dir="auto">주의사항</h3><ul id="cb3720e4-6f49-823f-8abc-8135c84dace7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN, Proxy, CDN 등을 통해 우회 가능할 수 있음</li></ul><ul id="feb720e4-6f49-8278-b99d-81a0c00d1ceb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">국가 차단만으로 완전한 보안이 되지 않음</li></ul><ul id="7a4720e4-6f49-82dd-9c9a-01fb3bbae849" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다른 룰과 조합해서 다층 방어를 구성해야 함</li></ul><hr id="403720e4-6f49-8375-9c7f-81e78225c127" dir="auto"/><h1 id="bc0720e4-6f49-8349-a044-011e487e5498" class="" dir="auto">9. 실습 4. SQL Injection 공격 방어</h1><hr id="2f4720e4-6f49-839c-8d2d-81200ed73e7b" dir="auto"/><h2 id="418720e4-6f49-8379-a423-0135765110c8" class="" dir="auto">9.1 SQL Injection이란</h2><p id="460720e4-6f49-8374-b426-81d54a56e43e" class="" dir="auto">SQL Injection은 입력값에 SQL 구문을 삽입해서</p><p id="011720e4-6f49-8392-805a-81be31a494c9" class="" dir="auto">데이터베이스 질의를 변조하려는 공격 방식이다.</p><p id="6b1720e4-6f49-8215-a33c-81c8446cf3df" class="" dir="auto">예를 들어 로그인 입력창, 검색창, URL 파라미터 등에</p><p id="06e720e4-6f49-833c-886a-81ff67940530" class="" dir="auto">악의적인 SQL 문장을 넣어 인증 우회나 데이터 조회를 시도할 수 있다.</p><p id="91e720e4-6f49-8320-b6c0-81b4b8384e8b" class="" dir="auto">대표적인 예시는 다음과 같다.</p><pre id="ae9720e4-6f49-8221-a91e-01e886a66545" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&#x27; OR &#x27;1&#x27;=&#x27;1</code></pre><p id="c4e720e4-6f49-82eb-80ea-01142ccd53f7" class="" dir="auto">또는</p><pre id="ce0720e4-6f49-828b-8c19-01cab77d8445" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">?id=1&#x27; OR &#x27;1&#x27;=&#x27;1</code></pre><p id="dee720e4-6f49-828e-ae00-81a9ce3a11cc" class="" dir="auto">이런 문자열은 입력 검증이 부족한 애플리케이션에서 문제를 일으킬 수 있다.</p><hr id="a63720e4-6f49-8312-84a9-017ef2ab7815" dir="auto"/><h2 id="f8d720e4-6f49-8277-aa98-8104c2b29262" class="" dir="auto">9.2 WAF에서 SQL Injection 방어하는 방법</h2><p id="608720e4-6f49-825e-a0b4-0197bb23c82e" class="" dir="auto">AWS WAF에서는 두 가지 방식이 있다.</p><pre id="091720e4-6f49-8319-a774-0175d3f6dee8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 직접 SQLi Match Rule 작성
+2. AWS Managed Rules 사용</code></pre><p id="7c8720e4-6f49-832c-bbcb-01332eb9a3f5" class="" dir="auto">실습에서는 관리가 쉬운 <strong>AWS Managed Rules</strong>를 사용한다.</p><p id="166720e4-6f49-82a2-a55a-013de349c3d3" class="" dir="auto">특히 다음 Rule Group이 많이 사용된다.</p><pre id="4b7720e4-6f49-8276-bf17-018ca22cda60" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWSManagedRulesCommonRuleSet</code></pre><p id="dbe720e4-6f49-8343-9e46-01ff994e0da8" class="" dir="auto">또는 SQL Injection 관련 Rule이 포함된 관리형 세트를 사용한다.</p><p id="c29720e4-6f49-832e-bf23-0112ecef0fd7" class="" dir="auto">추가로 좀 더 직접적으로 실습하려면 <strong>SQL database rule statement</strong>를 직접 생성할 수도 있다.</p><p id="416720e4-6f49-82bf-8565-01abc1da2cc8" class="" dir="auto">하지만 교육용 실습에서는 관리형 Rule Group을 먼저 쓰는 쪽이 이해하기 쉽다.</p><hr id="244720e4-6f49-836d-83fc-812d36aab70a" dir="auto"/><h2 id="590720e4-6f49-83a3-ba02-81a7e76d2974" class="" dir="auto">9.3 AWS Managed Rules 추가</h2><p id="2a2720e4-6f49-8289-a322-017351cd14a5" class="" dir="auto">Web ACL에서 다음으로 이동한다.</p><pre id="2c9720e4-6f49-8336-94e8-81989e3bb9bf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Add rules → Add managed rule groups</code></pre><p id="aad720e4-6f49-8304-bd5e-011e06846cc6" class="" dir="auto">다음 항목을 선택한다.</p><pre id="5d3720e4-6f49-821e-be91-81c9e58ca033" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS managed rule groups</code></pre><p id="2fb720e4-6f49-82f5-b6ee-81bb284be6f2" class="" dir="auto">여기서 다음 Rule Group을 추가한다.</p><p id="f57720e4-6f49-83de-9a9c-81a8d532128b" class="" dir="auto">예</p><pre id="8d5720e4-6f49-8320-830a-81d3c8c83589" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Core rule set
+Known bad inputs
+SQL database</code></pre><p id="29a720e4-6f49-82db-85be-813083e13484" class="" dir="auto">실습 환경에 따라 콘솔에 보이는 이름은 약간 다를 수 있다.</p><p id="7af720e4-6f49-82ca-920d-81a1bd1f3549" class="" dir="auto">핵심은 <strong>SQL Injection 탐지와 악성 입력 탐지 Rule Group</strong>을 추가하는 것이다.</p><p id="4c2720e4-6f49-8315-ae7a-8164c04141b5" class="" dir="auto">권장 예시는 다음과 같다.</p><pre id="221720e4-6f49-830d-a4ee-81a91b1efd1a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWSManagedRulesKnownBadInputsRuleSet
+AWSManagedRulesSQLiRuleSet</code></pre><p id="9e2720e4-6f49-83a0-90d3-8147c2482e7f" class="" dir="auto">각 Rule Group의 Action은 일반적으로 다음처럼 둔다.</p><pre id="446720e4-6f49-837e-aadd-0120a5ccf74c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Use rule actions defined in the rule group</code></pre><p id="c6d720e4-6f49-829e-a706-01739dc99761" class="" dir="auto">대부분 차단(Block) 동작을 포함한다.</p><hr id="a22720e4-6f49-839c-9f75-018092ee04a0" dir="auto"/><h2 id="573720e4-6f49-8341-86fe-81174a04355b" class="" dir="auto">9.4 SQL Injection 테스트용 요청 보내기</h2><p id="83d720e4-6f49-83b8-a0ed-019d2ddf736b" class="" dir="auto">테스트는 브라우저 주소창이나 curl로 할 수 있다.</p><p id="9a7720e4-6f49-8379-8b5d-01efeec03246" class="" dir="auto">예를 들어 ALB 뒤에 다음과 같은 URL이 있다고 가정한다.</p><pre id="0ae720e4-6f49-83a9-8031-01293407aa5d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://ALB-DNS-이름/search?id=1</code></pre><p id="f22720e4-6f49-8312-8ca2-0141b7ab7ec8" class="" dir="auto">이제 다음과 같이 악성 패턴을 넣어본다.</p><pre id="bc1720e4-6f49-835f-b1f2-8129c57b0787" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl&quot;http://ALB-DNS-이름/search?id=1&#x27; OR &#x27;1&#x27;=&#x27;1&quot;</code></pre><p id="150720e4-6f49-8214-b470-8196d6d3c43b" class="" dir="auto">또는 URL 인코딩해서 다음처럼 보낼 수 있다.</p><pre id="88b720e4-6f49-8332-89f7-01256c820a5a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl&quot;http://ALB-DNS-이름/search?id=1%27%20OR%20%271%27%3D%271&quot;</code></pre><h3 id="3bb720e4-6f49-8239-9822-81655b6ab623" class="" dir="auto">명령어 설명</h3><pre id="8eb720e4-6f49-8343-8184-012cba154c15" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl&quot;http://ALB-DNS-이름/search?id=1%27%20OR%20%271%27%3D%271&quot;</code></pre><ul id="a06720e4-6f49-82cb-812c-013032384c8d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>curl</code><ul id="ea0720e4-6f49-82cc-aa3d-017d99b1b921" class="bulleted-list" dir="auto"><li style="list-style-type:circle">HTTP 요청을 보내는 명령어다.</li></ul><ul id="188720e4-6f49-83aa-8145-81ccf9588a68" class="bulleted-list" dir="auto"><li style="list-style-type:circle">웹 브라우저 없이도 GET/POST 요청을 테스트할 때 매우 자주 사용한다.</li></ul></li></ul><ul id="055720e4-6f49-837a-be88-015018e5f785" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>http://ALB-DNS-이름/search?...</code><ul id="26c720e4-6f49-82d9-a714-812879f49831" class="bulleted-list" dir="auto"><li style="list-style-type:circle">ALB로 요청을 보내는 URL이다.</li></ul><ul id="2bf720e4-6f49-830c-a49b-81f68dd53f9f" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>/search</code>는 예시 경로다.</li></ul><ul id="46a720e4-6f49-8354-aa8d-01f5daddaad4" class="bulleted-list" dir="auto"><li style="list-style-type:circle">실제 실습 환경에 맞게 수정해야 한다.</li></ul></li></ul><ul id="394720e4-6f49-83cb-9e32-01cc2d3b495a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>%27</code><ul id="ca9720e4-6f49-82ac-bd84-0172ffb9a75b" class="bulleted-list" dir="auto"><li style="list-style-type:circle">작은따옴표 <code>&#x27;</code> 의 URL 인코딩 값이다.</li></ul></li></ul><ul id="574720e4-6f49-8340-a867-814fed8a8d77" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>%20</code><ul id="de3720e4-6f49-8327-8357-01fdd9b94c7d" class="bulleted-list" dir="auto"><li style="list-style-type:circle">공백(space)의 URL 인코딩 값이다.</li></ul></li></ul><ul id="cba720e4-6f49-834a-804b-013abdf4bc4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>%3D</code><ul id="fbf720e4-6f49-82fe-854e-01a0f18db2ad" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>=</code> 문자의 URL 인코딩 값이다.</li></ul></li></ul><p id="9d9720e4-6f49-83a3-9c81-0112cd1f4043" class="" dir="auto">즉 아래 문자열을 브라우저에서 안전하게 보내기 위해 인코딩한 것이다.</p><pre id="6fd720e4-6f49-832c-8eba-810d0e5e9f09" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1&#x27; OR &#x27;1&#x27;=&#x27;1</code></pre><hr id="37d720e4-6f49-82c3-a25c-01762823ad0a" dir="auto"/><h2 id="5f0720e4-6f49-829a-aea5-81ea9c104532" class="" dir="auto">9.5 예상 결과</h2><p id="b70720e4-6f49-8204-99e5-01bac353e65b" class="" dir="auto">정상적으로 WAF 규칙이 동작하면 요청은 차단된다.</p><p id="b98720e4-6f49-83e8-96e3-81ea5852106f" class="" dir="auto">예상 결과는 다음과 같다.</p><pre id="01f720e4-6f49-82a9-909d-81c346486192" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">403 Forbidden</code></pre><p id="a6a720e4-6f49-8252-afd2-01fad38217fd" class="" dir="auto">또는 ALB/WAF 차단 페이지가 나타날 수 있다.</p><hr id="dca720e4-6f49-82a2-8bb7-8187bdb7e11d" dir="auto"/><h2 id="86f720e4-6f49-826f-b9f0-8117087f60af" class="" dir="auto">9.6 실습 포인트</h2><p id="76d720e4-6f49-8348-9b87-01dc30d3d0c2" class="" dir="auto">이 실습에서 중요한 점은 다음이다.</p><ul id="a16720e4-6f49-830f-8fcc-017328ba266c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF는 애플리케이션 코드 수정 없이도 1차 방어가 가능함</li></ul><ul id="b33720e4-6f49-8286-ac97-81dd195f757f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하지만 WAF만으로 보안이 끝나는 것은 아님</li></ul><ul id="6ae720e4-6f49-8273-84dd-010f7bd5acbf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 자체의 입력 검증, Prepared Statement, ORM 보안 설정이 반드시 병행되어야 함</li></ul><p id="c68720e4-6f49-82f6-ba8d-81afea007572" class="" dir="auto">즉 WAF는 <strong>보조적 보호막이 아니라 매우 중요한 전방 방어 계층</strong>이지만,</p><p id="f22720e4-6f49-83dc-a122-81d8df238423" class="" dir="auto">애플리케이션 보안 대책을 완전히 대체하지는 않는다.</p><hr id="fdb720e4-6f49-82c3-b343-81ddbb57bdf6" dir="auto"/><h1 id="0f6720e4-6f49-828a-aae6-812e40a3e72e" class="" dir="auto">10. 실습 5. WAF Logging 구성</h1><hr id="ca3720e4-6f49-832c-8224-01b9415a7144" dir="auto"/><h2 id="796720e4-6f49-82e1-a014-81777efadaf5" class="" dir="auto">10.1 WAF Logging이 필요한 이유</h2><p id="0cf720e4-6f49-8300-92d8-81dc063b67dd" class="" dir="auto">WAF는 차단만 하는 것으로 끝나면 안 된다.</p><p id="63c720e4-6f49-8387-973e-81f81488a8e6" class="" dir="auto">무엇이 차단되었는지, 어느 IP에서 어떤 요청이 들어왔는지, 어떤 Rule에 걸렸는지를 확인해야 한다.</p><p id="557720e4-6f49-8251-a586-0196f42a8add" class="" dir="auto">Logging을 구성하면 다음이 가능해진다.</p><ul id="ba5720e4-6f49-83f3-ae90-01a39be9603b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">차단 이벤트 분석</li></ul><ul id="aeb720e4-6f49-82f3-9593-8120ed65815d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오탐(False Positive) 확인</li></ul><ul id="77f720e4-6f49-8378-b36c-01b8eb0d3e6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공격 패턴 파악</li></ul><ul id="224720e4-6f49-8265-a254-81a7afc2c123" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 Rule 튜닝</li></ul><ul id="ead720e4-6f49-83cd-b87f-81f1a8f905c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 감사 자료 확보</li></ul><hr id="004720e4-6f49-83ef-a0db-01059a959670" dir="auto"/><h2 id="0b2720e4-6f49-82f2-835f-0193c27316bf" class="" dir="auto">10.2 WAF Logging 대상</h2><p id="4ec720e4-6f49-8235-8950-81485a31ca2f" class="" dir="auto">AWS WAF Logging은 보통 다음으로 보낼 수 있다.</p><ul id="d03720e4-6f49-821c-994c-01c0096e4e84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch Logs</li></ul><ul id="f2d720e4-6f49-8204-aeb6-01f730c829d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="32a720e4-6f49-8396-a3ce-01e09431c49a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kinesis Data Firehose</li></ul><p id="e83720e4-6f49-82af-ba7d-015e986fa8c5" class="" dir="auto">실습에서는 <strong>CloudWatch Logs</strong>가 가장 확인하기 쉽다.</p><hr id="b28720e4-6f49-8319-9bdc-81141592713d" dir="auto"/><h2 id="2f3720e4-6f49-83cc-9bf3-81c07eecec69" class="" dir="auto">10.3 CloudWatch Logs 로그 그룹 준비</h2><p id="692720e4-6f49-8362-be9f-01cfbea3ebc9" class="" dir="auto">먼저 CloudWatch에서 로그 그룹을 생성한다.</p><pre id="204720e4-6f49-822b-9c23-81bfe7dcc5d8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS Console → CloudWatch → Logs → Log groups → Create log group</code></pre><p id="bf8720e4-6f49-82c7-80fc-819bb949a912" class="" dir="auto">이름 예시</p><pre id="710720e4-6f49-8264-a190-01232de6d1c9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws-waf-logs-lab</code></pre><p id="562720e4-6f49-832c-a2ea-015b0968463b" class="" dir="auto">저장한다.</p><hr id="640720e4-6f49-8360-8c89-01c2770a39d3" dir="auto"/><h2 id="983720e4-6f49-82c6-920b-01e60986e7a7" class="" dir="auto">10.4 WAF Logging 활성화</h2><p id="0d4720e4-6f49-8228-9315-81a51a443400" class="" dir="auto">다시 WAF 콘솔로 이동한다.</p><pre id="583720e4-6f49-8302-ae90-81699aaab838" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">WAF → Web ACLs → my-waf-lab</code></pre><p id="e11720e4-6f49-839c-b74e-81073ac45b40" class="" dir="auto">다음 메뉴를 선택한다.</p><pre id="cfa720e4-6f49-8386-b09a-012e464c7d6e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Logging and metrics</code></pre><p id="9a1720e4-6f49-82c1-990a-014fcdc59b69" class="" dir="auto">그 다음</p><pre id="0b5720e4-6f49-826f-9274-016345c9e3dc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Enable logging</code></pre><p id="5fa720e4-6f49-8205-a5a0-81cbe256668b" class="" dir="auto">로그 대상에서 CloudWatch Logs를 선택하고</p><p id="da8720e4-6f49-82cb-9c67-81a5544e50dc" class="" dir="auto">앞에서 만든 로그 그룹을 지정한다.</p><p id="185720e4-6f49-8380-940f-01fd41bb12af" class="" dir="auto">예</p><pre id="392720e4-6f49-836b-98e2-8171fae67ccd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws-waf-logs-lab</code></pre><p id="e39720e4-6f49-8307-90e3-81d22e795330" class="" dir="auto">저장한다.</p><hr id="0f9720e4-6f49-8354-b20b-01dece09b0c4" dir="auto"/><h2 id="a2e720e4-6f49-821f-aa52-012f035b8e57" class="" dir="auto">10.5 로그 필드 이해</h2><p id="53d720e4-6f49-821b-a009-0106e7b78eba" class="" dir="auto">WAF 로그에는 다양한 정보가 기록된다.</p><p id="422720e4-6f49-8301-a5d9-81001d47c07d" class="" dir="auto">대표적으로 다음 항목을 확인할 수 있다.</p><ul id="4be720e4-6f49-82a1-bcba-81b569a960ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 시각</li></ul><ul id="101720e4-6f49-836f-a754-0123600d37aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클라이언트 IP</li></ul><ul id="570720e4-6f49-83d6-8714-0121841ab408" class="bulleted-list" dir="auto"><li style="list-style-type:disc">URI</li></ul><ul id="4d4720e4-6f49-82a9-b26a-01cc036592fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP Method</li></ul><ul id="b03720e4-6f49-8353-9d57-817d9bc1bc49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Country</li></ul><ul id="7a2720e4-6f49-833e-9c36-014e5cb854ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">적용된 Rule</li></ul><ul id="d12720e4-6f49-8216-9d42-01a29f800009" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Allow / Block 여부</li></ul><p id="8ab720e4-6f49-83d9-a15c-014c6aa45c5c" class="" dir="auto">로그 예시는 대략 다음과 같은 JSON 형태다.</p><pre id="22c720e4-6f49-8258-9f16-815bb18b669a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;timestamp&quot;:1710000000000,
+  &quot;formatVersion&quot;:1,
+  &quot;webaclId&quot;:&quot;example-web-acl-id&quot;,
+  &quot;terminatingRuleId&quot;:&quot;block-specific-ip&quot;,
+  &quot;action&quot;:&quot;BLOCK&quot;,
+  &quot;httpSourceName&quot;:&quot;ALB&quot;,
+  &quot;httpSourceId&quot;:&quot;app/my-alb/123456789&quot;,
+  &quot;ruleGroupList&quot;: [],
+  &quot;httpRequest&quot;: {
+    &quot;clientIp&quot;:&quot;203.0.113.10&quot;,
+    &quot;country&quot;:&quot;KR&quot;,
+    &quot;uri&quot;:&quot;/search&quot;,
+    &quot;args&quot;:&quot;id=1&#x27; OR &#x27;1&#x27;=&#x27;1&quot;,
+    &quot;httpVersion&quot;:&quot;HTTP/1.1&quot;,
+    &quot;httpMethod&quot;:&quot;GET&quot;,
+    &quot;requestId&quot;:&quot;example-request-id&quot;
+  }
+}</code></pre><hr id="3b3720e4-6f49-8396-bc8f-01e1436377c6" dir="auto"/><h2 id="ce3720e4-6f49-83ac-92ec-816862ee7fe5" class="" dir="auto">10.6 로그 확인</h2><p id="52e720e4-6f49-837e-aabc-8147ccd5e279" class="" dir="auto">CloudWatch Logs에서 해당 로그 그룹으로 이동한 뒤</p><p id="aba720e4-6f49-838e-b683-813c74c6f304" class="" dir="auto">Log stream을 열어 요청 로그를 확인한다.</p><p id="06d720e4-6f49-83e0-8aae-01c4dbf8d3cb" class="" dir="auto">확인 포인트는 다음과 같다.</p><pre id="3d5720e4-6f49-83e5-b3d6-812e484f0634" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">action = BLOCK
+terminatingRuleId = 어떤 룰이 차단했는가
+clientIp = 어느 IP에서 요청했는가
+country = 어느 국가에서 들어왔는가
+uri / args = 어떤 요청이 들어왔는가</code></pre><hr id="640720e4-6f49-8388-974f-8148a6ddbc4d" dir="auto"/><h2 id="0be720e4-6f49-8230-992d-0146ba9a68a9" class="" dir="auto">10.7 SQL Injection 차단 로그 확인 포인트</h2><p id="e55720e4-6f49-8363-9927-0152f1f441b1" class="" dir="auto">SQL Injection 테스트 후에는 다음을 중점적으로 본다.</p><ul id="585720e4-6f49-8238-94ef-81e0bd0d5889" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 파라미터에 SQLi 패턴이 들어갔는가</li></ul><ul id="653720e4-6f49-8284-a2df-81fdc4fec993" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Managed Rule이 탐지했는가</li></ul><ul id="895720e4-6f49-8244-8ea9-81ad3f7910b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최종 action이 BLOCK인가</li></ul><p id="0a0720e4-6f49-83cf-b575-818520fb355c" class="" dir="auto">이 확인 과정이 매우 중요하다.</p><p id="c4a720e4-6f49-8355-b9f9-011e557638d4" class="" dir="auto">왜냐하면 실제 운영에서는 단순히 “막았다”보다</p><p id="a72720e4-6f49-8288-ad1f-0119e34bcec4" class="" dir="auto"><strong>무엇을 근거로 막았는지</strong>를 알아야 Rule 조정이 가능하기 때문이다.</p><hr id="7b8720e4-6f49-822e-a366-810df8b16733" dir="auto"/><h1 id="620720e4-6f49-8284-918c-0164f6ea7434" class="" dir="auto">11. 실습 흐름</h1><pre id="f28720e4-6f49-831b-9c86-81d406dfc4d9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. ALB 뒤에 웹 서버 준비
+2. WAF Web ACL 생성
+3. ALB에 Web ACL 연결
+4. 특정 IP 차단 Rule 추가
+5. 특정 국가 차단 Rule 추가
+6. SQL Injection 방어용 Managed Rule 추가
+7. WAF Logging 활성화
+8. curl 또는 브라우저로 정상/공격 요청 테스트
+9. CloudWatch Logs에서 차단 로그 확인</code></pre><hr id="57a720e4-6f49-8267-ac33-01221eadf775" dir="auto"/><h1 id="723720e4-6f49-83cc-922c-013a3e4c3a52" class="" dir="auto">12. 테스트 시나리오</h1><hr id="61c720e4-6f49-83ed-89eb-817fda951df2" dir="auto"/><h2 id="092720e4-6f49-8215-b86c-8153867e6939" class="" dir="auto">시나리오 1. 정상 요청</h2><pre id="8fa720e4-6f49-833d-96ff-01581b4bdd73" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl http://ALB-DNS-이름/</code></pre><p id="4b6720e4-6f49-832e-9d1e-011bdb2a74ee" class="" dir="auto">예상 결과</p><pre id="bd8720e4-6f49-82b8-a0a7-01e7b3301c7e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">정상 페이지 응답</code></pre><hr id="5d0720e4-6f49-822e-b41f-0131a5270e5d" dir="auto"/><h2 id="923720e4-6f49-822b-b112-0138f3fda4f5" class="" dir="auto">시나리오 2. 특정 IP 차단</h2><p id="653720e4-6f49-8301-8e55-0179fd509b2e" class="" dir="auto">차단 대상 IP에서 다음 요청 수행</p><pre id="dae720e4-6f49-8278-92ca-81b6ac216078" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl http://ALB-DNS-이름/</code></pre><p id="8ae720e4-6f49-8296-a5cc-813cbe333afd" class="" dir="auto">예상 결과</p><pre id="fd9720e4-6f49-83be-b229-01d84114e40a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">403 Forbidden</code></pre><p id="191720e4-6f49-833f-b9e9-0130bb16ec12" class="" dir="auto">로그 확인 포인트</p><pre id="29c720e4-6f49-8333-9442-0144ee79a115" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terminatingRuleId = block-specific-ip
+action = BLOCK</code></pre><hr id="99d720e4-6f49-826f-9398-810114f204f3" dir="auto"/><h2 id="841720e4-6f49-8358-90d2-017c350b6336" class="" dir="auto">시나리오 3. 특정 국가 차단</h2><p id="886720e4-6f49-83f1-b9fa-81b3649c27da" class="" dir="auto">해당 국가 IP 환경에서 접속 시도</p><p id="57e720e4-6f49-8266-877f-8138ad2709a6" class="" dir="auto">예상 결과</p><pre id="914720e4-6f49-8357-9933-813839262607" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">403 Forbidden</code></pre><p id="0fd720e4-6f49-838e-a479-01a2ff0efc19" class="" dir="auto">로그 확인 포인트</p><pre id="81f720e4-6f49-82ca-bb47-81f3b25924ff" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">country = 차단 대상 국가
+terminatingRuleId = block-country</code></pre><hr id="66a720e4-6f49-8329-9b0b-014ef62d1d38" dir="auto"/><h2 id="44c720e4-6f49-8333-af43-01b8a5d97fea" class="" dir="auto">시나리오 4. SQL Injection 테스트</h2><pre id="ea1720e4-6f49-837e-ab60-812b1964e62e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl&quot;http://ALB-DNS-이름/search?id=1%27%20OR%20%271%27%3D%271&quot;</code></pre><p id="676720e4-6f49-82f8-b223-81bc6a86a078" class="" dir="auto">예상 결과</p><pre id="b32720e4-6f49-8346-8385-019e4d2e8b96" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">403 Forbidden</code></pre><p id="97a720e4-6f49-8211-a11a-8105116c5aa3" class="" dir="auto">로그 확인 포인트</p><pre id="07b720e4-6f49-8397-a537-810454ce1d50" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Managed Rule Group이 탐지
+action = BLOCK
+args = 공격 문자열 포함</code></pre><hr id="f92720e4-6f49-82d9-a153-01eb0b5427d9" dir="auto"/><h1 id="631720e4-6f49-8259-af94-017ce4b67a41" class="" dir="auto">13. 핵심 내용</h1><h2 id="5f1720e4-6f49-82f4-a8e9-01ed03dfdea7" class="" dir="auto">13.1 WAF와 Security Group 차이</h2><p id="87b720e4-6f49-8380-a4c1-8165410523d2" class="" dir="auto">Security Group은 인스턴스 수준의 네트워크 접근 제어를 한다.</p><p id="41a720e4-6f49-8221-af1a-819f5cfec9af" class="" dir="auto">주로 포트와 IP 중심이다.</p><p id="351720e4-6f49-83dc-a8e5-81312e885d8e" class="" dir="auto">WAF는 HTTP/HTTPS 요청 내용을 검사한다.</p><p id="663720e4-6f49-836e-93cd-014d01dad2b8" class="" dir="auto">즉 웹 애플리케이션 계층 보안에 더 가깝다.</p><p id="f32720e4-6f49-8297-b66a-8170217ae4a6" class="" dir="auto">정리하면 다음과 같다.</p><pre id="5ac720e4-6f49-8376-b289-017ae1a3ec87" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Security Group = L3/L4 중심
+WAF = L7 중심</code></pre><hr id="f33720e4-6f49-825f-8cb0-0111ffa022a7" dir="auto"/><h2 id="713720e4-6f49-8247-bc0a-81595aaf4bde" class="" dir="auto">13.2 IP 차단과 Geolocation 차이</h2><ul id="8ed720e4-6f49-8369-9940-0170518f2605" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 차단은 특정 주소 또는 대역을 직접 차단</li></ul><ul id="ac9720e4-6f49-831f-8083-81412394a93c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Geolocation은 IP 기반 국가 정보로 차단</li></ul><p id="d34720e4-6f49-822b-a17c-81d18a4704dc" class="" dir="auto">둘은 목적이 다르다.</p><ul id="87b720e4-6f49-8257-b39a-013df8f7623e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 차단 = 특정 공격자 대응</li></ul><ul id="2df720e4-6f49-83b9-94ab-017273512afe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">국가 차단 = 지역 기반 접근 통제</li></ul><hr id="665720e4-6f49-83ff-9a00-81b62d4034e6" dir="auto"/><h2 id="2b6720e4-6f49-83a9-8118-01523157f441" class="" dir="auto">13.3 SQL Injection 방어의 의미</h2><p id="e74720e4-6f49-832f-9661-8101b1c9bc7b" class="" dir="auto">WAF가 SQL Injection 패턴을 차단해 줄 수는 있지만</p><p id="f2c720e4-6f49-823d-980d-01b6a3e4213e" class="" dir="auto">애플리케이션 코드 자체가 안전해야 진짜 보안이 완성된다.</p><p id="838720e4-6f49-83c1-9fc9-013b7dbdd680" class="" dir="auto">즉 다음이 함께 필요하다.</p><ul id="d46720e4-6f49-8315-b8ab-01e925267aca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">입력값 검증</li></ul><ul id="83f720e4-6f49-8390-846c-81e996cf665e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Prepared Statement 사용</li></ul><ul id="789720e4-6f49-8308-883e-8164b54dd16b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ORM 보안 설정</li></ul><ul id="35e720e4-6f49-837e-8738-01d399bcea01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최소 권한 DB 계정 사용</li></ul><ul id="62f720e4-6f49-8316-b301-8194655ecded" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF 적용</li></ul><hr id="0e2720e4-6f49-83f7-a01c-816b0ac520f5" dir="auto"/><h2 id="24e720e4-6f49-83be-bafe-8176d3f89b38" class="" dir="auto">13.4 Logging의 중요성</h2><p id="252720e4-6f49-834f-87f2-01f892ec0cea" class="" dir="auto">운영 환경에서는 차단 자체보다 <strong>로그 분석</strong>이 더 중요할 때가 많다.</p><p id="5b8720e4-6f49-82e4-b122-8138de23ca48" class="" dir="auto">왜냐하면 다음을 판단해야 하기 때문이다.</p><ul id="9a3720e4-6f49-839e-b19e-018fbd1efd47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 공격인지</li></ul><ul id="5a1720e4-6f49-83f3-9386-0136127d7e49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정상 사용자가 오탐으로 차단된 것인지</li></ul><ul id="8cc720e4-6f49-834f-ab46-0178fca7a5c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어느 Rule이 너무 과하게 동작하는지</li></ul><ul id="bde720e4-6f49-8286-a055-81fb04d3a20e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">차단 추세가 증가하는지</li></ul><p id="b32720e4-6f49-8276-8679-81ccfe022a9e" class="" dir="auto">따라서 WAF는 반드시 Logging과 함께 운영하는 것이 좋다.</p><hr id="1df720e4-6f49-82f4-a0d9-81b9b6ac7a83" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

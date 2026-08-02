@@ -1,0 +1,777 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Docker Network 실습 </title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="e85720e4-6f49-8314-bbc5-817c834ec230" class="page sans"><header><h1 class="page-title" dir="auto">Docker Network 실습 </h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="4de720e4-6f49-8226-ba5e-01ee2e0f5b22" dir="auto"/><h2 id="f8b720e4-6f49-821a-81b5-0158204ffcaf" class="" dir="auto">실습 개요</h2><h3 id="816720e4-6f49-8378-804d-01252705f2d6" class="" dir="auto">실습 목표</h3><p id="972720e4-6f49-83dd-8c46-81fed8fba452" class="" dir="auto">이 실습을 통해 다음을 직접 확인한다.</p><ul id="8ef720e4-6f49-820b-82cc-017ccce7c76d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 기본 bridge 네트워크의 동작 방식</li></ul><ul id="e9b720e4-6f49-83e7-8a60-013e0e25f76d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 IP 기반 통신의 한계</li></ul><ul id="37f720e4-6f49-8360-9c29-01e1228024a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">User-defined bridge 네트워크의 필요성</li></ul><ul id="41d720e4-6f49-831d-ad36-818431a98cc3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 이름(DNS) 기반 통신</li></ul><ul id="bb0720e4-6f49-824e-9113-81f1482918e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트 퍼블리시(<code>p</code>)가 동작하는 위치</li></ul><ul id="855720e4-6f49-820a-bf39-81a9d064ac31" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 모드에 따른 통신 차이</li></ul><hr id="9ca720e4-6f49-8321-b8a0-01023286d0c0" dir="auto"/><h2 id="9d7720e4-6f49-8328-935c-81713ec1dea2" class="" dir="auto">실습 환경</h2><ul id="f44720e4-6f49-8390-b2b3-8166a414eef3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OS: Ubuntu (Docker 설치 완료)</li></ul><ul id="759720e4-6f49-8300-b0a6-81a5193ab734" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지:<ul id="b63720e4-6f49-82d7-98f2-0159bbe5e7e6" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>nginx:alpine</code></li></ul><ul id="2fa720e4-6f49-8390-b060-0114374047e5" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>curlimages/curl</code></li></ul></li></ul><hr id="df9720e4-6f49-83b7-8260-8196be62ce15" dir="auto"/><h2 id="a44720e4-6f49-8301-95b0-01480aff83ff" class="" dir="auto">실습 1. 기본 bridge 네트워크 확인</h2><h3 id="da7720e4-6f49-832a-9119-81cbe3243e1b" class="" dir="auto">1-1. Docker 네트워크 목록 확인</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="d2b720e4-6f49-828f-a0be-81b498ee9d96" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker network ls</code></pre><h3 id="087720e4-6f49-838b-b1e2-8100cc8f43b5" class="" dir="auto">확인 포인트</h3><ul id="67b720e4-6f49-82a0-8c1a-014b3b70eb3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본적으로 다음 네트워크가 존재함<ul id="3bc720e4-6f49-8306-ab11-0144e19d90c9" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>bridge</code></li></ul><ul id="6a2720e4-6f49-8375-a0d6-819a6d881d31" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>host</code></li></ul><ul id="ebe720e4-6f49-8342-bda4-0196bf98bdb4" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>none</code></li></ul></li></ul><hr id="204720e4-6f49-821b-b59d-016ee52dbd1f" dir="auto"/><h3 id="7fa720e4-6f49-831a-aa2a-01f850f878e9" class="" dir="auto">1-2. 기본 bridge 네트워크 상세 확인</h3><pre id="1a5720e4-6f49-8374-85c4-016c053e771e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker network inspect bridge</code></pre><h3 id="9a1720e4-6f49-8292-821c-01c4875ecc45" class="" dir="auto">확인 포인트</h3><ul id="26a720e4-6f49-82c0-9272-81b46221954d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet (예: <code>172.17.0.0/16</code>)</li></ul><ul id="3dc720e4-6f49-8337-bf1d-01cf81e939ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway</li></ul><ul id="dc6720e4-6f49-8295-b781-8126779cd9f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Containers</code> 항목</li></ul><hr id="4a9720e4-6f49-8259-a0dd-01affcf658a4" dir="auto"/><h2 id="38f720e4-6f49-8364-89fe-01d0f18c81fb" class="" dir="auto">실습 2. 기본 bridge 네트워크에서 컨테이너 실행</h2><h3 id="633720e4-6f49-83b2-be52-015d7f99a8c2" class="" dir="auto">2-1. 컨테이너 2개 실행</h3><pre id="476720e4-6f49-8293-a851-016b2eb8df56" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d --name web1 nginx:alpine
+docker run -d --name web2 nginx:alpine</code></pre><blockquote id="44f720e4-6f49-830f-a9fe-813b0eb973b6" class="" dir="auto">네트워크를 지정하지 않았으므로<p id="0e0720e4-6f49-827f-bf08-0124ea6d266a" class="" dir="auto">두 컨테이너는 자동으로 <strong>기본 bridge 네트워크</strong>에 연결된다.</p></blockquote><hr id="53e720e4-6f49-8256-b2b8-01e78b27ff22" dir="auto"/><h3 id="347720e4-6f49-823f-8553-017cb289fa0f" class="" dir="auto">2-2. 컨테이너 IP 확인</h3><pre id="bd8720e4-6f49-8392-b6f0-81914bc38949" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker inspect -f &#x27;{{ .NetworkSettings.IPAddress }}&#x27; web1
+docker inspect -f &#x27;{{ .NetworkSettings.IPAddress }}&#x27; web2</code></pre><p id="a84720e4-6f49-8348-8728-014a9d4c90b4" class="" dir="auto">예시:</p><pre id="638720e4-6f49-8306-9302-01e0fc523576" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">web1 → 172.17.0.2
+web2 → 172.17.0.3</code></pre><hr id="eec720e4-6f49-827c-b9b3-8169dfd9851c" dir="auto"/><h2 id="67d720e4-6f49-8267-a856-01bab9cdc746" class="" dir="auto">실습 3. 기본 bridge에서 컨테이너 간 통신</h2><h3 id="7ab720e4-6f49-8203-8883-01dc35a02539" class="" dir="auto">3-1. web1에서 web2로 IP 기반 접근</h3><pre id="33c720e4-6f49-823d-a97d-0176f48c9112" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker exec -it web1 sh</code></pre><pre id="1e6720e4-6f49-834d-916f-8114780c990c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">apk add --no-cache curl
+curl http://172.17.0.3</code></pre><h3 id="d73720e4-6f49-824e-809a-01cdc322c9c6" class="" dir="auto">기대 결과</h3><ul id="065720e4-6f49-8281-bb78-81c47fce1b1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">nginx 기본 페이지 HTML 출력</li></ul><ul id="187720e4-6f49-8389-ba9a-01bf66fc0cce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 기반 통신은 가능</li></ul><hr id="61f720e4-6f49-83ee-889e-816177dacd34" dir="auto"/><h3 id="4b3720e4-6f49-824b-8b5e-819c9c55df6d" class="" dir="auto">3-2. 컨테이너 이름으로 접근 시도</h3><pre id="a2c720e4-6f49-83a6-a09b-0172e6ad113f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://web2</code></pre><h3 id="d65720e4-6f49-83bc-9afd-01e90da1856e" class="" dir="auto">기대 결과</h3><pre id="22c720e4-6f49-82f7-9762-01c8bdfe7653" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">curl: (6) Could not resolve host: web2</code></pre><h3 id="ea7720e4-6f49-82c2-928b-8172331e934a" class="" dir="auto">정리</h3><ul id="e3c720e4-6f49-8285-85ac-010828b800b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 bridge 네트워크는 <strong>컨테이너 이름 DNS를 제공하지 않음</strong></li></ul><ul id="b12720e4-6f49-8319-8770-018f6ecdf386" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 기반 통신만 가능 → 운영 환경에 부적합</li></ul><hr id="c19720e4-6f49-83f9-9dcf-01f9e524ceaa" dir="auto"/><h2 id="9f9720e4-6f49-821d-bf11-01170dd597c7" class="" dir="auto">실습 4. User-defined bridge 네트워크 생성</h2><h3 id="51d720e4-6f49-825e-9fbb-01d190c49d37" class="" dir="auto">4-1. 사용자 정의 네트워크 생성</h3><pre id="097720e4-6f49-82df-a41c-81dc345b52f0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker network create mynet</code></pre><pre id="720720e4-6f49-82c9-8283-810baa5ff238" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker network ls</code></pre><hr id="2ae720e4-6f49-833f-a266-01e34f02d8d5" dir="auto"/><h3 id="db9720e4-6f49-8266-8341-81cdf2e34733" class="" dir="auto">4-2. 새 네트워크에 컨테이너 실행</h3><pre id="6d7720e4-6f49-8321-98f9-01135f752e54" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d --name app1 --network mynet nginx:alpine
+docker run -d --name app2 --network mynet nginx:alpine</code></pre><hr id="345720e4-6f49-832b-833c-01a20cc685b9" dir="auto"/><h2 id="0d6720e4-6f49-824a-a6af-015cbfceca6e" class="" dir="auto">실습 5. User-defined bridge 네트워크 통신</h2><h3 id="1c9720e4-6f49-822d-8b4a-818dd97ec069" class="" dir="auto">5-1. IP 확인</h3><pre id="b51720e4-6f49-83ae-8826-81f2a5780fc3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker inspect -f &#x27;{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}&#x27; app1
+docker inspect -f &#x27;{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}&#x27; app2</code></pre><hr id="711720e4-6f49-83d2-9084-81f5eace646f" dir="auto"/><h3 id="fea720e4-6f49-8337-b29d-016a14096d34" class="" dir="auto">5-2. 컨테이너 이름 기반 통신 (DNS)</h3><pre id="6f4720e4-6f49-82ee-941a-01fb59623ee9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker exec -it app1 sh</code></pre><pre id="1ca720e4-6f49-8304-a179-815129a0b794" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">apk add --no-cache curl
+curl http://app2</code></pre><h3 id="345720e4-6f49-838c-b4fb-014823d771b4" class="" dir="auto">기대 결과</h3><ul id="e45720e4-6f49-8211-b93b-01552641a2e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">nginx HTML 정상 출력</li></ul><h3 id="349720e4-6f49-82b6-8348-01d3105b6cdf" class="" dir="auto">핵심 포인트</h3><ul id="5f6720e4-6f49-8362-85f5-8150832426db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">User-defined bridge는 <strong>자동 DNS 제공</strong></li></ul><ul id="62e720e4-6f49-8310-bb21-81c546a0ef47" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 이름으로 통신 가능</li></ul><ul id="cd5720e4-6f49-836d-aace-81c91d84591a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 변경에도 영향 없음</li></ul><hr id="d2d720e4-6f49-832e-aece-015644c49256" dir="auto"/><h2 id="0fa720e4-6f49-82bd-8eb3-0173c9f6f5eb" class="" dir="auto">실습 6. 포트 퍼블리시(<code>p</code>) 이해하기</h2><h3 id="270720e4-6f49-83d3-a0c1-816c24a1f299" class="" dir="auto">6-1. 컨테이너 실행 + 포트 퍼블리시</h3><pre id="b35720e4-6f49-83ff-9693-01371f5f3027" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d --name web-pub -p 8080:80 nginx:alpine</code></pre><hr id="eff720e4-6f49-8232-bf88-01ca29bcc89b" dir="auto"/><h3 id="9f3720e4-6f49-83f1-8beb-01ffce58d482" class="" dir="auto">6-2. 호스트에서 접근</h3><pre id="37c720e4-6f49-82d2-95e2-812caf83d9d7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://127.0.0.1:8080</code></pre><h3 id="167720e4-6f49-8397-ae26-81040ee519b8" class="" dir="auto">확인 포인트</h3><ul id="806720e4-6f49-821d-be44-0131f012333c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트 퍼블리시는 <strong>호스트 ↔ 컨테이너</strong> 통신</li></ul><ul id="d57720e4-6f49-82c3-8b8b-01d1f93e0249" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 ↔ 컨테이너 통신과는 무관</li></ul><hr id="464720e4-6f49-8248-8c2a-812bdb0133ad" dir="auto"/><h2 id="1db720e4-6f49-83f9-9d9b-81aa44f4912e" class="" dir="auto">실습 7. 컨테이너 내부 OK / 외부 접속 실패 디버깅</h2><h3 id="a0f720e4-6f49-830d-8092-01dd66d9c59e" class="" dir="auto">7-1. 컨테이너 내부에서 서비스 확인</h3><pre id="5ec720e4-6f49-8346-a2fe-81d965b3d47f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker exec -it web-pub sh
+apk add --no-cache curl
+curl http://127.0.0.1</code></pre><hr id="6d4720e4-6f49-8314-9cfb-8168e2e96f67" dir="auto"/><h3 id="b7b720e4-6f49-8289-b94d-815a9da34ce9" class="" dir="auto">7-2. 호스트에서 포트 확인</h3><pre id="19e720e4-6f49-8246-a0e4-0118c1db4e4a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker port web-pub</code></pre><p id="128720e4-6f49-8315-bac6-81ca98e68097" class="" dir="auto">출력 예:</p><pre id="d4f720e4-6f49-829a-add5-810c6a4fadf5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">80/tcp -&gt; 0.0.0.0:8080</code></pre><hr id="9c9720e4-6f49-82d8-9b39-01ee081bef5a" dir="auto"/><h3 id="0b1720e4-6f49-82da-aeaf-811522dfe97e" class="" dir="auto">정리</h3><ul id="a8d720e4-6f49-824a-92ba-0158b06f5d03" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부 OK + 외부 실패 →<ul id="5e8720e4-6f49-8395-9c78-011e5866c710" class="bulleted-list" dir="auto"><li style="list-style-type:circle">포트 퍼블리시</li></ul><ul id="0d9720e4-6f49-83e6-a07f-015c05e45fb4" class="bulleted-list" dir="auto"><li style="list-style-type:circle">호스트 방화벽</li></ul><ul id="951720e4-6f49-83a5-8c28-013bcc947696" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Docker 네트워크 상태</li></ul><ul id="257720e4-6f49-8343-bf3a-0143d2511ad6" class="bulleted-list" dir="auto"><li style="list-style-type:circle">OS 네트워크 문제</li></ul></li></ul><hr id="6e0720e4-6f49-832d-8196-81d534b82bc2" dir="auto"/><h2 id="383720e4-6f49-83a2-80ad-0147df8b8520" class="" dir="auto">실습 8. 네트워크 모드 비교</h2><h3 id="e9f720e4-6f49-83de-86a8-81c29782c087" class="" dir="auto">8-1. none 네트워크</h3><pre id="7ad720e4-6f49-82c0-bd93-0177f7340a0e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d --name nonet --network none nginx:alpine</code></pre><pre id="0f0720e4-6f49-83bb-ab33-81a93b4a9dfb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker inspect -f &#x27;{{.NetworkSettings.IPAddress}}&#x27; nonet</code></pre><h3 id="acc720e4-6f49-821c-a2ab-019a9540d678" class="" dir="auto">결과</h3><ul id="fbb720e4-6f49-833b-8cfb-01e33bac9b6b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 없음</li></ul><ul id="c08720e4-6f49-82f6-94d0-8152a30a252f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부/내부 통신 불가</li></ul><hr id="036720e4-6f49-825d-b9d7-81918e32d6ed" dir="auto"/><h3 id="565720e4-6f49-8353-803b-019353f8876d" class="" dir="auto">8-2. host 네트워크 (Linux 전용)</h3><pre id="831720e4-6f49-824f-9108-81273dda4fc9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d --name hostnet --network host nginx:alpine</code></pre><pre id="e99720e4-6f49-8289-8cff-8123adda7270" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://127.0.0.1</code></pre><h3 id="185720e4-6f49-8287-999c-01f843b9fb61" class="" dir="auto">결과</h3><ul id="801720e4-6f49-8285-b47b-01a367e65fbe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트 퍼블리시 필요 없음</li></ul><ul id="35d720e4-6f49-8311-a2f3-0136534546fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">호스트 포트 직접 사용</li></ul><ul id="d2e720e4-6f49-834c-b60a-01d8423338e7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">격리 약화 → 운영에서는 주의</li></ul><hr id="86c720e4-6f49-8378-bb9a-01cbef97b458" dir="auto"/><h2 id="26f720e4-6f49-8220-81e0-01e2a815cbdb" class="" dir="auto">실습 정리</h2><h3 id="d35720e4-6f49-82f6-92fb-81051bda5aa2" class="" dir="auto">핵심 요약</h3><ul id="bd0720e4-6f49-8348-af23-016122a41dc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 bridge:<ul id="c45720e4-6f49-8273-a173-01d216cd06fa" class="bulleted-list" dir="auto"><li style="list-style-type:circle">IP 통신 가능</li></ul><ul id="70b720e4-6f49-829e-8d48-010002ec1aba" class="bulleted-list" dir="auto"><li style="list-style-type:circle">이름 기반 통신 불가</li></ul></li></ul><ul id="313720e4-6f49-8221-baff-8102693ab7ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">User-defined bridge:<ul id="a13720e4-6f49-8328-9fdd-81f7ce64b4d0" class="bulleted-list" dir="auto"><li style="list-style-type:circle">컨테이너 이름 DNS 제공</li></ul><ul id="cf6720e4-6f49-8300-876c-01a4a51d4e1a" class="bulleted-list" dir="auto"><li style="list-style-type:circle">운영 환경 권장</li></ul></li></ul><ul id="efc720e4-6f49-8267-b367-81daae3e247c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>p</code>:<ul id="01d720e4-6f49-824f-9572-01665622a8c9" class="bulleted-list" dir="auto"><li style="list-style-type:circle">호스트 ↔ 컨테이너 통신</li></ul><ul id="208720e4-6f49-82ce-a68c-818ffba36ef7" class="bulleted-list" dir="auto"><li style="list-style-type:circle">컨테이너 간 통신과 무관</li></ul></li></ul><ul id="2a8720e4-6f49-826d-bdc9-01404d72ae8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부 OK / 외부 실패:<ul id="b9f720e4-6f49-8333-92a1-81a1a151a36d" class="bulleted-list" dir="auto"><li style="list-style-type:circle">앱 문제 아님</li></ul><ul id="41a720e4-6f49-83c6-93ab-81cc28f6b3ab" class="bulleted-list" dir="auto"><li style="list-style-type:circle">네트워크/호스트 OS 문제 가능성 큼</li></ul></li></ul><hr id="ecf720e4-6f49-8355-b635-0178411fda80" dir="auto"/><h2 id="cf9720e4-6f49-8233-a144-812c3fc991ed" class="" dir="auto">실습 종료 – 리소스 정리</h2><pre id="0bf720e4-6f49-8319-8fc6-01fa4745474c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker rm -f web1 web2 app1 app2 web-pub nonet hostnet
+docker network rm mynet</code></pre><hr id="b77720e4-6f49-8261-9b0b-815c3dcb6954" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

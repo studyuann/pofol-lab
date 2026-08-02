@@ -1,0 +1,807 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. 노드풀 확장에 따른 DaemonSet 자동 배포</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="a67720e4-6f49-8220-b526-81bff9ee96a6" class="page sans"><header><h1 class="page-title" dir="auto">실습. 노드풀 확장에 따른 DaemonSet 자동 배포</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="291720e4-6f49-82d3-a77e-01f115753f73" dir="auto"/><h1 id="315720e4-6f49-8367-a603-81e6f50d9191" class="" dir="auto">실습 목표</h1><p id="40d720e4-6f49-834d-982e-819ebd9b2630" class="" dir="auto">이 실습에서 확인할 내용은 아래와 같음.</p><ul id="ddc720e4-6f49-82e8-8aa2-01537ef05c64" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 GKE Standard 클러스터에 노드가 2개 존재함</li></ul><ul id="9bf720e4-6f49-838f-82f1-0172ab6c0bfa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DaemonSet 배포 후 각 노드에 Pod가 1개씩 생성됨</li></ul><ul id="988720e4-6f49-821b-bfa9-8198df31629e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드풀 크기를 3으로 확장하면 새 노드에도 DaemonSet Pod가 자동 생성됨</li></ul><ul id="d74720e4-6f49-834c-9b3f-01ecae6d4027" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>kubectl get ds</code>, <code>kubectl get pods -o wide</code>, <code>kubectl get nodes</code>로 이를 검증함</li></ul><hr id="d9d720e4-6f49-8237-af1c-01227e673fd2" dir="auto"/><h1 id="c2c720e4-6f49-832a-b649-816dd6450ad9" class="" dir="auto">실습 환경</h1><ul id="5e3720e4-6f49-83b4-9d7f-01415a7ca378" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 이름: <code>이니셜-std-cluster-1</code></li></ul><ul id="8fa720e4-6f49-839d-88e7-013269f903e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 노드 수: <code>2</code></li></ul><ul id="6fc720e4-6f49-8248-97ed-01b474ee5879" class="bulleted-list" dir="auto"><li style="list-style-type:disc">존:  <code>asia-northeast3-c</code></li></ul><hr id="53d720e4-6f49-833b-8b3a-8185169f27aa" dir="auto"/><h1 id="751720e4-6f49-83a2-a4b7-013c67fbe0b2" class="" dir="auto">실습 흐름</h1><ol type="1" id="379720e4-6f49-83d2-ab99-8189e1995e1d" class="numbered-list" start="1" dir="auto"><li>현재 클러스터 인증 정보 가져오기</li></ol><ol type="1" id="d67720e4-6f49-8244-bd89-818dfaeee5db" class="numbered-list" start="2" dir="auto"><li>현재 노드 2개 상태 확인</li></ol><ol type="1" id="5a8720e4-6f49-828a-b4e6-81627befdc59" class="numbered-list" start="3" dir="auto"><li>실습용 DaemonSet 배포</li></ol><ol type="1" id="695720e4-6f49-8236-a3ef-81b7f2c27e35" class="numbered-list" start="4" dir="auto"><li>현재 노드별 DaemonSet Pod 확인</li></ol><ol type="1" id="7ef720e4-6f49-8205-a2f0-812b22ab1579" class="numbered-list" start="5" dir="auto"><li>노드풀 크기를 2 → 3으로 증가</li></ol><ol type="1" id="2b3720e4-6f49-8330-97d0-01af99bf8831" class="numbered-list" start="6" dir="auto"><li>새 노드 Ready 확인</li></ol><ol type="1" id="20e720e4-6f49-82ac-929d-812491b8fcc5" class="numbered-list" start="7" dir="auto"><li>새 노드에 DaemonSet Pod가 자동 생성됐는지 확인</li></ol><hr id="506720e4-6f49-835b-a088-81d7194c066e" dir="auto"/><h1 id="23f720e4-6f49-8201-b880-0189728cf255" class="" dir="auto">1. 클러스터 인증 정보 가져오기</h1><p id="3fe720e4-6f49-836b-9894-01f4c1fdd0d6" class="" dir="auto">먼저 <code>kubectl</code>이 GKE 클러스터에 연결되도록 인증 정보를 가져옴.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="344720e4-6f49-82f8-9b9f-810a12ae239b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials 이니셜-std-cluster-1 \
+  --zone asia-northeast3-c</code></pre><hr id="3f8720e4-6f49-8353-80c4-013633db3125" dir="auto"/><h1 id="671720e4-6f49-8256-9340-8122318bbce4" class="" dir="auto">2. 현재 노드 상태 확인</h1><pre id="8e8720e4-6f49-835a-b13c-01778bdbb4fc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes</code></pre><p id="4ed720e4-6f49-8344-b972-01144fdae63e" class="" dir="auto">예상 출력 예시:</p><pre id="ff5720e4-6f49-827c-b7e8-01cd877862cf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME                                                  STATUS   ROLES    AGE   VERSION
+gke-이니셜-std-cluster-1-default-pool-xxxx            Ready    &lt;none&gt;   20m   v1.xx.x
+gke-이니셜-std-cluster-1-default-pool-yyyy            Ready    &lt;none&gt;   20m   v1.xx.x</code></pre><h2 id="bb4720e4-6f49-82be-95f3-81c22427d835" class="" dir="auto">확인 포인트</h2><ul id="e71720e4-6f49-8296-be97-81cf53b2f67c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드가 정확히 2개인지 확인</li></ul><ul id="09b720e4-6f49-83d9-940b-01a1a777a8e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">두 노드 모두 <code>Ready</code> 상태인지 확인</li></ul><ul id="842720e4-6f49-83e7-a5df-81b521019cec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">아직 실습용 DaemonSet은 배포하지 않았으므로 관련 Pod는 없음</li></ul><hr id="f82720e4-6f49-835c-b5e1-8148b2130616" dir="auto"/><h1 id="de1720e4-6f49-8277-9525-01b527083cc7" class="" dir="auto">3. 노드풀 이름 확인</h1><p id="1f3720e4-6f49-82d7-b610-01555e4119d4" class="" dir="auto">노드 확장 명령에서 <strong>노드풀 이름</strong>이 필요함.</p><p id="783720e4-6f49-8284-b130-01cae8467402" class="" dir="auto">일반적으로 기본값은 <code>default-pool</code>인 경우가 많지만, 실제 이름을 확인하는 것이 안전함.</p><pre id="18b720e4-6f49-830d-82f2-013375f6ae45" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container node-pools list \
+  --cluster 이니셜-std-cluster-1 \
+  --zone asia-northeast3-c</code></pre><p id="c61720e4-6f49-8237-abff-014665f072fe" class="" dir="auto">예상 출력 예시:</p><pre id="f72720e4-6f49-82f1-8d6f-81c0b8f63cb3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME          MACHINE_TYPE  DISK_SIZE_GB  NODE_VERSION
+default-pool  e2-medium     100           1.xx.x-gke.xxx</code></pre><h2 id="eb7720e4-6f49-82d6-8b65-010e17022e6c" class="" dir="auto">확인 포인트</h2><ul id="2cc720e4-6f49-8202-a2b3-019c157bffc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드풀 이름이 <code>default-pool</code>인지 확인</li></ul><ul id="db6720e4-6f49-82fb-8119-8167e42537ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다르면 아래 이후 명령에서 해당 이름으로 바꾸면 됨</li></ul><hr id="857720e4-6f49-825e-90d3-81e8e5ec60b5" dir="auto"/><h1 id="8c6720e4-6f49-822e-b5ce-01474237180e" class="" dir="auto">4. 실습용 네임스페이스 생성</h1><pre id="501720e4-6f49-82e7-9076-01657a089dfb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create namespace ds-lab</code></pre><hr id="400720e4-6f49-83c7-92ac-0194a1df5f76" dir="auto"/><h1 id="f1f720e4-6f49-824d-8455-01725ed0f245" class="" dir="auto">5. DaemonSet 매니페스트 작성</h1><p id="adf720e4-6f49-82aa-8b7b-81b21b4c36ae" class="" dir="auto">파일명: <code>daemonset-lab.yaml</code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="0c7720e4-6f49-82f1-b0bf-817f2783b10f" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: ds-nginx
+  namespace: ds-lab
+spec:
+  selector:
+    matchLabels:
+      app: ds-nginx
+  template:
+    metadata:
+      labels:
+        app: ds-nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25
+        ports:
+        - containerPort: 80</code></pre><hr id="6ea720e4-6f49-83a1-9706-016b5edd61d5" dir="auto"/><h1 id="44e720e4-6f49-8289-8da9-011ca9788732" class="" dir="auto">6. DaemonSet 배포</h1><pre id="3a1720e4-6f49-8206-9034-0178f0a2d696" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f daemonset-lab.yaml</code></pre><p id="d70720e4-6f49-8394-bae7-8185d1325359" class="" dir="auto">확인:</p><pre id="951720e4-6f49-83b9-9cd7-013f6b273945" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get daemonset -n ds-lab</code></pre><p id="81e720e4-6f49-83ae-a016-8150d8b8ee48" class="" dir="auto">예상 출력 예시:</p><pre id="bc4720e4-6f49-8369-b256-81ad61c7c97a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME       DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+ds-nginx   2         2         2       2            2           &lt;none&gt;          10s</code></pre><h2 id="301720e4-6f49-83d1-b610-8116fb16a88a" class="" dir="auto">항목 설명</h2><ul id="74c720e4-6f49-82ed-bf69-81a47dc5d93b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>DESIRED</code><p id="5a3720e4-6f49-821c-9217-01919dd9171d" class="" dir="auto">DaemonSet이 배치하려는 목표 Pod 수임</p><p id="46b720e4-6f49-8376-ae1c-81a0382da63b" class="" dir="auto">현재 배치 대상 노드 수와 거의 같게 보임</p></li></ul><ul id="026720e4-6f49-8376-b515-012aa2914f70" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>CURRENT</code><p id="8f6720e4-6f49-82ef-9452-012a4deb2b3e" class="" dir="auto">현재 실제 생성된 Pod 수임</p></li></ul><ul id="adf720e4-6f49-83c7-b0fc-812b066ee773" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>READY</code><p id="cce720e4-6f49-83ab-82a6-817a456a2736" class="" dir="auto">정상 실행 중인 Pod 수임</p></li></ul><hr id="43f720e4-6f49-827d-8615-8174d95d5a99" dir="auto"/><h1 id="05b720e4-6f49-8347-8007-013573720816" class="" dir="auto">7. 현재 어떤 노드에 Pod가 배치됐는지 확인</h1><pre id="e60720e4-6f49-8202-91de-819bf71608b0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -n ds-lab -o wide</code></pre><p id="cca720e4-6f49-829d-ac7e-017d320a1020" class="" dir="auto">예상 출력 예시:</p><pre id="995720e4-6f49-820c-89a2-0142ff086374" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME             READY   STATUS    RESTARTS   AGE   IP           NODE
+ds-nginx-2k8l9   1/1     Running   0          20s   10.52.1.10   gke-이니셜-std-cluster-1-default-pool-xxxx
+ds-nginx-7q9xw   1/1     Running   0          20s   10.52.2.11   gke-이니셜-std-cluster-1-default-pool-yyyy</code></pre><h2 id="c21720e4-6f49-8226-b06b-81901a333f34" class="" dir="auto">확인 포인트</h2><ul id="8a7720e4-6f49-835d-aa10-81c04c385d1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod가 2개 생성됐는지 확인</li></ul><ul id="f84720e4-6f49-82dc-afa8-8185430a77cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 Pod가 서로 다른 노드에 1개씩 떠 있는지 확인</li></ul><ul id="0f4720e4-6f49-8268-b4bb-81a842a9d887" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>NODE</code> 컬럼이 핵심임</li></ul><hr id="d99720e4-6f49-838b-8da0-817f8e04ae61" dir="auto"/><h1 id="d94720e4-6f49-8361-b086-01bda2775c91" class="" dir="auto">8. 노드풀 크기를 2개에서 3개로 확장</h1><pre id="759720e4-6f49-839b-af09-013cd12756e5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters resize 이니셜-std-cluster-1 \
+  --node-pool default-pool \
+  --num-nodes 3 \
+  --zone asia-northeast3-c</code></pre><h2 id="152720e4-6f49-83a8-ac43-01b7ee9e86c9" class="" dir="auto">명령 설명</h2><ul id="7ae720e4-6f49-833b-82c4-01ea3e3247a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud container clusters resize</code><p id="1d5720e4-6f49-8302-9874-81e8071ce592" class="" dir="auto">GKE 클러스터의 특정 노드풀 크기를 조정하는 명령임</p></li></ul><ul id="833720e4-6f49-8347-b321-0127edd7079c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-node-pool default-pool</code><p id="6d1720e4-6f49-82df-9599-0145534d9c6e" class="" dir="auto">어떤 노드풀을 조정할지 지정함</p><p id="bad720e4-6f49-82cf-a2e7-81e4bb9a0f20" class="" dir="auto">3단계에서 확인한 실제 노드풀 이름을 넣으면 됨</p></li></ul><ul id="aa3720e4-6f49-8365-a4be-810a61e43784" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-num-nodes 3</code><p id="7c2720e4-6f49-82b6-8739-81095809bc75" class="" dir="auto">노드풀의 노드 수를 3개로 맞춤</p><p id="8a0720e4-6f49-826a-87d4-81d99a048627" class="" dir="auto">현재 2개였으므로 1개가 새로 추가됨</p></li></ul><ul id="528720e4-6f49-839c-ae47-8117fa2c69df" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-zone asia-northeast3-c</code><p id="586720e4-6f49-82d0-a487-0197338c8740" class="" dir="auto">zonal cluster 기준 위치 정보임</p></li></ul><p id="c9a720e4-6f49-8214-918e-016f177ff481" class="" dir="auto">GKE는 Standard 클러스터의 노드풀 크기를 수동으로 조정할 수 있고, 수요가 높을 때 클러스터 오토스케일러가 노드를 추가하는 기능도 제공함.</p><hr id="5c7720e4-6f49-8226-b117-0137517e361e" dir="auto"/><h1 id="c81720e4-6f49-82d3-966b-019b0369a242" class="" dir="auto">9. 새 노드 Ready 상태 확인</h1><p id="6cc720e4-6f49-8212-9d67-0178fcbb5630" class="" dir="auto">노드가 늘어나는 과정은 즉시 끝나지 않을 수 있음.</p><p id="2d6720e4-6f49-82b0-b312-012654e27381" class="" dir="auto">아래 명령으로 상태를 실시간 확인하면 됨.</p><pre id="148720e4-6f49-83eb-a49e-818d78aab943" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes -w</code></pre><p id="7ee720e4-6f49-8217-82a3-8144922d118d" class="" dir="auto">예상 흐름 예시:</p><pre id="c5a720e4-6f49-82b4-8c9c-81aa4c4a0a47" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gke-이니셜-std-cluster-1-default-pool-xxxx   Ready
+gke-이니셜-std-cluster-1-default-pool-yyyy   Ready
+gke-이니셜-std-cluster-1-default-pool-zzzz   NotReady
+gke-이니셜-std-cluster-1-default-pool-zzzz   Ready</code></pre><h2 id="215720e4-6f49-82ef-93b8-81ca9e50f851" class="" dir="auto"><code>-w</code> 옵션 설명</h2><ul id="bc8720e4-6f49-834a-b253-8149fcf2462e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>watch</code> 옵션임</li></ul><ul id="521720e4-6f49-8280-8440-0135dfb1e147" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스 상태 변경을 계속 보여줌</li></ul><ul id="3cc720e4-6f49-82c0-b9df-013296b0b307" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새 노드가 <code>NotReady → Ready</code>로 바뀌는 과정 확인에 적합함</li></ul><p id="b93720e4-6f49-8284-b17d-81283409a7f4" class="" dir="auto">GKE 문서에서도 새 노드 생성에는 시간이 걸릴 수 있고, 노드가 시작된 뒤에 Pod가 배치된다고 설명함. (<a href="https://docs.cloud.google.com/kubernetes-engine/docs/how-to/capacity-provisioning?utm_source=chatgpt.com">Google Cloud Documentation</a>)</p><hr id="41f720e4-6f49-831a-ab52-01e3aa3c7f0f" dir="auto"/><h1 id="352720e4-6f49-83f1-812a-814453dd0d68" class="" dir="auto">10. DaemonSet 상태 다시 확인</h1><pre id="6da720e4-6f49-83ff-89ba-81c4c6ae0657" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get daemonset -n ds-lab</code></pre><p id="bc9720e4-6f49-83b7-9921-81805c6b3ed3" class="" dir="auto">예상 출력 예시:</p><pre id="6f8720e4-6f49-8327-a301-010bfb1345d9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME       DESIRED   CURRENT   READY   UP-TO-DATE   AVAILABLE   NODE SELECTOR   AGE
+ds-nginx   3         3         3       3            3           &lt;none&gt;          5m</code></pre><h2 id="ebd720e4-6f49-833f-9725-819d0c22058e" class="" dir="auto">핵심 확인 포인트</h2><ul id="8c6720e4-6f49-839f-9f21-816167654324" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>DESIRED</code>가 <code>2 → 3</code>으로 증가했는지 확인</li></ul><ul id="b37720e4-6f49-8319-88a9-01a2fc1f4563" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>CURRENT</code>, <code>READY</code>도 <code>3</code>이 되었는지 확인</li></ul><p id="99f720e4-6f49-8270-85c2-01d3553388cd" class="" dir="auto">이 값이 늘어났다면 <strong>DaemonSet 컨트롤러가 새 노드를 인식했고, 새 노드에도 Pod를 자동 생성했음</strong>을 의미함. (<a href="https://docs.cloud.google.com/kubernetes-engine/docs/tutorials/automatically-bootstrapping-gke-nodes-with-daemonsets?utm_source=chatgpt.com">Google Cloud Documentation</a>)</p><hr id="259720e4-6f49-82e3-b3b1-811d3e338077" dir="auto"/><h1 id="734720e4-6f49-831b-bb3f-0141cc28ce2a" class="" dir="auto">11. 새 노드에 Pod가 자동 생성됐는지 최종 확인</h1><pre id="67d720e4-6f49-83c3-99a6-014e1616dad3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -n ds-lab -o wide</code></pre><p id="d37720e4-6f49-820f-9eab-018e1b8fc1ff" class="" dir="auto">예상 출력 예시:</p><pre id="062720e4-6f49-836a-bc4e-01afe5751117" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">NAME             READY   STATUS    RESTARTS   AGE    IP           NODE
+ds-nginx-2k8l9   1/1     Running   0          6m     10.52.1.10   gke-이니셜-std-cluster-1-default-pool-xxxx
+ds-nginx-7q9xw   1/1     Running   0          6m     10.52.2.11   gke-이니셜-std-cluster-1-default-pool-yyyy
+ds-nginx-p4t8n   1/1     Running   0          40s    10.52.3.12   gke-이니셜-std-cluster-1-default-pool-zzzz</code></pre><hr id="18b720e4-6f49-8358-afdc-0185475fc407" dir="auto"/><h1 id="529720e4-6f49-82c9-b2fb-81066997163a" class="" dir="auto">12. 정리</h1><p id="7d6720e4-6f49-83db-82c0-81931f872df8" class="" dir="auto">이번 실습으로 확인한 핵심은 아래와 같음.</p><ul id="ff2720e4-6f49-83fc-a55e-8131b8aaf28e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deployment는 replica 수 중심으로 동작함</li></ul><ul id="93c720e4-6f49-83a3-9cd4-81c0b11a5d0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DaemonSet은 노드 수 중심으로 동작함</li></ul><ul id="474720e4-6f49-83d1-b008-81a20cacf040" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE에서 노드풀이 확장되면 새 노드가 클러스터에 참여함</li></ul><ul id="4b7720e4-6f49-8392-b862-8104b87e5051" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DaemonSet은 새 노드를 감지해서 해당 노드에 Pod를 자동 생성함 </li></ul><hr id="ab1720e4-6f49-8207-89d2-81513a33e8b6" dir="auto"/><h1 id="cfb720e4-6f49-83bc-89e3-0147cda50dad" class="" dir="auto">13. 정리</h1><p id="c0a720e4-6f49-82eb-9f7d-01e08da752c2" class="" dir="auto">실습 리소스 삭제:</p><pre id="b93720e4-6f49-83b5-b304-015062cbd5a9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete namespace ds-lab</code></pre><p id="270720e4-6f49-8391-ad0a-81ebe3c7ef51" class="" dir="auto">노드 수를 다시 2개로 축소하려면:</p><pre id="5bf720e4-6f49-837d-b6de-817eac7f364f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters resize 이니셜-std-cluster-1 \
+  --node-pool default-pool \
+  --num-nodes 2 \
+  --zone asia-northeast3-c</code></pre><hr id="8bd720e4-6f49-8209-88ec-810354cd7272" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

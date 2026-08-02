@@ -1,0 +1,828 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. Workload Identity Federation</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="d11720e4-6f49-8383-9139-8117b65fb266" class="page sans"><header><h1 class="page-title" dir="auto">실습. Workload Identity Federation</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="a20720e4-6f49-837a-93c3-01309317cbf2" class="" dir="auto">1. 실습 목표</h2><ul id="ff2720e4-6f49-83a5-aec3-011a99c35584" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 GKE Standard 클러스터에 Workload Identity Federation for GKE를 활성화함</li></ul><ul id="c7b720e4-6f49-8371-bdf0-014873e2a296" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes ServiceAccount를 생성함</li></ul><ul id="298720e4-6f49-824f-b615-01e234e4deaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud Storage 버킷에 대한 IAM 권한을 Kubernetes ServiceAccount에 부여함</li></ul><ul id="199720e4-6f49-8218-9677-0111a370ef7b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod에서 별도 서비스 계정 키 파일 없이 Google Cloud API에 접근함</li></ul><ul id="6ce720e4-6f49-8247-9974-01be0222402e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습 종료 후 IAM 권한과 리소스를 정리함</li></ul><hr id="374720e4-6f49-83dd-9413-014a33bdeabb" dir="auto"/><h2 id="903720e4-6f49-83ef-84ca-01515dc55c8a" class="" dir="auto">2. 실습 구성</h2><ol type="1" id="357720e4-6f49-82eb-ab1c-81cb3a106e4e" class="numbered-list" start="1" dir="auto"><li>GKE Standard 클러스터 준비</li></ol><ol type="1" id="09b720e4-6f49-8387-a98d-01192168919a" class="numbered-list" start="2" dir="auto"><li>Workload Identity Federation for GKE 활성화</li></ol><ol type="1" id="140720e4-6f49-822a-891e-81918c0a9051" class="numbered-list" start="3" dir="auto"><li>노드풀에 GKE metadata server 적용</li></ol><ol type="1" id="6c5720e4-6f49-8207-aaa8-01a66cc733f9" class="numbered-list" start="4" dir="auto"><li>Kubernetes 네임스페이스와 ServiceAccount 생성</li></ol><ol type="1" id="8ee720e4-6f49-830e-b88f-01e49e968122" class="numbered-list" start="5" dir="auto"><li>Cloud Storage 버킷 생성</li></ol><ol type="1" id="8df720e4-6f49-8361-af8d-81a8fdca58c2" class="numbered-list" start="6" dir="auto"><li>버킷 권한을 KSA에 부여</li></ol><ol type="1" id="230720e4-6f49-8268-8198-819b4b74d8a8" class="numbered-list" start="7" dir="auto"><li>테스트 Pod 실행</li></ol><ol type="1" id="e65720e4-6f49-82b4-a441-01dd6d65063f" class="numbered-list" start="8" dir="auto"><li>Pod 내부에서 인증 및 접근 확인</li></ol><ol type="1" id="c8c720e4-6f49-82a6-b765-81b22d804cff" class="numbered-list" start="9" dir="auto"><li>리소스 정리</li></ol><hr id="323720e4-6f49-82b2-8c34-01275dc84f2a" dir="auto"/><h2 id="e37720e4-6f49-8216-acc3-016ee04ec667" class="" dir="auto">3. 사전 준비</h2><h2 id="fe0720e4-6f49-82f8-96fe-0112e65b4e75" class="" dir="auto">3-1. 필요한 권한</h2><p id="9ee720e4-6f49-8354-a7ee-01511c4b9e6a" class="" dir="auto">실습용 계정에는 최소한 다음 역할이 있어야 함.</p><ul id="5f5720e4-6f49-8206-b2a0-81d64670edc4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>roles/container.admin</code></li></ul><ul id="9c0720e4-6f49-8334-a175-817ae4f7b2a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>roles/iam.serviceAccountAdmin</code></li></ul><p id="830720e4-6f49-82f0-94f1-81cdaf6d1cf2" class="" dir="auto">또한 프로젝트에서 <strong>IAM Service Account Credentials API</strong>도 활성화돼 있어야 함.</p><hr id="b9b720e4-6f49-8387-98ba-819fc7055062" dir="auto"/><h2 id="622720e4-6f49-835e-962a-01e48ce8b975" class="" dir="auto">3-2. 환경 변수 설정</h2><p id="7f0720e4-6f49-8323-b6f8-81ee8b8f6e13" class="" dir="auto">Cloud Shell에서 아래 값을 먼저 설정함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="83b720e4-6f49-83fe-a034-81b803f3513a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export PROJECT_ID=$(gcloud config get-value project)
+export CLUSTER_NAME=이니셜-std-cluster-1
+export LOCATION=asia-northeast3-c
+export NODEPOOL_NAME=이니셜-node-pool
+export NAMESPACE=demo-wif
+export KSA_NAME=ksa-demo
+export BUCKET_NAME=${PROJECT_ID}-wif-demo-$(date +%s)</code></pre><p id="21f720e4-6f49-838c-8b9a-015cfd9d4310" class="" dir="auto">프로젝트 번호도 함께 변수로 저장함.</p><pre id="a50720e4-6f49-838d-bd30-014521d75aee" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format=&#x27;value(projectNumber)&#x27;)</code></pre><p id="692720e4-6f49-82a8-839d-81037227376e" class="" dir="auto">확인:</p><pre id="556720e4-6f49-822e-a6c9-81752bf00444" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">echo $PROJECT_ID
+echo $PROJECT_NUMBER
+echo $CLUSTER_NAME
+echo $LOCATION</code></pre><hr id="505720e4-6f49-821c-9e2f-01c32426f292" dir="auto"/><h2 id="bdb720e4-6f49-82f3-b268-0178676e4870" class="" dir="auto">4. 실습 1 - API 활성화</h2><p id="bb4720e4-6f49-82d3-8e10-017d751e2aa0" class="" dir="auto">필요 API를 활성화함.</p><pre id="65d720e4-6f49-8241-91fa-01b5c82d7420" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud services enable container.googleapis.com
+gcloud services enable iamcredentials.googleapis.com
+gcloud services enable storage.googleapis.com</code></pre><hr id="91c720e4-6f49-82e9-8be6-8183b554836b" dir="auto"/><h2 id="cd0720e4-6f49-82e2-9f0f-0135d0ab74e9" class="" dir="auto">5. 실습 2 - Standard 클러스터 준비</h2><p id="b07720e4-6f49-8322-b648-01cab48c49e8" class="" dir="auto">없다면 최소 설정으로 생성함.</p><pre id="48c720e4-6f49-831c-9cf5-81fe75c3eb4e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters create $CLUSTER_NAME \
+  --zone=$LOCATION</code></pre><p id="205720e4-6f49-827d-938e-01e21ba777eb" class="" dir="auto">생성 확인:</p><pre id="74b720e4-6f49-8211-8897-8176ca9bb0e3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters list</code></pre><p id="31e720e4-6f49-82cc-b5fb-0193711e65b2" class="" dir="auto">클러스터 접속 정보 등록:</p><pre id="e1d720e4-6f49-8362-8dec-01bbfbdc88ae" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials $CLUSTER_NAME \
+  --zone=$LOCATION</code></pre><hr id="c03720e4-6f49-82fd-89d3-0182b22ffb42" dir="auto"/><h2 id="481720e4-6f49-82d8-b303-01b4d22607a1" class="" dir="auto">6. 실습 3 - 클러스터에 Workload Identity Federation for GKE 활성화</h2><h2 id="8a9720e4-6f49-82a5-8b92-012c3b473d1f" class="" dir="auto">6-1. gcloud로 활성화</h2><p id="550720e4-6f49-8356-8e70-818580b971ac" class="" dir="auto">기존 Standard 클러스터에 Workload Identity Federation for GKE를 활성화함.</p><pre id="cf8720e4-6f49-83d7-91a6-01fbe68fa10a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters update $CLUSTER_NAME \
+  --location=$LOCATION \
+  --workload-pool=${PROJECT_ID}.svc.id.goog</code></pre><hr id="953720e4-6f49-828f-8545-0163976533a1" dir="auto"/><h2 id="2e3720e4-6f49-839c-8542-81be5b972b50" class="" dir="auto">6-2. 활성화 여부 확인</h2><pre id="9f9720e4-6f49-8327-a83e-017db5eb5b07" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters describe $CLUSTER_NAME \
+  --location=$LOCATION \
+  --format=&quot;value(workloadIdentityConfig.workloadPool)&quot;</code></pre><p id="210720e4-6f49-8234-863a-81810b8fcfd9" class="" dir="auto">정상이라면 다음과 비슷하게 보임.</p><pre id="c51720e4-6f49-83bc-92e7-81e943ba87de" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">PROJECT_ID.svc.id.goog</code></pre><hr id="e95720e4-6f49-82ea-9b83-01412c23b9a5" dir="auto"/><h2 id="e0c720e4-6f49-8252-873f-8152ad7796be" class="" dir="auto">7. 실습 4 - 노드풀에 GKE metadata server 적용</h2><p id="7ca720e4-6f49-83cd-a4da-01db268dd978" class="" dir="auto">클러스터에서 기능을 켰더라도, Standard에서는 노드풀에도 설정이 필요함.</p><pre id="1f5720e4-6f49-8330-907b-01fffd345bb6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container node-pools update $NODEPOOL_NAME \
+  --cluster=$CLUSTER_NAME \
+  --location=$LOCATION \
+  --workload-metadata=GKE_METADATA</code></pre><hr id="6e5720e4-6f49-82c7-bc0e-010ca47bd3f6" dir="auto"/><h2 id="d6a720e4-6f49-8261-9a64-016ecf374db4" class="" dir="auto">7-2. 노드풀 적용 여부 확인</h2><pre id="0f0720e4-6f49-82b7-8e90-81a41093e56e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container node-pools describe $NODEPOOL_NAME \
+  --cluster=$CLUSTER_NAME \
+  --location=$LOCATION \
+  --format=&quot;value(config.workloadMetadataConfig.mode)&quot;</code></pre><p id="282720e4-6f49-82c1-8c17-812493f28443" class="" dir="auto">정상이라면 다음과 비슷하게 보임.</p><pre id="370720e4-6f49-83bb-a09b-811635be1793" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">GKE_METADATA</code></pre><hr id="734720e4-6f49-8288-a2e7-01d20e2eb50c" dir="auto"/><h2 id="3a0720e4-6f49-8295-8d69-01f2c6f71991" class="" dir="auto">8. 실습 5 - 네임스페이스와 Kubernetes ServiceAccount 생성</h2><p id="edb720e4-6f49-828d-a52e-811ba591e8e7" class="" dir="auto">네임스페이스 생성:</p><pre id="bd4720e4-6f49-82e4-ba35-0123ac57bb4a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create namespace $NAMESPACE</code></pre><p id="df2720e4-6f49-825d-95e9-81d0e35666b4" class="" dir="auto">Kubernetes ServiceAccount 생성:</p><pre id="e7c720e4-6f49-821e-842c-81193bde3d96" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create serviceaccount $KSA_NAME --namespace $NAMESPACE</code></pre><p id="9a4720e4-6f49-83c2-9819-81bae4073c23" class="" dir="auto">확인:</p><pre id="24a720e4-6f49-82ed-911f-8158828e42fe" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get sa -n $NAMESPACE</code></pre><hr id="621720e4-6f49-82d8-a7a6-0163f70d0f41" dir="auto"/><h2 id="57d720e4-6f49-834c-9b36-010104943ab0" class="" dir="auto">9. 실습 6 - Cloud Storage 버킷 생성</h2><p id="e07720e4-6f49-83da-93ae-0127ef01781e" class="" dir="auto">
+</p><p id="e6a720e4-6f49-83ed-931e-01324c00d1b5" class="" dir="auto">검증용으로 빈 버킷을 하나 생성함.</p><pre id="ca1720e4-6f49-831a-98cc-0191d810b8f3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud storage buckets create gs://$BUCKET_NAME</code></pre><hr id="a3f720e4-6f49-828c-b9e2-019ff3573db6" dir="auto"/><h2 id="7da720e4-6f49-837f-8bc5-010d0da28eb2" class="" dir="auto">10. 실습 7 - 버킷 접근 권한을 KSA에 부여</h2><p id="c83720e4-6f49-821f-b01f-0171b495d8e8" class="" dir="auto">Kubernetes ServiceAccount에 직접 IAM principal 형식으로 권한을 부여함.</p><pre id="ae0720e4-6f49-83a8-8359-816b31f835bf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud storage buckets add-iam-policy-binding gs://$BUCKET_NAME \
+  --role=roles/storage.objectViewer \
+  --member=principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA_NAME} \
+  --condition=None</code></pre><hr id="3ae720e4-6f49-837e-8586-015473618db7" dir="auto"/><h2 id="f2f720e4-6f49-832e-88de-0125ec62c5a9" class="" dir="auto">11. 실습 8 - 테스트 Pod 배포</h2><p id="00e720e4-6f49-822d-9437-817524bd72f8" class="" dir="auto">아래 YAML 파일을 작성함.</p><p id="9cb720e4-6f49-8236-b707-81994a1130cc" class="" dir="auto">파일명: <code>wif-test-pod.yaml</code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="2f4720e4-6f49-82d7-84ba-01c930482fbb" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: wif-test-pod
+  namespace: demo-wif
+spec:
+  serviceAccountName: ksa-demo
+  containers:
+  - name: cloud-sdk
+    image: google/cloud-sdk:slim
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+      - sleep 3600</code></pre><p id="4ef720e4-6f49-822b-9217-816fdde6f4d9" class="" dir="auto">배포:</p><pre id="554720e4-6f49-83c9-9165-8137e4fa10ee" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f wif-test-pod.yaml</code></pre><p id="fda720e4-6f49-83c3-a342-01f78739e6fc" class="" dir="auto">상태 확인:</p><pre id="fda720e4-6f49-83d2-8b88-01a70c4f4f44" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pod -n $NAMESPACE</code></pre><p id="0ee720e4-6f49-83bc-a13d-81f2e8cb69f7" class="" dir="auto"><code>Running</code> 상태가 될 때까지 확인함.</p><hr id="332720e4-6f49-838d-93d1-012cfb0629fb" dir="auto"/><h2 id="073720e4-6f49-839a-9474-0116fd3832bd" class="" dir="auto">12. 실습 9 - Pod 내부에서 인증 확인</h2><p id="c77720e4-6f49-831a-8b99-0184607367e2" class="" dir="auto">Pod 안으로 접속:</p><pre id="059720e4-6f49-824d-bc83-0191c8b9f4a0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it -n $NAMESPACE wif-test-pod -- /bin/sh</code></pre><p id="0b6720e4-6f49-838e-bab5-01a33e21299b" class="" dir="auto">Pod 내부에서 액세스 토큰 요청 테스트:</p><pre id="0a1720e4-6f49-8281-bbd4-016e08daefde" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -H &quot;Metadata-Flavor: Google&quot; \
+  http://169.254.169.254/computeMetadata/v1/instance/service-accounts/default/token</code></pre><p id="9c0720e4-6f49-8205-bcab-811600405ae8" class="" dir="auto">정상이라면 JSON 형태의 토큰 정보가 출력됨.</p><p id="4f2720e4-6f49-8348-b9f1-811ec7814484" class="" dir="auto">예시 형태:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="cc5720e4-6f49-83b5-b492-81077ce2b632" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;access_token&quot;: &quot;...&quot;,
+  &quot;expires_in&quot;: 3599,
+  &quot;token_type&quot;: &quot;Bearer&quot;
+}</code></pre><hr id="624720e4-6f49-8339-b50f-817e52285945" dir="auto"/><h2 id="fad720e4-6f49-82ce-8968-01049f1d6046" class="" dir="auto">13. 실습 10 - 버킷 접근 테스트</h2><p id="519720e4-6f49-8347-b3e4-017c57c62a11" class="" dir="auto">Pod 내부에서 아래 명령 실행:</p><pre id="f7c720e4-6f49-82b8-85ba-0184844f6caf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud storage ls gs://$BUCKET_NAME</code></pre><p id="47a720e4-6f49-8221-85e9-81013447d0c9" class="" dir="auto">또는 파일이 없더라도 버킷 자체 접근이 되는지 확인:</p><pre id="c3c720e4-6f49-8242-912f-01e1d6ab2ab8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud storage buckets describe gs://$BUCKET_NAME</code></pre><p id="215720e4-6f49-82b1-b005-812180febc92" class="" dir="auto">ls 명령은 실행되지만 describe 명령은 거부된다.   현재 부여된 역할은 <code><strong>roles/storage.objectViewer</strong></code> 이다. 이 역할에는 <code>storage.objects.get</code>, <code>storage.objects.list</code> 등 객체 관련 권한은 들어있으나, 버킷의 설정을 보는 <code>storage.buckets.get</code> 권한이 포함되어 있지 않다.<br/></p><ul id="0d6720e4-6f49-8336-b03d-01e6c88800be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">describe 할 수 있는 역할을 부여한다.</li></ul><pre id="d31720e4-6f49-831f-bb92-81ea65383b8b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud storage buckets add-iam-policy-binding gs://$BUCKET_NAME \
+  --role=roles/storage.legacyBucketReader \
+  --member=principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloadIdentityPools/${PROJECT_ID}.svc.id.goog/subject/ns/${NAMESPACE}/sa/${KSA_NAME}</code></pre><ul id="4b1720e4-6f49-8220-aeb7-8147b59c0c59" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Storage Admin 권한 부여 (가장 확실함)</li></ul><p id="2a0720e4-6f49-8322-8e48-81e225d59da6" class="" dir="auto">모든 권한을 부여하여 <code>describe</code> 및 수정까지 가능하게 한다.</p><pre id="cfd720e4-6f49-8292-b5da-01267763f16b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud storage buckets add-iam-policy-binding gs://$BUCKET_NAME \
+  --role=roles/storage.admin \
+  --member=principal://iam.googleapis.com/projects/${PROJECT_NUMBER}/locations/global/workloa</code></pre><h3 id="89f720e4-6f49-8223-8017-01e9e1610c70" class="" dir="auto">확인 포인트</h3><ul id="121720e4-6f49-8371-8379-014745144fdd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">별도 JSON 키 파일 없이 접근되는지 확인</li></ul><ul id="652720e4-6f49-833f-9e56-81b73ce36005" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Permission denied</code>가 아니라 정상 응답이 오는지 확인</li></ul><ul id="c6b720e4-6f49-82b4-ba9d-0127fb0dd0af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 Pod는 <code>ksa-demo</code>를 사용하고 있으므로, 버킷 권한이 정확히 KSA 단위로 적용된 것임</li></ul><hr id="ca8720e4-6f49-8262-9b2b-016d3edc1f67" dir="auto"/><p id="39d720e4-6f49-8257-97ea-8152e2c54561" class="" dir="auto">
+</p><h2 id="c4b720e4-6f49-835b-804e-814152b599cc" class="" dir="auto">14. 실습 11 - 권한이 없는 경우 비교 테스트</h2><p id="a99720e4-6f49-82f6-ae11-810e669eb4ea" class="" dir="auto">권한 차이를 보여주기 위해 별도 ServiceAccount 없이 Pod를 하나 더 만들어도 좋음.</p><p id="669720e4-6f49-8338-ad94-81f250091cba" class="" dir="auto">파일명: <code>wif-noauth-pod.yaml</code></p><pre id="6c0720e4-6f49-8381-a95e-81f8770f6788" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: wif-noauth-pod
+  namespace: demo-wif
+spec:
+  containers:
+  - name: cloud-sdk
+    image: google/cloud-sdk:slim
+    command: [&quot;/bin/sh&quot;, &quot;-c&quot;]
+    args:
+      - sleep 3600</code></pre><p id="42b720e4-6f49-82b7-9cfc-0122effc39d7" class="" dir="auto">배포:</p><pre id="841720e4-6f49-8275-80fe-0195d64c9a08" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f wif-noauth-pod.yaml</code></pre><p id="4f9720e4-6f49-824f-aad5-8182c90fa0d6" class="" dir="auto">접속:</p><pre id="fad720e4-6f49-83d1-a0d1-01aae1d4b289" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it -n $NAMESPACE wif-noauth-pod -- /bin/sh</code></pre><p id="a5f720e4-6f49-83e7-a4e3-81ed614667c5" class="" dir="auto">버킷 조회 시도:</p><pre id="5aa720e4-6f49-824c-8f48-01206ccefcc9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud storage ls gs://$BUCKET_NAME</code></pre><h3 id="056720e4-6f49-8368-95df-010a288b3138" class="" dir="auto">결과</h3><ul id="e1d720e4-6f49-83d0-9585-01bff0278b2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ksa-demo</code>를 사용하는 Pod는 접근 가능</li></ul><ul id="831720e4-6f49-82b9-87af-011ab3c293fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">권한을 받지 않은 Pod는 접근 실패 가능</li></ul><p id="2c6720e4-6f49-828d-a7b2-01ded829ab78" class="" dir="auto">결과적으로 <strong>노드 서비스 계정 전체 권한에 기대지 않고, 워크로드 단위로 권한을 분리</strong>하는 효과.</p><p id="803720e4-6f49-82de-b53f-016fe1bc4f01" class="" dir="auto"> Workload Identity Federation for GKE는 각 애플리케이션에 세분화된 ID와 권한을 부여하기 위한 방식</p><hr id="744720e4-6f49-8399-886f-017448b0f4c7" dir="auto"/><p id="610720e4-6f49-8363-8614-01c7d867c60a" class="" dir="auto">
+</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

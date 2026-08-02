@@ -1,0 +1,869 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. GKE NetworkPolicy</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="0a4720e4-6f49-83e9-aa24-01a558571504" class="page sans"><header><h1 class="page-title" dir="auto">실습. GKE NetworkPolicy</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="e8c720e4-6f49-8342-992b-018b3b2a4cd6" class="" dir="auto">1. 실습 목표</h2><p id="895720e4-6f49-83f5-8073-016cdb645465" class="" dir="auto">GKE 클러스터에서 <strong>Kubernetes NetworkPolicy</strong>를 이용해 Pod 간 통신을 제어하는 방법을 확인한다. Kubernetes의 NetworkPolicy는 <strong>IP와 포트 수준에서 Pod 트래픽 흐름을 제어하는 리소스</strong>이며, 이를 통해 특정 Pod만 접근 허용하거나 특정 방향의 통신만 허용할 수 있다.</p><ul id="fa5720e4-6f49-8281-999c-81657e260fa7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autopilot 클러스터를 생성할 수 있음</li></ul><ul id="546720e4-6f49-83a5-bcd6-013f8573653e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 상태에서 Pod 간 통신이 가능한지 확인할 수 있음</li></ul><ul id="d10720e4-6f49-8206-8c9e-8139f20d0327" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 Pod에 대해 ingress 기본 차단 정책을 적용할 수 있음</li></ul><ul id="8d4720e4-6f49-83c4-8edc-810efe633dd6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 라벨을 가진 Pod만 접근 허용하도록 구성할 수 있음</li></ul><ul id="38a720e4-6f49-82b8-a032-8153d31aa80f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ingress와 egress 정책 차이를 이해할 수 있음</li></ul><hr id="60f720e4-6f49-83da-a412-0160f16309c5" dir="auto"/><h2 id="9c7720e4-6f49-830a-9f4b-01b4e5102bc8" class="" dir="auto">2. NetworkPolicy란</h2><p id="af7720e4-6f49-82ee-b615-81067e186f15" class="" dir="auto">NetworkPolicy는 <strong>Pod 단위의 네트워크 접근제어 정책</strong>이다.</p><p id="a65720e4-6f49-83f9-b4c8-814af2ae82ed" class="" dir="auto">이 정책은 <strong>어떤 Pod가 어떤 Pod와 통신 가능한지</strong>를 IP/포트 레벨에서 제어한다. 다만 NetworkPolicy API가 있다고 해서 무조건 동작하는 것은 아니고, 실제 네트워크 플러그인이 정책 enforcement를 지원해야 한다. GKE는 이 enforcement를 지원한다.</p><p id="354720e4-6f49-8254-a986-01112c2eecb4" class="" dir="auto">중요한 점은 다음과 같다.</p><ul id="a81720e4-6f49-82f8-a7c2-015001ee470f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본적으로 Pod 간 통신은 허용되는 상태임</li></ul><ul id="b4a720e4-6f49-838e-8f1f-81eb16e981ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NetworkPolicy가 적용되면 <strong>정책 대상 Pod가 격리됨</strong></li></ul><ul id="33b720e4-6f49-82a6-994b-01122dc2e534" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Ingress</code>는 <strong>들어오는 트래픽</strong></li></ul><ul id="1e9720e4-6f49-8353-af66-012276c4f258" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Egress</code>는 <strong>나가는 트래픽</strong></li></ul><ul id="916720e4-6f49-827b-984f-814ec45ceb61" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정책은 “허용 목록” 중심으로 생각하는 것이 이해하기 쉬움</li></ul><p id="613720e4-6f49-8270-82ad-01a0ee11197d" class="" dir="auto">즉, 어떤 Pod에 정책이 적용되면 그 Pod는 이제 “아무나 접근 가능한 상태”가 아니라, <strong>정책에서 허용한 대상만 접근 가능한 상태</strong>가 됨.</p><p id="6e0720e4-6f49-83b6-aeef-017b167d010c" class="" dir="auto">
+</p><ul id="73f720e4-6f49-825c-82bd-81a6b4db8b09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autopilot 모드에서는 기본적으로 활성화되며, Standard 모드에서는 클러스터 생성시 활성화해야 사용가능함.</li></ul><hr id="632720e4-6f49-8269-b04e-81435f625ccb" dir="auto"/><h2 id="135720e4-6f49-825a-b392-01aae92cb646" class="" dir="auto">3. 실습 시나리오</h2><p id="94e720e4-6f49-83fd-a63d-0170a25882ec" class="" dir="auto">실습에서는 Autopilot 모드 클러스터를 사용함.</p><ol type="1" id="511720e4-6f49-8247-8187-8167497589c4" class="numbered-list" start="1" dir="auto"><li>Autopilot 클러스터 생성</li></ol><ol type="1" id="fcc720e4-6f49-8210-b2ff-815ddb52a130" class="numbered-list" start="2" dir="auto"><li><code>np-demo</code> 네임스페이스 생성</li></ol><ol type="1" id="518720e4-6f49-830b-a89a-811f475057cb" class="numbered-list" start="3" dir="auto"><li><code>server</code> Pod 생성</li></ol><ol type="1" id="8c3720e4-6f49-82a7-bd71-81b3c9c18edf" class="numbered-list" start="4" dir="auto"><li><code>client-allowed</code>, <code>client-blocked</code> Pod 생성</li></ol><ol type="1" id="f41720e4-6f49-825a-8032-818ed11cc13f" class="numbered-list" start="5" dir="auto"><li>정책 적용 전 두 Pod 모두 <code>server</code> 접속 가능 여부 확인</li></ol><ol type="1" id="0d2720e4-6f49-8286-9397-8181d2e5b3d0" class="numbered-list" start="6" dir="auto"><li><code>server</code>에 대해 기본 차단 정책 적용</li></ol><ol type="1" id="779720e4-6f49-82a5-9d7d-015c959f3be7" class="numbered-list" start="7" dir="auto"><li>두 client 모두 차단되는지 확인</li></ol><ol type="1" id="a9b720e4-6f49-82f6-8efc-01a45357d1d1" class="numbered-list" start="8" dir="auto"><li><code>client-allowed</code>만 허용하는 정책 적용</li></ol><ol type="1" id="2be720e4-6f49-82bf-88e8-819c0ef5500b" class="numbered-list" start="9" dir="auto"><li>허용/차단 결과 비교 확인</li></ol><ol type="1" id="daa720e4-6f49-82a7-b896-81a323ae5ebc" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>egress 정책 예시 확인</li></ol><hr id="241720e4-6f49-83f2-a3e5-0193cf832c66" dir="auto"/><h2 id="528720e4-6f49-8262-91fc-814de1154a25" class="" dir="auto">4. 실습 환경 준비</h2><h3 id="a5e720e4-6f49-8253-b367-81a10f6ae75a" class="" dir="auto">4-1. 환경 변수 설정</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="9fb720e4-6f49-8370-b17a-0163ae828efb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export PROJECT_ID=$(gcloud config get-value project)
+export REGION=asia-northeast3
+export CLUSTER_NAME=np-autopilot-cluster
+export VPCNETWORK=kdtmsp-vpc
+export GKESUBNET=auto-subnet</code></pre><p id="952720e4-6f49-83b7-acdd-817e13dbef5f" class="" dir="auto">명령 설명:</p><ul id="99b720e4-6f49-8389-baf4-01a57c28ca09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PROJECT_ID는 현재 설정된 GCP 프로젝트 ID를 자동으로 가져옴</li></ul><ul id="7aa720e4-6f49-829e-a78b-8119172ef8f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">REGION은 클러스터 생성 리전임</li></ul><ul id="cf9720e4-6f49-820c-828a-01d0d5a72029" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CLUSTER_NAME은 생성할 클러스터 이름임</li></ul><ul id="0db720e4-6f49-8363-94b5-814d36644fb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPCNETWORK는 cluster를 생성할 VPC네트워크임</li></ul><ul id="870720e4-6f49-8395-9451-014b217dc7d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKESUBNET은 클러스터가 생성될 서브넷임. (이때 서브넷에 파드가 생성될 secondary range 가 필요함.  서비스는 생성하지 않아도 됨.)</li></ul><p id="552720e4-6f49-8395-9f0b-013258541776" class="" dir="auto">확인:</p><pre id="99b720e4-6f49-83ba-b243-81c7becca91d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">echo $PROJECT_ID
+echo $REGION
+echo $CLUSTER_NAME
+echo $VPCNETWORK
+echo $GKESUBNET</code></pre><hr id="0e0720e4-6f49-83bd-aeb2-01c37670d931" dir="auto"/><h3 id="1f7720e4-6f49-8297-b20d-01e7b936f4e7" class="" dir="auto">4-2. Autopilot 클러스터 생성</h3><pre id="f09720e4-6f49-83aa-8874-815c4ee37cd1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters create-auto $CLUSTER_NAME \
+  --region $REGION \
+  --network $VPCNETWORK \
+  --subnetwork $GKESUBNET</code></pre><p id="fee720e4-6f49-837b-a7e5-810169234c38" class="" dir="auto">이 명령은 <strong>Autopilot 클러스터를 생성하는 명령</strong>이다.</p><p id="483720e4-6f49-82c9-95ad-01e4aa9e2b2a" class="" dir="auto">
+</p><p id="a24720e4-6f49-8248-b87c-01d2cef57cab" class="" dir="auto">클러스터 확인:</p><pre id="ea0720e4-6f49-83ed-bbae-816768412c5e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters list</code></pre><hr id="57d720e4-6f49-82fe-afd7-01a21ac32d5b" dir="auto"/><h3 id="81d720e4-6f49-820c-94f8-8114a0b08b07" class="" dir="auto">4-3. kubectl 인증 정보 가져오기</h3><pre id="0e2720e4-6f49-83cb-9bd6-81828eda6bf9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials $CLUSTER_NAME --region $REGION</code></pre><p id="3ea720e4-6f49-83ba-8f67-81e1f68aa503" class="" dir="auto">명령 설명:</p><ul id="973720e4-6f49-8265-9e61-01cda5ba4534" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 명령을 실행하면 현재 PC의 kubeconfig에 GKE 접속 정보가 등록됨</li></ul><ul id="db7720e4-6f49-831f-98a3-019a7710c810" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 <code>kubectl</code> 명령으로 클러스터 리소스를 조회하고 생성할 수 있게 됨</li></ul><p id="b6d720e4-6f49-8369-a740-8186530cc55e" class="" dir="auto">노드 확인:</p><pre id="906720e4-6f49-8315-a06f-019ad62f33b7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes</code></pre><p id="589720e4-6f49-82a5-8cfb-813371f7bf16" class="" dir="auto">Autopilot이어도 내부적으로 워크로드가 올라갈 노드는 존재하므로 <code>kubectl get nodes</code> 결과가 보임.</p><p id="de4720e4-6f49-823f-bb6d-8167d8dfd422" class="" dir="auto">다만, 파드가 없으면 노드가 보이지 않을 수 있음. </p><hr id="c19720e4-6f49-83dd-8ef4-815b7e6d1576" dir="auto"/><h2 id="75e720e4-6f49-83c9-9573-01d51e0d252c" class="" dir="auto">5. 네임스페이스와 테스트 Pod 생성</h2><h3 id="0eb720e4-6f49-8397-ba22-01f87c7c8bd1" class="" dir="auto">5-1. 네임스페이스 생성</h3><pre id="f68720e4-6f49-8350-870c-010b5c73d3b8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create namespace np-demo</code></pre><p id="64d720e4-6f49-8216-b1f8-0113c39e50ac" class="" dir="auto">확인:</p><pre id="1ef720e4-6f49-8390-96f1-8197b7bbd542" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ns</code></pre><hr id="2d2720e4-6f49-8371-bd0a-01ddc18162ae" dir="auto"/><h3 id="b01720e4-6f49-8215-a764-81f9cdfd856b" class="" dir="auto">5-2. server Pod 생성</h3><p id="4fb720e4-6f49-827b-b323-8155bc776994" class="" dir="auto">아래 내용을 <code>server.yaml</code> 파일로 저장한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="61b720e4-6f49-8385-9ccc-01d22745378c" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: server
+  namespace: np-demo
+  labels:
+    app: server
+spec:
+  containers:
+  - name: nginx
+    image: nginx:1.25
+    ports:
+    - containerPort: 80</code></pre><p id="2a9720e4-6f49-831b-bc8c-017137a387f2" class="" dir="auto">적용:</p><pre id="c11720e4-6f49-8357-9e46-01bda6e4447c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f server.yaml</code></pre><p id="786720e4-6f49-83a1-9891-817f15cbb0ac" class="" dir="auto">설명:</p><ul id="f4d720e4-6f49-8323-9620-8165c157a16b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>labels.app: server</code><p id="9b8720e4-6f49-82d1-a6e8-81d820920fc7" class="" dir="auto">이 Pod를 NetworkPolicy의 대상으로 선택할 때 사용함</p></li></ul><ul id="124720e4-6f49-8354-977e-0140b5d69709" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>image: nginx:1.25</code><p id="aca720e4-6f49-8219-a7b8-01a620cf30f3" class="" dir="auto">HTTP 요청을 받을 테스트 서버 이미지임</p></li></ul><ul id="db0720e4-6f49-8337-8e06-8199439613b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>containerPort: 80</code><p id="ff6720e4-6f49-8236-83d4-8169fd5c8583" class="" dir="auto">컨테이너가 80번 포트로 요청을 받는다는 의미임</p></li></ul><hr id="bac720e4-6f49-83b6-bfb8-01f9a6905011" dir="auto"/><h3 id="f31720e4-6f49-83ad-8dc4-01204d7511d5" class="" dir="auto">5-3. client Pod 2개 생성</h3><p id="810720e4-6f49-828b-b63e-0163b3667fcb" class="" dir="auto">아래 내용을 <code>clients.yaml</code>로 저장한다.</p><pre id="0ef720e4-6f49-827e-9d3a-81ae1574cbcb" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: client-allowed
+  namespace: np-demo
+  labels:
+    app: client
+    access: allowed
+spec:
+  containers:
+  - name: client
+    image: curlimages/curl:8.7.1
+    command: [&quot;sleep&quot;, &quot;3600&quot;]
+
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: client-blocked
+  namespace: np-demo
+  labels:
+    app: client
+    access: blocked
+spec:
+  containers:
+  - name: client
+    image: curlimages/curl:8.7.1
+    command: [&quot;sleep&quot;, &quot;3600&quot;]</code></pre><p id="2a6720e4-6f49-8214-b749-81778a8b9375" class="" dir="auto">적용:</p><pre id="a8c720e4-6f49-83aa-994e-81016f563dc5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f clients.yaml</code></pre><p id="2a1720e4-6f49-8353-9610-81646c862e48" class="" dir="auto">설명:</p><ul id="b13720e4-6f49-8232-9387-0152cd2bb193" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>curlimages/curl</code> 이미지는 <code>curl</code> 명령이 포함된 테스트용 컨테이너 이미지임</li></ul><ul id="dc6720e4-6f49-8204-ac1d-01a1a4e850fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>sleep 3600</code>은 컨테이너가 바로 종료되지 않도록 유지하는 용도임</li></ul><ul id="02b720e4-6f49-8207-b113-81d517d69434" class="bulleted-list" dir="auto"><li style="list-style-type:disc">두 Pod의 핵심 차이는 라벨이다<ul id="aa3720e4-6f49-8382-af21-81ac61c11cfe" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>client-allowed</code> → <code>access=allowed</code></li></ul><ul id="b2a720e4-6f49-8252-a3ac-018bf11fb7e9" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>client-blocked</code> → <code>access=blocked</code></li></ul></li></ul><p id="2a1720e4-6f49-8240-9d85-8159446f581c" class="" dir="auto">상태 확인:</p><pre id="940720e4-6f49-8208-a587-01fc9526dff0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -n np-demo -o wide</code></pre><hr id="f46720e4-6f49-8285-ad9f-016016f05c80" dir="auto"/><h2 id="84b720e4-6f49-83a7-b10c-816e9003e479" class="" dir="auto">6. 정책 적용 전 통신 확인</h2><p id="e09720e4-6f49-8262-a6d1-0189862b36ab" class="" dir="auto">Kubernetes에서는 일반적으로 정책 적용 전 Pod 간 통신이 허용된다. </p><h3 id="fa7720e4-6f49-83f4-867e-01c902bff967" class="" dir="auto">6-1. server Pod IP 확인</h3><pre id="947720e4-6f49-83b7-9bc5-812701636c61" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pod server -n np-demo -o wide</code></pre><p id="67a720e4-6f49-8219-9ae1-81caf366a488" class="" dir="auto">또는 변수 저장:</p><pre id="66b720e4-6f49-8321-aacf-01de9732fa8b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">export SERVER_IP=$(kubectl get pod server -n np-demo -o jsonpath=&#x27;{.status.podIP}&#x27;)
+echo $SERVER_IP</code></pre><p id="2c3720e4-6f49-8279-a2d8-0146815b29b4" class="" dir="auto">명령 설명:</p><ul id="e1f720e4-6f49-8284-97e5-81fb9e65e425" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>jsonpath</code>는 Kubernetes 리소스의 특정 필드만 추출할 때 사용함</li></ul><ul id="0f5720e4-6f49-83e3-90b5-8134c120a420" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>{.status.podIP}</code>는 현재 Pod IP를 의미함</li></ul><hr id="afe720e4-6f49-82f8-9e03-817e08b0898c" dir="auto"/><h3 id="1d9720e4-6f49-837c-8844-0145a2694ef9" class="" dir="auto">6-2. client-allowed에서 접속</h3><pre id="435720e4-6f49-8250-aecf-819eeaaeb581" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n np-demo client-allowed -- curl -I --max-time 3 http://$SERVER_IP</code></pre><p id="89b720e4-6f49-827a-ae01-81f27ea346d2" class="" dir="auto">예상 결과:</p><pre id="25d720e4-6f49-82e0-a3bb-012a7630f369" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">HTTP/1.1 200 OK</code></pre><hr id="396720e4-6f49-834c-8dd1-01326c841840" dir="auto"/><h3 id="131720e4-6f49-8337-b3a3-015d65f716f0" class="" dir="auto">6-3. client-blocked에서 접속</h3><pre id="663720e4-6f49-83ac-9a13-81a551a37416" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n np-demo client-blocked -- curl -I --max-time 3 http://$SERVER_IP</code></pre><p id="721720e4-6f49-827c-bcab-81d5ce3e930e" class="" dir="auto">예상 결과:</p><pre id="ad3720e4-6f49-827a-8be8-810d4607e689" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">HTTP/1.1 200 OK</code></pre><p id="55a720e4-6f49-831d-9e82-8129afee1537" class="" dir="auto">현재는 아무 정책도 없으므로 둘 다 접속 가능해야 정상이다.</p><hr id="35b720e4-6f49-82c5-bcb5-81c2152bfc2f" dir="auto"/><h2 id="dc9720e4-6f49-82a2-91af-01927cef237c" class="" dir="auto">7. server Pod에 대한 기본 차단 정책 적용</h2><p id="446720e4-6f49-8340-9639-81a9441e1327" class="" dir="auto">이제 <code>server</code> Pod로 들어오는 ingress를 전부 차단한다.</p><h3 id="2fe720e4-6f49-82e7-9284-813c9f8f3811" class="" dir="auto">7-1. 정책 파일 작성</h3><p id="32d720e4-6f49-82a3-9f48-81465760add7" class="" dir="auto">아래 내용을 <code>deny-all-ingress-to-server.yaml</code>로 저장한다.</p><pre id="54f720e4-6f49-82cf-92ce-014a3a081c52" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-all-ingress-to-server
+  namespace: np-demo
+spec:
+  podSelector:
+    matchLabels:
+      app: server
+  policyTypes:
+  - Ingress</code></pre><p id="884720e4-6f49-8328-9d8e-8148e1e895da" class="" dir="auto">적용:</p><pre id="0ca720e4-6f49-8394-951a-81b889dbda2f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f deny-all-ingress-to-server.yaml</code></pre><hr id="619720e4-6f49-821d-a3b6-01e4083cde78" dir="auto"/><h3 id="9d7720e4-6f49-8296-898c-8161a9efec15" class="" dir="auto">7-2. YAML 해설</h3><h3 id="e1f720e4-6f49-82ea-8826-8173be0bf91c" class="" dir="auto"><code>podSelector</code></h3><pre id="004720e4-6f49-82e5-9464-01ccaf143f86" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">podSelector:
+  matchLabels:
+    app: server</code></pre><p id="522720e4-6f49-8265-8397-81c0fb39b099" class="" dir="auto">이 정책은 <code>app=server</code> 라벨을 가진 Pod에만 적용된다.</p><p id="cb4720e4-6f49-83a2-b744-811b7e1ad64e" class="" dir="auto">즉, <code>server</code> Pod가 격리 대상이 됨.</p><h3 id="ad7720e4-6f49-83c7-aa63-814ccf3dd908" class="" dir="auto"><code>policyTypes</code></h3><pre id="a86720e4-6f49-83f0-9f21-0112c7c7af4d" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">policyTypes:
+- Ingress</code></pre><p id="84b720e4-6f49-820a-af06-0133fc57e6d4" class="" dir="auto">이 정책은 ingress, 즉 <strong>들어오는 트래픽</strong>에 대해서만 적용됨.</p><p id="e25720e4-6f49-82b8-81a1-81a0fe38fa77" class="" dir="auto">중요한 점은 이 정책에 <code>ingress:</code> 허용 규칙이 없다는 것이다.</p><p id="37c720e4-6f49-839f-bf27-011beecdcde1" class="" dir="auto">따라서 결과적으로는 <strong>server Pod로 들어오는 모든 ingress가 차단됨</strong>.</p><hr id="278720e4-6f49-82b5-9393-818eb7a05515" dir="auto"/><h3 id="583720e4-6f49-8274-8d04-012439069d75" class="" dir="auto">7-3. 차단 확인</h3><pre id="2e6720e4-6f49-8345-ad19-815ca20a4176" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n np-demo client-allowed -- curl -I --max-time 3 http://$SERVER_IP</code></pre><pre id="255720e4-6f49-83f8-aa67-0188e0e4a648" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n np-demo client-blocked -- curl -I --max-time 3 http://$SERVER_IP</code></pre><p id="395720e4-6f49-839c-a040-81a477bed34f" class="" dir="auto">예상 결과:</p><ul id="2fc720e4-6f49-83fe-a5d6-010e2bd97cd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">둘 다 timeout 또는 연결 실패가 발생함</li></ul><p id="e5f720e4-6f49-824e-a6a8-81fbe60d3be2" class="" dir="auto">이 상태는 정상이다.</p><p id="378720e4-6f49-8297-bbda-81155aea28f5" class="" dir="auto">이제 <code>server</code> Pod는 ingress 측면에서 완전히 격리된 상태다.</p><p id="72d720e4-6f49-8260-8ab1-018f005ddf14" class="" dir="auto">정책 확인:</p><pre id="638720e4-6f49-8339-b8ea-8185ffcf9963" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get networkpolicy -n np-demo
+kubectl describe networkpolicy deny-all-ingress-to-server -n np-demo</code></pre><hr id="c81720e4-6f49-83f3-b34d-817709ca6e25" dir="auto"/><h2 id="c25720e4-6f49-83bc-9811-01b843bbdf6f" class="" dir="auto">8. 특정 Pod만 허용하는 정책 적용</h2><p id="841720e4-6f49-8217-a215-012ca2b1b75f" class="" dir="auto">이제 <code>client-allowed</code>만 <code>server</code>에 접근할 수 있도록 허용한다.</p><h3 id="054720e4-6f49-821d-b715-816e4d66f6df" class="" dir="auto">8-1. 허용 정책 파일 작성</h3><p id="654720e4-6f49-8392-ba47-01eb6454197c" class="" dir="auto">아래 내용을 <code>allow-client-allowed-to-server.yaml</code>로 저장한다.</p><pre id="ae7720e4-6f49-83a9-946b-01e55e4a20de" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: allow-client-allowed-to-server
+  namespace: np-demo
+spec:
+  podSelector:
+    matchLabels:
+      app: server
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          access: allowed
+    ports:
+    - protocol: TCP
+      port: 80</code></pre><p id="f30720e4-6f49-8276-9c3d-014e9e954267" class="" dir="auto">적용:</p><pre id="a96720e4-6f49-826c-b6cc-01f089f21ba7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f allow-client-allowed-to-server.yaml</code></pre><hr id="c98720e4-6f49-8307-aba8-019fc402eb4b" dir="auto"/><h3 id="c3e720e4-6f49-837d-a224-81bf9cd3e102" class="" dir="auto">8-2. YAML 해설</h3><h3 id="6c9720e4-6f49-8314-896f-010797cb2bc0" class="" dir="auto"><code>podSelector</code></h3><pre id="0ab720e4-6f49-8221-b2ca-017889d4d106" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">podSelector:
+  matchLabels:
+    app: server</code></pre><p id="404720e4-6f49-8253-85a0-01209fae3a78" class="" dir="auto">이 정책도 <code>server</code> Pod에 적용됨.</p><h3 id="26d720e4-6f49-83e8-9306-81b5fe642846" class="" dir="auto"><code>ingress.from.podSelector</code></h3><pre id="3de720e4-6f49-83cb-865f-011df953672e" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">from:
+- podSelector:
+    matchLabels:
+      access: allowed</code></pre><p id="b4a720e4-6f49-8372-959a-81a17dffafea" class="" dir="auto"><code>access=allowed</code> 라벨을 가진 Pod만 <code>server</code>에 접근 가능하다는 의미다.</p><h3 id="ed0720e4-6f49-8391-addb-81cafad06f60" class="" dir="auto"><code>ports</code></h3><pre id="f72720e4-6f49-82cb-aefa-81e776357ad5" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">ports:
+- protocol: TCP
+  port: 80</code></pre><p id="1e5720e4-6f49-824b-b1f9-018f65a8859f" class="" dir="auto">허용되는 포트는 TCP 80번이다.</p><p id="39e720e4-6f49-8332-bd66-010499de24e7" class="" dir="auto">즉, <code>allowed</code> 라벨이 붙은 Pod라도 80번 포트 외의 다른 포트 접근은 이 규칙으로 허용되지 않음.</p><p id="97e720e4-6f49-82e7-ad18-81f56df5fe26" class="" dir="auto">Kubernetes NetworkPolicy는 허용 규칙을 조합해 동작하며, 적용된 Pod에 대해서는 허용된 트래픽만 통과시키는 방식으로 이해하면 된다. </p><hr id="7a2720e4-6f49-8214-8251-015751f4fae3" dir="auto"/><h3 id="d76720e4-6f49-83d9-bc05-817956475cb8" class="" dir="auto">8-3. 허용/차단 결과 확인</h3><h3 id="bae720e4-6f49-8394-954c-81687e3e1858" class="" dir="auto">허용 Pod 테스트</h3><pre id="810720e4-6f49-8382-80c1-0144707895f5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n np-demo client-allowed -- curl -I --max-time 3 http://$SERVER_IP</code></pre><p id="005720e4-6f49-823e-838f-016e17f554c8" class="" dir="auto">예상 결과:</p><pre id="1a6720e4-6f49-839b-bc3b-8193e4beb827" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">HTTP/1.1 200 OK</code></pre><h3 id="741720e4-6f49-8271-b7ed-8125cd528c1b" class="" dir="auto">차단 Pod 테스트</h3><pre id="18e720e4-6f49-821e-958a-01b311c518d4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n np-demo client-blocked -- curl -I --max-time 3 http://$SERVER_IP</code></pre><p id="d19720e4-6f49-825a-9ffb-01fb1d283c66" class="" dir="auto">예상 결과:</p><ul id="575720e4-6f49-83de-9484-81c9c7096fa5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">timeout 또는 연결 실패</li></ul><p id="6d0720e4-6f49-8221-b996-81aa075aea68" class="" dir="auto">즉, 이제는 다음과 같은 상태가 됨.</p><ul id="c76720e4-6f49-8341-8ef0-01e9cdbbeeb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>client-allowed</code> → 접근 가능</li></ul><ul id="450720e4-6f49-82f3-8215-8150e213edfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>client-blocked</code> → 접근 불가</li></ul><hr id="d16720e4-6f49-8249-926b-0177bf5b192d" dir="auto"/><h2 id="41a720e4-6f49-82ba-bd24-0101a80558e2" class="" dir="auto">9. egress 정책 추가 실습</h2><p id="87b720e4-6f49-8247-922b-81284b8e1e4b" class="" dir="auto">지금까지는 <code>server</code>로 들어오는 ingress를 제어했음.</p><p id="45b720e4-6f49-822b-b09b-01c1093ed114" class="" dir="auto">이번에는 <code>client-blocked</code> Pod가 <strong>밖으로 나가는 통신</strong>을 제한하는 egress 예시를 본다.</p><h3 id="8f5720e4-6f49-82d2-bf82-013dc19a20b8" class="" dir="auto">9-1. egress 차단 정책 작성</h3><p id="d1a720e4-6f49-8209-8301-012191d58a71" class="" dir="auto">아래 내용을 <code>deny-egress-client-blocked.yaml</code>로 저장한다.</p><pre id="594720e4-6f49-8344-8d6a-01fe2375c6c6" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: deny-egress-client-blocked
+  namespace: np-demo
+spec:
+  podSelector:
+    matchLabels:
+      access: blocked
+  policyTypes:
+  - Egress</code></pre><p id="39c720e4-6f49-8376-aedf-8198877a5370" class="" dir="auto">적용:</p><pre id="d33720e4-6f49-833e-b450-01e374d01a22" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f deny-egress-client-blocked.yaml</code></pre><p id="672720e4-6f49-82f7-8549-81d932d45395" class="" dir="auto">설명:</p><ul id="784720e4-6f49-820f-84b0-814885c7f184" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>access=blocked</code> 라벨을 가진 Pod에 적용됨</li></ul><ul id="2fa720e4-6f49-8252-b448-0186936f159f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>policyTypes: Egress</code> 이므로 나가는 통신을 제어함</li></ul><ul id="e77720e4-6f49-831a-80de-81ad0f06635f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">허용 규칙이 없으므로 해당 Pod의 egress가 기본 차단됨</li></ul><hr id="2ea720e4-6f49-82f5-a789-81f04a9619b2" dir="auto"/><h3 id="f1b720e4-6f49-837c-a69e-01ca28dff9a9" class="" dir="auto">9-2. egress 차단 확인</h3><p id="122720e4-6f49-8288-9afd-816deb45664f" class="" dir="auto"><code>client-blocked</code>에서 외부 접속을 시도한다.</p><pre id="70b720e4-6f49-8316-8096-81c7d7bf6b53" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n np-demo client-blocked -- curl -I --max-time 5 https://example.com</code></pre><p id="5cd720e4-6f49-8207-bc9c-81ad5dad9492" class="" dir="auto">예상 결과:</p><ul id="fda720e4-6f49-8229-9ca2-81ee42b61033" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실패하거나 timeout이 발생할 수 있음</li></ul><p id="7e0720e4-6f49-82df-b875-81284ef85922" class="" dir="auto">반면 <code>client-allowed</code>는 egress 정책 대상이 아니므로 다음 테스트는 성공함.</p><pre id="2c9720e4-6f49-830a-8973-81133e9f4de7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n np-demo client-allowed -- curl -I --max-time 5 https://example.com</code></pre><hr id="88e720e4-6f49-831c-b4b9-81eb7af85d07" dir="auto"/><h2 id="c8f720e4-6f49-823b-85cf-015d03d5fbb9" class="" dir="auto">10. 현재 적용된 정책 전체 확인</h2><pre id="bdb720e4-6f49-833b-abd9-016d379127e2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get networkpolicy -n np-demo</code></pre><p id="eb1720e4-6f49-826b-88f0-01da87e44e7d" class="" dir="auto">상세 확인:</p><pre id="d50720e4-6f49-829a-a303-011d8ec983a3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe networkpolicy -n np-demo</code></pre><p id="8cb720e4-6f49-8389-8af8-816b2653c35c" class="" dir="auto">이 명령을 통해 다음을 확인하면 된다.</p><ul id="1d4720e4-6f49-82ad-9e67-01a41a352e31" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Pod가 정책 대상으로 선택됐는지</li></ul><ul id="1a3720e4-6f49-82ad-b4ee-01340b6da439" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ingress인지 egress인지</li></ul><ul id="20d720e4-6f49-831e-a80b-010f06607fb2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 라벨의 Pod가 허용됐는지</li></ul><ul id="ed7720e4-6f49-8389-8a24-81ba5145fe48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 포트가 허용됐는지</li></ul><hr id="19c720e4-6f49-8259-9b27-815cbe223e89" dir="auto"/><h2 id="e34720e4-6f49-8301-98b6-01ff8b8f1591" class="" dir="auto">11. 정리</h2><h3 id="68a720e4-6f49-83c4-9c3b-81b243e00bfa" class="" dir="auto">11-1. 정책이 없을 때</h3><p id="1b6720e4-6f49-839d-b534-01163838f346" class="" dir="auto">모든 Pod가 자유롭게 통신 가능했음</p><h3 id="09b720e4-6f49-831f-80af-818544ba9d4e" class="" dir="auto">11-2. ingress 기본 차단 후</h3><p id="e3a720e4-6f49-8369-819e-8108304dc396" class="" dir="auto"><code>server</code> Pod로 들어오는 모든 트래픽이 차단됐음</p><h3 id="c5d720e4-6f49-8339-9eeb-814377cd19d1" class="" dir="auto">11-3. 특정 라벨 허용 후</h3><p id="5ff720e4-6f49-83a3-bae4-01bb767f69a6" class="" dir="auto"><code>access=allowed</code> 라벨을 가진 Pod만 <code>server</code>의 80번 포트로 접근 가능했음</p><h3 id="e3b720e4-6f49-821c-b06f-81e4025fcc1c" class="" dir="auto">11-4. egress 차단 후</h3><p id="08d720e4-6f49-8245-bd2d-817598cfcc8a" class="" dir="auto"><code>client-blocked</code> Pod의 외부 통신이 제한됐음</p><hr id="107720e4-6f49-82d1-950a-815710c7f1e6" dir="auto"/><h2 id="c7b720e4-6f49-8237-b542-01175ff2ccff" class="" dir="auto">12. Autopilot 실습 시 주의사항</h2><h3 id="22b720e4-6f49-829b-987c-0186418b66e3" class="" dir="auto">12-1. 노드 직접 관리 개념은 약함</h3><p id="4d9720e4-6f49-8244-a78e-8148e83dddbb" class="" dir="auto">Autopilot은 워크로드 중심 운영 모드다.</p><p id="d30720e4-6f49-8394-9b0b-019efefee24c" class="" dir="auto">따라서  “노드 생성/노드풀 설정”보다 “배포 manifest와 정책 적용”에 초점을 두면 됨. </p><h3 id="604720e4-6f49-827c-89ba-8161acd42f38" class="" dir="auto">12-2. 보안 제한이 더 강함</h3><p id="e96720e4-6f49-8313-b56f-811062be2c4e" class="" dir="auto">Autopilot은 기본 보안 정책이 더 강하게 적용된다. 따라서 일부 privileged 워크로드나 특정 host-level 설정은 Standard보다 제약이 있을 수 있다. 하지만 일반적인 nginx, curl, NetworkPolicy 실습은 큰 문제 없이 가능하다. </p><h3 id="ade720e4-6f49-83ae-9b3e-01f60322ea9f" class="" dir="auto">12-3. VPC-native는 기본</h3><p id="b5e720e4-6f49-821b-9930-818b307c0daa" class="" dir="auto">Autopilot은 VPC-native 네트워킹이 기본이며 별도 해제 불가다. 즉, Pod/Service 네트워크 구조가 GKE 권장 방식에 맞춰 기본 제공된다고 보면 됨. </p><hr id="01e720e4-6f49-837b-8245-81247b7eec5b" dir="auto"/><h2 id="338720e4-6f49-8384-bf7f-01fe0151f40d" class="" dir="auto">13. 정리 명령</h2><p id="009720e4-6f49-82dd-980c-81092dbb1a33" class="" dir="auto">실습 종료 후 리소스를 삭제한다.</p><h3 id="b86720e4-6f49-83a7-9d19-01b367d0704c" class="" dir="auto">13-1. 네임스페이스 삭제</h3><pre id="fac720e4-6f49-8309-810e-81b6f0d90e38" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete namespace np-demo</code></pre><h3 id="fff720e4-6f49-8301-a216-0187bc61112c" class="" dir="auto">13-2. 클러스터 삭제</h3><pre id="17c720e4-6f49-821e-bd37-8197ad28a820" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters delete $CLUSTER_NAME --region $REGION</code></pre><p id="985720e4-6f49-8386-a57f-01f7c3dbce02" class="" dir="auto">삭제 확인 메시지가 나오면 <code>y</code> 입력하면 된다.</p><hr id="9ed720e4-6f49-8300-9e8e-019045eb43c8" dir="auto"/><h2 id="a3d720e4-6f49-8352-801a-818dd967d3f8" class="" dir="auto">14. 추가 실습 과제</h2><h3 id="854720e4-6f49-82a2-bcd3-8154b58fba5d" class="" dir="auto">과제 1</h3><p id="835720e4-6f49-832a-b7c5-81b8cee4335f" class="" dir="auto"><code>client-blocked</code>도 허용하되, 80번 포트만 허용되도록 수정해보기</p><h3 id="04c720e4-6f49-8347-a557-8156a63ca12c" class="" dir="auto">과제 2</h3><p id="a4b720e4-6f49-82d8-852e-01104784bfd9" class="" dir="auto"><code>server</code> Pod를 2개로 늘리고, <code>app=server</code> 라벨 전체에 동일 정책이 적용되는지 확인해보기</p><h3 id="5de720e4-6f49-8360-8c0a-81aecc3ae2f3" class="" dir="auto">과제 3</h3><p id="2d8720e4-6f49-83fe-9650-01e1f88c2c89" class="" dir="auto">별도 <code>db</code> Pod를 만들고, <code>server</code>만 <code>db</code>로 접근 가능하도록 egress/ingress 조합 정책 작성해보기</p><h3 id="84c720e4-6f49-82ec-96ee-81ca8c4b1895" class="" dir="auto">과제 4</h3><p id="e1a720e4-6f49-8220-8e28-816778c7790f" class="" dir="auto"><code>namespaceSelector</code>를 활용해서 특정 네임스페이스의 Pod만 접근 가능하도록 바꿔보기</p><hr id="99f720e4-6f49-8301-a406-81d199ca0e41" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,1307 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Bedrock 기반 자연어 SQL 생성 및 Streamlit 시각화 앱 구현</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="2ac720e4-6f49-8317-9cd2-81afb3e5a12e" class="page sans"><header><h1 class="page-title" dir="auto">Bedrock 기반 자연어 SQL 생성 및 Streamlit 시각화 앱 구현</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="f24720e4-6f49-8381-b111-81c80a35ec78" class="" dir="auto">Amazon Bedrock + Athena + Streamlit</h2><hr id="e56720e4-6f49-83a1-b765-01104d219420" dir="auto"/><h1 id="3d1720e4-6f49-8391-a5fa-0153a687b7b0" class="" dir="auto">1. 실습 개요</h1><p id="656720e4-6f49-832f-bdba-01c80e38e403" class="" dir="auto">앞에서 준비한 S3와 Athena 환경을 기반으로 자연어 분석 앱을 구현한다.</p><p id="05c720e4-6f49-826e-a34d-01465d0abb46" class="" dir="auto">사용자는 다음과 같이 한국어로 질문한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="0f7720e4-6f49-825e-9bc2-8115ae2fcbd5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">월별 매출 추이를 보여줘</code></pre><p id="04f720e4-6f49-82a2-8b28-011015e3f713" class="" dir="auto">앱은 이 질문을 Amazon Bedrock에 전달한다.</p><p id="647720e4-6f49-82ad-b4a2-81a3f392368c" class="" dir="auto">Bedrock은 질문을 Athena SQL로 변환한다.</p><p id="58e720e4-6f49-824a-8810-019290e3043b" class="" dir="auto">Athena는 생성된 SQL을 실행해 S3 데이터를 조회한다.</p><p id="44d720e4-6f49-8355-af0d-01ab2e644223" class="" dir="auto">Python은 Athena 결과 CSV를 읽어 pandas DataFrame으로 변환한다.</p><p id="445720e4-6f49-8353-918a-01ca0952e3a0" class="" dir="auto">Streamlit은 결과를 표와 차트로 보여준다.</p><p id="7d4720e4-6f49-820f-bbd1-0157f3b0cdec" class="" dir="auto">2부의 전체 흐름은 다음과 같다.</p><pre id="8bd720e4-6f49-83a6-bab3-8157cbdc25e8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 자연어 질문
+        ↓
+Streamlit 입력창
+        ↓
+Bedrock SQL 생성
+        ↓
+SQL 검증
+        ↓
+Athena 쿼리 실행
+        ↓
+S3 결과 CSV 읽기
+        ↓
+pandas DataFrame 변환
+        ↓
+Streamlit 표/차트 출력</code></pre><hr id="259720e4-6f49-83dd-b397-013707f797bc" dir="auto"/><h1 id="60d720e4-6f49-8237-a9d5-819b78830113" class="" dir="auto">2. 실습 목표</h1><p id="823720e4-6f49-820b-92b3-01f2d0902946" class="" dir="auto">실습을 완료하면 다음을 수행할 수 있다.</p><table id="ab2720e4-6f49-8289-85d9-8108db67f396" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="31b720e4-6f49-82df-a167-811b794c32ba" dir="ltr"><th id="~@RR" class="simple-table-header-color simple-table-header">항목</th><th id="^UVP" class="simple-table-header-color simple-table-header" style="width:430px">목표</th></tr></thead><tbody><tr id="88a720e4-6f49-8230-ba05-812613dab60d" dir="ltr"><td id="~@RR" class="">Bedrock</td><td id="^UVP" class="" style="width:430px">자연어 질문을 Athena SQL로 변환할 수 있다</td></tr><tr id="a41720e4-6f49-8299-9bfd-0149788e4d05" dir="ltr"><td id="~@RR" class="">boto3</td><td id="^UVP" class="" style="width:430px">Python에서 Bedrock Runtime, Athena, S3를 호출할 수 있다</td></tr><tr id="e97720e4-6f49-8339-b770-01a2d92a8558" dir="ltr"><td id="~@RR" class="">SQL 검증</td><td id="^UVP" class="" style="width:430px">모델이 생성한 SQL을 실행 전에 검사할 수 있다</td></tr><tr id="0e9720e4-6f49-8303-aadb-819ea94885ea" dir="ltr"><td id="~@RR" class="">Athena</td><td id="^UVP" class="" style="width:430px">Python 코드로 Athena 쿼리를 실행할 수 있다</td></tr><tr id="fd2720e4-6f49-822f-829d-01dc2c487c60" dir="ltr"><td id="~@RR" class="">pandas</td><td id="^UVP" class="" style="width:430px">Athena 결과를 DataFrame으로 변환할 수 있다</td></tr><tr id="076720e4-6f49-82bc-a73f-01e48d5e47c4" dir="ltr"><td id="~@RR" class="">Streamlit</td><td id="^UVP" class="" style="width:430px">자연어 기반 데이터 분석 웹 앱을 구현할 수 있다</td></tr><tr id="a67720e4-6f49-839b-a30c-810af16fe29e" dir="ltr"><td id="~@RR" class="">Plotly</td><td id="^UVP" class="" style="width:430px">조회 결과를 차트로 시각화할 수 있다</td></tr></tbody></table><hr id="63a720e4-6f49-83c9-913d-018854312d3d" dir="auto"/><h1 id="554720e4-6f49-8316-bcd2-010daf055a46" class="" dir="auto">3. 사전 조건</h1><p id="319720e4-6f49-82b6-bddd-01fb7e2fe890" class="" dir="auto">다음 상태가 준비되어 있어야 한다.</p><pre id="91b720e4-6f49-83e3-b2a6-81e4d5d73e65" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3 버킷 생성 완료
+ecommerce_sales.csv 업로드 완료
+Athena 결과 저장 경로 생성 완료
+Athena 데이터베이스 생성 완료
+ecommerce_sales 테이블 생성 완료
+Athena 조회 테스트 성공
+Bedrock 모델 접근 권한 활성화 완료</code></pre><p id="ed1720e4-6f49-834b-8da4-818b0eab2556" class="" dir="auto">서울 리전을 사용한다.</p><pre id="f89720e4-6f49-8233-a7cc-81986c17d60b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">리전 이름: Asia Pacific (Seoul)
+리전 코드: ap-northeast-2</code></pre><hr id="96b720e4-6f49-8399-b47d-017c16854ff0" dir="auto"/><h1 id="513720e4-6f49-82b3-bb20-01a51b8811a2" class="" dir="auto">4. Python 패키지 추가 설치</h1><p id="751720e4-6f49-8238-afc8-01df81a2154f" class="" dir="auto">1부의 <code>requirements.txt</code>에 웹 화면과 차트 생성을 위한 패키지를 추가한다.</p><p id="e46720e4-6f49-8307-a2fb-817107e063d9" class="" dir="auto">파일명: <code>requirements.txt</code></p><pre id="499720e4-6f49-8266-960b-012cf8acc700" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">boto3
+pandas
+streamlit
+plotly
+python-dotenv</code></pre><p id="e76720e4-6f49-8374-af7f-01404731a609" class="" dir="auto">각 패키지의 역할은 다음과 같다.</p><table id="1ea720e4-6f49-824b-86bc-812268801926" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="333720e4-6f49-8254-84f7-81e2fe95ebfb" dir="ltr"><th id="Z}ek" class="simple-table-header-color simple-table-header">패키지</th><th id="FrX[" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="90f720e4-6f49-839b-a602-810937b00f2b" dir="ltr"><td id="Z}ek" class=""><code>boto3</code></td><td id="FrX[" class="">AWS 서비스를 Python에서 호출한다</td></tr><tr id="e0d720e4-6f49-83c4-870a-01f76344f77f" dir="ltr"><td id="Z}ek" class=""><code>pandas</code></td><td id="FrX[" class="">Athena 결과를 표 형태로 처리한다</td></tr><tr id="6d0720e4-6f49-835e-86ad-8127035c763c" dir="ltr"><td id="Z}ek" class=""><code>streamlit</code></td><td id="FrX[" class="">웹 기반 데이터 분석 화면을 만든다</td></tr><tr id="abf720e4-6f49-82f2-9e93-010bd1dc1be8" dir="ltr"><td id="Z}ek" class=""><code>plotly</code></td><td id="FrX[" class="">차트를 생성한다</td></tr><tr id="51d720e4-6f49-8224-ab2a-013bf91d1c10" dir="ltr"><td id="Z}ek" class=""><code>python-dotenv</code></td><td id="FrX[" class=""><code>.env</code> 파일의 환경 변수를 읽는다</td></tr></tbody></table><p id="3eb720e4-6f49-8352-a6b8-81cef2dee5cc" class="" dir="auto">패키지를 설치한다.</p><pre id="278720e4-6f49-82f7-ae77-81f190367fe5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pip install -r requirements.txt</code></pre><p id="6e2720e4-6f49-83ac-b6d0-81447249cb6a" class="" dir="auto">설치 확인은 다음 명령어로 할 수 있다.</p><pre id="ff8720e4-6f49-8335-9dfb-811ffdf2dc08" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pip list</code></pre><p id="728720e4-6f49-83ea-a07d-01818bfed70c" class="" dir="auto">예상 목록에 다음 패키지가 포함되어야 한다.</p><pre id="dc3720e4-6f49-83fa-bd45-018a20e04723" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">boto3
+pandas
+streamlit
+plotly
+python-dotenv</code></pre><hr id="c1a720e4-6f49-8256-8eed-81428c7aa150" dir="auto"/><h1 id="ffc720e4-6f49-83a3-98cd-010f647c32f9" class="" dir="auto">5. 환경 변수 파일 수정</h1><p id="bff720e4-6f49-82f2-9d7b-8106c5aca674" class="" dir="auto">2부에서는 Bedrock 모델 ID가 필요하다.</p><p id="084720e4-6f49-83c4-afa3-016921e836fe" class="" dir="auto"><code>.env</code> 파일에 다음 항목을 추가한다.</p><pre id="34d720e4-6f49-8344-a209-01a976c1a109" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">BEDROCK_MODEL_ID=서울리전에서_활성화한_모델_ID</code></pre><p id="18b720e4-6f49-822c-81cb-014de5b3e4c1" class="" dir="auto">예시는 다음과 같다.</p><pre id="240720e4-6f49-833d-87cb-81cc8a5de297" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS_REGION=ap-northeast-2
+S3_BUCKET=nlp-s3-analytics-kim-123456789012
+DATA_PREFIX=datasets/ecommerce_sales/
+ATHENA_OUTPUT_PREFIX=athena-results/
+ATHENA_DATABASE=nlp_s3_analytics_db
+ATHENA_TABLE=ecommerce_sales
+BEDROCK_MODEL_ID=amazon.nova-lite-v1:0</code></pre><p id="22c720e4-6f49-83c1-8491-81e71e2a0937" class="" dir="auto">각 항목의 의미는 다음과 같다.</p><table id="b55720e4-6f49-829a-8bc3-010ef2b6810a" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="e11720e4-6f49-8225-9e3e-018ffb816b3e" dir="ltr"><th id="eIYd" class="simple-table-header-color simple-table-header">항목</th><th id="N?gP" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="f12720e4-6f49-83d1-af3d-0102612bbb66" dir="ltr"><td id="eIYd" class=""><code>AWS_REGION</code></td><td id="N?gP" class="">사용할 AWS 리전이다</td></tr><tr id="c39720e4-6f49-8336-8f23-819d3639c2b5" dir="ltr"><td id="eIYd" class=""><code>S3_BUCKET</code></td><td id="N?gP" class="">원천 데이터와 Athena 결과가 저장되는 버킷이다</td></tr><tr id="168720e4-6f49-82ce-9ebc-01ad1c822103" dir="ltr"><td id="eIYd" class=""><code>DATA_PREFIX</code></td><td id="N?gP" class="">CSV 원천 데이터 경로이다</td></tr><tr id="87c720e4-6f49-836f-b752-81429e0c14e3" dir="ltr"><td id="eIYd" class=""><code>ATHENA_OUTPUT_PREFIX</code></td><td id="N?gP" class="">Athena 결과 저장 경로이다</td></tr><tr id="336720e4-6f49-824e-ad82-81613500c301" dir="ltr"><td id="eIYd" class=""><code>ATHENA_DATABASE</code></td><td id="N?gP" class="">Athena 데이터베이스 이름이다</td></tr><tr id="0f8720e4-6f49-83a5-b420-01c1a2332059" dir="ltr"><td id="eIYd" class=""><code>ATHENA_TABLE</code></td><td id="N?gP" class="">Athena 테이블 이름이다</td></tr><tr id="d83720e4-6f49-83d9-953b-8198ced6f396" dir="ltr"><td id="eIYd" class=""><code>BEDROCK_MODEL_ID</code></td><td id="N?gP" class="">Bedrock에서 사용할 모델 ID이다</td></tr></tbody></table><p id="2c8720e4-6f49-83d3-86c4-81034cafb768" class="" dir="auto"><code>BEDROCK_MODEL_ID</code>는 학생 계정과 리전에 따라 다를 수 있다.</p><p id="b33720e4-6f49-8218-9b31-81e5c20639c0" class="" dir="auto">서울 리전에서 사용할 수 있는 모델을 확인한 뒤 <code>.env</code>에 입력한다.</p><p id="9e2720e4-6f49-83eb-8117-818aa4d35022" class="" dir="auto">확인 위치는 다음과 같다.</p><pre id="6f7720e4-6f49-8343-957e-8115b94ec57a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon Bedrock 콘솔
+→ 리전: 서울 ap-northeast-2
+→ Model access
+→ 사용 가능한 모델 확인</code></pre><hr id="e58720e4-6f49-832d-b09c-811e0d487418" dir="auto"/><h1 id="2df720e4-6f49-836a-af4a-01e1b02b8f47" class="" dir="auto">6. Athena 쿼리 실행 함수 작성</h1><h2 id="028720e4-6f49-83b1-b6e6-015c975c9925" class="" dir="auto">6.1 파일 역할</h2><p id="3a1720e4-6f49-8321-9fe6-8136a8df170a" class="" dir="auto">이 파일은 Python 코드에서 Athena SQL을 실행하고 결과를 DataFrame으로 반환하는 공통 함수를 제공한다.</p><p id="c32720e4-6f49-8225-9740-81a983aa0d88" class="" dir="auto">파일명은 다음과 같다.</p><pre id="02c720e4-6f49-830f-8754-81bde3f19e4f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">athena_utils.py</code></pre><p id="9c8720e4-6f49-8339-8795-8172010fa94e" class="" dir="auto">이 파일이 담당하는 작업은 다음과 같다.</p><pre id="69e720e4-6f49-82c3-899e-012766bc6b06" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">.env 파일 읽기
+Athena 클라이언트 생성
+S3 클라이언트 생성
+Athena 쿼리 실행
+쿼리 상태 확인
+S3에 저장된 Athena 결과 CSV 읽기
+pandas DataFrame으로 변환</code></pre><hr id="7ec720e4-6f49-83f4-bec7-813a7dcd4398" dir="auto"/><h2 id="bff720e4-6f49-83b4-90b9-015460f18d6c" class="" dir="auto">6.2 코드 작성</h2><p id="4cf720e4-6f49-83a0-baee-81130acf9161" class="" dir="auto">파일명: <code>athena_utils.py</code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="4ec720e4-6f49-8294-9f34-0127246b12fd" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import os
+import time
+from io import StringIO
+from dotenv import load_dotenv
+import boto3
+import pandas as pd
+
+load_dotenv()
+
+AWS_REGION = os.getenv(&quot;AWS_REGION&quot;, &quot;ap-northeast-2&quot;)
+S3_BUCKET = os.getenv(&quot;S3_BUCKET&quot;)
+ATHENA_OUTPUT_PREFIX = os.getenv(&quot;ATHENA_OUTPUT_PREFIX&quot;, &quot;athena-results/&quot;)
+ATHENA_DATABASE = os.getenv(&quot;ATHENA_DATABASE&quot;, &quot;nlp_s3_analytics_db&quot;)
+
+athena = boto3.client(&quot;athena&quot;, region_name=AWS_REGION)
+s3 = boto3.client(&quot;s3&quot;, region_name=AWS_REGION)
+
+
+def run_athena_query(sql: str) -&gt; pd.DataFrame:
+    if not S3_BUCKET:
+        raise ValueError(&quot;.env 파일에 S3_BUCKET 값을 설정해야 한다.&quot;)
+
+    output_location = f&quot;s3://{S3_BUCKET}/{ATHENA_OUTPUT_PREFIX.strip(&#x27;/&#x27;)}/&quot;
+
+    response = athena.start_query_execution(
+        QueryString=sql,
+        QueryExecutionContext={&quot;Database&quot;: ATHENA_DATABASE},
+        ResultConfiguration={&quot;OutputLocation&quot;: output_location}
+    )
+
+    query_execution_id = response[&quot;QueryExecutionId&quot;]
+
+    while True:
+        status_response = athena.get_query_execution(QueryExecutionId=query_execution_id)
+        state = status_response[&quot;QueryExecution&quot;][&quot;Status&quot;][&quot;State&quot;]
+
+        if state in [&quot;SUCCEEDED&quot;, &quot;FAILED&quot;, &quot;CANCELLED&quot;]:
+            break
+
+        time.sleep(1)
+
+    if state != &quot;SUCCEEDED&quot;:
+        reason = status_response[&quot;QueryExecution&quot;][&quot;Status&quot;].get(&quot;StateChangeReason&quot;, &quot;Unknown&quot;)
+        raise RuntimeError(f&quot;Athena 쿼리 실패: {state}, 원인: {reason}&quot;)
+
+    result_key = f&quot;{ATHENA_OUTPUT_PREFIX.strip(&#x27;/&#x27;)}/{query_execution_id}.csv&quot;
+    obj = s3.get_object(Bucket=S3_BUCKET, Key=result_key)
+    csv_text = obj[&quot;Body&quot;].read().decode(&quot;utf-8&quot;)
+
+    return pd.read_csv(StringIO(csv_text))</code></pre><hr id="439720e4-6f49-82fe-8b3c-0109158720b8" dir="auto"/><h2 id="b3f720e4-6f49-8351-a6ff-01e9fbf863e9" class="" dir="auto">6.3 코드 설명</h2><pre id="1ee720e4-6f49-828e-b2d2-01513632b230" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import os</code></pre><p id="447720e4-6f49-83e6-9797-81b8d175810b" class="" dir="auto">환경 변수를 읽기 위해 사용한다.</p><hr id="42b720e4-6f49-83d1-b00e-0152da646a57" dir="auto"/><pre id="fa5720e4-6f49-822d-9357-8153bc97fee0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import time</code></pre><p id="c30720e4-6f49-8274-9aa8-818cd4f4dfde" class="" dir="auto">Athena 쿼리 상태를 일정 간격으로 확인할 때 사용한다.</p><hr id="046720e4-6f49-8217-ae28-81ce35ec451c" dir="auto"/><pre id="dcf720e4-6f49-825d-9377-81fa8cfcf5eb" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from io import StringIO</code></pre><p id="f4e720e4-6f49-83dd-8d3f-81e615122f86" class="" dir="auto">문자열 형태의 CSV 데이터를 파일처럼 읽기 위해 사용한다.</p><p id="9a0720e4-6f49-8218-8bba-012dbcaacdf8" class="" dir="auto">Athena 결과는 S3에서 문자열로 읽어오므로, pandas가 CSV 파일처럼 처리할 수 있게 <code>StringIO</code>로 감싼다.</p><hr id="681720e4-6f49-837a-9855-0110a1dce2f7" dir="auto"/><pre id="9fb720e4-6f49-83c4-955b-017023eff6a9" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from dotenv import load_dotenv</code></pre><p id="5a6720e4-6f49-82d5-9ddc-813298112bd1" class="" dir="auto"><code>.env</code> 파일을 읽기 위해 사용한다.</p><hr id="c13720e4-6f49-83fb-b874-815ff90121a0" dir="auto"/><pre id="7b7720e4-6f49-82df-a25f-015bfae79b7b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">import boto3</code></pre><p id="eed720e4-6f49-836b-b62c-019520a2ed5d" class="" dir="auto">AWS 서비스 API를 호출하기 위해 사용한다.</p><hr id="56c720e4-6f49-8277-a3ab-01f147a69011" dir="auto"/><pre id="d4f720e4-6f49-82a4-900a-81a7554313d7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import pandas as pd</code></pre><p id="040720e4-6f49-83a3-a4f4-81b8570258fe" class="" dir="auto">Athena 결과 CSV를 DataFrame으로 변환하기 위해 사용한다.</p><hr id="700720e4-6f49-832b-8903-01e2fca41597" dir="auto"/><pre id="ce4720e4-6f49-82c4-ac2d-016154f7035f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">load_dotenv()</code></pre><p id="d55720e4-6f49-8238-a6e6-812ce995dcd6" class="" dir="auto">현재 프로젝트 디렉터리에 있는 <code>.env</code> 파일을 읽는다.</p><hr id="6e9720e4-6f49-835f-8839-81f229102e65" dir="auto"/><pre id="535720e4-6f49-8283-990f-81f341817baa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS_REGION=os.getenv(&quot;AWS_REGION&quot;,&quot;ap-northeast-2&quot;)</code></pre><p id="996720e4-6f49-839a-bc8a-818987570c68" class="" dir="auto"><code>.env</code> 파일에서 AWS 리전을 읽는다.</p><p id="eb4720e4-6f49-8204-80f1-013872d1bf62" class="" dir="auto">값이 없으면 기본값으로 서울 리전인 <code>ap-northeast-2</code>를 사용한다.</p><hr id="528720e4-6f49-825b-a282-81d305a0f2ee" dir="auto"/><pre id="61d720e4-6f49-826b-961b-817fb5125b32" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3_BUCKET=os.getenv(&quot;S3_BUCKET&quot;)</code></pre><p id="c30720e4-6f49-83d0-a58c-01f499add339" class="" dir="auto">Athena 결과 CSV가 저장되는 S3 버킷 이름을 읽는다.</p><hr id="793720e4-6f49-8332-90d4-8111c3efa094" dir="auto"/><pre id="e65720e4-6f49-82ba-a431-812329cbebe2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ATHENA_OUTPUT_PREFIX=os.getenv(&quot;ATHENA_OUTPUT_PREFIX&quot;,&quot;athena-results/&quot;)</code></pre><p id="371720e4-6f49-8285-9a39-01572f1f620b" class="" dir="auto">Athena 결과 파일이 저장될 S3 prefix를 읽는다.</p><p id="349720e4-6f49-8246-a204-811b372abc65" class="" dir="auto">예시는 다음과 같다.</p><pre id="42e720e4-6f49-8336-a094-01153055fa02" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">athena-results/</code></pre><hr id="fec720e4-6f49-832f-9a66-0111d5f05069" dir="auto"/><pre id="b3a720e4-6f49-8370-a1b5-810af76a7204" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ATHENA_DATABASE=os.getenv(&quot;ATHENA_DATABASE&quot;,&quot;nlp_s3_analytics_db&quot;)</code></pre><p id="d51720e4-6f49-8370-bc13-011747d11eda" class="" dir="auto">Athena에서 사용할 데이터베이스 이름을 읽는다.</p><hr id="b84720e4-6f49-829b-9733-81c5457b9230" dir="auto"/><pre id="098720e4-6f49-83bf-836d-016c86eb2e5e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">athena=boto3.client(&quot;athena&quot;,region_name=AWS_REGION)</code></pre><p id="ad8720e4-6f49-8365-8777-01b18de7a5aa" class="" dir="auto">Athena 클라이언트를 생성한다.</p><p id="2a1720e4-6f49-8371-a68d-8150ea1e0593" class="" dir="auto">이 클라이언트로 쿼리를 실행하고 쿼리 상태를 확인한다.</p><hr id="0dd720e4-6f49-83f7-aee7-01d2bffc81e0" dir="auto"/><pre id="6fd720e4-6f49-823f-be96-01b80d29c76c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3=boto3.client(&quot;s3&quot;,region_name=AWS_REGION)</code></pre><p id="aab720e4-6f49-828b-a958-01f1e4b145fa" class="" dir="auto">S3 클라이언트를 생성한다.</p><p id="b4a720e4-6f49-8231-a403-016bcb7985d7" class="" dir="auto">이 클라이언트로 Athena 결과 CSV 파일을 읽는다.</p><hr id="487720e4-6f49-8367-970b-015e3f27c44e" dir="auto"/><pre id="278720e4-6f49-827d-a8de-01afd00b24f8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">def run_athena_query(sql:str) -&gt;pd.DataFrame:</code></pre><p id="944720e4-6f49-8257-919f-8197f306897d" class="" dir="auto">Athena 쿼리를 실행하고 결과를 DataFrame으로 반환하는 함수이다.</p><p id="e59720e4-6f49-832d-8fba-017c22892cb8" class="" dir="auto">인자와 반환값은 다음과 같다.</p><table id="c3f720e4-6f49-8216-87af-019c160a3416" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="098720e4-6f49-8392-9f3d-8110dc4ffbe1" dir="ltr"><th id="ek|T" class="simple-table-header-color simple-table-header">구분</th><th id="Py;v" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="528720e4-6f49-82a2-9169-814bb7130376" dir="ltr"><td id="ek|T" class=""><code>sql</code></td><td id="Py;v" class="">Athena에서 실행할 SQL 문자열</td></tr><tr id="5e9720e4-6f49-825a-be3c-0189577f53ac" dir="ltr"><td id="ek|T" class="">반환값</td><td id="Py;v" class="">pandas DataFrame</td></tr></tbody></table><hr id="97d720e4-6f49-8219-8159-01fefb00f6eb" dir="auto"/><pre id="8ec720e4-6f49-8337-9ade-818d7fb8a251" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">if not S3_BUCKET:
+	raise ValueError(&quot;.env 파일에 S3_BUCKET 값을 설정해야 한다.&quot;)</code></pre><p id="5bb720e4-6f49-8355-9962-81568b677dfe" class="" dir="auto">S3 버킷 값이 비어 있는지 확인한다.</p><p id="5ea720e4-6f49-827a-adcd-810da4e6452e" class="" dir="auto">Athena 결과 저장 위치를 만들려면 S3 버킷 이름이 반드시 필요하다.</p><hr id="b96720e4-6f49-82cf-b2b2-016d86f646c1" dir="auto"/><pre id="557720e4-6f49-837a-b423-013ae14e4428" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">output_location=f&quot;s3://{S3_BUCKET}/{ATHENA_OUTPUT_PREFIX.strip(&#x27;/&#x27;)}/&quot;</code></pre><p id="2ce720e4-6f49-82a5-9ba7-0192283396f0" class="" dir="auto">Athena 결과 저장 위치를 만든다.</p><p id="41c720e4-6f49-827e-aa4b-8129286c5f8a" class="" dir="auto">예시는 다음과 같다.</p><pre id="96c720e4-6f49-83c2-96e4-81c9d3fd6463" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://nlp-s3-analytics-kim-123456789012/athena-results/</code></pre><p id="1c4720e4-6f49-82b8-89e7-014e35b21c55" class="" dir="auto"><code>strip(&#x27;/&#x27;)</code>은 앞뒤의 <code>/</code>를 제거한다.</p><p id="47c720e4-6f49-833c-bfdc-81a3f3157abe" class="" dir="auto">이렇게 하면 경로에서 <code>/</code>가 중복되는 것을 방지할 수 있다.</p><hr id="304720e4-6f49-8246-a03a-81f32ea1300f" dir="auto"/><pre id="999720e4-6f49-8349-9bd1-0170e5907d32" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">response=athena.start_query_execution(...)</code></pre><p id="39c720e4-6f49-8240-bb16-014eb0c9b0ea" class="" dir="auto">Athena 쿼리를 시작한다.</p><p id="fd8720e4-6f49-834b-adbf-01f9f5ddc7a3" class="" dir="auto">이 함수는 쿼리 결과 자체를 바로 반환하지 않는다.</p><p id="b2f720e4-6f49-823a-b081-81323b52e61c" class="" dir="auto">대신 쿼리 실행 ID를 반환한다.</p><hr id="d8e720e4-6f49-82c7-ac9b-0131bbeba8c6" dir="auto"/><pre id="4cd720e4-6f49-8229-8b82-8189f04811d4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">QueryString=sql</code></pre><p id="b53720e4-6f49-829f-88c9-01f03cab35d7" class="" dir="auto">실행할 SQL 문장을 지정한다.</p><hr id="87d720e4-6f49-82ab-b2cd-81e1bc78af6b" dir="auto"/><pre id="fa4720e4-6f49-83b6-bd54-01c8865920e1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">QueryExecutionContext={&quot;Database&quot;:ATHENA_DATABASE}</code></pre><p id="876720e4-6f49-8206-8262-81a56afe3e72" class="" dir="auto">쿼리를 실행할 Athena 데이터베이스를 지정한다.</p><hr id="86f720e4-6f49-832b-9cd0-81611b9a3a46" dir="auto"/><pre id="9d8720e4-6f49-8288-a05e-01a7aac5d68d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ResultConfiguration={&quot;OutputLocation&quot;:output_location}</code></pre><p id="a0d720e4-6f49-837e-aa56-018fab703429" class="" dir="auto">Athena 쿼리 결과를 저장할 S3 경로를 지정한다.</p><hr id="c0d720e4-6f49-83a3-b63b-01be205961dc" dir="auto"/><pre id="073720e4-6f49-822f-a582-014f4bf2e337" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">query_execution_id=response[&quot;QueryExecutionId&quot;]</code></pre><p id="5bf720e4-6f49-8238-a8ac-016ca3526d13" class="" dir="auto">실행한 쿼리의 고유 ID를 가져온다.</p><p id="3b7720e4-6f49-823d-ba23-8101277394cc" class="" dir="auto">이 ID는 쿼리 상태 확인과 결과 파일 조회에 사용된다.</p><hr id="552720e4-6f49-8262-acd0-0162b0861e1f" dir="auto"/><pre id="a5b720e4-6f49-8285-b097-010d54642453" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">while True:</code></pre><p id="b13720e4-6f49-83f2-9930-01e82ceb19b3" class="" dir="auto">쿼리가 완료될 때까지 반복해서 상태를 확인한다.</p><hr id="ad0720e4-6f49-822e-ad2f-81cb58d6b668" dir="auto"/><pre id="c47720e4-6f49-82db-993f-01e148d12c40" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">status_response=athena.get_query_execution(QueryExecutionId=query_execution_id)</code></pre><p id="3ed720e4-6f49-824b-954a-01d41e86f5ef" class="" dir="auto">현재 쿼리 실행 상태를 조회한다.</p><hr id="2e8720e4-6f49-8348-a78b-81b96f50cd0d" dir="auto"/><pre id="62a720e4-6f49-831a-82aa-017f02e85789" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">state=status_response[&quot;QueryExecution&quot;][&quot;Status&quot;][&quot;State&quot;]</code></pre><p id="9fa720e4-6f49-820a-ad23-01309871bdec" class="" dir="auto">쿼리 상태 값을 가져온다.</p><p id="296720e4-6f49-82c9-b9e6-01333a03c273" class="" dir="auto">Athena 쿼리 상태는 대표적으로 다음과 같다.</p><table id="eaa720e4-6f49-8370-9444-814be7d44657" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="491720e4-6f49-8338-90e8-818685abe865" dir="ltr"><th id="lmG=" class="simple-table-header-color simple-table-header">상태</th><th id="iuFh" class="simple-table-header-color simple-table-header">의미</th></tr></thead><tbody><tr id="3d0720e4-6f49-82b8-98ab-01c359d0f828" dir="ltr"><td id="lmG=" class=""><code>QUEUED</code></td><td id="iuFh" class="">대기 중</td></tr><tr id="516720e4-6f49-82fa-a52e-01c293143099" dir="ltr"><td id="lmG=" class=""><code>RUNNING</code></td><td id="iuFh" class="">실행 중</td></tr><tr id="044720e4-6f49-83b6-ac9e-81d4a9bffbee" dir="ltr"><td id="lmG=" class=""><code>SUCCEEDED</code></td><td id="iuFh" class="">성공</td></tr><tr id="6e1720e4-6f49-82a6-b2a4-0115fc0a4f54" dir="ltr"><td id="lmG=" class=""><code>FAILED</code></td><td id="iuFh" class="">실패</td></tr><tr id="382720e4-6f49-830a-b20b-01a0b94946cd" dir="ltr"><td id="lmG=" class=""><code>CANCELLED</code></td><td id="iuFh" class="">취소됨</td></tr></tbody></table><hr id="7e3720e4-6f49-8364-8f27-8130ebcfca80" dir="auto"/><pre id="58e720e4-6f49-8367-a317-812468a0dc0e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if state in [&quot;SUCCEEDED&quot;,&quot;FAILED&quot;,&quot;CANCELLED&quot;]:
+		break</code></pre><p id="c3f720e4-6f49-8371-950c-815ceeaa58a4" class="" dir="auto">쿼리가 성공, 실패, 취소 중 하나의 최종 상태가 되면 반복문을 종료한다.</p><hr id="e6a720e4-6f49-82d8-b7c0-013671b83a71" dir="auto"/><pre id="068720e4-6f49-838f-86a3-8172b70587c6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">time.sleep(1)</code></pre><p id="38a720e4-6f49-8276-9726-01874888d33a" class="" dir="auto">1초 기다린 뒤 다시 상태를 확인한다.</p><p id="d73720e4-6f49-833c-b446-01cde0570bcc" class="" dir="auto">이 코드를 넣지 않으면 너무 짧은 시간에 API를 반복 호출하게 된다.</p><hr id="90f720e4-6f49-834c-aaf3-01f84a54f4bf" dir="auto"/><pre id="3fc720e4-6f49-8303-8822-01eaafc994cf" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if state != &quot;SUCCEEDED&quot;:</code></pre><p id="ed0720e4-6f49-8307-b175-810fd023e61b" class="" dir="auto">쿼리가 성공하지 않았다면 오류를 발생시킨다.</p><hr id="8c8720e4-6f49-8241-b39f-01c172af25b0" dir="auto"/><pre id="d0c720e4-6f49-829d-b457-013fc111ab58" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">reason=status_response[&quot;QueryExecution&quot;][&quot;Status&quot;].get(&quot;StateChangeReason&quot;,&quot;Unknown&quot;)</code></pre><p id="eb4720e4-6f49-83c9-b135-81bbf982c524" class="" dir="auto">쿼리 실패 원인을 가져온다.</p><p id="9fb720e4-6f49-8352-90b7-81c020e4b55c" class="" dir="auto">SQL 문법 오류, 테이블 없음, 권한 오류 등이 여기에 포함될 수 있다.</p><hr id="bd3720e4-6f49-82ef-b8ad-011a53db68b8" dir="auto"/><pre id="948720e4-6f49-8309-ac03-0167e0d0f1b4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">result_key=f&quot;{ATHENA_OUTPUT_PREFIX.strip(&#x27;/&#x27;)}/{query_execution_id}.csv&quot;</code></pre><p id="d2a720e4-6f49-8309-9cf2-0145df51cc47" class="" dir="auto">Athena 결과 CSV의 S3 객체 키를 만든다.</p><p id="ef2720e4-6f49-83a7-ab8a-017d64c6d447" class="" dir="auto">Athena는 보통 다음 형식으로 결과 파일을 저장한다.</p><pre id="882720e4-6f49-83e8-8cee-01d795a6281a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">athena-results/쿼리실행ID.csv</code></pre><hr id="465720e4-6f49-8308-bd32-819b9b4421af" dir="auto"/><pre id="fd9720e4-6f49-8260-b72b-01536ebfb7f9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">obj=s3.get_object(Bucket=S3_BUCKET,Key=result_key)</code></pre><p id="c21720e4-6f49-82d5-9f48-81a983d14d57" class="" dir="auto">S3에서 Athena 결과 CSV 파일을 읽는다.</p><hr id="8b9720e4-6f49-8359-ab6d-81e4a09d7b6c" dir="auto"/><pre id="136720e4-6f49-835d-8bac-8107344a0d56" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">csv_text=obj[&quot;Body&quot;].read().decode(&quot;utf-8&quot;)</code></pre><p id="f7a720e4-6f49-83ce-a1a4-8148c68fe1fb" class="" dir="auto">S3 객체 본문을 읽고 UTF-8 문자열로 변환한다.</p><hr id="380720e4-6f49-83ba-8d7d-0190de18b864" dir="auto"/><pre id="cbb720e4-6f49-83b7-a7bf-01636749b6e2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">returnpd.read_csv(StringIO(csv_text))</code></pre><p id="a94720e4-6f49-8258-9cd2-01291aea3722" class="" dir="auto">CSV 문자열을 pandas DataFrame으로 변환해서 반환한다.</p><hr id="3e8720e4-6f49-823b-a6e2-01ae049d4b2c" dir="auto"/><h1 id="240720e4-6f49-83a7-8c5f-81d731059db0" class="" dir="auto">7. Bedrock으로 자연어 질문을 SQL로 변환</h1><h2 id="c04720e4-6f49-8384-81db-01106fd19cb9" class="" dir="auto">7.1 처리 방식</h2><p id="10f720e4-6f49-8312-9c5e-81c62bd376e6" class="" dir="auto">사용자는 다음과 같이 질문한다.</p><pre id="3be720e4-6f49-826b-a3cd-81941090c6b8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">월별 매출 추이를 보여줘</code></pre><p id="321720e4-6f49-838a-aef8-813c31178855" class="" dir="auto">Bedrock에는 질문만 전달하지 않는다.</p><p id="8cb720e4-6f49-8314-b1fb-019fea8ddcec" class="" dir="auto">테이블 구조와 SQL 생성 규칙을 함께 전달해야 한다.</p><p id="9e2720e4-6f49-8347-bd96-819b79d4c420" class="" dir="auto">Bedrock에 전달할 정보는 다음과 같다.</p><pre id="42d720e4-6f49-82ba-9574-81ac3313f6df" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Athena 데이터베이스 이름
+Athena 테이블 이름
+컬럼 목록
+각 컬럼의 의미
+매출 계산식
+SQL 작성 규칙
+금지 SQL 명령어
+출력 형식</code></pre><p id="298720e4-6f49-8390-9e94-01a39bc08eed" class="" dir="auto">이렇게 해야 모델이 다음처럼 Athena에서 실행 가능한 SQL을 생성할 수 있다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" integrity="sha512-sijCOJblSCXYYmXdwvqV0tak8QJW5iy2yLB1wAbbLc3OOIueqymizRFWUS/mwKctnzPKpNdPJV3aK1zlDMJmXQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="5b2720e4-6f49-82a0-8299-81265e8621ee" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  date_format(order_date,&#x27;%Y-%m&#x27;) AS order_month,
+  SUM(quantity* unit_price- discount_amount) AS sales
+FROM ecommerce_sales
+GROUP BY date_format(order_date,&#x27;%Y-%m&#x27;)
+ORDER BY order_month;</code></pre><hr id="20e720e4-6f49-820f-8e5b-81f1b0a82908" dir="auto"/><h2 id="e86720e4-6f49-82ff-9354-81c685efda1f" class="" dir="auto">7.2 파일 역할</h2><p id="6ce720e4-6f49-82af-8622-017d6abb4702" class="" dir="auto">파일명은 다음과 같다.</p><pre id="4a6720e4-6f49-83ca-8365-01c090fcc327" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">bedrock_sql_generator.py</code></pre><p id="45c720e4-6f49-82f2-990f-01d5e1424808" class="" dir="auto">이 파일은 다음 작업을 담당한다.</p><pre id="9db720e4-6f49-8323-a71d-811ab1b565e7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">.env 파일 읽기
+Bedrock Runtime 클라이언트 생성
+테이블 스키마 프롬프트 정의
+사용자 질문을 Bedrock에 전달
+Bedrock 응답에서 SQL 추출
+생성된 SQL 검증
+최종 SQL 반환</code></pre><hr id="9c3720e4-6f49-83c4-b065-015720560a17" dir="auto"/><h2 id="740720e4-6f49-8388-a5d4-81cf04762cd4" class="" dir="auto">7.3 코드 작성</h2><p id="a10720e4-6f49-8337-ba35-81860591cfba" class="" dir="auto">파일명: <code>bedrock_sql_generator.py</code></p><pre id="185720e4-6f49-8390-beba-81c188fe95a2" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">import os
+import re
+from dotenv import load_dotenv
+import boto3
+
+load_dotenv()
+
+AWS_REGION = os.getenv(&quot;AWS_REGION&quot;, &quot;ap-northeast-2&quot;)
+BEDROCK_MODEL_ID = os.getenv(&quot;BEDROCK_MODEL_ID&quot;)
+ATHENA_DATABASE = os.getenv(&quot;ATHENA_DATABASE&quot;, &quot;nlp_s3_analytics_db&quot;)
+ATHENA_TABLE = os.getenv(&quot;ATHENA_TABLE&quot;, &quot;ecommerce_sales&quot;)
+
+if not BEDROCK_MODEL_ID:
+    raise ValueError(&quot;.env 파일에 BEDROCK_MODEL_ID 값을 설정해야 한다.&quot;)
+
+bedrock = boto3.client(&quot;bedrock-runtime&quot;, region_name=AWS_REGION)
+
+TABLE_SCHEMA = f&quot;&quot;&quot;
+데이터베이스: {ATHENA_DATABASE}
+테이블: {ATHENA_TABLE}
+
+컬럼:
+- order_id string: 주문 ID
+- order_date date: 주문일
+- customer_id string: 고객 ID
+- region string: 지역
+- category string: 상품 카테고리
+- product_name string: 상품명
+- channel string: 판매 채널. web, mobile, store
+- quantity int: 주문 수량
+- unit_price int: 상품 단가
+- discount_amount int: 할인 금액
+- payment_method string: 결제 방식
+- is_returned boolean: 반품 여부
+
+매출 계산식:
+(quantity * unit_price - discount_amount)
+
+주의:
+- Athena SQL 문법을 사용한다.
+- SELECT 문만 생성한다.
+- INSERT, UPDATE, DELETE, DROP, ALTER, CREATE 문은 절대 생성하지 않는다.
+- 결과 행 수가 많을 수 있으면 LIMIT 100을 추가한다.
+- SQL 외의 설명은 출력하지 않는다.
+&quot;&quot;&quot;
+
+
+def extract_sql(text: str) -&gt; str:
+    code_block = re.search(r&quot;```sql\s*(.*?)```&quot;, text, re.DOTALL | re.IGNORECASE)
+    if code_block:
+        return code_block.group(1).strip()
+
+    generic_block = re.search(r&quot;```\s*(.*?)```&quot;, text, re.DOTALL)
+    if generic_block:
+        return generic_block.group(1).strip()
+
+    return text.strip()
+
+
+def validate_sql(sql: str) -&gt; None:
+    normalized = sql.strip().lower()
+
+    if not normalized.startswith(&quot;select&quot;):
+        raise ValueError(&quot;SELECT 문만 실행할 수 있다.&quot;)
+
+    forbidden_keywords = [
+        &quot;insert&quot;, &quot;update&quot;, &quot;delete&quot;, &quot;drop&quot;, &quot;alter&quot;, &quot;create&quot;,
+        &quot;truncate&quot;, &quot;merge&quot;, &quot;grant&quot;, &quot;revoke&quot;, &quot;unload&quot;
+    ]
+
+    for keyword in forbidden_keywords:
+        if re.search(rf&quot;\b{keyword}\b&quot;, normalized):
+            raise ValueError(f&quot;허용되지 않은 SQL 키워드가 포함되어 있다: {keyword}&quot;)
+
+    if ATHENA_TABLE.lower() not in normalized:
+        raise ValueError(f&quot;허용된 테이블만 조회할 수 있다: {ATHENA_TABLE}&quot;)
+
+
+def generate_sql_from_question(question: str) -&gt; str:
+    system_text = f&quot;&quot;&quot;
+너는 AWS Athena SQL 생성기이다.
+사용자의 한국어 질문을 보고 Athena에서 실행 가능한 SQL 하나만 생성한다.
+
+{TABLE_SCHEMA}
+&quot;&quot;&quot;
+
+    user_text = f&quot;&quot;&quot;
+사용자 질문:
+{question}
+
+SQL만 출력한다.
+&quot;&quot;&quot;
+
+    response = bedrock.converse(
+        modelId=BEDROCK_MODEL_ID,
+        messages=[
+            {
+                &quot;role&quot;: &quot;user&quot;,
+                &quot;content&quot;: [{&quot;text&quot;: user_text}]
+            }
+        ],
+        system=[
+            {&quot;text&quot;: system_text}
+        ],
+        inferenceConfig={
+            &quot;maxTokens&quot;: 800,
+            &quot;temperature&quot;: 0.0
+        }
+    )
+
+    output_text = response[&quot;output&quot;][&quot;message&quot;][&quot;content&quot;][0][&quot;text&quot;]
+    sql = extract_sql(output_text)
+    validate_sql(sql)
+
+    return sql</code></pre><hr id="10f720e4-6f49-83c4-9149-815d1239931c" dir="auto"/><h1 id="4fc720e4-6f49-83b3-8f5f-81b702d4ea27" class="" dir="auto">8. Bedrock SQL 생성 코드 설명</h1><h2 id="c28720e4-6f49-828e-8cbf-815c8ccab585" class="" dir="auto">8.1 모듈 가져오기</h2><pre id="947720e4-6f49-8386-b55d-81c40322f74c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">import os</code></pre><p id="bc8720e4-6f49-8319-822a-0126f3561516" class="" dir="auto">환경 변수를 읽기 위해 사용한다.</p><pre id="8e2720e4-6f49-8227-931f-81f3729cc667" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">import re</code></pre><p id="8f9720e4-6f49-82f9-878b-81e93553d5fe" class="" dir="auto">정규표현식을 사용하기 위해 가져온다.</p><p id="0d1720e4-6f49-830e-8937-81301c149920" class="" dir="auto">Bedrock 응답에서 SQL 코드블록을 추출하거나 금지 키워드를 검사할 때 사용한다.</p><pre id="4ba720e4-6f49-834d-94ba-01a167a1a490" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">from dotenv import load_dotenv</code></pre><p id="535720e4-6f49-834c-9d00-81addb18a0bd" class="" dir="auto"><code>.env</code> 파일을 읽기 위해 사용한다.</p><pre id="93f720e4-6f49-8358-a059-018a421fdcc8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">import boto3</code></pre><p id="3aa720e4-6f49-82f9-8c73-010df5c3e0a0" class="" dir="auto">Bedrock Runtime API를 호출하기 위해 사용한다.</p><hr id="794720e4-6f49-821b-91c2-8159abfb2e08" dir="auto"/><h2 id="348720e4-6f49-8316-931a-81150f61acca" class="" dir="auto">8.2 환경 변수 읽기</h2><pre id="e38720e4-6f49-822a-a9c0-01238d03faed" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">load_dotenv()</code></pre><p id="f74720e4-6f49-834a-836c-01cb03ad214a" class="" dir="auto"><code>.env</code> 파일을 읽어 환경 변수로 등록한다.</p><pre id="64a720e4-6f49-8236-9186-81d357c85c24" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS_REGION=os.getenv(&quot;AWS_REGION&quot;,&quot;ap-northeast-2&quot;)</code></pre><p id="6f9720e4-6f49-832d-9537-01216e44ac6a" class="" dir="auto">AWS 리전을 읽는다.</p><p id="133720e4-6f49-8252-a335-0198bd982ba3" class="" dir="auto">값이 없으면 서울 리전 <code>ap-northeast-2</code>를 기본값으로 사용한다.</p><pre id="7a4720e4-6f49-837e-a766-01375d053176" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">BEDROCK_MODEL_ID=os.getenv(&quot;BEDROCK_MODEL_ID&quot;)</code></pre><p id="31f720e4-6f49-83a4-8bc6-01c8e72932a5" class="" dir="auto">Bedrock에서 사용할 모델 ID를 읽는다.</p><p id="cfb720e4-6f49-82f6-991d-017c6671c247" class="" dir="auto">예시는 다음과 같다.</p><pre id="357720e4-6f49-839b-9ca4-81fb16a72d8c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">amazon.nova-lite-v1:0</code></pre><p id="54b720e4-6f49-83b2-91a2-011f0b14dd59" class="" dir="auto">학생 계정마다 사용 가능한 모델이 다를 수 있으므로, <code>.env</code> 파일의 값을 실제 모델 ID로 수정해야 한다.</p><hr id="91a720e4-6f49-82a8-99ab-815f109dff96" dir="auto"/><pre id="ea3720e4-6f49-8330-9e74-81d932d65351" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ATHENA_DATABASE=os.getenv(&quot;ATHENA_DATABASE&quot;,&quot;nlp_s3_analytics_db&quot;)</code></pre><p id="8f1720e4-6f49-831f-b553-81b833284eb5" class="" dir="auto">Athena 데이터베이스 이름을 읽는다.</p><pre id="b4d720e4-6f49-8282-8f95-8185ad15d9d3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ATHENA_TABLE=os.getenv(&quot;ATHENA_TABLE&quot;,&quot;ecommerce_sales&quot;)</code></pre><p id="f17720e4-6f49-8331-b63d-01924879d5c8" class="" dir="auto">Athena 테이블 이름을 읽는다.</p><hr id="3d7720e4-6f49-8286-b912-01d8b5ca4226" dir="auto"/><h2 id="aa1720e4-6f49-83bf-9298-81216153b17b" class="" dir="auto">8.3 Bedrock 모델 ID 검사</h2><pre id="6aa720e4-6f49-82bc-a098-81a074b0cc56" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">if not BEDROCK_MODEL_ID:
+	raise ValueError(&quot;.env 파일에 BEDROCK_MODEL_ID 값을 설정해야 한다.&quot;)</code></pre><p id="514720e4-6f49-826f-b309-013ef164893d" class="" dir="auto">모델 ID가 없으면 오류를 발생시킨다.</p><p id="6f6720e4-6f49-839b-ad2f-817952df4a74" class="" dir="auto">이 검사를 하지 않으면 Bedrock 호출 단계에서 더 복잡한 오류가 발생할 수 있다.</p><p id="158720e4-6f49-82f8-b989-815087c75bcc" class="" dir="auto">실습에서는 설정 문제를 빨리 찾기 위해 처음에 명확한 오류를 발생시키는 것이 좋다.</p><hr id="a09720e4-6f49-822f-931f-81708e137c3b" dir="auto"/><h2 id="97b720e4-6f49-82b3-b1db-81e90b151711" class="" dir="auto">8.4 Bedrock Runtime 클라이언트 생성</h2><pre id="8d5720e4-6f49-82b3-bc1b-01acc39181fc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">bedrock=boto3.client(&quot;bedrock-runtime&quot;,region_name=AWS_REGION)</code></pre><p id="6c2720e4-6f49-82ad-85bd-817ee67ea2be" class="" dir="auto">Bedrock Runtime 클라이언트를 생성한다.</p><p id="76a720e4-6f49-8388-8769-0199ca38fb77" class="" dir="auto">Bedrock 서비스에는 여러 API가 있지만, 모델 호출은 <code>bedrock-runtime</code> 클라이언트로 수행한다.</p><hr id="0e6720e4-6f49-839d-a622-01bfb01adfb8" dir="auto"/><h2 id="548720e4-6f49-836e-9fd6-0178eedacff5" class="" dir="auto">8.5 테이블 스키마 프롬프트 작성</h2><pre id="1fe720e4-6f49-83df-8130-01b997d97058" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">TABLE_SCHEMA=f&quot;&quot;&quot;
+데이터베이스:{ATHENA_DATABASE}
+테이블:{ATHENA_TABLE}
+
+컬럼:
+...
+&quot;&quot;&quot;</code></pre><p id="225720e4-6f49-839d-a070-019a4f6c484b" class="" dir="auto">이 문자열은 Bedrock에 전달할 테이블 설명이다.</p><p id="90b720e4-6f49-82e4-a6b7-816bb04bba82" class="" dir="auto">자연어를 SQL로 바꾸려면 모델이 테이블 구조를 알아야 한다.</p><p id="3db720e4-6f49-8387-8b3c-01b5af9f34a9" class="" dir="auto">예를 들어 사용자가 다음과 같이 질문했다고 하자.</p><pre id="e6f720e4-6f49-82f0-9c42-81b0dc16c338" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">지역별 주문 건수를 알려줘</code></pre><p id="08f720e4-6f49-834a-b706-81a496d9a491" class="" dir="auto">모델이 <code>region</code>이라는 컬럼이 지역을 의미한다는 사실을 알아야 다음과 같은 SQL을 만들 수 있다.</p><pre id="902720e4-6f49-8351-bd7b-8137f244ac19" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  region,
+COUNT(*) AS order_count
+FROM ecommerce_sales
+GROUP BY region
+ORDER BY order_countDESC;</code></pre><hr id="023720e4-6f49-83ee-ad1a-01129f38a0fa" dir="auto"/><h2 id="3ca720e4-6f49-82cf-be36-01bab30562d3" class="" dir="auto">8.6 매출 계산식 제공</h2><pre id="536720e4-6f49-82c4-b547-01a771778e65" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">매출 계산식:
+(quantity * unit_price - discount_amount)</code></pre><p id="e7c720e4-6f49-82b7-a8cd-81bb1e1793c4" class="" dir="auto">사용자가 “매출”이라고 질문했을 때 어떤 계산식을 사용해야 하는지 알려준다.</p><p id="123720e4-6f49-824c-ad5e-01086dcf9380" class="" dir="auto">이 설명이 없으면 모델이 다음처럼 잘못된 SQL을 만들 수 있다.</p><pre id="27a720e4-6f49-8281-8f5f-819ae906666a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SELECT SUM(unit_price)AS sales
+FROM ecommerce_sales;</code></pre><p id="4eb720e4-6f49-833e-8097-81daaae27338" class="" dir="auto">위 SQL은 단가만 합산하므로 실제 매출 계산이 아니다.</p><p id="5d6720e4-6f49-8327-b461-81ad56aa939e" class="" dir="auto">이번 실습의 매출 계산식은 다음과 같다.</p><pre id="87c720e4-6f49-8233-a189-011296e9ffcd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">매출 = 수량 * 단가 - 할인금액</code></pre><p id="f89720e4-6f49-8351-ad0f-0178cf30d81c" class="" dir="auto">따라서 SQL에서는 다음 식을 사용한다.</p><pre id="6dc720e4-6f49-82a2-ad02-01964402d9c7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">quantity* unit_price- discount_amount</code></pre><hr id="553720e4-6f49-8234-9974-810fa1ade96a" dir="auto"/><h2 id="c39720e4-6f49-83da-8c24-017e51c2ca54" class="" dir="auto">8.7 SQL 생성 규칙 제공</h2><pre id="9d0720e4-6f49-8333-b578-019afbccba20" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">주의:
+- Athena SQL 문법을 사용한다.
+- SELECT 문만 생성한다.
+- INSERT, UPDATE, DELETE, DROP, ALTER, CREATE 문은 절대 생성하지 않는다.
+- 결과 행 수가 많을 수 있으면 LIMIT 100을 추가한다.
+- SQL 외의 설명은 출력하지 않는다.</code></pre><p id="390720e4-6f49-835e-bd43-01be09a3dc51" class="" dir="auto">이 규칙은 모델이 SQL을 안전하고 실행 가능한 형태로 만들도록 유도한다.</p><p id="017720e4-6f49-8376-aea2-81db566c769d" class="" dir="auto">특히 다음 문장이 중요하다.</p><pre id="c01720e4-6f49-8279-9682-015f5de68dc0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SQL 외의 설명은 출력하지 않는다.</code></pre><p id="579720e4-6f49-8227-ab77-01be63b290f0" class="" dir="auto">모델이 설명 문장을 함께 출력하면 Athena에서 바로 실행할 수 없다.</p><hr id="3b8720e4-6f49-835f-a9b1-81c2818fb435" dir="auto"/><h2 id="610720e4-6f49-83fc-b8b4-81b7a835c14d" class="" dir="auto">8.8 SQL 코드블록 추출 함수</h2><pre id="488720e4-6f49-829b-925e-0136c93b9b54" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">def extract_sql(text:str) -&gt;str:</code></pre><p id="836720e4-6f49-8386-b423-81c37324ebcd" class="" dir="auto">Bedrock 응답에서 SQL만 추출하는 함수이다.</p><p id="f2c720e4-6f49-8215-ac07-010031c9f6a0" class="" dir="auto">모델은 때때로 다음처럼 코드블록으로 SQL을 반환할 수 있다.</p><pre id="ff4720e4-6f49-8302-bd49-813bb32946f1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">```sql
+SELECT category, COUNT(*)
+FROM ecommerce_sales
+GROUP BY category;</code></pre><pre id="384720e4-6f49-83b1-a905-01147b11d031" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">
+이 경우 코드블록 표시인 ```sql 과 ``` 를 제거해야 한다.
+
+---
+
+```python id=&quot;yjf1rq&quot;
+code_block = re.search(r&quot;```sql\s*(.*?)```&quot;, text, re.DOTALL | re.IGNORECASE)</code></pre><p id="36b720e4-6f49-83a1-a599-81588b600764" class="" dir="auto"><code>```sql ... ```</code> 형태의 코드블록을 찾는다.</p><table id="5b9720e4-6f49-83b8-bd8f-013ba08dc26d" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="a58720e4-6f49-8276-ab47-813d0e0bde04" dir="ltr"><th id="gpKq" class="simple-table-header-color simple-table-header">요소</th><th id="\vrO" class="simple-table-header-color simple-table-header">의미</th></tr></thead><tbody><tr id="a78720e4-6f49-8261-8f3a-018729507ed1" dir="ltr"><td id="gpKq" class=""><code>re.search()</code></td><td id="\vrO" class="">문자열에서 패턴과 일치하는 부분을 찾는다</td></tr><tr id="f2f720e4-6f49-83ca-a672-012afb36aa70" dir="ltr"><td id="gpKq" class=""><code>r&quot;...&quot;</code></td><td id="\vrO" class="">raw string이다. 정규표현식을 작성할 때 사용한다</td></tr><tr id="b85720e4-6f49-8328-abf4-81097cdd2740" dir="ltr"><td id="gpKq" class=""><code>.*?</code></td><td id="\vrO" class="">가능한 짧게 임의의 문자를 찾는다</td></tr><tr id="910720e4-6f49-83a2-aa67-013e74451f48" dir="ltr"><td id="gpKq" class=""><code>re.DOTALL</code></td><td id="\vrO" class="">줄바꿈까지 포함해서 검색한다</td></tr><tr id="1c0720e4-6f49-82af-a77f-01dae5bd0a6e" dir="ltr"><td id="gpKq" class=""><code>re.IGNORECASE</code></td><td id="\vrO" class="">대소문자를 구분하지 않는다</td></tr></tbody></table><hr id="4b1720e4-6f49-8262-a617-01127960b7f0" dir="auto"/><pre id="758720e4-6f49-824e-9ab0-0178a754bbf8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ifcode_block:
+returncode_block.group(1).strip()</code></pre><p id="c7a720e4-6f49-8257-ac8a-8157407b509e" class="" dir="auto">SQL 코드블록이 있으면 코드블록 내부 내용만 반환한다.</p><hr id="f2f720e4-6f49-83ce-9bd4-0193fd36f400" dir="auto"/><pre id="839720e4-6f49-8252-adf8-01c8573d8f66" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">generic_block=re.search(r&quot;```\s*(.*?)```&quot;,text,re.DOTALL)</code></pre><p id="4c5720e4-6f49-830a-a866-81671a12b0f1" class="" dir="auto"><code>sql</code>이라는 언어 표시가 없는 일반 코드블록도 처리한다.</p><hr id="055720e4-6f49-8301-998d-814a5acf3fea" dir="auto"/><pre id="429720e4-6f49-8343-9d02-01856dc45f4f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">returntext.strip()</code></pre><p id="b17720e4-6f49-83a7-817e-01417465aa7b" class="" dir="auto">코드블록이 없으면 응답 전체를 SQL로 보고 앞뒤 공백만 제거한다.</p><h1 id="d6a720e4-6f49-83c6-8f5b-81d956257498" class="" dir="auto">9. SQL 검증 로직 이해</h1><h2 id="fd4720e4-6f49-8374-b5b2-810a58f7e03d" class="" dir="auto">9.1 SQL 검증이 필요한 이유</h2><p id="aea720e4-6f49-82ea-8392-0112809ab8f2" class="" dir="auto">Bedrock이 생성한 SQL을 바로 실행하면 위험할 수 있다.</p><p id="dd7720e4-6f49-8243-a842-0176f37d28e9" class="" dir="auto">예를 들어 사용자가 다음과 같이 입력할 수 있다.</p><pre id="579720e4-6f49-82d2-9602-81b054fe1e8a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">테이블 삭제하는 SQL을 만들어줘</code></pre><p id="908720e4-6f49-8269-bf97-01865da8ac03" class="" dir="auto">또는 모델이 의도하지 않게 다음과 같은 SQL을 만들 수 있다.</p><pre id="6fd720e4-6f49-8298-b59b-011c975f514c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">DROPTABLE ecommerce_sales;</code></pre><p id="e27720e4-6f49-8249-8a39-8189c66fa614" class="" dir="auto">따라서 모델이 생성한 SQL은 Athena에서 실행하기 전에 반드시 검증해야 한다.</p><p id="8de720e4-6f49-82ff-87b1-011c5f7f0baf" class="" dir="auto">이번 실습에서는 다음 규칙을 적용한다.</p><pre id="583720e4-6f49-8384-a560-812daff36457" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SELECT 문만 허용
+위험 키워드 차단
+허용된 테이블만 조회</code></pre><hr id="ff0720e4-6f49-837d-8bc6-01987e040642" dir="auto"/><h2 id="9f8720e4-6f49-8248-aead-015158e30b0a" class="" dir="auto">9.2 validate_sql 함수</h2><pre id="6c4720e4-6f49-8384-843b-812450ef36a6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">def validate_sql(sql:str) -&gt; None:</code></pre><p id="28b720e4-6f49-8232-9b97-01026df4541e" class="" dir="auto">SQL 문자열을 검사하는 함수이다.</p><p id="3ac720e4-6f49-8217-b454-818ed08548d5" class="" dir="auto">문제가 없으면 아무 값도 반환하지 않는다.</p><p id="dd7720e4-6f49-8339-9d1b-01fe45265c12" class="" dir="auto">문제가 있으면 <code>ValueError</code>를 발생시킨다.</p><hr id="419720e4-6f49-83bb-b768-01c23fcb6332" dir="auto"/><h2 id="d5b720e4-6f49-8249-8142-01b64cb2f9cd" class="" dir="auto">9.3 SQL 소문자 변환</h2><pre id="2fa720e4-6f49-8302-9c53-01f6d1cbe993" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">normalized=sql.strip().lower()</code></pre><p id="7cf720e4-6f49-830f-92bf-01b0f931eece" class="" dir="auto">검사를 쉽게 하기 위해 SQL을 소문자로 변환한다.</p><p id="19e720e4-6f49-82fd-887a-01603b89eceb" class="" dir="auto">예를 들어 다음 SQL은</p><pre id="2af720e4-6f49-8203-aebf-019ee5298faf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SELECT * FROM ecommerce_sales;</code></pre><p id="6a8720e4-6f49-823b-bbdb-01f1df5cc610" class="" dir="auto">검사 단계에서는 다음처럼 바뀐다.</p><pre id="f0a720e4-6f49-8387-9807-8185284fa895" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">select * from ecommerce_sales;</code></pre><hr id="5a6720e4-6f49-83f0-82ac-0139eba69f4b" dir="auto"/><h2 id="3f4720e4-6f49-82ac-ae06-01ef967a6bab" class="" dir="auto">9.4 SELECT 문만 허용</h2><pre id="d43720e4-6f49-8383-aaa3-81b74dd81726" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">if not normalized.startswith(&quot;select&quot;):
+	raise ValueError(&quot;SELECT 문만 실행할 수 있다.&quot;)</code></pre><p id="fae720e4-6f49-82ff-889b-81c86ae3db43" class="" dir="auto">SQL이 <code>select</code>로 시작하지 않으면 실행하지 않는다.</p><p id="731720e4-6f49-8260-a988-814841650deb" class="" dir="auto">이번 실습에서는 조회만 허용한다.</p><p id="7e5720e4-6f49-8203-acfa-81194be6c575" class="" dir="auto">데이터 변경, 테이블 삭제, 테이블 생성은 허용하지 않는다.</p><hr id="eae720e4-6f49-8369-aff7-811d9e80c165" dir="auto"/><h2 id="273720e4-6f49-8279-bd6c-019f5c395099" class="" dir="auto">9.5 위험 키워드 목록</h2><pre id="a22720e4-6f49-836b-ae79-01f62ccf29c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">forbidden_keywords= [
+&quot;insert&quot;,&quot;update&quot;,&quot;delete&quot;,&quot;drop&quot;,&quot;alter&quot;,&quot;create&quot;,
+&quot;truncate&quot;,&quot;merge&quot;,&quot;grant&quot;,&quot;revoke&quot;,&quot;unload&quot;
+]</code></pre><p id="5a8720e4-6f49-83b3-aa54-01cedaacdb3d" class="" dir="auto">이 목록은 실행을 차단할 SQL 키워드이다.</p><table id="71d720e4-6f49-834f-a54b-819e6027b6d2" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="6cc720e4-6f49-8345-864e-019029f70e8e" dir="ltr"><th id="MP]]" class="simple-table-header-color simple-table-header">키워드</th><th id="gs_Z" class="simple-table-header-color simple-table-header">위험성</th></tr></thead><tbody><tr id="d4f720e4-6f49-82fa-bd60-01d0774739a6" dir="ltr"><td id="MP]]" class=""><code>insert</code></td><td id="gs_Z" class="">데이터를 추가할 수 있다</td></tr><tr id="1aa720e4-6f49-833d-8277-0114a33c7ab2" dir="ltr"><td id="MP]]" class=""><code>update</code></td><td id="gs_Z" class="">데이터를 변경할 수 있다</td></tr><tr id="713720e4-6f49-824d-8c9e-81b6a506da2b" dir="ltr"><td id="MP]]" class=""><code>delete</code></td><td id="gs_Z" class="">데이터를 삭제할 수 있다</td></tr><tr id="ce4720e4-6f49-8285-a490-813845f02f3b" dir="ltr"><td id="MP]]" class=""><code>drop</code></td><td id="gs_Z" class="">테이블이나 데이터베이스를 삭제할 수 있다</td></tr><tr id="700720e4-6f49-8230-b752-81dc1a9587cd" dir="ltr"><td id="MP]]" class=""><code>alter</code></td><td id="gs_Z" class="">테이블 구조를 변경할 수 있다</td></tr><tr id="087720e4-6f49-835e-996b-01b7045f4d03" dir="ltr"><td id="MP]]" class=""><code>create</code></td><td id="gs_Z" class="">새 테이블이나 데이터베이스를 만들 수 있다</td></tr><tr id="ad2720e4-6f49-8305-b585-81b3cf867f7e" dir="ltr"><td id="MP]]" class=""><code>truncate</code></td><td id="gs_Z" class="">테이블 데이터를 비울 수 있다</td></tr><tr id="303720e4-6f49-83da-9c9f-8147464a22db" dir="ltr"><td id="MP]]" class=""><code>grant</code></td><td id="gs_Z" class="">권한을 부여할 수 있다</td></tr><tr id="b97720e4-6f49-8388-9496-8196e988c116" dir="ltr"><td id="MP]]" class=""><code>revoke</code></td><td id="gs_Z" class="">권한을 회수할 수 있다</td></tr><tr id="170720e4-6f49-82e8-8fec-019e8c109c6b" dir="ltr"><td id="MP]]" class=""><code>unload</code></td><td id="gs_Z" class="">조회 결과를 외부 위치로 내보낼 수 있다</td></tr></tbody></table><hr id="33e720e4-6f49-8383-b98d-017573a42828" dir="auto"/><h2 id="398720e4-6f49-8337-8ae9-017e607d463f" class="" dir="auto">9.6 금지 키워드 검사</h2><pre id="328720e4-6f49-8323-a459-013fcedef36a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">for keyword in forbidden_keywords:
+	if re.search(rf&quot;\b{keyword}\b&quot;,normalized):
+		raise ValueError(f&quot;허용되지 않은 SQL 키워드가 포함되어 있다:{keyword}&quot;)</code></pre><p id="9f0720e4-6f49-8271-a667-01be8bd306bb" class="" dir="auto">이 코드는 SQL에 금지 키워드가 포함되어 있는지 검사한다.</p><p id="e28720e4-6f49-8264-851e-01e19b27ce11" class="" dir="auto"><code>rf&quot;\b{keyword}\b&quot;</code>에서 <code>\b</code>는 단어 경계를 의미한다.</p><p id="acc720e4-6f49-8331-8a2a-81cbef7a8508" class="" dir="auto">즉, <code>drop</code>이라는 단어가 독립적으로 등장하는지 확인한다.</p><hr id="0c0720e4-6f49-820f-93b0-012e68df4121" dir="auto"/><h2 id="d06720e4-6f49-833b-8e3c-813c524e3d9f" class="" dir="auto">9.7 허용 테이블 확인</h2><pre id="6ce720e4-6f49-8366-aa1c-81d3e1c63916" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if ATHENA_TABLE.lower() not in normalized:
+	raise ValueError(f&quot;허용된 테이블만 조회할 수 있다:{ATHENA_TABLE}&quot;)</code></pre><p id="85a720e4-6f49-838e-8614-0147e1266f59" class="" dir="auto">이번 실습에서는 <code>ecommerce_sales</code> 테이블만 조회하도록 제한한다.</p><p id="470720e4-6f49-8264-8628-817021e7cffc" class="" dir="auto">이 검증이 없으면 사용자가 다른 테이블이나 시스템 테이블을 조회하도록 유도할 수 있다.</p><hr id="64f720e4-6f49-83dd-84d1-81ec17b6b6d7" dir="auto"/><h1 id="272720e4-6f49-823d-ae9b-010c8c1084ba" class="" dir="auto">10. CLI 테스트 프로그램 작성</h1><h2 id="953720e4-6f49-8235-b23b-01a4f55a46fa" class="" dir="auto">10.1 파일 역할</h2><p id="0e1720e4-6f49-8341-ad89-01941f84f62c" class="" dir="auto">파일명은 다음과 같다.</p><pre id="2aa720e4-6f49-8385-849f-816c1e1907e0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">03_ask_cli.py</code></pre><p id="25e720e4-6f49-83bc-8e69-81c930ac4bb8" class="" dir="auto">이 파일은 터미널에서 자연어 질문을 입력받아 다음 작업을 수행한다.</p><pre id="5af720e4-6f49-8370-b8c9-818334fb7a43" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 질문 입력
+        ↓
+Bedrock으로 SQL 생성
+        ↓
+생성된 SQL 출력
+        ↓
+Athena 쿼리 실행
+        ↓
+조회 결과 출력</code></pre><p id="841720e4-6f49-8247-ada6-01a4353cb125" class="" dir="auto">Streamlit 앱을 만들기 전에 CLI에서 먼저 테스트하면 오류를 더 쉽게 찾을 수 있다.</p><hr id="d74720e4-6f49-8352-adbb-01190080d3c0" dir="auto"/><h2 id="385720e4-6f49-8267-8e8f-011fe13e5e45" class="" dir="auto">10.2 코드 작성</h2><p id="5bc720e4-6f49-8298-91e1-817fd35efe7f" class="" dir="auto">파일명: <code>03_ask_cli.py</code></p><pre id="e1d720e4-6f49-822d-987c-819c8ce8bd88" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from bedrock_sql_generator import generate_sql_from_question
+from athena_utils import run_athena_query
+
+question=input(&quot;질문 입력: &quot;).strip()
+
+sql=generate_sql_from_question(question)
+print(&quot;\n[생성된 SQL]&quot;)
+print(sql)
+
+df=run_athena_query(sql)
+print(&quot;\n[조회 결과]&quot;)
+print(df)</code></pre><hr id="62e720e4-6f49-83d4-9951-01aa2ff8165a" dir="auto"/><h2 id="487720e4-6f49-8263-9d84-8162f69111e4" class="" dir="auto">10.3 코드 설명</h2><pre id="cef720e4-6f49-829a-ab19-812f978029e2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">frombedrock_sql_generatorimportgenerate_sql_from_question</code></pre><p id="fb2720e4-6f49-83ff-8eba-813d0270b96a" class="" dir="auto"><code>bedrock_sql_generator.py</code> 파일에서 자연어 질문을 SQL로 변환하는 함수를 가져온다.</p><hr id="5d5720e4-6f49-82f5-aca1-01c148b3973b" dir="auto"/><pre id="c42720e4-6f49-8288-9b57-015d7c9ce0a0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">fromathena_utilsimportrun_athena_query</code></pre><p id="b2b720e4-6f49-8320-ae64-81a9ba9d81c8" class="" dir="auto"><code>athena_utils.py</code> 파일에서 Athena 쿼리를 실행하는 함수를 가져온다.</p><hr id="a27720e4-6f49-82f8-a298-81468e640ad5" dir="auto"/><pre id="601720e4-6f49-82cd-81df-810f5fe86ea0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">question=input(&quot;질문 입력: &quot;).strip()</code></pre><p id="2d2720e4-6f49-83a8-99cd-81fe76b85159" class="" dir="auto">터미널에서 사용자의 자연어 질문을 입력받는다.</p><p id="a4f720e4-6f49-832a-be7e-01a8c18a145a" class="" dir="auto"><code>strip()</code>은 앞뒤 공백을 제거한다.</p><hr id="33c720e4-6f49-82ed-8e7b-81c159324943" dir="auto"/><pre id="a0d720e4-6f49-832e-bbd7-01aee2dcc993" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sql=generate_sql_from_question(question)</code></pre><p id="6a3720e4-6f49-839c-847a-81cf02a64eab" class="" dir="auto">Bedrock을 호출해 자연어 질문을 SQL로 변환한다.</p><hr id="f56720e4-6f49-82a0-b1a8-01cf542148b8" dir="auto"/><pre id="c10720e4-6f49-8260-a9db-014996a1ec1c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">print(&quot;\n[생성된 SQL]&quot;)
+print(sql)</code></pre><p id="a06720e4-6f49-82ca-8c51-01297799e4dd" class="" dir="auto">모델이 생성한 SQL을 화면에 출력한다.</p><p id="c18720e4-6f49-8213-a5c5-81c2d27ba649" class="" dir="auto">SQL이 올바르게 생성되었는지 확인하기 위한 단계이다.</p><hr id="d7b720e4-6f49-8214-8ed7-018cb4dcab30" dir="auto"/><pre id="69d720e4-6f49-8326-b368-81b701dbf52d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">df=run_athena_query(sql)</code></pre><p id="a56720e4-6f49-8345-a10e-011a05d44c98" class="" dir="auto">생성된 SQL을 Athena에서 실행한다.</p><p id="7c1720e4-6f49-8203-891b-01168124484b" class="" dir="auto">결과는 pandas DataFrame으로 반환된다.</p><hr id="c63720e4-6f49-82cd-b59d-01144657c8a8" dir="auto"/><pre id="c61720e4-6f49-823c-9935-81952439bafa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">print(&quot;\n[조회 결과]&quot;)
+print(df)</code></pre><p id="346720e4-6f49-826f-8912-014ebb2fdaac" class="" dir="auto">조회 결과를 터미널에 출력한다.</p><hr id="b00720e4-6f49-8329-803c-0143ed155e9d" dir="auto"/><h2 id="549720e4-6f49-8215-ab2d-8135e09aeb3e" class="" dir="auto">10.4 실행</h2><p id="911720e4-6f49-8204-be37-81a0a80c5d3b" class="" dir="auto">다음 명령어를 실행한다.</p><pre id="019720e4-6f49-83ba-a5e7-0144155ce08a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python 03_ask_cli.py</code></pre><p id="9e0720e4-6f49-8353-b8d0-016e0405f5ed" class="" dir="auto">질문을 입력한다.</p><pre id="5f6720e4-6f49-82cd-ac92-01021883bfbe" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">질문 입력: 카테고리별 매출 TOP 5를 보여줘</code></pre><p id="c53720e4-6f49-831a-8107-0166cc79d815" class="" dir="auto">예상 출력은 다음과 비슷하다.</p><pre id="d72720e4-6f49-83ea-8ae3-81eb946a2587" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">[생성된 SQL]
+SELECT
+  category,
+  SUM(quantity * unit_price - discount_amount) AS sales
+FROM ecommerce_sales
+GROUP BY category
+ORDER BY sales DESC
+LIMIT 5
+
+[조회 결과]
+  category     sales
+0     전자기기  12345678
+1       패션   3456789
+2       도서   2345678</code></pre><p id="d8f720e4-6f49-830a-a618-8198609bad38" class="" dir="auto">실제 결과는 샘플 데이터 내용에 따라 다를 수 있다.</p><hr id="661720e4-6f49-83fd-bee0-0144de7c93a5" dir="auto"/><h1 id="735720e4-6f49-8391-b2a4-813a21b15db9" class="" dir="auto">11. Streamlit 시각화 앱 작성</h1><h2 id="2e9720e4-6f49-8257-af08-010693ab0b96" class="" dir="auto">11.1 파일 역할</h2><p id="51c720e4-6f49-83cc-ae1b-0109fdd8be1b" class="" dir="auto">파일명은 다음과 같다.</p><pre id="96c720e4-6f49-83dd-9d31-01769f335061" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">04_streamlit_app.py</code></pre><p id="926720e4-6f49-828b-bb94-8184123221ec" class="" dir="auto">이 파일은 웹 기반 자연어 분석 화면을 만든다.</p><p id="ca7720e4-6f49-834c-be63-810a68d4378e" class="" dir="auto">앱에서 수행하는 작업은 다음과 같다.</p><pre id="d32720e4-6f49-825b-a936-01804b8903d2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">자연어 질문 입력창 제공
+차트 유형 선택 메뉴 제공
+Bedrock으로 SQL 생성
+생성된 SQL 출력
+Athena 쿼리 실행
+조회 결과 표 출력
+조회 결과 차트 출력
+오류 메시지 출력</code></pre><hr id="ad0720e4-6f49-835c-8e9e-011657396263" dir="auto"/><h2 id="35d720e4-6f49-8230-a60c-01bb3679de00" class="" dir="auto">11.2 코드 작성</h2><p id="53f720e4-6f49-8246-8142-81ef128f51d8" class="" dir="auto">파일명: <code>04_streamlit_app.py</code></p><pre id="d62720e4-6f49-82a7-a784-81fef61d7cce" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import streamlit as st
+import plotly.express as px
+
+from bedrock_sql_generator import generate_sql_from_question
+from athena_utils import run_athena_query
+
+st.set_page_config(
+    page_title=&quot;자연어 기반 S3 데이터 분석&quot;,
+    layout=&quot;wide&quot;
+)
+
+st.title(&quot;자연어 기반 S3 데이터 분석 및 시각화&quot;)
+st.caption(&quot;Amazon Bedrock + Amazon Athena + Amazon S3 + Streamlit&quot;)
+
+examples = [
+    &quot;전체 매출 합계를 알려줘&quot;,
+    &quot;월별 매출 추이를 보여줘&quot;,
+    &quot;카테고리별 매출 TOP 5를 보여줘&quot;,
+    &quot;지역별 주문 건수를 알려줘&quot;,
+    &quot;반품률이 가장 높은 카테고리를 보여줘&quot;,
+    &quot;2026년 1월 일자별 매출을 보여줘&quot;
+]
+
+question = st.text_input(
+    &quot;분석 질문&quot;,
+    value=examples[0],
+    placeholder=&quot;예: 카테고리별 매출 TOP 5를 보여줘&quot;
+)
+
+chart_type = st.selectbox(
+    &quot;차트 유형&quot;,
+    [&quot;자동&quot;, &quot;막대그래프&quot;, &quot;선그래프&quot;, &quot;파이차트&quot;, &quot;차트 없음&quot;]
+)
+
+run_button = st.button(&quot;분석 실행&quot;)
+
+if run_button:
+    try:
+        with st.spinner(&quot;Bedrock으로 SQL 생성 중...&quot;):
+            sql = generate_sql_from_question(question)
+
+        st.subheader(&quot;생성된 SQL&quot;)
+        st.code(sql, language=&quot;sql&quot;)
+
+        with st.spinner(&quot;Athena 쿼리 실행 중...&quot;):
+            df = run_athena_query(sql)
+
+        st.subheader(&quot;조회 결과&quot;)
+        st.dataframe(df, use_container_width=True)
+
+        if df.empty:
+            st.warning(&quot;조회 결과가 없다.&quot;)
+        elif chart_type != &quot;차트 없음&quot;:
+            st.subheader(&quot;시각화&quot;)
+
+            columns = list(df.columns)
+
+            if len(columns) &gt;= 2:
+                x_col = columns[0]
+                y_col = columns[1]
+
+                if chart_type == &quot;선그래프&quot;:
+                    fig = px.line(df, x=x_col, y=y_col, markers=True)
+                    st.plotly_chart(fig, use_container_width=True)
+                elif chart_type == &quot;파이차트&quot;:
+                    fig = px.pie(df, names=x_col, values=y_col)
+                    st.plotly_chart(fig, use_container_width=True)
+                else:
+                    # &#x27;자동&#x27; 또는 &#x27;막대그래프&#x27;인 경우
+                    fig = px.bar(df, x=x_col, y=y_col)
+                    st.plotly_chart(fig, use_container_width=True)
+            else:
+                st.info(&quot;차트를 만들려면 최소 2개 컬럼이 필요하다.&quot;)
+
+    except Exception as e:
+        st.error(str(e))</code></pre><hr id="e3f720e4-6f49-82b1-820d-812d78395564" dir="auto"/><h1 id="064720e4-6f49-837d-a0b1-8172c645b1a2" class="" dir="auto">12. Streamlit 코드 설명</h1><h2 id="2a4720e4-6f49-83a3-80d6-01c095a4c6e7" class="" dir="auto">12.1 Streamlit과 Plotly 가져오기</h2><pre id="9cf720e4-6f49-834c-b5b0-812c4451acd7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import streamlit as st</code></pre><p id="302720e4-6f49-82f0-9f75-817ac725ce8d" class="" dir="auto">Streamlit 라이브러리를 가져온다.</p><p id="026720e4-6f49-821f-b562-814215176c6f" class="" dir="auto"><code>st</code>는 Streamlit 기능을 호출하기 위한 별칭이다.</p><hr id="607720e4-6f49-82bf-a927-817b755e9c87" dir="auto"/><pre id="b55720e4-6f49-8288-b203-01fad1f679fb" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import plotly.express as px</code></pre><p id="4ea720e4-6f49-83c5-bd94-81b51d13a069" class="" dir="auto">Plotly Express를 가져온다.</p><p id="9dc720e4-6f49-8373-a541-815fff30751a" class="" dir="auto">간단한 막대그래프, 선그래프, 파이차트를 만들 때 사용한다.</p><hr id="946720e4-6f49-8331-a4bd-01511b57de22" dir="auto"/><h2 id="0bd720e4-6f49-838f-ac84-81ebac62cd28" class="" dir="auto">12.2 직접 작성한 함수 가져오기</h2><pre id="cb1720e4-6f49-83fb-be35-81c6c60a7fc6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from bedrock_sql_generator import generate_sql_from_question</code></pre><p id="c01720e4-6f49-82f2-aff3-8143a0bb0fc8" class="" dir="auto">자연어 질문을 SQL로 변환하는 함수를 가져온다.</p><hr id="07c720e4-6f49-8244-9494-0193f2b0f982" dir="auto"/><pre id="229720e4-6f49-836f-9fa5-814b21bc0482" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from athena_utils import run_athena_query</code></pre><p id="6ec720e4-6f49-821e-a1c2-01ac0c9be847" class="" dir="auto">Athena에서 SQL을 실행하고 결과를 DataFrame으로 가져오는 함수를 가져온다.</p><hr id="926720e4-6f49-838b-a233-8161fc88e5ae" dir="auto"/><h2 id="4bc720e4-6f49-824c-9a1d-8112b9f30059" class="" dir="auto">12.3 페이지 설정</h2><pre id="af4720e4-6f49-83e7-be40-015e346b2cf3" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">st.set_page_config(
+	page_title=&quot;자연어 기반 S3 데이터 분석&quot;,
+	layout=&quot;wide&quot;
+)</code></pre><p id="876720e4-6f49-8380-b3bb-81e90ac36040" class="" dir="auto">Streamlit 페이지의 기본 설정이다.</p><table id="a59720e4-6f49-83c1-a839-0150388a55b0" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="b2e720e4-6f49-83f7-97bb-81c5c5ed7826" dir="ltr"><th id="=^eC" class="simple-table-header-color simple-table-header">옵션</th><th id="Fbxm" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="121720e4-6f49-83d6-8482-81b7e022724d" dir="ltr"><td id="=^eC" class=""><code>page_title</code></td><td id="Fbxm" class="">브라우저 탭에 표시될 제목</td></tr><tr id="4c3720e4-6f49-83b0-b034-012e44fda509" dir="ltr"><td id="=^eC" class=""><code>layout=&quot;wide&quot;</code></td><td id="Fbxm" class="">화면을 넓게 사용</td></tr></tbody></table><hr id="ea2720e4-6f49-8349-8227-812a80e9401b" dir="auto"/><h2 id="366720e4-6f49-83d9-858d-814c49bcdf4a" class="" dir="auto">12.4 제목과 설명 출력</h2><pre id="de8720e4-6f49-8299-afe6-81de9a76121e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">st.title(&quot;자연어 기반 S3 데이터 분석 및 시각화&quot;)</code></pre><p id="259720e4-6f49-8321-8801-019a850e9325" class="" dir="auto">웹 페이지 상단에 큰 제목을 출력한다.</p><hr id="050720e4-6f49-83f4-9770-0108f993c018" dir="auto"/><pre id="1c6720e4-6f49-820e-ab4b-01d76c3845e8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">st.caption(&quot;Amazon Bedrock + Amazon Athena + Amazon S3 + Streamlit&quot;)</code></pre><p id="681720e4-6f49-8398-9351-01dc7859a5b3" class="" dir="auto">제목 아래에 작은 설명 문구를 출력한다.</p><hr id="a99720e4-6f49-82ad-85ce-019c4f711408" dir="auto"/><h2 id="0f1720e4-6f49-8262-bc2e-810e9a938bb4" class="" dir="auto">12.5 예시 질문 목록</h2><pre id="d28720e4-6f49-82d4-8eab-81f331d5a611" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">examples= [
+	&quot;전체 매출 합계를 알려줘&quot;,
+	&quot;월별 매출 추이를 보여줘&quot;,
+	&quot;카테고리별 매출 TOP 5를 보여줘&quot;,
+	&quot;지역별 주문 건수를 알려줘&quot;,
+	&quot;반품률이 가장 높은 카테고리를 보여줘&quot;,
+	&quot;2026년 1월 일자별 매출을 보여줘&quot;
+]</code></pre><p id="668720e4-6f49-832e-ab70-01fef1b812cf" class="" dir="auto">학생이 바로 테스트할 수 있는 예시 질문 목록이다.</p><p id="9c3720e4-6f49-8397-b1cb-81c2669b7de5" class="" dir="auto">예시 질문을 제공하면 학생이 어떤 질문을 입력해야 할지 쉽게 이해할 수 있다.</p><hr id="232720e4-6f49-8231-a56d-01a78207b641" dir="auto"/><h2 id="751720e4-6f49-83f5-81f1-011ea82bf9c1" class="" dir="auto">12.6 자연어 입력창</h2><pre id="2b3720e4-6f49-82a6-9ecd-8144a5fb7c03" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">question=st.text_input(
+		&quot;분석 질문&quot;,
+		value=examples[0],
+		placeholder=&quot;예: 카테고리별 매출 TOP 5를 보여줘&quot;
+)</code></pre><p id="7ac720e4-6f49-821e-8880-0139d43f09f6" class="" dir="auto">자연어 질문을 입력하는 텍스트 박스를 만든다.</p><table id="57f720e4-6f49-8214-bf64-0196150a3f1b" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="f05720e4-6f49-83c8-8e25-015aa7104361" dir="ltr"><th id="hk=S" class="simple-table-header-color simple-table-header">옵션</th><th id="CY&lt;z" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="a81720e4-6f49-821d-bf5a-810494a2f1f4" dir="ltr"><td id="hk=S" class=""><code>&quot;분석 질문&quot;</code></td><td id="CY&lt;z" class="">입력창의 라벨</td></tr><tr id="256720e4-6f49-8215-ac24-016cb9f1c7fd" dir="ltr"><td id="hk=S" class=""><code>value=examples[0]</code></td><td id="CY&lt;z" class="">기본 입력값</td></tr><tr id="496720e4-6f49-821a-879e-010d079dcc95" dir="ltr"><td id="hk=S" class=""><code>placeholder</code></td><td id="CY&lt;z" class="">입력 예시 안내 문구</td></tr></tbody></table><hr id="181720e4-6f49-83f7-921c-01424262869d" dir="auto"/><h2 id="b04720e4-6f49-8297-90dc-8173a04fc655" class="" dir="auto">12.7 차트 유형 선택</h2><pre id="9a0720e4-6f49-8381-a173-01760bb8f538" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">chart_type=st.selectbox(
+&quot;차트 유형&quot;,
+    [&quot;자동&quot;,&quot;막대그래프&quot;,&quot;선그래프&quot;,&quot;파이차트&quot;,&quot;차트 없음&quot;]
+)</code></pre><p id="088720e4-6f49-82b4-aafa-81ad22c20134" class="" dir="auto">차트 유형을 선택하는 드롭다운 메뉴를 만든다.</p><p id="689720e4-6f49-830b-94aa-01edabbaf954" class="" dir="auto">이번 실습에서는 <code>자동</code>도 막대그래프와 동일하게 처리된다.</p><table id="b41720e4-6f49-827f-884b-81b5022ecf79" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="031720e4-6f49-82da-87ba-8172881bf8eb" dir="ltr"><th id="IBjD" class="simple-table-header-color simple-table-header">선택값</th><th id="@V`@" class="simple-table-header-color simple-table-header">동작</th></tr></thead><tbody><tr id="28b720e4-6f49-82cb-aad0-0167c810f611" dir="ltr"><td id="IBjD" class=""><code>자동</code></td><td id="@V`@" class="">기본적으로 막대그래프 출력</td></tr><tr id="12d720e4-6f49-82c8-8741-01243409f1b5" dir="ltr"><td id="IBjD" class=""><code>막대그래프</code></td><td id="@V`@" class="">막대그래프 출력</td></tr><tr id="f94720e4-6f49-83d7-a087-01e34d9a11f1" dir="ltr"><td id="IBjD" class=""><code>선그래프</code></td><td id="@V`@" class="">선그래프 출력</td></tr><tr id="ef2720e4-6f49-83a1-95ad-016b7fd952d2" dir="ltr"><td id="IBjD" class=""><code>파이차트</code></td><td id="@V`@" class="">파이차트 출력</td></tr><tr id="32b720e4-6f49-82c9-bd38-01d8c064565e" dir="ltr"><td id="IBjD" class=""><code>차트 없음</code></td><td id="@V`@" class="">표만 출력</td></tr></tbody></table><hr id="7ed720e4-6f49-83ce-8a09-8131e62a14fa" dir="auto"/><h2 id="1f6720e4-6f49-82c9-8948-8136979edfb7" class="" dir="auto">12.8 분석 실행 버튼</h2><pre id="d08720e4-6f49-8210-a902-01746f891fd3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">run_button=st.button(&quot;분석 실행&quot;)</code></pre><p id="2de720e4-6f49-8220-ad91-014828cf37c3" class="" dir="auto">분석 실행 버튼을 만든다.</p><p id="342720e4-6f49-82cf-b1b5-810f603f3af8" class="" dir="auto">사용자가 이 버튼을 클릭하면 <code>run_button</code> 값이 <code>True</code>가 된다.</p><hr id="b26720e4-6f49-83ca-b04f-01a37eeb0a2a" dir="auto"/><pre id="d7e720e4-6f49-8245-bb14-01e34825dc17" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if run_button:</code></pre><p id="3e0720e4-6f49-8393-b26d-818ca50f4b25" class="" dir="auto">버튼이 눌렸을 때만 아래 분석 로직을 실행한다.</p><hr id="ff9720e4-6f49-838b-bbb7-81ee5f1a26a0" dir="auto"/><h2 id="cc8720e4-6f49-83a6-89e0-01c59c2cb571" class="" dir="auto">12.9 예외 처리 구조</h2><pre id="0e4720e4-6f49-82f2-a313-0147543019c5" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">try:
+    ...
+except Exceptionase:
+		st.error(str(e))</code></pre><p id="28c720e4-6f49-8322-a833-81ca2afdc66d" class="" dir="auto">분석 과정에서 오류가 발생하면 앱이 중단되지 않고 화면에 오류 메시지를 출력한다.</p><p id="4a2720e4-6f49-828b-ab24-01b086295f7b" class="" dir="auto">오류가 발생할 수 있는 대표 상황은 다음과 같다.</p><pre id="6f6720e4-6f49-82b6-a150-8100e0c25aa4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Bedrock 모델 ID가 잘못됨
+Bedrock 모델 접근 권한이 없음
+Athena SQL 문법 오류 발생
+S3 결과 파일을 읽을 수 없음
+.env 설정값이 누락됨</code></pre><hr id="ccc720e4-6f49-8324-8eb3-81ac241b5109" dir="auto"/><h2 id="462720e4-6f49-82aa-9ced-8183e3ee2acc" class="" dir="auto">12.10 Bedrock SQL 생성</h2><pre id="115720e4-6f49-8355-a26d-811be118946d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">withst.spinner(&quot;Bedrock으로 SQL 생성 중...&quot;):
+sql=generate_sql_from_question(question)</code></pre><p id="e42720e4-6f49-82a1-9fef-816ec6afbccf" class="" dir="auto"><code>st.spinner()</code>는 작업이 진행 중임을 화면에 표시한다.</p><p id="c37720e4-6f49-8258-868a-812dc49fd924" class="" dir="auto"><code>generate_sql_from_question(question)</code>은 사용자의 자연어 질문을 Bedrock에 전달하고 SQL을 반환한다.</p><hr id="259720e4-6f49-82d7-90ed-01d7c5d7b160" dir="auto"/><h2 id="762720e4-6f49-823b-b41b-8117e2425d39" class="" dir="auto">12.11 생성된 SQL 출력</h2><pre id="3ce720e4-6f49-829d-8a00-015093692974" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">st.subheader(&quot;생성된 SQL&quot;)
+st.code(sql,language=&quot;sql&quot;)</code></pre><p id="320720e4-6f49-8219-810a-81b07d1407b3" class="" dir="auto">생성된 SQL을 코드 블록 형태로 출력한다.</p><p id="218720e4-6f49-83c2-9f53-8170be5ecaa6" class="" dir="auto">이 SQL을 보고 Bedrock이 어떤 쿼리를 만들었는지 확인할 수 있다.</p><hr id="bf8720e4-6f49-8349-87a3-810dbf5bc4e4" dir="auto"/><h2 id="a92720e4-6f49-82d2-bbe3-819ccb169c3b" class="" dir="auto">12.12 Athena 쿼리 실행</h2><pre id="356720e4-6f49-82aa-90ab-018fa6ae19ee" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">with st.spinner(&quot;Athena 쿼리 실행 중...&quot;):
+	df=run_athena_query(sql)</code></pre><p id="7c9720e4-6f49-8229-b09a-010463317e88" class="" dir="auto">생성된 SQL을 Athena에서 실행한다.</p><p id="119720e4-6f49-8286-bd6a-81a84a69b104" class="" dir="auto">결과는 pandas DataFrame인 <code>df</code>에 저장된다.</p><hr id="42a720e4-6f49-838a-8d04-01e317b36a58" dir="auto"/><h2 id="ab3720e4-6f49-8238-8be7-01f7c850f4a9" class="" dir="auto">12.13 조회 결과 출력</h2><pre id="d47720e4-6f49-8316-95c9-01f3bdb16a1f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">st.subheader(&quot;조회 결과&quot;)
+st.dataframe(df,use_container_width=True)</code></pre><p id="215720e4-6f49-8267-9240-812544045646" class="" dir="auto">조회 결과를 표 형태로 출력한다.</p><p id="11b720e4-6f49-83ae-984a-01177a970c7c" class="" dir="auto"><code>use_container_width=True</code>는 표를 화면 너비에 맞게 표시한다.</p><hr id="b57720e4-6f49-83d2-8bd8-01d5524ed05a" dir="auto"/><h2 id="9c1720e4-6f49-834e-8c3a-81d09dc3b8c5" class="" dir="auto">12.14 결과가 비어 있는 경우 처리</h2><pre id="9a2720e4-6f49-8313-bd95-81400eb3b777" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if df.empty:
+  st.warning(&quot;조회 결과가 없다.&quot;)</code></pre><p id="e84720e4-6f49-8297-a024-0140f3193adb" class="" dir="auto">Athena 쿼리는 성공했지만 결과 행이 없을 수 있다.</p><p id="8ed720e4-6f49-8225-b49a-0130ac494d4a" class="" dir="auto">이 경우 빈 차트를 만들지 않고 경고 메시지를 출력한다.</p><hr id="02e720e4-6f49-8233-9036-010ba530b85b" dir="auto"/><h2 id="ac5720e4-6f49-82f3-b725-01f8119fa8fe" class="" dir="auto">12.15 차트 출력 조건</h2><pre id="64e720e4-6f49-8204-b391-8164790d13be" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">elifchart_type != &quot;차트 없음&quot;:</code></pre><p id="5ca720e4-6f49-8276-bb8e-818dc99a72f7" class="" dir="auto">사용자가 <code>차트 없음</code>을 선택하지 않은 경우에만 차트를 출력한다.</p><hr id="374720e4-6f49-82ef-bd02-811ffe17eefb" dir="auto"/><h2 id="6d4720e4-6f49-821d-869e-81f5b8eedc27" class="" dir="auto">12.16 차트에 사용할 컬럼 선택</h2><pre id="5c0720e4-6f49-83d9-abc4-819240e4d586" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">columns=list(df.columns)
+
+if len(columns) &gt;= 2:
+	x_col=columns[0]
+	y_col=columns[1]</code></pre><p id="bfc720e4-6f49-825e-8a18-819847343e21" class="" dir="auto">조회 결과에서 첫 번째 컬럼을 X축, 두 번째 컬럼을 Y축으로 사용한다.</p><p id="a39720e4-6f49-8315-944e-0128517e67ef" class="" dir="auto">예를 들어 결과가 다음과 같다면</p><table id="53a720e4-6f49-83c1-bbfa-81a42a68e888" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="e2b720e4-6f49-82a0-850f-01efff8a2ce6" dir="ltr"><th id=":mcH" class="simple-table-header-color simple-table-header">category</th><th id="dI\G" class="simple-table-header-color simple-table-header">sales</th></tr></thead><tbody><tr id="d19720e4-6f49-83fc-94a4-81a8ced45a23" dir="ltr"><td id=":mcH" class="">전자기기</td><td id="dI\G" class="">12000000</td></tr><tr id="fbb720e4-6f49-8271-911d-018188beee9a" dir="ltr"><td id=":mcH" class="">패션</td><td id="dI\G" class="">8000000</td></tr></tbody></table><p id="adc720e4-6f49-8277-ad1a-815c9c0fb2c1" class="" dir="auto">다음처럼 사용된다.</p><table id="0e2720e4-6f49-8217-8b43-810c375ce8db" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="5c6720e4-6f49-833f-8094-010d8cdc9f61" dir="ltr"><th id="GwTg" class="simple-table-header-color simple-table-header">역할</th><th id="O]oK" class="simple-table-header-color simple-table-header">컬럼</th></tr></thead><tbody><tr id="860720e4-6f49-8275-954c-81332e71c496" dir="ltr"><td id="GwTg" class="">X축</td><td id="O]oK" class=""><code>category</code></td></tr><tr id="7ec720e4-6f49-83f4-a8c2-015bcdd70845" dir="ltr"><td id="GwTg" class="">Y축</td><td id="O]oK" class=""><code>sales</code></td></tr></tbody></table><hr id="ad4720e4-6f49-833d-9650-019a8dd6f28d" dir="auto"/><h2 id="3eb720e4-6f49-8288-80f7-8114ac0d4fe4" class="" dir="auto">12.17 선그래프 출력</h2><pre id="940720e4-6f49-826b-89d1-014b6e1ae874" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if chart_type==&quot;선그래프&quot;:
+	fig=px.line(df,x=x_col,y=y_col,markers=True)
+	st.plotly_chart(fig,use_container_width=True)</code></pre><p id="f0b720e4-6f49-8231-8161-01b186f8ddb0" class="" dir="auto">선그래프는 시간 흐름에 따른 변화를 표현할 때 적합하다.</p><p id="403720e4-6f49-83da-bd51-814bf668f9e1" class="" dir="auto">예시는 다음과 같다.</p><pre id="fe2720e4-6f49-8398-a68e-8197f4066e8a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">월별 매출 추이
+일자별 주문 건수
+주차별 반품률</code></pre><hr id="7f9720e4-6f49-82db-b098-8163484c773c" dir="auto"/><h2 id="8fa720e4-6f49-821e-98d5-8179c1c6c7cd" class="" dir="auto">12.18 파이차트 출력</h2><pre id="fb1720e4-6f49-8226-b39d-01d702e48f7a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">elif chart_type==&quot;파이차트&quot;:
+	fig=px.pie(df,names=x_col,values=y_col)
+	st.plotly_chart(fig,use_container_width=True)</code></pre><p id="10c720e4-6f49-83d0-9689-81991af84131" class="" dir="auto">파이차트는 비중을 표현할 때 적합하다.</p><p id="911720e4-6f49-83c3-bba2-81b605919c83" class="" dir="auto">예시는 다음과 같다.</p><pre id="b87720e4-6f49-8389-b9f6-01c6c397eb27" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">지역별 주문 비중
+카테고리별 매출 비중
+판매 채널별 주문 비중</code></pre><hr id="eed720e4-6f49-83c9-b566-8120ff431340" dir="auto"/><h2 id="ebe720e4-6f49-8382-9d4a-81b49c2074d1" class="" dir="auto">12.19 막대그래프 출력</h2><pre id="efc720e4-6f49-8395-a0f5-8101cdfb5391" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">else:
+fig=px.bar(df,x=x_col,y=y_col)
+st.plotly_chart(fig,use_container_width=True)</code></pre><p id="123720e4-6f49-8210-bf75-81aa14bd5c82" class="" dir="auto">막대그래프는 그룹별 값을 비교할 때 적합하다.</p><p id="e85720e4-6f49-82c9-98f4-01521106cf77" class="" dir="auto">예시는 다음과 같다.</p><pre id="e79720e4-6f49-837d-83d7-81666bd1ea70" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">카테고리별 매출
+지역별 주문 건수
+상품별 판매 수량</code></pre><hr id="313720e4-6f49-839f-8e79-81a51bb4a7fc" dir="auto"/><h2 id="e32720e4-6f49-82e3-a48f-8144fdd0c059" class="" dir="auto">12.20 차트를 만들 수 없는 경우</h2><pre id="082720e4-6f49-8241-8b3c-8119d790cf39" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">else:
+st.info(&quot;차트를 만들려면 최소 2개 컬럼이 필요하다.&quot;)</code></pre><p id="bed720e4-6f49-83e9-ac82-0168b2c53d90" class="" dir="auto">차트는 보통 X축과 Y축이 필요하다.</p><p id="6d7720e4-6f49-8283-a3a0-016fdf35710c" class="" dir="auto">조회 결과 컬럼이 1개뿐이면 표는 출력할 수 있지만 차트 생성은 어렵다.</p><p id="3da720e4-6f49-83d9-9fa6-01655ca8b061" class="" dir="auto">예를 들어 다음 결과는 컬럼이 1개뿐이다.</p><p id="149720e4-6f49-83de-888d-81858d32a4f5" class="" dir="auto">total_sales</p><hr id="f6c720e4-6f49-82f5-ba0f-01b99e511b6a" dir="auto"/><p id="2e4720e4-6f49-8259-8044-01ff69f2fd6b" class="" dir="auto">30000000</p><hr id="c90720e4-6f49-82ea-9501-817df98cc114" dir="auto"/><p id="ed1720e4-6f49-837e-8203-012071d67e8b" class="" dir="auto">이런 경우에는 차트 대신 표로 확인한다.</p><h1 id="6f2720e4-6f49-82ec-b714-01c4002e4c3c" class="" dir="auto">13. Streamlit 앱 실행</h1><p id="d56720e4-6f49-834a-8df8-0137b52ff5aa" class="" dir="auto">다음 명령어로 앱을 실행한다.</p><pre id="cf7720e4-6f49-8237-8800-816dca330df9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">streamlit run 04_streamlit_app.py</code></pre><p id="db2720e4-6f49-82d5-a711-01656b85bcba" class="" dir="auto">명령어 설명은 다음과 같다.</p><table id="dbe720e4-6f49-82ae-b5f4-814ffaac4968" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="6cf720e4-6f49-83b4-8f06-819a3d053d79" dir="ltr"><th id="ODB=" class="simple-table-header-color simple-table-header">명령어</th><th id="XZyx" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="90b720e4-6f49-8369-a5c3-01b0a515f649" dir="ltr"><td id="ODB=" class=""><code>streamlit run</code></td><td id="XZyx" class="">Streamlit 앱을 실행한다</td></tr><tr id="ea3720e4-6f49-827c-a4bb-01b3846b79d4" dir="ltr"><td id="ODB=" class=""><code>04_streamlit_app.py</code></td><td id="XZyx" class="">실행할 앱 파일</td></tr></tbody></table><p id="5ae720e4-6f49-8373-9f0e-814c428a6466" class="" dir="auto">정상적으로 실행되면 브라우저가 열리고 다음과 같은 주소가 표시된다.</p><pre id="73d720e4-6f49-836e-a7ca-01c59360ae55" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://localhost:8501</code></pre><p id="ae5720e4-6f49-82b2-8b2f-8105180ba2e2" class="" dir="auto">브라우저가 자동으로 열리지 않으면 터미널에 표시된 URL을 직접 복사해서 브라우저에 붙여넣는다.</p><hr id="8fe720e4-6f49-83bc-812a-819a5ee82f05" dir="auto"/><h1 id="011720e4-6f49-832b-9a99-8103a35db503" class="" dir="auto">14. 앱 테스트</h1><h2 id="3ba720e4-6f49-833c-8180-810ee846d032" class="" dir="auto">14.1 기본 질문 테스트</h2><p id="b89720e4-6f49-82ce-bd52-0146bf994394" class="" dir="auto">입력창에 다음 질문을 입력한다.</p><pre id="e51720e4-6f49-8318-bceb-01d3bd916b23" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">전체 매출 합계를 알려줘</code></pre><p id="59b720e4-6f49-82db-b4c9-014a035732c6" class="" dir="auto">차트 유형은 <code>차트 없음</code>을 선택해도 된다.</p><p id="fd2720e4-6f49-825c-8db2-01d288f268de" class="" dir="auto">전체 매출 합계는 결과 컬럼이 1개일 가능성이 높기 때문에 표로 확인하는 것이 적합하다.</p><p id="2d9720e4-6f49-82c1-bf76-0155337a35aa" class="" dir="auto">예상 SQL은 다음과 비슷하다.</p><pre id="db9720e4-6f49-8244-bc52-81dc706ba20f" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  SUM(quantity* unit_price- discount_amount) AS total_sales
+FROM ecommerce_sales;</code></pre><hr id="39f720e4-6f49-822c-a662-81f38c9adb74" dir="auto"/><h2 id="838720e4-6f49-82f0-977e-81250b2dc414" class="" dir="auto">14.2 카테고리별 매출 테스트</h2><p id="589720e4-6f49-83a8-b5ea-81b301ab9e4a" class="" dir="auto">질문을 다음과 같이 입력한다.</p><pre id="184720e4-6f49-8259-a937-81a6aefeb777" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">카테고리별 매출 TOP 5를 보여줘</code></pre><p id="802720e4-6f49-831b-8c94-81e7cc3cdf95" class="" dir="auto">차트 유형은 <code>막대그래프</code>를 선택한다.</p><p id="dc1720e4-6f49-82ad-baa4-818feb5ce46d" class="" dir="auto">예상 SQL은 다음과 비슷하다.</p><pre id="6a1720e4-6f49-82bd-a01a-8107a72b092c" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  category,
+  SUM(quantity* unit_price- discount_amount)AS sales
+FROM ecommerce_sales
+GROUP BY category
+ORDER BY salesDESC
+LIMIT 5;</code></pre><p id="9e9720e4-6f49-82d2-9a88-8115a5fb4a58" class="" dir="auto">화면에서 확인할 항목은 다음과 같다.</p><pre id="27c720e4-6f49-8324-a209-81874106d412" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">생성된 SQL
+카테고리별 매출 표
+카테고리별 매출 막대그래프</code></pre><hr id="797720e4-6f49-824d-b456-01873a158964" dir="auto"/><h2 id="6b0720e4-6f49-824b-9815-81f76640ddf8" class="" dir="auto">14.3 월별 매출 추이 테스트</h2><p id="94c720e4-6f49-83b5-93d7-816a1854d85a" class="" dir="auto">질문을 다음과 같이 입력한다.</p><pre id="4a2720e4-6f49-829e-857a-017e0605cdea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">월별 매출 추이를 보여줘</code></pre><p id="f06720e4-6f49-8370-8477-017752fde0c5" class="" dir="auto">차트 유형은 <code>선그래프</code>를 선택한다.</p><p id="83f720e4-6f49-823f-b701-0153566fe760" class="" dir="auto">예상 SQL은 다음과 비슷하다.</p><pre id="ef3720e4-6f49-82c2-a542-014ca41f32e0" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  date_format(order_date,&#x27;%Y-%m&#x27;) AS order_month,
+  SUM(quantity* unit_price- discount_amount) AS sales
+FROM ecommerce_sales
+GROUP BY date_format(order_date,&#x27;%Y-%m&#x27;)
+ORDER BY order_month;</code></pre><p id="290720e4-6f49-826b-8d89-81b3c51fa115" class="" dir="auto">선그래프는 시간 흐름에 따른 변화를 보기 좋다.</p><hr id="d7d720e4-6f49-8265-8ee3-011121adeef3" dir="auto"/><h2 id="33d720e4-6f49-831f-a413-814a9a045807" class="" dir="auto">14.4 지역별 주문 건수 테스트</h2><p id="4d2720e4-6f49-8358-b019-0122083272af" class="" dir="auto">질문을 다음과 같이 입력한다.</p><pre id="977720e4-6f49-834d-af86-812441124876" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">지역별 주문 건수를 알려줘</code></pre><p id="1d2720e4-6f49-821c-9e4d-81d516529f54" class="" dir="auto">차트 유형은 <code>막대그래프</code>를 선택한다.</p><p id="f23720e4-6f49-82b7-a32e-01dafe6d3c39" class="" dir="auto">예상 SQL은 다음과 비슷하다.</p><pre id="dd1720e4-6f49-8314-8fc3-813ec76de55b" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  region,
+COUNT(*) AS order_count
+FROM ecommerce_sales
+GROUP BY region
+ORDER BY order_countDESC;</code></pre><hr id="e13720e4-6f49-82c6-8bbf-81171d509c14" dir="auto"/><h2 id="e3a720e4-6f49-829d-8071-012b702707e0" class="" dir="auto">14.5 반품률 분석 테스트</h2><p id="7aa720e4-6f49-839d-96dc-0175ac50b2ef" class="" dir="auto">질문을 다음과 같이 입력한다.</p><pre id="d64720e4-6f49-8312-ab08-012f248beccd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">반품률이 가장 높은 카테고리 TOP 5를 보여줘</code></pre><p id="84b720e4-6f49-8236-be20-0147df70e23c" class="" dir="auto">차트 유형은 <code>막대그래프</code>를 선택한다.</p><p id="a32720e4-6f49-82d2-85ca-018af3ac7dbc" class="" dir="auto">예상 SQL은 다음과 비슷하다.</p><pre id="bf1720e4-6f49-82f0-896d-01623fc84149" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  category,
+  SUM(CASEWHEN is_returned=trueTHEN1ELSE0END)*100.0/COUNT(*) AS return_rate
+FROM ecommerce_sales
+GROUP BY category
+ORDER BY return_rateDESC
+LIMIT5;</code></pre><hr id="3df720e4-6f49-8331-b87a-81e4981b1948" dir="auto"/><h1 id="ff6720e4-6f49-821f-85e5-0192b8235f7a" class="" dir="auto">15. 실습 질문 예시</h1><h2 id="589720e4-6f49-8243-a046-01306e2de5b0" class="" dir="auto">15.1 기본 집계 질문</h2><pre id="036720e4-6f49-821f-b5b7-01b3facd8806" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">전체 주문 건수를 알려줘</code></pre><pre id="cf1720e4-6f49-8352-ab0b-81681f123166" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">전체 매출 합계를 알려줘</code></pre><pre id="f0c720e4-6f49-825d-acf0-016b875628d8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">전체 반품 건수를 알려줘</code></pre><hr id="f13720e4-6f49-835b-83a0-81844763bf22" dir="auto"/><h2 id="aa0720e4-6f49-8379-8883-014dfb702bd8" class="" dir="auto">15.2 그룹별 집계 질문</h2><pre id="b9d720e4-6f49-82b3-a166-81fe5ff9735f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">카테고리별 매출을 보여줘</code></pre><pre id="f20720e4-6f49-82c6-a94b-8168ba9ebabb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">지역별 주문 건수를 알려줘</code></pre><pre id="836720e4-6f49-828b-9b01-812402f99d46" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">판매 채널별 매출을 비교해줘</code></pre><pre id="765720e4-6f49-83fb-a78b-8134bf551e95" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">결제 방식별 주문 건수를 보여줘</code></pre><hr id="2f6720e4-6f49-827e-ba8d-01eba55f1c1b" dir="auto"/><h2 id="447720e4-6f49-839e-bc60-814d7dd01df2" class="" dir="auto">15.3 날짜 기반 분석 질문</h2><pre id="686720e4-6f49-82b5-a043-81a0505bc758" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">월별 매출 추이를 보여줘</code></pre><pre id="24b720e4-6f49-8283-8fe0-81b0f201a925" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026년 1월 일자별 매출을 보여줘</code></pre><pre id="3e6720e4-6f49-8249-b68e-018fe261b1f3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026년 2월 카테고리별 매출을 보여줘</code></pre><hr id="59c720e4-6f49-82c4-8c92-01b58cb17501" dir="auto"/><h2 id="539720e4-6f49-82e3-b7df-811761af00e0" class="" dir="auto">15.4 TOP N 분석 질문</h2><pre id="033720e4-6f49-83a1-8a24-01df0aef505f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">매출이 높은 상품 TOP 10을 보여줘</code></pre><pre id="66e720e4-6f49-8396-804b-01aa3f86ad02" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">주문 수량이 많은 카테고리 TOP 5를 알려줘</code></pre><pre id="d81720e4-6f49-828b-bd8f-012346888a51" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">반품률이 가장 높은 카테고리 TOP 5를 보여줘</code></pre><hr id="6fa720e4-6f49-83e6-98ee-81f73c143035" dir="auto"/><h1 id="e14720e4-6f49-837f-95c2-01a02f8d2682" class="" dir="auto">16. 예상 SQL 예시</h1><h2 id="69c720e4-6f49-83a8-9b79-010a623c415d" class="" dir="auto">16.1 전체 매출 합계</h2><p id="71e720e4-6f49-83d6-8a73-01866c401214" class="" dir="auto">질문:</p><pre id="a10720e4-6f49-8311-9eed-0108b416b163" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">전체 매출 합계를 알려줘</code></pre><p id="46d720e4-6f49-82eb-bf2f-018fe868df04" class="" dir="auto">예상 SQL:</p><pre id="2f2720e4-6f49-820b-9b12-814eb721ab7f" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  SUM(quantity* unit_price- discount_amount) AS total_sales
+FROM ecommerce_sales;</code></pre><hr id="ebd720e4-6f49-8297-9fb9-0123f42b4b04" dir="auto"/><h2 id="328720e4-6f49-8313-99b8-81d1ffc09e7c" class="" dir="auto">16.2 카테고리별 매출</h2><p id="62c720e4-6f49-82cb-85ce-01d5593673b6" class="" dir="auto">질문:</p><pre id="752720e4-6f49-83f7-9060-017bed6d7828" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">카테고리별 매출을 보여줘</code></pre><p id="a71720e4-6f49-8265-9230-81737c7b8994" class="" dir="auto">예상 SQL:</p><pre id="a98720e4-6f49-8321-bc71-014ed5688996" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  category,
+  SUM(quantity* unit_price- discount_amount) AS sales
+FROM ecommerce_sales
+GROUP BY category
+ORDER BY sales DESC;</code></pre><hr id="d72720e4-6f49-833f-b3a7-816fbab1d88b" dir="auto"/><h2 id="444720e4-6f49-8281-92c6-017b0bb8cc98" class="" dir="auto">16.3 월별 매출 추이</h2><p id="a2b720e4-6f49-829e-abb9-814a8e611d1a" class="" dir="auto">질문:</p><pre id="3aa720e4-6f49-8349-9f9f-0138cb6c7788" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">월별 매출 추이를 보여줘</code></pre><p id="db9720e4-6f49-825a-b630-81346563f637" class="" dir="auto">예상 SQL:</p><pre id="78e720e4-6f49-8335-9a57-81353f290f1d" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  date_format(order_date,&#x27;%Y-%m&#x27;) AS order_month,
+  SUM(quantity* unit_price- discount_amount) AS sales
+FROM ecommerce_sales
+GROUP BY date_format(order_date,&#x27;%Y-%m&#x27;)
+ORDER BY order_month;</code></pre><hr id="968720e4-6f49-822d-b093-013b940de9c0" dir="auto"/><h2 id="732720e4-6f49-83db-8bb4-81b859c4f2f4" class="" dir="auto">16.4 반품률이 높은 카테고리</h2><p id="aa1720e4-6f49-823f-8ff6-0110ea4cab30" class="" dir="auto">질문:</p><pre id="a05720e4-6f49-83ac-bd4d-01e0c0e19d99" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">반품률이 가장 높은 카테고리 TOP 5를 보여줘</code></pre><p id="576720e4-6f49-823e-b7ef-013b8991b7b6" class="" dir="auto">예상 SQL:</p><pre id="274720e4-6f49-82ca-a5c7-01c51d6c1667" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  category,
+  SUM(CASEWHEN is_returned=trueTHEN1ELSE0END)*100.0/COUNT(*) AS return_rate
+FROM ecommerce_sales
+GROUP BY category
+ORDER BY return_rateDESC
+LIMIT5;</code></pre><hr id="e33720e4-6f49-829a-b480-8121c558baee" dir="auto"/><h1 id="073720e4-6f49-8311-aaeb-813152e758e6" class="" dir="auto">17. 자주 발생하는 오류와 해결</h1><h2 id="03f720e4-6f49-8358-9529-813575186da9" class="" dir="auto">17.1 Bedrock 모델 접근 오류</h2><p id="072720e4-6f49-82f8-a3a3-8150f679a55e" class="" dir="auto">오류 예시는 다음과 같다.</p><pre id="6a6720e4-6f49-83e7-b32d-018061945d3e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AccessDeniedException</code></pre><p id="054720e4-6f49-82b5-92b4-01a5111f0556" class="" dir="auto">가능한 원인은 다음과 같다.</p><pre id="387720e4-6f49-83ed-a39e-01689b790d2f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Bedrock 모델 접근 권한이 활성화되지 않음
+BEDROCK_MODEL_ID 값이 잘못됨
+서울 리전에서 해당 모델을 사용할 수 없음
+IAM에 bedrock:InvokeModel 권한이 없음</code></pre><p id="074720e4-6f49-82b6-80e0-81bb7e8fd92a" class="" dir="auto">해결 방법은 다음과 같다.</p><pre id="637720e4-6f49-82b9-98b5-01cae50eeb40" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon Bedrock 콘솔에서 Model access 확인
+.env 파일의 BEDROCK_MODEL_ID 확인
+AWS_REGION이 ap-northeast-2인지 확인
+수업용 IAM 권한 확인</code></pre><hr id="808720e4-6f49-8315-a883-81c2d4f615a1" dir="auto"/><h2 id="1f5720e4-6f49-829f-a997-817f46b7c65e" class="" dir="auto">17.2 Bedrock 모델 ID 오류</h2><p id="b16720e4-6f49-82f0-aae6-019dda2cb66c" class="" dir="auto">오류 예시는 다음과 같다.</p><pre id="d22720e4-6f49-8351-857a-01e8e0ba14ff" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ValidationException: The provided model identifier is invalid</code></pre><p id="2ab720e4-6f49-8273-a8eb-81ea6702d6a7" class="" dir="auto">가능한 원인은 다음과 같다.</p><pre id="4e6720e4-6f49-8365-bab1-81d9bbd4edbc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">BEDROCK_MODEL_ID 오타
+현재 리전에서 지원하지 않는 모델 ID 사용
+모델 접근 권한이 없는 모델 사용</code></pre><p id="990720e4-6f49-82f3-8dd4-01c8ff6b7d42" class="" dir="auto">해결 방법은 다음과 같다.</p><pre id="34f720e4-6f49-8229-be45-0171642504f6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Bedrock 콘솔에서 실제 모델 ID 확인
+.env 파일 수정
+터미널 또는 Streamlit 앱 재실행</code></pre><hr id="1d8720e4-6f49-83cd-af26-810a38fac57d" dir="auto"/><h2 id="488720e4-6f49-835b-a955-01aa93819ff3" class="" dir="auto">17.3 Athena 쿼리 실패</h2><p id="1ab720e4-6f49-838c-aeff-013e01487de6" class="" dir="auto">오류 예시는 다음과 같다.</p><pre id="b6b720e4-6f49-83fe-93c1-0116e484081b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Athena 쿼리 실패: FAILED, 원인: ...</code></pre><p id="322720e4-6f49-8272-ae25-018aa76834cb" class="" dir="auto">가능한 원인은 다음과 같다.</p><pre id="675720e4-6f49-8282-86a1-81d4cf9d5b98" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">생성된 SQL 문법 오류
+테이블 이름 오류
+컬럼 이름 오류
+Athena 결과 저장 S3 경로 오류</code></pre><p id="f88720e4-6f49-8246-ae9a-01f34a4bcaf1" class="" dir="auto">해결 방법은 다음과 같다.</p><pre id="06e720e4-6f49-838d-80b5-01712a393640" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Streamlit 화면의 생성된 SQL 확인
+Athena Query editor에서 SQL 직접 실행
+.env의 ATHENA_DATABASE, ATHENA_TABLE 값 확인
+S3의 athena-results/ 경로 확인</code></pre><hr id="4ef720e4-6f49-8256-b270-014d000c192d" dir="auto"/><h2 id="a1d720e4-6f49-8205-9fa9-0192ae7e6ec5" class="" dir="auto">17.4 SQL 검증 오류</h2><p id="3e1720e4-6f49-83f5-9df8-81ac8b9761ec" class="" dir="auto">오류 예시는 다음과 같다.</p><pre id="fb2720e4-6f49-83be-8f4d-813d22972eed" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SELECT 문만 실행할 수 있다.</code></pre><p id="4e3720e4-6f49-8306-b701-01621e04acfe" class="" dir="auto">또는 다음과 같다.</p><pre id="1b8720e4-6f49-8293-96c4-813ddcc29a4c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">허용되지 않은 SQL 키워드가 포함되어 있다: drop</code></pre><p id="66b720e4-6f49-8396-834f-81266c414aa3" class="" dir="auto">가능한 원인은 다음과 같다.</p><pre id="26c720e4-6f49-8374-9af3-812cbd943d07" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">모델이 SELECT가 아닌 SQL을 생성함
+사용자 질문이 데이터 삭제나 생성과 관련됨
+모델 응답에 설명 문장이 섞임</code></pre><p id="dcd720e4-6f49-839a-9678-014b0440d501" class="" dir="auto">해결 방법은 다음과 같다.</p><pre id="dec720e4-6f49-829d-b95c-0142e7aeec33" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">질문을 조회 중심으로 다시 작성
+프롬프트의 SQL만 출력한다 조건 강화
+extract_sql 함수 확인</code></pre><hr id="cb8720e4-6f49-82c2-bec9-819fdc69634d" dir="auto"/><h2 id="b1e720e4-6f49-83b5-b70e-014db902e352" class="" dir="auto">17.5 Streamlit 앱 실행 오류</h2><p id="e81720e4-6f49-833b-8a92-815af1ab45cd" class="" dir="auto">오류 예시는 다음과 같다.</p><pre id="9c0720e4-6f49-8377-b649-01403895aa0f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ModuleNotFoundError: No module named &#x27;streamlit&#x27;</code></pre><p id="bad720e4-6f49-83db-bf0f-8179f548522a" class="" dir="auto">해결 방법은 다음과 같다.</p><pre id="5b1720e4-6f49-8383-8ee5-0117fea7c1ab" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">pip install-r requirements.txt</code></pre><p id="bd2720e4-6f49-8244-b4bc-01f6da70948b" class="" dir="auto">가상환경이 활성화되어 있는지도 확인한다.</p><pre id="7ac720e4-6f49-826c-8f47-01a3d9288e94" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">which python
+which pip</code></pre><p id="475720e4-6f49-828f-91b0-81e6df9b6c3d" class="" dir="auto">Windows PowerShell에서는 다음 명령어를 사용한다.</p><pre id="5ce720e4-6f49-8389-b4bb-010ad80eb97b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">wherepython
+wherepip</code></pre><hr id="450720e4-6f49-835a-8e2e-819c657be6a4" dir="auto"/><h1 id="968720e4-6f49-8329-b4e3-01ff0c4e8984" class="" dir="auto">18. 실습 과제</h1><h2 id="50c720e4-6f49-83a8-9cc3-01e0bd05125e" class="" dir="auto">과제 1. 자연어 질문 실행 결과 정리</h2><p id="843720e4-6f49-8253-8f80-01d0d96b6265" class="" dir="auto">다음 질문을 Streamlit 앱에서 실행한다.</p><pre id="dcf720e4-6f49-834c-aeb1-813202e6c7ea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">전체 매출 합계를 알려줘
+카테고리별 매출 TOP 5를 보여줘
+월별 매출 추이를 보여줘
+지역별 주문 건수를 알려줘
+반품률이 가장 높은 카테고리를 보여줘</code></pre><p id="312720e4-6f49-83f9-b799-015ae89f1442" class="" dir="auto">제출 항목은 다음과 같다.</p><pre id="342720e4-6f49-828b-890d-01906020e414" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">질문
+생성된 SQL
+조회 결과
+차트 화면</code></pre><hr id="7c5720e4-6f49-8292-812e-01e8e5767f77" dir="auto"/><h2 id="c75720e4-6f49-832a-8e92-81f7f12a2ff9" class="" dir="auto">과제 2. SQL 검증 로직 강화</h2><p id="21c720e4-6f49-8291-9952-01f3570a0b50" class="" dir="auto"><code>validate_sql()</code> 함수에 다음 기능을 추가한다.</p><pre id="9ad720e4-6f49-834d-9dab-016d67108437" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">세미콜론이 2개 이상이면 차단
+information_schema 조회 차단
+허용 컬럼 목록에 없는 컬럼 사용 시 차단
+LIMIT이 없으면 자동으로 LIMIT 100 추가</code></pre><hr id="39c720e4-6f49-8365-9fa6-819bb370dab6" dir="auto"/><h2 id="552720e4-6f49-8350-8414-0184ae41b806" class="" dir="auto">과제 3. 차트 유형 자동 추천</h2><p id="da5720e4-6f49-82ae-b455-010e0bef63fe" class="" dir="auto">현재 앱은 차트 유형을 사용자가 직접 선택한다.</p><p id="d1b720e4-6f49-83be-a10a-817e80a26a26" class="" dir="auto">이를 Bedrock이 자동 추천하도록 변경한다.</p><p id="a35720e4-6f49-820b-8fa6-01beaf310cea" class="" dir="auto">Bedrock 출력 형식을 다음 JSON 형태로 제한한다.</p><pre id="35b720e4-6f49-83f0-b83a-812a6f825f5b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;sql&quot;:&quot;SELECT ...&quot;,
+  &quot;chart_type&quot;:&quot;bar&quot;
+}</code></pre><p id="41c720e4-6f49-831d-8a2c-81cf75cf851d" class="" dir="auto">허용할 차트 유형은 다음과 같다.</p><pre id="032720e4-6f49-8304-ae7c-81701f966728" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">bar
+line
+pie
+table</code></pre><hr id="e33720e4-6f49-822e-a281-011351ad5ca9" dir="auto"/><h2 id="dcb720e4-6f49-8343-9f64-01c9e8896cd0" class="" dir="auto">과제 4. 데이터 컬럼 확장</h2><p id="f46720e4-6f49-83b3-9110-81db9d880d03" class="" dir="auto">샘플 데이터에 다음 컬럼을 추가한다.</p><pre id="b2a720e4-6f49-82ca-b06e-81de9b711170" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">age_group
+gender
+membership_level
+delivery_status</code></pre><p id="c2e720e4-6f49-8267-a63b-011fcc462c81" class="" dir="auto">추가 후 Athena 테이블도 수정하고 다음 질문을 분석한다.</p><pre id="095720e4-6f49-823b-9003-81cc8983f2ed" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">멤버십 등급별 매출을 보여줘
+연령대별 반품률을 보여줘
+배송 상태별 주문 건수를 알려줘</code></pre><hr id="0ae720e4-6f49-8268-bf03-8130349f6a2d" dir="auto"/><h1 id="675720e4-6f49-8283-b345-8107666cd5e8" class="" dir="auto">19. 정리</h1><p id="7ff720e4-6f49-82af-b345-81c8cd4afa12" class="" dir="auto">Amazon Bedrock을 사용해 자연어 질문을 SQL로 변환하고, Athena 조회 결과를 Streamlit으로 시각화했다.</p><p id="aa6720e4-6f49-83b7-878f-01352bff3b78" class="" dir="auto">실습한 흐름은 다음과 같다.</p><pre id="ac0720e4-6f49-82e8-9325-01d9ed46d1a4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">자연어 질문 입력
+        ↓
+Bedrock SQL 생성
+        ↓
+SQL 검증
+        ↓
+Athena 쿼리 실행
+        ↓
+S3 결과 CSV 읽기
+        ↓
+pandas DataFrame 변환
+        ↓
+Streamlit 표/차트 출력</code></pre><p id="2ae720e4-6f49-8331-98c7-016837c4a1fe" class="" dir="auto">전체 실습을 완료하면 다음 구조를 구현한 것이다.</p><pre id="a90720e4-6f49-8210-b156-016613c5c4a3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CSV 데이터 생성
+→ S3 업로드
+→ Athena 테이블 생성
+→ Bedrock 자연어 SQL 생성
+→ Athena 쿼리 실행
+→ pandas DataFrame 변환
+→ Streamlit 시각화</code></pre><p id="2fb720e4-6f49-8245-baf5-019e19741498" class="" dir="auto">이 구조는 다음과 같은 실무 시스템으로 확장할 수 있다.</p><pre id="3ab720e4-6f49-82ff-aba8-815f69275612" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영 로그 자연어 분석 도구
+보안 이벤트 질의 시스템
+클라우드 비용 분석 챗봇
+S3 데이터 레이크 질의 인터페이스
+관리자용 자연어 BI 대시보드</code></pre><hr id="c1c720e4-6f49-8228-9d2c-810e2827fedc" dir="auto"/><h1 id="a6d720e4-6f49-822d-a3dd-81e10a81b943" class="" dir="auto">20. 실습 리소스 삭제</h1><p id="f8e720e4-6f49-829d-8694-01773451ea64" class="" dir="auto">실습 후 비용 발생을 막기 위해 리소스를 삭제한다.</p><h2 id="d47720e4-6f49-82b1-9f03-019d70b5124a" class="" dir="auto">20.1 S3 객체 삭제</h2><p id="f9c720e4-6f49-82ab-912d-81e9c23b8324" class="" dir="auto">아래 명령어에서 버킷 이름은 본인 버킷명으로 변경한다.</p><pre id="77b720e4-6f49-827f-ab0d-81c281a9e56d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3rm s3://nlp-s3-analytics-kim-123456789012--recursive</code></pre><p id="6f4720e4-6f49-828c-8103-81f2db7f9294" class="" dir="auto">명령어 설명은 다음과 같다.</p><table id="520720e4-6f49-8292-9fe0-01735b7bfb69" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="fb5720e4-6f49-831a-8a44-01862b4dc389" dir="ltr"><th id="DrX]" class="simple-table-header-color simple-table-header">명령어</th><th id="yW{=" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="2c4720e4-6f49-8382-aa3b-81c11a69b578" dir="ltr"><td id="DrX]" class=""><code>aws s3 rm</code></td><td id="yW{=" class="">S3 객체를 삭제한다</td></tr><tr id="b81720e4-6f49-826f-87dd-011d224b542b" dir="ltr"><td id="DrX]" class=""><code>--recursive</code></td><td id="yW{=" class="">버킷 안의 모든 객체를 재귀적으로 삭제한다</td></tr></tbody></table><hr id="450720e4-6f49-83f6-8965-81a542a69de2" dir="auto"/><h2 id="52e720e4-6f49-8200-b09b-0192964a3c16" class="" dir="auto">20.2 S3 버킷 삭제</h2><p id="814720e4-6f49-824e-ae51-81d0830baf71" class="" dir="auto">버킷 안의 객체를 모두 삭제한 뒤 버킷을 삭제한다.</p><pre id="bf6720e4-6f49-8322-9577-01723ff70c13" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3api delete-bucket \
+--bucket nlp-s3-analytics-kim-123456789012 \
+--region ap-northeast-2</code></pre><p id="2e2720e4-6f49-82ec-b475-011cc3ef56a4" class="" dir="auto">버킷이 비어 있지 않으면 삭제가 실패한다.</p><hr id="087720e4-6f49-833d-bce9-01565a5cc10f" dir="auto"/><h2 id="d12720e4-6f49-8217-82e7-81f73d0224c1" class="" dir="auto">20.3 Athena 테이블과 데이터베이스 삭제</h2><p id="858720e4-6f49-836b-be4e-81159ca7dfaf" class="" dir="auto">Athena Query editor에서 실행한다.</p><pre id="b3b720e4-6f49-8336-8093-01d813218c1a" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">DROP TABLE IF EXISTS nlp_s3_analytics_db.ecommerce_sales;
+DROP DATABASE IF EXISTS nlp_s3_analytics_db;</code></pre><hr id="7f9720e4-6f49-8398-b4c4-015d634ee4b1" dir="auto"/><h2 id="9a8720e4-6f49-8258-82af-81e70bfbf1c1" class="" dir="auto">20.4 로컬 실습 폴더 삭제</h2><p id="ba6720e4-6f49-8247-9fe6-81dfa9a10064" class="" dir="auto">macOS 또는 Linux:</p><pre id="43c720e4-6f49-8345-bf76-810306822c8e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cd ..
+rm -rf nlp-s3-bedrock-athena-lab</code></pre><p id="c3a720e4-6f49-834b-9ed3-81dee0c67370" class="" dir="auto">Windows PowerShell:</p><pre id="776720e4-6f49-82fa-835e-012884961989" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Remove-Item-Recurse-Force .\nlp-s3-bedrock-athena-lab</code></pre></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,800 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Aurora PostgreSQL 생성 및 고가용성 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="99e720e4-6f49-8275-8206-8125963c2250" class="page sans"><header><h1 class="page-title" dir="auto">Aurora PostgreSQL 생성 및 고가용성 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="17a720e4-6f49-8202-abd9-816dfa0717d0" class="" dir="auto">실습 목표</h2><p id="f04720e4-6f49-83a0-9367-01f0415db3c2" class="" dir="auto">이번 실습에서는 <strong>Amazon Aurora PostgreSQL 데이터베이스 클러스터</strong>를 생성하고 다음 기능을 확인한다.</p><ul id="0df720e4-6f49-8339-bcd4-811caac1b5a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Aurora PostgreSQL 생성</li></ul><ul id="51d720e4-6f49-83e0-bc81-8115d3c8a747" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Database Subnet 구성</li></ul><ul id="794720e4-6f49-8344-8022-017226371698" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DB Security Group 구성</li></ul><ul id="dd7720e4-6f49-83b1-9762-01d0687c1e69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DB Subnet Group 생성</li></ul><ul id="630720e4-6f49-82fe-914c-817c8a315442" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PostgreSQL 접속</li></ul><ul id="837720e4-6f49-8213-ba7e-81081bbd944b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Database / User 생성</li></ul><ul id="593720e4-6f49-820d-8939-81546d9c0502" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Parameter Group 적용</li></ul><ul id="bff720e4-6f49-8311-8411-011528efdfc7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Read Replica 동작 확인</li></ul><ul id="dfe720e4-6f49-8318-b502-81225f30bfab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Aurora Failover 테스트</li></ul><hr id="055720e4-6f49-83d1-91f6-0140feee76fb" dir="auto"/><h1 id="d16720e4-6f49-83d0-bd5c-01c41e558e71" class="" dir="auto">1. Database Network Baseline 생성</h1><p id="d7c720e4-6f49-8362-bf06-81618e7f260d" class="" dir="auto">Aurora는 <strong>서로 다른 AZ에 최소 2개의 DB Subnet</strong>이 필요하다.</p><h2 id="8d4720e4-6f49-820c-b763-810d22f46091" class="" dir="auto">1️⃣ Database Subnet 생성</h2><p id="724720e4-6f49-8393-a8fb-8117793dd28a" class="" dir="auto">AWS 콘솔 이동</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="b9e720e4-6f49-83d9-a7bb-8106a35c3023" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC → Subnets → Subnet 생성</code></pre><p id="602720e4-6f49-820f-9d9f-8107dc3f814b" class="" dir="auto">다음 명세로 생성한다.</p><table id="b6e720e4-6f49-829b-bc05-81d345af4f64" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="6ec720e4-6f49-8207-a146-019fedbfdb9f" dir="ltr"><th id="cnhX" class="simple-table-header-color simple-table-header">항목</th><th id=";Peu" class="simple-table-header-color simple-table-header">Database Subnet 01</th><th id="Z\Tr" class="simple-table-header-color simple-table-header">Database Subnet 02</th></tr></thead><tbody><tr id="f6e720e4-6f49-8354-aa21-011257bda7e8" dir="ltr"><td id="cnhX" class="">VPC</td><td id=";Peu" class="">이니셜-vpc-ap-01</td><td id="Z\Tr" class="">이니셜-vpc-ap-01</td></tr><tr id="b0d720e4-6f49-8207-adb6-818884d65414" dir="ltr"><td id="cnhX" class="">Subnet Name</td><td id=";Peu" class="">이니셜-sub-db-01</td><td id="Z\Tr" class="">이니셜-sub-db-02</td></tr><tr id="7a9720e4-6f49-8204-a2d5-01725ad31b9f" dir="ltr"><td id="cnhX" class="">AZ</td><td id=";Peu" class="">ap-northeast-2a</td><td id="Z\Tr" class="">ap-northeast-2c</td></tr><tr id="fce720e4-6f49-8295-a2f5-81adddf191cf" dir="ltr"><td id="cnhX" class="">CIDR</td><td id=";Peu" class="">10.0.80.0/24</td><td id="Z\Tr" class="">10.0.81.0/24</td></tr></tbody></table><ul id="37d720e4-6f49-8205-af1c-0106881ca6df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서로 다른 AZ에 DB Subnet이 존재해야 Aurora Multi-AZ 구성이 가능하다.</li></ul><hr id="815720e4-6f49-82fd-890d-011b501bfcab" dir="auto"/><h2 id="aaa720e4-6f49-8379-a253-01357b67f3f0" class="" dir="auto">2️⃣ Database Routing Table 생성</h2><p id="70b720e4-6f49-836f-a52f-01d99fab5074" class="" dir="auto">AWS 콘솔 이동</p><pre id="94e720e4-6f49-829c-8aa5-013132bdcb64" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC → Route Tables → 생성</code></pre><p id="f50720e4-6f49-82e7-a711-012d2471939e" class="" dir="auto">설정</p><table id="843720e4-6f49-83b4-8796-016c72441059" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="107720e4-6f49-8373-95a0-81877fa7656e" dir="ltr"><th id="c=Zk" class="simple-table-header-color simple-table-header">항목</th><th id="V&gt;CO" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="9aa720e4-6f49-8221-8e27-01c949a8e9c7" dir="ltr"><td id="c=Zk" class="">Name</td><td id="V&gt;CO" class="">이니셜-rtb-db</td></tr><tr id="a1e720e4-6f49-8214-a3c8-01b9b9e78302" dir="ltr"><td id="c=Zk" class="">VPC</td><td id="V&gt;CO" class="">이니셜-vpc-ap-01</td></tr></tbody></table><p id="797720e4-6f49-82ca-b2d0-81d893efd6c0" class="" dir="auto">생성 후 다음 서브넷 연결</p><ul id="009720e4-6f49-8336-9be4-81b90f9cf6c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이니셜-sub-db-01</li></ul><ul id="240720e4-6f49-8316-99a3-81d1d6334ea5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이니셜-sub-db-02</li></ul><hr id="ac0720e4-6f49-8279-a7de-81a354f8ccd5" dir="auto"/><h1 id="f07720e4-6f49-8347-9c89-010f8a0d5f03" class="" dir="auto">2. Security Group 생성</h1><p id="61a720e4-6f49-82f8-add7-81eed8aea350" class="" dir="auto">AWS 콘솔 이동</p><pre id="302720e4-6f49-83c6-a501-011124a1ada4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 → Security Groups → 생성</code></pre><p id="73e720e4-6f49-838b-a684-01c10141ec8a" class="" dir="auto">설정</p><table id="b6a720e4-6f49-827e-a5a9-01997ec79e4f" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="291720e4-6f49-8243-a01d-81fb1f23d0cf" dir="ltr"><th id="Rwcp" class="simple-table-header-color simple-table-header">항목</th><th id="uqUb" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="9bd720e4-6f49-8343-8695-817f9d668d8b" dir="ltr"><td id="Rwcp" class="">Name</td><td id="uqUb" class="">이니셜-sg-aurora</td></tr><tr id="0b6720e4-6f49-82eb-85f3-810f9ea27a5d" dir="ltr"><td id="Rwcp" class="">VPC</td><td id="uqUb" class="">이니셜-vpc-ap-01</td></tr></tbody></table><h3 id="8dc720e4-6f49-82b3-aecf-011e048190fc" class="" dir="auto">Inbound Rule</h3><table id="90c720e4-6f49-82b1-9854-81067b9af19b" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="1cb720e4-6f49-82c7-9fc7-01c95680974a" dir="ltr"><th id="KPyk" class="simple-table-header-color simple-table-header">Type</th><th id="e_pn" class="simple-table-header-color simple-table-header">Port</th><th id="iMXg" class="simple-table-header-color simple-table-header">Source</th></tr></thead><tbody><tr id="33c720e4-6f49-82c6-bc0a-819ad1dbe24d" dir="ltr"><td id="KPyk" class="">PostgreSQL</td><td id="e_pn" class="">5432</td><td id="iMXg" class="">10.0.0.0/16</td></tr></tbody></table><p id="c7d720e4-6f49-82d8-bd65-0103547f1ba2" class="" dir="auto">💡 VPC 내부에서만 DB 접속 허용한다.</p><hr id="041720e4-6f49-8371-8fba-81109bed59f3" dir="auto"/><h1 id="136720e4-6f49-8299-960f-81dc4af35a8b" class="" dir="auto">3. DB Subnet Group 생성</h1><p id="e1d720e4-6f49-8342-8767-01f3092ae82b" class="" dir="auto">Aurora는 <strong>DB Subnet Group</strong>을 통해 DB 인스턴스를 배치할 서브넷을 지정한다.</p><p id="aeb720e4-6f49-8397-a2dd-0129fa6114be" class="" dir="auto">AWS 콘솔 이동</p><pre id="100720e4-6f49-829f-9ba5-81346bfc7827" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">RDS → Subnet Groups → Create</code></pre><p id="862720e4-6f49-8385-8afb-01b0289e0f79" class="" dir="auto">설정</p><table id="cf6720e4-6f49-8218-b482-013fb0b6b64f" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="d71720e4-6f49-8246-b667-818bcf092e1c" dir="ltr"><th id="W@}v" class="simple-table-header-color simple-table-header">항목</th><th id="^q~M" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="779720e4-6f49-8351-ac04-01faafa9abf0" dir="ltr"><td id="W@}v" class="">Name</td><td id="^q~M" class="">이니셜-subgroup-aurora</td></tr><tr id="05d720e4-6f49-83ae-b425-0146ad188292" dir="ltr"><td id="W@}v" class="">VPC</td><td id="^q~M" class="">이니셜-vpc-ap-01</td></tr><tr id="e02720e4-6f49-8289-b411-81c85e15ddbc" dir="ltr"><td id="W@}v" class="">AZ</td><td id="^q~M" class="">ap-northeast-2a, ap-northeast-2c</td></tr><tr id="af9720e4-6f49-8363-acf9-819658455eae" dir="ltr"><td id="W@}v" class="">Subnet</td><td id="^q~M" class="">이니셜-sub-db-01, 이니셜-sub-db-02</td></tr></tbody></table><hr id="482720e4-6f49-8212-ad34-818cdda6916a" dir="auto"/><h1 id="7da720e4-6f49-8249-bd67-017ccb7fac0a" class="" dir="auto">4. Aurora PostgreSQL 생성</h1><p id="624720e4-6f49-83a6-aceb-81243f79b295" class="" dir="auto">AWS 콘솔 이동</p><pre id="ea7720e4-6f49-82f0-aa2e-81f5d5ed61c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">RDS → Databases → Create database</code></pre><h2 id="9ee720e4-6f49-83f1-8865-01505ae6204e" class="" dir="auto">Engine 설정</h2><table id="07f720e4-6f49-8231-a944-81e2f3692ba1" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="03e720e4-6f49-83ba-90f5-0151a5b3bb3e" dir="ltr"><th id="N&gt;Yq" class="simple-table-header-color simple-table-header">항목</th><th id="{BA}" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="eb5720e4-6f49-8256-8136-818108b45325" dir="ltr"><td id="N&gt;Yq" class="">Engine</td><td id="{BA}" class="">Aurora PostgreSQL</td></tr><tr id="790720e4-6f49-836e-a295-81c1c80effa8" dir="ltr"><td id="N&gt;Yq" class="">Version</td><td id="{BA}" class="">Aurora PostgreSQL 15</td></tr><tr id="4d7720e4-6f49-8396-a015-01f2a1c088f1" dir="ltr"><td id="N&gt;Yq" class="">Template</td><td id="{BA}" class="">Dev/Test</td></tr></tbody></table><hr id="cd8720e4-6f49-82d2-b7e4-81260d33f476" dir="auto"/><h2 id="2a1720e4-6f49-83bd-857d-01de6a3fce0c" class="" dir="auto">Database 설정</h2><table id="5f9720e4-6f49-83d8-9c1b-81152a41131a" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="be1720e4-6f49-836b-90ab-81a0690082ee" dir="ltr"><th id="_Wqw" class="simple-table-header-color simple-table-header">항목</th><th id="}td_" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="fc8720e4-6f49-8382-8954-81343fb94e3a" dir="ltr"><td id="_Wqw" class="">Cluster identifier</td><td id="}td_" class="">이니셜-rds-aurora</td></tr><tr id="908720e4-6f49-8364-b30a-81fa8eb93979" dir="ltr"><td id="_Wqw" class="">Master username</td><td id="}td_" class="">postgres</td></tr><tr id="854720e4-6f49-82bb-b304-81c6bb3dae22" dir="ltr"><td id="_Wqw" class="">Password</td><td id="}td_" class="">qwer1234</td></tr></tbody></table><hr id="de1720e4-6f49-8216-aa01-01d446169ebb" dir="auto"/><h2 id="055720e4-6f49-83d2-8243-812947f5495c" class="" dir="auto">Instance 설정</h2><table id="0c6720e4-6f49-8212-8580-018d730f693b" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="8bd720e4-6f49-83d7-8b2e-81610ddcf669" dir="ltr"><th id="|t^&lt;" class="simple-table-header-color simple-table-header">항목</th><th id="JtL}" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="73b720e4-6f49-83df-b873-01a9ce838921" dir="ltr"><td id="|t^&lt;" class="">Instance type</td><td id="JtL}" class="">db.t3.medium</td></tr><tr id="95a720e4-6f49-8217-8d47-01c6ff31275f" dir="ltr"><td id="|t^&lt;" class="">Multi-AZ</td><td id="JtL}" class="">생성 안함</td></tr></tbody></table><hr id="622720e4-6f49-8310-aa1a-011fef893534" dir="auto"/><h2 id="db9720e4-6f49-8308-91e8-016eec95f901" class="" dir="auto">Network 설정</h2><table id="3ac720e4-6f49-82c3-8218-0119f1a5c58a" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="567720e4-6f49-8348-a032-01c00eb6e37c" dir="ltr"><th id="vnOn" class="simple-table-header-color simple-table-header">항목</th><th id="p}W]" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="b39720e4-6f49-8285-adec-817077a81e4d" dir="ltr"><td id="vnOn" class="">VPC</td><td id="p}W]" class="">이니셜-vpc-ap-01</td></tr><tr id="8d9720e4-6f49-82d4-b379-016198f8ff21" dir="ltr"><td id="vnOn" class="">DB Subnet Group</td><td id="p}W]" class="">이니셜-subgroup-aurora</td></tr><tr id="bf2720e4-6f49-8301-8fa0-812093b218ac" dir="ltr"><td id="vnOn" class="">Public Access</td><td id="p}W]" class="">No</td></tr><tr id="c88720e4-6f49-8311-9989-0140a984d35a" dir="ltr"><td id="vnOn" class="">Security Group</td><td id="p}W]" class="">이니셜-sg-aurora</td></tr></tbody></table><hr id="1c3720e4-6f49-823c-81c3-0144681d4471" dir="auto"/><h1 id="523720e4-6f49-838b-92ac-01939b08e1df" class="" dir="auto">5. PostgreSQL 접속</h1><h2 id="4d6720e4-6f49-8248-95eb-81412cc44777" class="" dir="auto">1️⃣ PostgreSQL client 설치</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="ccf720e4-6f49-8389-9f0e-81734db3c0a5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">sudo apt update
+sudo apt install postgresql-client</code></pre><hr id="325720e4-6f49-83de-8201-8175e4b62024" dir="auto"/><h2 id="668720e4-6f49-82d4-84f4-01c3aa3f4cbd" class="" dir="auto">2️⃣ Aurora Endpoint 확인</h2><p id="446720e4-6f49-830f-9200-817a2c280d86" class="" dir="auto">AWS 콘솔 이동</p><pre id="f5f720e4-6f49-835f-8a24-0149370aabc4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">RDS → Databases → 이니셜-rds-aurora</code></pre><p id="ef9720e4-6f49-82e9-92cc-8181f05d78d4" class="" dir="auto">다음 값 복사</p><pre id="67e720e4-6f49-831b-9363-01e897198193" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Cluster Endpoint</code></pre><hr id="b0f720e4-6f49-8348-91dc-81078e6f42ea" dir="auto"/><h2 id="eb1720e4-6f49-82f3-b2b7-81d9b93e79d8" class="" dir="auto">3️⃣ PostgreSQL 접속</h2><pre id="98f720e4-6f49-83dc-bbeb-81bd86082bb0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">psql -U postgres -h {RDS_AURORA_ENDPOINT}</code></pre><p id="6de720e4-6f49-82b8-8c35-81167a120b4c" class="" dir="auto">비밀번호 입력</p><pre id="1b0720e4-6f49-833a-b4bf-01402fe86ba3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">qwer1234</code></pre><p id="2c4720e4-6f49-833e-9aad-0177f8df0a79" class="" dir="auto">정상 접속 화면</p><pre id="e98720e4-6f49-8244-9678-81711ee8bcb0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">postgres=&gt;</code></pre><hr id="0ef720e4-6f49-82e0-a50f-810168f6e450" dir="auto"/><h1 id="9fb720e4-6f49-8225-a7a2-81a16ae3df74" class="" dir="auto">6. Database 및 User 생성</h1><p id="8de720e4-6f49-82a1-82a0-81375fe68377" class="" dir="auto">Aurora 접속 상태에서 실행</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" integrity="sha512-sijCOJblSCXYYmXdwvqV0tak8QJW5iy2yLB1wAbbLc3OOIueqymizRFWUS/mwKctnzPKpNdPJV3aK1zlDMJmXQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="929720e4-6f49-830a-956c-015b896d614f" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">create database trip_advisor;
+
+create user &quot;user&quot; with password &#x27;qwer1234&#x27;;
+
+grant all privileges on database trip_advisor to &quot;user&quot;;
+
+alter database trip_advisor owner to &quot;user&quot;;</code></pre><hr id="b53720e4-6f49-8347-8795-81b20cfb907a" dir="auto"/><h2 id="dde720e4-6f49-8351-aa27-81f3087f47b1" class="" dir="auto">user 계정 접속 테스트</h2><pre id="fc1720e4-6f49-834d-b961-8189e15962be" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">psql -U user -d trip_advisor -h {RDS_AURORA_ENDPOINT}</code></pre><hr id="c47720e4-6f49-8298-a551-01a7b782de8c" dir="auto"/><h1 id="e0a720e4-6f49-82e2-8de4-814de98c8b40" class="" dir="auto">7. Custom Parameter Group 생성</h1><p id="924720e4-6f49-833d-84ea-81a5c79230e8" class="" dir="auto">Parameter Group은 <strong>DB 설정값 관리 기능</strong>이다.</p><h3 id="ee1720e4-6f49-82d5-9f3f-81f7cfa144f3" class="" dir="auto">Parameter Group 생성</h3><p id="9e7720e4-6f49-82bb-bc7f-81d4b2420024" class="" dir="auto">AWS 콘솔 이동</p><pre id="2f9720e4-6f49-829c-baeb-01f2810146a8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">RDS → Parameter Groups → Create</code></pre><p id="5f0720e4-6f49-8200-a3ce-81eda37a69b7" class="" dir="auto">설정</p><table id="020720e4-6f49-8202-b288-81fc09d3f33c" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="cfb720e4-6f49-8225-bcb2-01847e9f30b5" dir="ltr"><th id="xUju" class="simple-table-header-color simple-table-header">항목</th><th id="]t^K" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="89b720e4-6f49-834e-af7c-013986e12891" dir="ltr"><td id="xUju" class="">Name</td><td id="]t^K" class="">이니셜-pg-postgresql</td></tr><tr id="bb5720e4-6f49-83ac-bf2a-014750423630" dir="ltr"><td id="xUju" class="">Engine</td><td id="]t^K" class="">Aurora PostgreSQL</td></tr><tr id="36a720e4-6f49-83ec-a872-01cedebb774d" dir="ltr"><td id="xUju" class="">Family</td><td id="]t^K" class="">aurora-postgresql15</td></tr><tr id="766720e4-6f49-839c-958c-01f6fc9b0e1a" dir="ltr"><td id="xUju" class="">Type</td><td id="]t^K" class="">DB Cluster Parameter Group</td></tr></tbody></table><hr id="413720e4-6f49-8285-b8a4-015305ed3d63" dir="auto"/><h3 id="852720e4-6f49-8334-9c23-8163f97efbc4" class="" dir="auto">timezone 설정</h3><p id="4e3720e4-6f49-8248-a8d6-8147124baa2d" class="" dir="auto">Parameter Group 수정</p><pre id="e4b720e4-6f49-8377-8082-814bd22f7eb0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">timezone = Asia/Seoul</code></pre><hr id="8c9720e4-6f49-8309-a119-810eddc35676" dir="auto"/><h3 id="0f7720e4-6f49-82dd-b7ff-011112106999" class="" dir="auto">Parameter Group 적용</h3><pre id="b63720e4-6f49-8250-a5c6-814eae65978a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">RDS → Databases → 이니셜-rds-aurora → Modify</code></pre><p id="708720e4-6f49-83c6-8ea2-8130fff3a884" class="" dir="auto">다음 변경</p><pre id="483720e4-6f49-82d9-b85d-0120149ce2f1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">DB Cluster Parameter Group
+→ 이니셜-pg-postgresql</code></pre><hr id="ae2720e4-6f49-8370-8cb1-014e2b4ce07d" dir="auto"/><h3 id="28e720e4-6f49-821d-8afd-014738a45708" class="" dir="auto">적용 확인</h3><pre id="86f720e4-6f49-82fe-b739-8105e3c80190" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SHOW timezone;</code></pre><p id="2f8720e4-6f49-822a-ad18-01e9a5c36bdb" class="" dir="auto">결과</p><pre id="ef2720e4-6f49-83b1-a5d9-8156b3238442" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Asia/Seoul</code></pre><hr id="a1c720e4-6f49-83d7-bf7b-81bc7aebdd9c" dir="auto"/><h1 id="186720e4-6f49-82e6-89a9-818bd972eb18" class="" dir="auto">8. Read Replica 테스트</h1><p id="4fb720e4-6f49-8392-b49f-016ba9c34d86" class="" dir="auto">Aurora Reader 인스턴스를 생성한다.</p><p id="e56720e4-6f49-8306-8fd2-8148ba1489e5" class="" dir="auto">AWS 콘솔 이동</p><pre id="384720e4-6f49-83d5-9dff-81efff1652ab" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">RDS → Databases → 이니셜-rds-aurora → Actions → Add reader</code></pre><hr id="0e9720e4-6f49-825c-895f-01890ba0de68" dir="auto"/><h1 id="94b720e4-6f49-8325-9e19-81a9f211e5e7" class="" dir="auto">9. Writer / Reader 테스트</h1><h2 id="8f0720e4-6f49-833f-a278-01bcef477466" class="" dir="auto">Writer 접속</h2><pre id="961720e4-6f49-823b-a046-013ce77b8ac3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">psql -U user -d trip_advisor -h {WRITER_ENDPOINT}</code></pre><hr id="043720e4-6f49-8224-ad33-81ff812c4be7" dir="auto"/><h2 id="c9c720e4-6f49-83a0-a759-81c8c49a771f" class="" dir="auto">테스트 테이블 생성</h2><pre id="4d4720e4-6f49-82ba-8a34-01f680b9dc61" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">CREATE TABLE attractions (
+ id SERIAL PRIMARY KEY,
+ name VARCHAR(255),
+ location VARCHAR(255),
+ average_rating VARCHAR(10),
+ photo_url VARCHAR(255)
+);</code></pre><hr id="d26720e4-6f49-83ba-86d5-81a5f037698b" dir="auto"/><h2 id="e45720e4-6f49-8362-bc74-81cca0b5e243" class="" dir="auto">Reader 조회 반복</h2><pre id="9cd720e4-6f49-83e9-b8d2-81f182446259" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">while true; do
+ PGPASSWORD=&quot;qwer1234&quot; psql \
+ -h {READER_ENDPOINT} \
+ -U user \
+ -d trip_advisor \
+ -c &quot;select * from attractions;&quot;;
+ sleep 10;
+done</code></pre><hr id="e3c720e4-6f49-8378-b0e4-814957f4cfee" dir="auto"/><h2 id="387720e4-6f49-83a3-b44a-81d7d9468b36" class="" dir="auto">Writer에서 데이터 입력</h2><pre id="cc4720e4-6f49-83c6-8969-01aec5b5ecb5" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">INSERT INTO attractions
+(name,location,average_rating)
+VALUES
+(&#x27;Eiffel Tower&#x27;,&#x27;Paris&#x27;,4.7),
+(&#x27;Statue of Liberty&#x27;,&#x27;New York&#x27;,4.6),
+(&#x27;Taj Mahal&#x27;,&#x27;India&#x27;,4.9);</code></pre><p id="4e7720e4-6f49-832c-987f-010b46d16adb" class="" dir="auto">10초 후 Reader에서 데이터 확인 가능하다.</p><hr id="7c7720e4-6f49-839a-bd08-0179b94abb3d" dir="auto"/><h1 id="57f720e4-6f49-83ac-a82f-01cde92c439f" class="" dir="auto">10. Aurora Failover 테스트</h1><p id="774720e4-6f49-827c-a34e-81168f7c63e4" class="" dir="auto">Aurora는 Writer 장애 시 Reader가 자동 승격된다.</p><hr id="f27720e4-6f49-8294-99bf-01172db8abc7" dir="auto"/><h2 id="9f1720e4-6f49-824d-bd0e-01c84ab0d5f7" class="" dir="auto">Writer IP 확인</h2><pre id="e5e720e4-6f49-8282-a8aa-81f9fdb3cf62" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">nslookup {WRITER_ENDPOINT} \
+| grep -E &quot;Address: 10\.&quot; \
+| awk &#x27;{print $2}&#x27;</code></pre><hr id="a98720e4-6f49-8260-aaff-81a5b27547cf" dir="auto"/><h2 id="6c9720e4-6f49-8371-9801-81b9c9df0e40" class="" dir="auto">Writer IP 반복 조회</h2><pre id="686720e4-6f49-8215-9994-016a5a096881" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">while true; do
+ nslookup {WRITER_ENDPOINT} \
+ | grep -E &quot;Address: 10\.&quot; \
+ | awk &#x27;{print $2}&#x27;
+ sleep 1
+done</code></pre><hr id="a19720e4-6f49-83b2-a7bf-8109d85db90e" dir="auto"/><h2 id="9d2720e4-6f49-827b-beaf-81489973b56c" class="" dir="auto">Failover 실행</h2><p id="475720e4-6f49-83e4-8dee-81566c6673e0" class="" dir="auto">AWS 콘솔 이동</p><pre id="1b8720e4-6f49-82aa-a6ff-017185a0b8c7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">RDS → Databases → 이니셜-rds-aurora → Actions → Failover</code></pre><hr id="631720e4-6f49-82cd-9de0-01d4a40f141a" dir="auto"/><h2 id="b63720e4-6f49-824e-8744-0199e86f8f79" class="" dir="auto">결과 확인</h2><p id="347720e4-6f49-8245-9ab1-81f0add5b297" class="" dir="auto">터미널에서 Writer IP가 변경된다.</p><p id="ea6720e4-6f49-8216-8395-01c5428751a8" class="" dir="auto">즉</p><pre id="bf5720e4-6f49-8229-8b6b-01d0e3dc8f57" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">기존 Reader → 새로운 Writer</code></pre><p id="849720e4-6f49-83fd-aeb3-0199be61572d" class="" dir="auto">승격된 것이다.</p><hr id="729720e4-6f49-82ef-bb82-01b91367c4bf" dir="auto"/><h1 id="be7720e4-6f49-839c-9efc-019353ee3492" class="" dir="auto">핵심 정리</h1><p id="69a720e4-6f49-8305-b7e2-813ba0451b50" class="" dir="auto">Aurora 특징</p><table id="4c2720e4-6f49-8313-b00f-81eac89e6b16" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="5dd720e4-6f49-82da-a5c3-013879fdddee" dir="ltr"><th id=":MB_" class="simple-table-header-color simple-table-header">항목</th><th id="lXaJ" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="5a3720e4-6f49-8274-88e6-81dcde89ecd3" dir="ltr"><td id=":MB_" class="">Multi-AZ</td><td id="lXaJ" class="">여러 AZ에 DB 배치</td></tr><tr id="97f720e4-6f49-8338-b00e-012891c1b084" dir="ltr"><td id=":MB_" class="">Reader Instance</td><td id="lXaJ" class="">읽기 확장</td></tr><tr id="d48720e4-6f49-8377-ad32-018bb5ac0671" dir="ltr"><td id=":MB_" class="">Failover</td><td id="lXaJ" class="">자동 장애 조치</td></tr><tr id="edc720e4-6f49-83e5-9847-813911cd7628" dir="ltr"><td id=":MB_" class="">Endpoint</td><td id="lXaJ" class="">고정 IP 대신 DNS 사용</td></tr></tbody></table><hr id="68b720e4-6f49-8386-a058-013baaf07c99" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,813 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>CloudFront + 일반 S3 Origin 배포 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="e44720e4-6f49-832d-a384-0117aba823a7" class="page sans"><header><h1 class="page-title" dir="auto">CloudFront + 일반 S3 Origin 배포 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h1 id="a16720e4-6f49-83c7-9588-817f880b1456" class="" dir="auto">1. 실습 목표</h1><p id="978720e4-6f49-83b8-b058-01c16adc984f" class="" dir="auto">이 실습에서는 S3에 정적 웹 콘텐츠를 업로드하고, CloudFront를 통해 사용자에게 콘텐츠를 배포하는 구조를 구성한다.</p><p id="4f0720e4-6f49-824d-bcb2-01ff76ac4cc9" class="" dir="auto">이 실습의 핵심 목표는 다음과 같다.</p><ul id="850720e4-6f49-82f9-82b5-81fafca02dfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3를 정적 콘텐츠 저장소로 사용</li></ul><ul id="57d720e4-6f49-83b6-bcca-01d45eff13b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront를 통해 전 세계 엣지 로케이션에서 콘텐츠 제공</li></ul><ul id="fa8720e4-6f49-8358-8996-01b49115d572" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷은 비공개로 유지</li></ul><ul id="05e720e4-6f49-8256-a041-01462cf599ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront만 S3 버킷에 접근 가능하도록 OAC 구성</li></ul><ul id="ade720e4-6f49-831a-8a04-01d7929bdcd4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPS 기반으로 정적 사이트 제공</li></ul><ul id="9f3720e4-6f49-83f7-b60a-81f65b239824" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 website endpoint 방식과 OAC 방식의 차이 이해</li></ul><p id="73b720e4-6f49-82e7-9f51-81c78d1dc560" class="" dir="auto">정적 사이트를 안전하게 운영하는 관점에서 보면, <strong>일반 S3 오리진 + OAC</strong> 방식이 보안상 더 적절하다. </p><hr id="dd9720e4-6f49-82f1-81f0-0127bddfc96c" dir="auto"/><h1 id="1cb720e4-6f49-830c-801a-819f3f0eb75d" class="" dir="auto">2. 전체 아키텍처</h1><p id="050720e4-6f49-83f4-ade0-81e406e4a175" class="" dir="auto">이번 실습에서 구성할 아키텍처는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="062720e4-6f49-825e-a820-015140f5ae6c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+  │
+  │ HTTPS 요청
+  ▼
+CloudFront
+  │
+  │ OAC
+  ▼
+Private S3 Bucket</code></pre><p id="e84720e4-6f49-83c3-ac5d-01795bbc9d89" class="" dir="auto">이 구조에서 중요한 점은 다음과 같다.</p><ul id="fc7720e4-6f49-821b-9ff7-816e1234a865" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 CloudFront 도메인으로 접속</li></ul><ul id="344720e4-6f49-82a0-b4a0-0146347dbc10" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront가 S3 버킷에서 객체를 가져옴</li></ul><ul id="466720e4-6f49-82a6-a0de-01a36b1bdb21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷은 외부에 직접 공개하지 않음</li></ul><ul id="e5b720e4-6f49-827e-87f3-81b74413e53c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront만 버킷 접근 가능</li></ul><p id="35d720e4-6f49-8270-9798-016355fddc5b" class="" dir="auto">이 구조는 정적 파일을 공개 서비스로 제공하되, <strong>오리진 저장소 자체는 비공개로 보호</strong>하는 형태다. </p><hr id="78b720e4-6f49-823a-a7bd-81b1266a9240" dir="auto"/><h1 id="f42720e4-6f49-8311-a099-811a5fda1b28" class="" dir="auto">3. 먼저 구분해야 하는 두 가지 방식</h1><p id="ef4720e4-6f49-82b8-b96d-817cdced3cea" class="" dir="auto">CloudFront와 S3를 함께 사용할 때는 아래 두 가지 구성을 구분해야 한다.</p><h2 id="90a720e4-6f49-82c3-990b-01219bd89c2f" class="" dir="auto">3.1 방식 A: S3 website endpoint 사용</h2><p id="d55720e4-6f49-8389-8a6f-8182079b17bb" class="" dir="auto">이 방식은 S3의 <strong>Static Website Hosting</strong> 기능을 켜고, 생성된 <strong>website endpoint</strong>를 CloudFront 오리진으로 연결하는 구성이다.</p><p id="c1a720e4-6f49-8326-8639-8148bc82e3db" class="" dir="auto">예</p><pre id="8b2720e4-6f49-8319-bdcc-815d57f02061" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">bucket-name.s3-website-ap-northeast-2.amazonaws.com</code></pre><p id="be5720e4-6f49-82fe-a936-01371fa5875b" class="" dir="auto">이 방식의 특징은 다음과 같다.</p><ul id="ffa720e4-6f49-8340-a21e-81647ebd053d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 website endpoint 사용</li></ul><ul id="3bf720e4-6f49-82bd-bb19-01384538f7ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront에서는 custom origin으로 동작</li></ul><ul id="8b6720e4-6f49-8335-906b-812503a83e36" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오리진 연결은 HTTP only</li></ul><ul id="4c3720e4-6f49-8337-b021-8159706431e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OAC 사용 불가</li></ul><ul id="3c6720e4-6f49-83ad-84f0-011b30a2709d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공개 읽기 가능한 객체 구성이 필요</li></ul><p id="a39720e4-6f49-8397-9abe-018b285050b2" class="" dir="auto"> <strong>website endpoint는 HTTPS를 지원하지 않으며</strong>, 이 엔드포인트를 CloudFront 오리진으로 사용할 경우 <strong>custom origin</strong>이 되어 <strong>OAC 또는 OAI를 사용할 수 없다</strong>. 또한 website endpoint는 <strong>공개적으로 읽을 수 있는 콘텐츠만 지원</strong>한다.</p><h2 id="200720e4-6f49-820c-bb16-0163f55e9071" class="" dir="auto">3.2 방식 B: 일반 S3 버킷 오리진 + OAC 사용</h2><p id="9e5720e4-6f49-83fd-8790-018057bfdb16" class="" dir="auto">이 방식은 S3의 website endpoint가 아니라, <strong>일반 S3 버킷 자체</strong>를 CloudFront 오리진으로 사용하는 구성이다.</p><p id="75a720e4-6f49-83d9-bcb7-81e6a1e6122e" class="" dir="auto">예</p><pre id="05f720e4-6f49-8336-9a77-81654f3035a0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">bucket-name.s3.ap-northeast-2.amazonaws.com</code></pre><p id="aa7720e4-6f49-8399-afc0-0158ca75a371" class="" dir="auto">이 방식의 특징은 다음과 같다.</p><ul id="871720e4-6f49-82dd-9726-0191c8b45d35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일반 S3 bucket origin 사용</li></ul><ul id="048720e4-6f49-820c-8f61-81dfee2c6ab8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OAC 적용 가능</li></ul><ul id="0d3720e4-6f49-82a4-bea5-813a0da740f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷 비공개 유지 가능</li></ul><ul id="7e7720e4-6f49-83db-a385-8151f71f5dda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront를 통해서만 접근 가능</li></ul><ul id="c67720e4-6f49-8225-9918-81477f27b249" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 보안상 권장되는 방식</li></ul><hr id="6a5720e4-6f49-8296-b882-01290a5756e3" dir="auto"/><h1 id="b12720e4-6f49-83d6-b62d-0104aa4679fe" class="" dir="auto">4. <strong>일반 S3 버킷 오리진 + OAC 사용</strong></h1><p id="935720e4-6f49-8276-b74e-817792407326" class="" dir="auto">이 방식을 선택하는 이유는 다음과 같다.</p><ul id="003720e4-6f49-8350-bf08-8142e656eec2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷을 공개하지 않아도 됨</li></ul><ul id="b1a720e4-6f49-8273-82d9-8152dfb88ace" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront만 오리진 접근 가능</li></ul><ul id="53c720e4-6f49-828e-bbd0-81ef091178fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTPS 배포 구조를 자연스럽게 구성 가능</li></ul><ul id="685720e4-6f49-8396-b0e2-816b12d530ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무 운영에 더 적합함</li></ul><p id="0b5720e4-6f49-8322-b0f6-814811a7cd58" class="" dir="auto"><strong>“정적 파일은 공개 서비스지만, S3 버킷 자체는 공개하지 않는다”</strong>는 점이 핵심이다.</p><hr id="4da720e4-6f49-820f-a52e-81d43be924fb" dir="auto"/><h1 id="d2c720e4-6f49-83a9-b4c9-014eefcf3ccc" class="" dir="auto">5. 실습 준비</h1><p id="5f9720e4-6f49-82f9-be04-81e64e10092d" class="" dir="auto">실습 전에 아래 항목을 준비한다.</p><ul id="f22720e4-6f49-82dd-bce0-0145e2c17b2e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 계정</li></ul><ul id="542720e4-6f49-83f6-8962-8160d089a256" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 웹 파일<ul id="431720e4-6f49-83b8-9211-01ec8fe7a5d8" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>index.html</code></li></ul><ul id="ed5720e4-6f49-82d0-bb49-81659b5c015d" class="bulleted-list" dir="auto"><li style="list-style-type:circle">필요 시 <code>style.css</code>, <code>app.js</code>, 이미지 파일</li></ul></li></ul><ul id="b82720e4-6f49-8372-a85b-01731ac314d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷 생성 권한</li></ul><ul id="311720e4-6f49-82a9-97bb-81aefccda52f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront 배포 생성 권한</li></ul><p id="217720e4-6f49-8290-bdb3-81351f6f22f8" class="" dir="auto">실습에 사용할 기본 파일 예시는 다음과 같다.</p><h2 id="25c720e4-6f49-83f3-bd03-015d975beeba" class="" dir="auto">index.html</h2><pre id="483720e4-6f49-83be-ada1-819761e595df" class="code code-wrap" data-notion-code-syntax="html"><code class="language-html" style="white-space:pre-wrap;word-break:break-all">&lt;!DOCTYPE html&gt;
+&lt;html lang=&quot;ko&quot;&gt;
+&lt;head&gt;
+  &lt;meta charset=&quot;UTF-8&quot;&gt;
+  &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+  &lt;title&gt;CloudFront + S3 Test&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Hello CloudFront + S3&lt;/h1&gt;
+  &lt;p&gt;정적 웹사이트 배포 테스트 페이지&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre><p id="aea720e4-6f49-829e-b775-81e726747073" class="" dir="auto">이 파일은 브라우저에서 정적 페이지가 정상적으로 출력되는지 확인하는 가장 단순한 테스트용 파일이다.</p><hr id="5b6720e4-6f49-83fd-a8f6-01f05de1c6c1" dir="auto"/><h1 id="a23720e4-6f49-8321-9189-81b5a0712cb1" class="" dir="auto">6. Step 1. S3 버킷 생성</h1><p id="778720e4-6f49-833d-9b8b-81de57ad457c" class="" dir="auto">AWS 콘솔에서 S3 버킷을 생성한다.</p><p id="a4b720e4-6f49-8337-b3b6-81c3228f5957" class="" dir="auto">경로</p><pre id="f96720e4-6f49-82de-b5ff-81afa60d89a4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3 → Create bucket</code></pre><p id="3b8720e4-6f49-830f-a3a8-012a82490f1c" class="" dir="auto">예시 설정</p><pre id="26b720e4-6f49-837a-b247-81faa110267b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Bucket name
+이니셜-cf-static-site-001
+
+Region
+ap-northeast-2</code></pre><p id="0fe720e4-6f49-833a-8192-81bca41fdb3a" class="" dir="auto">이 실습에서는 S3를 <strong>CloudFront의 오리진 저장소</strong>로 사용할 것이므로, 버킷 이름은 전역적으로 고유해야 한다.</p><h2 id="fc0720e4-6f49-8228-ad8c-819feae9d004" class="" dir="auto">주의사항</h2><p id="0ec720e4-6f49-82e4-b369-018d977e6564" class="" dir="auto">이번 방식에서는 S3 Static Website Hosting을 반드시 활성화하지 않아도 된다.</p><p id="1d8720e4-6f49-82df-8094-012ad41804ee" class="" dir="auto">오히려 핵심은 <strong>일반 S3 오리진</strong>으로 사용하는 것이다.</p><p id="44e720e4-6f49-8282-ac90-0118861f6ab1" class="" dir="auto">즉 이 단계에서는 단순히 정적 파일을 저장할 S3 버킷을 만든다고 이해하면 된다.</p><hr id="aa7720e4-6f49-8262-9131-81e57e63b051" dir="auto"/><h1 id="db4720e4-6f49-82c3-a6ef-01e2440c49b6" class="" dir="auto">7. Step 2. 퍼블릭 액세스 차단 유지</h1><p id="af9720e4-6f49-83d8-80e3-01eacb2a8d40" class="" dir="auto">버킷 생성 시 또는 생성 후 <strong>퍼블릭 액세스 차단(Block Public Access)</strong> 은 유지한다.</p><p id="8c2720e4-6f49-826c-85df-819e91e97da9" class="" dir="auto">확인 항목</p><pre id="32d720e4-6f49-83a8-8fb3-819e9347cde9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Block all public access
+체크 유지</code></pre><p id="42a720e4-6f49-82d7-9662-0190bc271152" class="" dir="auto">즉 다음 네 가지도 함께 차단 상태로 유지한다.</p><ul id="e4b720e4-6f49-838d-abef-8135d1d01521" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Block public ACLs</li></ul><ul id="8e6720e4-6f49-831b-afaa-01717ae3bcd8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ignore public ACLs</li></ul><ul id="121720e4-6f49-82e8-ae3c-01dee35a9522" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Block public bucket policies</li></ul><ul id="340720e4-6f49-82c1-845e-0127c2d4c12b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Restrict public bucket policies</li></ul><p id="417720e4-6f49-8348-b664-81c3526a6ae2" class="" dir="auto">이번 실습의 핵심은 <strong>S3를 직접 공개하지 않는 것</strong>이다. S3 website hosting 문서에서는 website endpoint 방식으로 공개 사이트를 만들려면 퍼블릭 읽기 구성이 필요하지만, OAC 방식은 그와 다르게 버킷을 비공개로 유지할 수 있다.</p><hr id="88a720e4-6f49-8304-a272-019bdb868af8" dir="auto"/><h1 id="8aa720e4-6f49-824e-b16b-816bb7f3b6f7" class="" dir="auto">8. Step 3. 정적 파일 업로드</h1><p id="47e720e4-6f49-8232-b762-018ee0e72699" class="" dir="auto">생성한 버킷에 <code>index.html</code> 파일을 업로드한다.</p><p id="caa720e4-6f49-82b0-b8c8-01bb43775948" class="" dir="auto">경로</p><pre id="dba720e4-6f49-82a3-aa65-81606a1aa9f7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3 → 대상 버킷 선택 → Upload</code></pre><p id="cf4720e4-6f49-82fb-a699-0171bbf0fce6" class="" dir="auto">업로드 후 버킷 내부에 최소한 다음 파일이 있어야 한다.</p><pre id="50b720e4-6f49-82ae-bec5-8176785eb151" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">index.html</code></pre><p id="fbc720e4-6f49-82eb-baba-01bf3f7c08ee" class="" dir="auto">이 시점에서는 S3 URL로 직접 열리지 않아도 정상이다.</p><p id="97c720e4-6f49-83f6-83ef-01ca503a3f0f" class="" dir="auto">왜냐하면 버킷은 아직 비공개 상태이기 때문이다.</p><p id="679720e4-6f49-83c5-8c28-017feeb1565b" class="" dir="auto">즉 지금은 저장소만 준비한 단계다.</p><hr id="071720e4-6f49-82c3-9036-01e2be7f359b" dir="auto"/><h1 id="ebe720e4-6f49-8257-a9f6-01181ce8442c" class="" dir="auto">9. Step 4. CloudFront 배포 생성</h1><p id="248720e4-6f49-831a-93a5-8100b5db2ff9" class="" dir="auto">이제 CloudFront 배포를 생성한다.</p><p id="1f1720e4-6f49-824e-b509-015291f9e814" class="" dir="auto">경로</p><pre id="978720e4-6f49-833e-b79c-8194347a680b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CloudFront → Create distribution</code></pre><h2 id="ebc720e4-6f49-838a-addf-81341419658b" class="" dir="auto">9.1 Origin domain 선택</h2><p id="f36720e4-6f49-83fb-b872-01f565c045fb" class="" dir="auto">여기서 가장 중요하다.</p><p id="b85720e4-6f49-8327-88e3-81cba18aa5c3" class="" dir="auto"><strong>S3 website endpoint를 선택하는 것이 아니라 일반 S3 bucket origin을 선택해야 한다.</strong></p><p id="ac0720e4-6f49-8375-b571-810ecd903eed" class="" dir="auto">예시</p><pre id="31b720e4-6f49-837a-a434-01e222dbaa0d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Origin domain
+이니셜-cf-static-site-001.s3.ap-northeast-2.amazonaws.com</code></pre><p id="553720e4-6f49-83df-ad2e-01e4f1d0e793" class="" dir="auto">만약 <code>s3-website-...amazonaws.com</code> 형태를 선택하면 이번 실습 구조와 달라진다.</p><h2 id="714720e4-6f49-8291-8dcd-01f1864edb76" class="" dir="auto">9.2 Origin access 설정</h2><p id="143720e4-6f49-83cf-b2ed-01ae49fd56be" class="" dir="auto">설정값</p><pre id="3fa720e4-6f49-822b-be81-818098467ede" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Origin access
+Origin access control settings (recommended)</code></pre><p id="99d720e4-6f49-8321-aa79-01aa541be1ba" class="" dir="auto">새 OAC를 생성하거나 기존 OAC를 선택한다.</p><p id="673720e4-6f49-8367-9808-812a3ea918a0" class="" dir="auto">이 설정이 바로 CloudFront만 S3 오리진에 접근할 수 있도록 제한하는 핵심이다. AWS CloudFront 시작 가이드에서도 S3 origin에 대해 OAC를 사용하는 배포 생성 절차를 제공한다. (<a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/GettingStarted.SimpleDistribution.html?utm_source=chatgpt.com">AWS Docs</a>)</p><h2 id="320720e4-6f49-82c0-8c5b-01a8bd86fe87" class="" dir="auto">9.3 Viewer protocol policy 설정</h2><p id="f38720e4-6f49-8248-9fcd-0112c0a4ef58" class="" dir="auto">설정값</p><pre id="a16720e4-6f49-832e-a18f-01de61771c31" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Viewer protocol policy
+Redirect HTTP to HTTPS</code></pre><p id="316720e4-6f49-831e-aff3-017afad4c8eb" class="" dir="auto">또는</p><pre id="f83720e4-6f49-825e-a948-81199439e189" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">HTTPS only</code></pre><p id="5be720e4-6f49-82c0-8292-819ffe1861a9" class="" dir="auto">정적 사이트를 배포할 때는 일반적으로 HTTPS 사용을 강제하는 것이 좋다. CloudFront 문서에서도 Viewer Protocol Policy를 통해 HTTPS 강제를 설정할 수 있다고 설명한다. (<a href="https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/using-https-cloudfront-to-s3-origin.html?utm_source=chatgpt.com">AWS Docs</a>)</p><h2 id="e5f720e4-6f49-83d2-b203-8179192a0a38" class="" dir="auto">9.4 Default root object 설정</h2><p id="f27720e4-6f49-8316-841d-8146bbf46bb4" class="" dir="auto">설정값</p><pre id="1bb720e4-6f49-83e6-9975-019a0644c05f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Default root object
+index.html</code></pre><p id="d2f720e4-6f49-824a-83dd-81771813ae6f" class="" dir="auto">이 값을 설정하면 CloudFront 도메인 루트(<code>/</code>) 접속 시 <code>index.html</code> 을 기본 문서로 반환한다.</p><p id="261720e4-6f49-8392-a77f-81236ac4b639" class="" dir="auto">예를 들어 사용자가 다음 주소로 접속했을 때</p><pre id="dd8720e4-6f49-835f-98e7-01d0810e50c6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">https://배포도메인/</code></pre><p id="4db720e4-6f49-83d1-ae33-8114c6d6f1e2" class="" dir="auto">실제로는 <code>index.html</code> 이 응답된다.</p><h2 id="41b720e4-6f49-830b-90e8-81ebb5a7abf8" class="" dir="auto">9.5 Cache settings</h2><p id="827720e4-6f49-8367-924d-01c9b5636442" class="" dir="auto">일반적인 정적 파일 배포 실습이라면 기본 권장 캐시 정책을 사용하면 충분하다.</p><p id="258720e4-6f49-82e6-96a6-01f98995b4eb" class="" dir="auto">예</p><pre id="57d720e4-6f49-83fe-905f-01e32ca8edad" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Use a recommended cache policy</code></pre><p id="72c720e4-6f49-8276-a3b4-0180652cc0eb" class="" dir="auto">정적 콘텐츠는 변경 빈도가 낮고 캐시 효율이 높기 때문에 기본 권장 정책으로 시작해도 무리가 없다.</p><hr id="515720e4-6f49-8371-8064-81857c80bb28" dir="auto"/><h1 id="337720e4-6f49-8355-b1f1-813e452bff37" class="" dir="auto">10. Step 5. 버킷 정책 반영</h1><p id="ac1720e4-6f49-83ab-a7fc-01772a87646f" class="" dir="auto">CloudFront에서 OAC를 사용하면 콘솔이 자동으로 버킷 정책 적용을 제안하는 경우가 많다.</p><p id="8db720e4-6f49-83e6-a9cc-8177849bec03" class="" dir="auto">자동 적용이 되지 않았다면 수동으로 추가한다.</p><p id="52a720e4-6f49-8217-8816-812328350f4a" class="" dir="auto">예시 정책은 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="873720e4-6f49-8365-a44b-011379563ef1" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;AllowCloudFrontServicePrincipalReadOnly&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Principal&quot;: {
+        &quot;Service&quot;: &quot;cloudfront.amazonaws.com&quot;
+      },
+      &quot;Action&quot;: &quot;s3:GetObject&quot;,
+      &quot;Resource&quot;: &quot;arn:aws:s3:::이니셜-cf-static-site-001/*&quot;,
+      &quot;Condition&quot;: {
+        &quot;StringEquals&quot;: {
+          &quot;AWS:SourceArn&quot;: &quot;arn:aws:cloudfront::123456789012:distribution/배포ID&quot;
+        }
+      }
+    }
+  ]
+}</code></pre><h2 id="4cd720e4-6f49-8250-9e05-018f4777a8f4" class="" dir="auto">정책 설명</h2><h3 id="66c720e4-6f49-823d-bb03-81d163804c1a" class="" dir="auto"><code>Principal</code></h3><p id="fc6720e4-6f49-82c0-8ee9-01ad9a7ea9f1" class="" dir="auto">CloudFront 서비스 자체를 의미한다.</p><pre id="9e5720e4-6f49-834b-ad41-01e7bb605f77" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">&quot;Service&quot;: &quot;cloudfront.amazonaws.com&quot;</code></pre><p id="01c720e4-6f49-82b6-b321-81dfa7af1a8e" class="" dir="auto">즉 모든 사용자가 아니라 CloudFront 서비스만 이 버킷에 접근 가능하게 하는 것이다.</p><h3 id="3af720e4-6f49-83c4-aefd-016fa58ff7c0" class="" dir="auto"><code>Action</code></h3><p id="466720e4-6f49-8337-84a8-81c5c8054bc5" class="" dir="auto">허용할 작업은 <code>s3:GetObject</code> 이다.</p><p id="487720e4-6f49-8366-883b-01b119570e52" class="" dir="auto">즉 객체 읽기만 허용한다.</p><h3 id="36c720e4-6f49-8359-890d-01f825a25ee2" class="" dir="auto"><code>Resource</code></h3><p id="304720e4-6f49-8346-880b-014502d20f00" class="" dir="auto">버킷 내부 모든 객체를 의미한다.</p><pre id="90d720e4-6f49-8267-a0e1-017adb860b5d" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">arn:aws:s3:::버킷이름/*</code></pre><h3 id="2da720e4-6f49-8347-b9fe-81e86980327e" class="" dir="auto"><code>Condition</code></h3><p id="da9720e4-6f49-8223-8950-81c684cdf4ef" class="" dir="auto">특정 CloudFront 배포에서 오는 요청만 허용하기 위한 조건이다.</p><pre id="1aa720e4-6f49-83ff-b5dc-81f11b4e6f10" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">&quot;AWS:SourceArn&quot;: &quot;arn:aws:cloudfront::계정ID:distribution/배포ID&quot;</code></pre><p id="3d3720e4-6f49-8248-a78c-8194af16f105" class="" dir="auto">이 조건 덕분에 다른 CloudFront 배포나 다른 주체는 접근할 수 없다.</p><hr id="2f2720e4-6f49-82f0-9218-016b717ce54e" dir="auto"/><h1 id="c31720e4-6f49-82bc-b3a6-81b35b841bc9" class="" dir="auto">11. Step 6. CloudFront 배포 완료 후 테스트</h1><p id="92d720e4-6f49-828f-b175-818c0c50b931" class="" dir="auto">배포 생성 후 CloudFront가 배포를 완료하면 도메인 이름이 발급된다.</p><p id="744720e4-6f49-83f7-9b4a-01edbdc01f59" class="" dir="auto">예</p><pre id="039720e4-6f49-829e-99a4-015391262d77" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">d123exampleabcd.cloudfront.net</code></pre><p id="697720e4-6f49-82a5-afad-01b2129efff4" class="" dir="auto">브라우저에서 다음 주소로 접속한다.</p><pre id="bf7720e4-6f49-8239-ae35-0195b8fcf48f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">https://d123exampleabcd.cloudfront.net</code></pre><p id="98a720e4-6f49-8217-89a8-01d88b4ed84f" class="" dir="auto">정상이라면 <code>index.html</code> 내용이 표시된다.</p><h2 id="e4c720e4-6f49-8279-b99f-01bdea7e3b89" class="" dir="auto">확인 포인트</h2><ul id="54e720e4-6f49-83d8-9cad-01560a8acb99" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 객체는 비공개 상태</li></ul><ul id="183720e4-6f49-836a-9126-012f46a102bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront 주소로는 정상 접속</li></ul><ul id="882720e4-6f49-8276-9c10-0142eaef625c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 HTTPS로 접속</li></ul><ul id="90b720e4-6f49-833d-8427-01395ce19ad4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 오리진 저장소는 CloudFront만 접근 가능</li></ul><p id="b45720e4-6f49-823e-a4e9-8172e00cf51c" class="" dir="auto">이 구조가 이번 실습의 핵심 결과다.</p><hr id="8af720e4-6f49-8369-becb-815459bb4635" dir="auto"/><h1 id="347720e4-6f49-83f6-a0b2-811acbe62c6c" class="" dir="auto">12. Step 7. 직접 S3 접근 차단 확인</h1><p id="b0c720e4-6f49-831c-8121-01a5e7351f21" class="" dir="auto">이제 CloudFront를 거치지 않고 직접 S3에 접근이 되는지 확인한다.</p><p id="759720e4-6f49-837b-b1ef-01d64b45e95f" class="" dir="auto">예를 들어 S3 객체 URL을 직접 열어본다.</p><pre id="365720e4-6f49-8389-a963-018c07a18801" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">https://이니셜-cf-static-site-001.s3.ap-northeast-2.amazonaws.com/index.html</code></pre><p id="fb5720e4-6f49-82f6-aa1f-81f65309c455" class="" dir="auto">또는 브라우저/CLI에서 직접 접근을 시도해본다.</p><p id="995720e4-6f49-83d7-b209-8171dea2b511" class="" dir="auto">정상적인 OAC 구성이라면 <strong>직접 접근은 실패하거나 AccessDenied가 나와야 한다.</strong></p><p id="d2b720e4-6f49-8291-a9cc-01d4c72cc503" class="" dir="auto">이 테스트를 통해 다음을 확인할 수 있다.</p><ul id="dd7720e4-6f49-82fa-a71a-01e6514bf671" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷이 공개되지 않았음</li></ul><ul id="5e2720e4-6f49-82d2-bd9b-012e2e3dbd58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront만 오리진 접근 가능함</li></ul><ul id="924720e4-6f49-837c-b884-818e3e2bb6bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront가 보안 경계 역할을 수행함</li></ul><hr id="140720e4-6f49-8349-b2c2-8107733cb999" dir="auto"/><h1 id="a95720e4-6f49-83db-9091-01033d68b422" class="" dir="auto">13. Step 8. 파일 변경 후 캐시 동작 확인</h1><p id="c34720e4-6f49-8380-a278-81bdba2ccff1" class="" dir="auto">정적 웹사이트에서는 캐시 동작도 함께 이해하는 것이 좋다.</p><p id="341720e4-6f49-83e0-a949-0125f824aa9f" class="" dir="auto">예를 들어 <code>index.html</code> 의 내용을 수정해 다시 업로드한다.</p><p id="4f6720e4-6f49-83b3-aef2-813cdb64cbe4" class="" dir="auto">수정 예시</p><pre id="e3b720e4-6f49-829f-84d7-01e7dead884c" class="code code-wrap" data-notion-code-syntax="html"><code class="language-html" style="white-space:pre-wrap;word-break:break-all">&lt;h1&gt;Hello CloudFront + S3 - Version 2&lt;/h1&gt;</code></pre><p id="955720e4-6f49-8389-b5db-812aa5e4e844" class="" dir="auto">업로드 후 즉시 CloudFront URL로 접속했는데 이전 페이지가 보일 수 있다.</p><p id="658720e4-6f49-82c0-8e00-019a05e017d7" class="" dir="auto">이유는 CloudFront 엣지에 기존 객체가 캐시되어 있을 수 있기 때문이다.</p><p id="481720e4-6f49-83d5-b769-813b1df2b23e" class="" dir="auto">이 경우 두 가지 방법이 있다.</p><h2 id="43f720e4-6f49-834a-ad74-8172424e7172" class="" dir="auto">방법 1. 캐시 만료 대기</h2><p id="8f0720e4-6f49-8215-8248-815aab1f9d8c" class="" dir="auto">캐시 정책 TTL에 따라 일정 시간이 지나면 새 객체가 반영된다.</p><h2 id="2fd720e4-6f49-83e4-ba4d-01f950a7a1c2" class="" dir="auto">방법 2. Invalidation 실행</h2><p id="6d8720e4-6f49-8273-aed2-81f89e4d66d5" class="" dir="auto">CloudFront에서 캐시 무효화를 수행한다.</p><p id="83e720e4-6f49-8381-8bee-81ce0c06f625" class="" dir="auto">경로</p><pre id="d50720e4-6f49-83ca-a39f-814fc7d8d120" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CloudFront → Distribution → Invalidations → Create invalidation</code></pre><p id="85f720e4-6f49-837c-b1fa-01fe288d8553" class="" dir="auto">입력값</p><pre id="71b720e4-6f49-836b-9d8e-013fc60698fd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">/*</code></pre><p id="72e720e4-6f49-8350-9c06-81a9a6e37b2c" class="" dir="auto">또는 특정 파일만 지정</p><pre id="8f9720e4-6f49-83e6-ab55-0101f85adf49" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">/index.html</code></pre><p id="bf4720e4-6f49-82a7-b5a1-019f872b39d9" class="" dir="auto">이 작업은 캐시된 객체를 강제로 무효화해서 새 콘텐츠를 더 빨리 반영하는 데 사용한다.</p><hr id="6df720e4-6f49-82fa-9fc6-815f021b14ef" dir="auto"/><h1 id="a54720e4-6f49-8376-b52c-81d618136bb8" class="" dir="auto">14. 자주 발생하는 문제</h1><h1 id="8e0720e4-6f49-83da-b4a2-0161620c7762" class="" dir="auto">14.1 Access Denied 발생</h1><p id="2c2720e4-6f49-82c0-9c3b-010e3123053a" class="" dir="auto">원인 후보는 다음과 같다.</p><ul id="6ef720e4-6f49-82a9-b61d-810c6e9d34eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷 정책이 누락됨</li></ul><ul id="91d720e4-6f49-8379-8ae7-011d300465d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SourceArn이 잘못됨</li></ul><ul id="92c720e4-6f49-832a-883f-810a3c66724e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront OAC가 제대로 연결되지 않음</li></ul><ul id="1e0720e4-6f49-8254-aa18-01c456b7148c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오리진을 website endpoint로 잘못 선택함</li></ul><p id="fb3720e4-6f49-8251-bbfe-8113ad8ab2db" class="" dir="auto">특히 가장 많이 하는 실수는 다음이다.</p><ul id="d9b720e4-6f49-83b9-8307-0125d65dba42" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront 오리진을 <code>s3-website-...</code> 로 선택함</li></ul><ul id="295720e4-6f49-8384-87ed-81169a5c0ebb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그런데 OAC를 적용하려고 함</li></ul><p id="cbd720e4-6f49-83e9-b0b0-81984fd30b2a" class="" dir="auto">이 조합은 맞지 않는다.</p><h1 id="63a720e4-6f49-83e3-934b-01aaa0a70c65" class="" dir="auto">14.2 HTTPS는 되는데 파일이 안 보임</h1><p id="34b720e4-6f49-82c1-bdb8-01d2d2c68d45" class="" dir="auto">확인 항목</p><ul id="786720e4-6f49-833b-b289-01afd17606e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Default root object가 <code>index.html</code> 로 설정되어 있는지</li></ul><ul id="929720e4-6f49-8248-b3e8-81c8a4ec8beb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실제 버킷에 <code>index.html</code> 이 업로드되어 있는지</li></ul><ul id="a3b720e4-6f49-821c-b6df-0128c66c5633" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대소문자가 일치하는지</li></ul><h1 id="e93720e4-6f49-82fa-acdd-0112c1929374" class="" dir="auto">14.3 콘텐츠 수정 후 반영이 늦음</h1><p id="296720e4-6f49-8367-9531-01ab3df1acb2" class="" dir="auto">원인</p><ul id="ef0720e4-6f49-8209-8c3b-0110a7b061e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront 캐시 유지 중</li></ul><p id="0ab720e4-6f49-8216-a614-011b61498f45" class="" dir="auto">해결</p><ul id="075720e4-6f49-8275-a685-81dd0675a9aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Invalidation 수행</li></ul><ul id="df8720e4-6f49-832f-a2f5-81cba86d17a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 버전 관리 방식 사용<ul id="258720e4-6f49-82ff-8202-819ebc88f197" class="bulleted-list" dir="auto"><li style="list-style-type:circle">예: <code>app.v2.js</code></li></ul></li></ul><hr id="0c4720e4-6f49-837c-be5f-81341d48726b" dir="auto"/><h1 id="f1d720e4-6f49-8294-9105-019d225d8345" class="" dir="auto">15. 비교용: website endpoint 방식은 어떻게 다른가</h1><p id="79d720e4-6f49-8313-9206-8136d2b9f1ab" class="" dir="auto">이번 실습은 OAC 방식이지만, 비교를 위해 website endpoint 방식도 정리해둘 필요가 있다.</p><h2 id="ba8720e4-6f49-832e-b40b-0126f6ffbbb2" class="" dir="auto">15.1 website endpoint 방식의 특징</h2><ul id="c1a720e4-6f49-83d4-a01d-01f1f9bba709" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 Static Website Hosting 사용</li></ul><ul id="062720e4-6f49-8371-a4d1-0135ea08b57b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 website endpoint 사용</li></ul><ul id="9cc720e4-6f49-8223-b3a6-01af41bf0101" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오리진은 custom origin</li></ul><ul id="836720e4-6f49-833f-b173-01e73dd8bf00" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP only</li></ul><ul id="900720e4-6f49-83c5-bfb0-81175284eec2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OAC 불가</li></ul><ul id="c5f720e4-6f49-8270-bcb5-81c45f3bf593" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공개 읽기 정책 필요</li></ul><h2 id="a73720e4-6f49-8315-9020-016071136a23" class="" dir="auto">15.2 언제 사용할 수 있는가</h2><p id="9df720e4-6f49-83ba-8370-015f12cd4968" class="" dir="auto">다음과 같은 경우에만 제한적으로 사용할 수 있다.</p><ul id="b7a720e4-6f49-8376-8464-01392f9cc76e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공개용 정적 사이트</li></ul><ul id="926720e4-6f49-828f-9105-014088c3f756" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안보다 간단한 웹 호스팅 동작이 우선인 경우</li></ul><ul id="469720e4-6f49-834c-8291-81c498e93f95" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3의 website redirect 기능이 꼭 필요한 경우</li></ul><ul id="4e3720e4-6f49-82c3-af93-81a09e34d16d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">index / error document 기능을 S3 website hosting 자체에 의존하는 경우</li></ul><hr id="978720e4-6f49-8339-be86-81c5b59e626d" dir="auto"/><h1 id="37f720e4-6f49-835d-b09a-8103d8cd4006" class="" dir="auto">16. 최종 정리</h1><p id="d87720e4-6f49-835a-ac38-817fe291eb82" class="" dir="auto">이번 실습에서 기억해야 할 핵심은 다음과 같다.</p><ul id="72e720e4-6f49-8329-b04f-01da88210f39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront + S3 정적 배포에는 두 가지 방식이 있음</li></ul><ul id="a3e720e4-6f49-827e-abbd-817723073d72" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>S3 website endpoint 방식</strong><ul id="a60720e4-6f49-83ef-a120-01689bdedebb" class="bulleted-list" dir="auto"><li style="list-style-type:circle">공개 읽기 필요</li></ul><ul id="f2f720e4-6f49-83b7-8ebe-816557612f3e" class="bulleted-list" dir="auto"><li style="list-style-type:circle">HTTP only</li></ul><ul id="fef720e4-6f49-82b8-b0bc-815f3ead2fc2" class="bulleted-list" dir="auto"><li style="list-style-type:circle">OAC 불가</li></ul></li></ul><ul id="4dc720e4-6f49-82c1-858a-01fdccc45af3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>일반 S3 origin + OAC 방식</strong><ul id="087720e4-6f49-8269-be7b-814c4096d6fe" class="bulleted-list" dir="auto"><li style="list-style-type:circle">S3 비공개 유지 가능</li></ul><ul id="504720e4-6f49-82e2-8ddc-01d27f8bf131" class="bulleted-list" dir="auto"><li style="list-style-type:circle">CloudFront만 오리진 접근 가능</li></ul><ul id="99e720e4-6f49-8214-9eda-01c4586b48d4" class="bulleted-list" dir="auto"><li style="list-style-type:circle">실무 권장 방식</li></ul></li></ul><p id="35b720e4-6f49-824c-89be-01690175546f" class="" dir="auto">즉 정적 웹사이트를 안전하게 배포하려면</p><p id="8ea720e4-6f49-822d-bac7-01064af2ccd8" class="" dir="auto"><strong>S3는 비공개로 두고, CloudFront에 OAC를 적용해 배포하는 방식</strong>으로 이해하면 된다.</p><hr id="1b8720e4-6f49-8356-968d-01ff56197a31" dir="auto"/><h1 id="932720e4-6f49-82df-9091-810ea98edde4" class="" dir="auto">17. 실습 체크리스트</h1><p id="863720e4-6f49-829c-98b6-81e218facc6b" class="" dir="auto">실습 완료 후 아래 항목을 확인한다.</p><ul id="862720e4-6f49-822f-9559-818a4381f781" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷 생성 완료</li></ul><ul id="3e6720e4-6f49-834a-b56e-017da78d4c8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">퍼블릭 액세스 차단 유지</li></ul><ul id="c13720e4-6f49-838f-bf52-01d9dcad4783" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>index.html</code> 업로드 완료</li></ul><ul id="5f7720e4-6f49-8387-8fed-81f47e8e07fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront 배포 생성 완료</li></ul><ul id="1fd720e4-6f49-8279-9af7-81bd3c124904" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일반 S3 오리진 선택 완료</li></ul><ul id="786720e4-6f49-83a3-bddb-01ea465ffd6f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OAC 적용 완료</li></ul><ul id="776720e4-6f49-824a-82ed-0177e5e08a75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷 정책 반영 완료</li></ul><ul id="313720e4-6f49-8356-a491-812be804f79d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront 도메인으로 HTTPS 접속 성공</li></ul><ul id="aa5720e4-6f49-83d7-b5ec-81efb4084fd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">직접 S3 접근 차단 확인 완료</li></ul><ul id="312720e4-6f49-83c3-b07a-810073e06dcb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 수정 후 Invalidation 동작 확인 완료</li></ul><hr id="9dd720e4-6f49-83e7-a825-8162ea71f543" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

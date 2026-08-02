@@ -1,0 +1,801 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>11장 AWS 서버리스 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="f1a720e4-6f49-839d-8abc-0176bcf7009c" class="page sans"><header><h1 class="page-title" dir="auto">11장 AWS 서버리스 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="27b720e4-6f49-83d7-8c43-01427002c9db" class="" dir="auto">API Gateway, Lambda, SQS, SNS, Kinesis, Step Functions</h2><hr id="5d3720e4-6f49-8286-bc79-0166320b6abe" dir="auto"/><h1 id="75f720e4-6f49-83ae-b4e3-01f32ca0de5c" class="" dir="auto">11.1 서버리스 아키텍처 개요</h1><p id="a16720e4-6f49-827b-9cda-81dc403704f5" class="" dir="auto">서버리스 아키텍처는 서버가 아예 없다는 뜻이 아님.</p><p id="f59720e4-6f49-8352-92e3-81b6598c4516" class="" dir="auto">실제로는 서버가 존재하지만, 사용자가 서버를 직접 프로비저닝하거나 운영하지 않아도 되도록 추상화된 실행 방식임.</p><p id="eec720e4-6f49-8236-8573-81234ffd23db" class="" dir="auto">즉, 서버리스의 핵심은 다음과 같음.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="a9e720e4-6f49-82b6-b186-813ce6be5507" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">서버를 직접 관리하는 대신,
+이벤트와 코드 실행 중심으로 애플리케이션을 구성한다.</code></pre><p id="2b2720e4-6f49-8352-b06d-014dff1d50b4" class="" dir="auto">기존에는 애플리케이션을 실행하려면 보통 다음을 직접 고민해야 했음.</p><ul id="8d5720e4-6f49-8281-a40d-81dc8b01531c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버를 몇 대 둘지</li></ul><ul id="f13720e4-6f49-8383-b73f-81eed4a9b53f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영체제를 어떻게 관리할지</li></ul><ul id="596720e4-6f49-8305-a0d9-014fa0a4a65d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장을 어떻게 할지</li></ul><ul id="787720e4-6f49-8247-aff8-81fb6843d386" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 복구를 어떻게 할지</li></ul><ul id="557720e4-6f49-83d2-b437-0130cf637723" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패치를 어떻게 적용할지</li></ul><p id="50e720e4-6f49-82ef-b653-01cfde2b82c4" class="" dir="auto">반면 서버리스에서는 이런 부분 상당수를 AWS가 관리하고, 사용자는 <strong>코드, 이벤트, 흐름</strong>에 더 집중할 수 있음.</p><hr id="387720e4-6f49-82da-a3fc-815c6fccf9e5" dir="auto"/><h1 id="5cb720e4-6f49-83b2-8842-8147a17e413e" class="" dir="auto">11.2 서버리스가 필요한 이유</h1><p id="e07720e4-6f49-83fb-921d-81cd551006d1" class="" dir="auto">기존 EC2 기반 구조는 강력하고 유연하지만, 항상 서버 운영 부담이 따름.</p><p id="131720e4-6f49-82e2-8580-019681c90078" class="" dir="auto">예를 들어 다음과 같은 요구가 있다고 가정하면</p><ul id="3e1720e4-6f49-830a-80e7-8105c7971694" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 업로드 시 자동 처리</li></ul><ul id="cf1720e4-6f49-830e-ac5b-01a25b23d16c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 이벤트 발생 시 알림 발송</li></ul><ul id="4f5720e4-6f49-830a-85cc-01b97e849e87" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청이 올 때만 짧게 실행되는 API 처리</li></ul><ul id="a59720e4-6f49-8375-8038-01b1ace3fb7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">큐에 쌓인 작업 비동기 처리</li></ul><ul id="16f720e4-6f49-8328-89b7-019cc907d0db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 단계를 순서대로 실행하는 워크플로우</li></ul><p id="d1a720e4-6f49-828d-85e1-81846df2e079" class="" dir="auto">이런 작업을 위해 항상 서버를 24시간 켜 두는 것은 비효율적일 수 있음.</p><p id="b68720e4-6f49-838d-ba5b-81b2865468d4" class="" dir="auto">서버리스가 적합한 이유</p><h3 id="c08720e4-6f49-82df-aa6a-8108c67cf348" class="" dir="auto">1. 이벤트 중심 실행</h3><p id="7d8720e4-6f49-824c-8ff8-01643c354136" class="" dir="auto">필요한 순간에만 실행 가능함.</p><h3 id="ed6720e4-6f49-82e2-b0c7-8138e3afa4a6" class="" dir="auto">2. 운영 부담 감소</h3><p id="7cd720e4-6f49-82a5-bf97-01a0f3c3acd6" class="" dir="auto">서버 패치, 인프라 관리 부담이 줄어듦.</p><h3 id="9ea720e4-6f49-83cb-9275-81208ad2d1bf" class="" dir="auto">3. 자동 확장</h3><p id="ad6720e4-6f49-8315-9eac-8190084779e7" class="" dir="auto">요청 수에 따라 자동으로 확장될 수 있음.</p><h3 id="594720e4-6f49-8248-98aa-014d4ab63139" class="" dir="auto">4. 사용량 기반 과금</h3><p id="aa8720e4-6f49-8225-9c3d-01264d15b6dd" class="" dir="auto">항상 서버를 띄워둘 필요가 없는 경우 비용 효율성이 좋아질 수 있음.</p><p id="83a720e4-6f49-82e9-83e9-01a09b24cd8a" class="" dir="auto">즉, 서버리스는 특히 <strong>간헐적 요청, 이벤트 처리, 비동기 처리, API 백엔드</strong>에 잘 맞음.</p><hr id="d71720e4-6f49-832b-b1f2-012ab9edda5b" dir="auto"/><h1 id="3e2720e4-6f49-8394-b587-0171cc44690e" class="" dir="auto">11.3 서버리스 아키텍처의 핵심 개념</h1><p id="417720e4-6f49-83a1-b960-0100c5ef8556" class="" dir="auto">서버리스 아키텍처를 이해할 때 중요한 관점은 “기능을 서버 단위로 보지 않고, 이벤트와 서비스 조합 단위로 본다”는 점임.</p><p id="688720e4-6f49-8227-ac27-0126e6c0645b" class="" dir="auto">주요 개념</p><ul id="3dc720e4-6f49-823b-a74c-01628a2aa3c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Event-driven</li></ul><ul id="d4c720e4-6f49-83f0-914f-813ee61b1b33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Managed execution</li></ul><ul id="5ad720e4-6f49-83fc-9b79-01141e770e62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Function-based processing</li></ul><ul id="160720e4-6f49-83ac-bdc2-8163cc397a85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Decoupling</li></ul><ul id="076720e4-6f49-8239-ab84-810cd14863fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Workflow orchestration</li></ul><p id="68d720e4-6f49-831f-9b5f-812b5ce052b8" class="" dir="auto">즉, 서버리스는 단일 서비스가 아니라 <strong>이벤트가 발생하면 필요한 기능이 연결되어 동작하는 구조</strong>라고 이해하는 것이 좋음.</p><hr id="78f720e4-6f49-8320-bfff-01f3c5158f4e" dir="auto"/><h1 id="781720e4-6f49-82ff-8a97-01729591b51b" class="" dir="auto">11.4 이벤트 기반 아키텍처</h1><p id="cc2720e4-6f49-8255-a74b-01bde114fd46" class="" dir="auto">서버리스는 이벤트 기반 아키텍처와 매우 잘 맞음.</p><p id="1fd720e4-6f49-82e4-a2a2-0173ef4fc80b" class="" dir="auto">이벤트란 시스템에서 어떤 일이 발생했다는 사실 자체임.</p><p id="605720e4-6f49-8323-b54f-813be688b235" class="" dir="auto">예</p><ul id="fd9720e4-6f49-8336-9efb-81765f775621" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자가 API 호출</li></ul><ul id="172720e4-6f49-82f0-8dde-01b9b80c207c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3에 파일 업로드</li></ul><ul id="914720e4-6f49-83e1-a32f-8185aba0a249" class="bulleted-list" dir="auto"><li style="list-style-type:disc">큐에 메시지 도착</li></ul><ul id="fb7720e4-6f49-82f5-b8d6-019b0fc7118b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일정 시간이 도래</li></ul><ul id="512720e4-6f49-8311-b002-81e54af84e02" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DB 변경 발생</li></ul><ul id="f27720e4-6f49-830e-9a74-81f93ada5193" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주문 완료 이벤트 발생</li></ul><p id="1d5720e4-6f49-837f-9960-81caf5355b70" class="" dir="auto">이벤트 기반 아키텍처에서는 이런 사건이 발생했을 때 필요한 후속 작업을 자동으로 연결함.</p><p id="6c7720e4-6f49-82fb-95ed-010700efc1a0" class="" dir="auto">예시 흐름</p><pre id="8e9720e4-6f49-826c-9855-0156d7e04d0c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 주문 완료
+   │
+이벤트 발생
+   ├ 알림 발송
+   ├ 결제 후처리
+   ├ 재고 차감
+   └ 로그 저장</code></pre><p id="791720e4-6f49-8314-9d87-81c4f73fa268" class="" dir="auto">즉, 서버리스는 기능을 이벤트 반응 단위로 쪼개고 연결하는 데 적합함.</p><hr id="669720e4-6f49-8206-bda3-81175b2976bc" dir="auto"/><h1 id="440720e4-6f49-82d6-a959-81f3c37e79f9" class="" dir="auto">11.5 Amazon Lambda 개요</h1><p id="8fb720e4-6f49-820e-baff-810897646e4d" class="" dir="auto">Lambda는 AWS의 대표적인 서버리스 컴퓨팅 서비스임.</p><p id="400720e4-6f49-8252-b375-01a203d059cf" class="" dir="auto">코드를 업로드하면 AWS가 실행 환경을 관리하고, 이벤트가 들어올 때만 코드를 실행함.</p><p id="85a720e4-6f49-8345-912e-018c5fb65f45" class="" dir="auto">즉, Lambda의 핵심은 다음과 같음.</p><pre id="f90720e4-6f49-8306-af9e-81823e41ff58" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">코드를 함수 단위로 실행한다.
+서버 운영은 AWS가 관리한다.</code></pre><p id="4ee720e4-6f49-8217-b5d4-81a81eff71b4" class="" dir="auto">사용자는 보통 다음에 집중하면 됨.</p><ul id="5f1720e4-6f49-8367-ae1a-815eb4e5bd2e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 이벤트가 입력되는가</li></ul><ul id="35f720e4-6f49-8285-9418-01261c7d43f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 코드를 실행할 것인가</li></ul><ul id="09e720e4-6f49-82fc-bcfe-816937b62ff9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과를 어디로 보낼 것인가</li></ul><p id="057720e4-6f49-83ac-a6de-019ccf9b13bb" class="" dir="auto">Lambda는 서버리스 아키텍처의 실행 엔진 역할을 한다고 보면 됨.</p><hr id="d5e720e4-6f49-82cf-9cfa-0155d416c375" dir="auto"/><h1 id="ed0720e4-6f49-823b-bbec-01d9efeef33d" class="" dir="auto">11.6 Lambda의 특징</h1><h3 id="056720e4-6f49-83fe-b0ce-81bcee4bdd4b" class="" dir="auto">1. 이벤트 기반 실행</h3><p id="830720e4-6f49-8328-8bab-0134457514d5" class="" dir="auto">항상 켜져 있는 서버가 아니라, 호출될 때 실행됨.</p><h3 id="1ee720e4-6f49-83be-ad47-81efad792a99" class="" dir="auto">2. 자동 확장</h3><p id="ac5720e4-6f49-83ee-9a4a-81d5b7f33e6c" class="" dir="auto">동시 요청 증가 시 자동으로 확장 가능함.</p><h3 id="723720e4-6f49-839d-98ae-81a769810d0c" class="" dir="auto">3. 짧은 작업에 적합</h3><p id="770720e4-6f49-8221-9676-01944c7ab714" class="" dir="auto">일반적으로 짧고 독립적인 작업에 적합함.</p><h3 id="3d5720e4-6f49-835e-9514-014a5ebc1d4c" class="" dir="auto">4. 다양한 이벤트 소스 지원</h3><p id="d9d720e4-6f49-839e-bad2-012dee42a827" class="" dir="auto">API Gateway, S3, SQS, EventBridge, DynamoDB Streams 등과 연결 가능함.</p><p id="1ee720e4-6f49-8259-8818-01b5ebfdb804" class="" dir="auto">즉, Lambda는 다른 서버리스 서비스들과 결합될 때 진가가 커짐.</p><hr id="72a720e4-6f49-825b-9d29-0100a5261b3a" dir="auto"/><h1 id="1d9720e4-6f49-834c-8e1f-013494c32104" class="" dir="auto">11.7 Lambda가 적합한 경우</h1><ul id="096720e4-6f49-8204-ad4a-016f16d25c4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">간단한 API 백엔드</li></ul><ul id="711720e4-6f49-83e8-a745-010044e07f24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지/파일 처리</li></ul><ul id="864720e4-6f49-8308-9e5c-01673a0e1aac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 후처리</li></ul><ul id="a7b720e4-6f49-83d5-b251-81651efde80c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 처리</li></ul><ul id="512720e4-6f49-82a0-94cf-0164ca64dbfd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비동기 작업 처리</li></ul><ul id="c9b720e4-6f49-8360-9843-0147dedee49d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일정 기반 작업</li></ul><ul id="512720e4-6f49-82d1-a7ce-81985171e51d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버리스 워크플로우의 개별 단계</li></ul><p id="4c2720e4-6f49-82e0-bbb5-81f8ca0a2bef" class="" dir="auto">즉, Lambda는 “작고 독립적인 기능” 단위에 잘 맞음.</p><hr id="682720e4-6f49-8361-bba2-810398c5ddf6" dir="auto"/><h1 id="43b720e4-6f49-836f-a43c-01e975c54b0f" class="" dir="auto">11.8 Lambda의 한계와 고려사항</h1><h3 id="ca9720e4-6f49-8212-b88a-810231410669" class="" dir="auto">1. 장시간 실행 작업에는 부적합할 수 있음</h3><p id="6aa720e4-6f49-83f1-bd03-81e5aeecb526" class="" dir="auto">긴 배치 작업이나 지속적 연결이 필요한 작업에는 한계가 있을 수 있음.</p><h3 id="fde720e4-6f49-8219-bc7b-0139f4447338" class="" dir="auto">2. 상태 저장 부적합</h3><p id="4af720e4-6f49-82ec-b6ff-01d0b1b3978e" class="" dir="auto">Lambda 자체 실행 환경에 중요한 상태를 두면 안 됨.</p><h3 id="899720e4-6f49-822e-89d0-819906b6d071" class="" dir="auto">3. 콜드 스타트 고려</h3><p id="c66720e4-6f49-82ef-ae62-01f91c800168" class="" dir="auto">오랜 시간 사용하지 않은 함수가 처음 실행될 때 초기 지연이 발생할 수 있음.</p><h3 id="839720e4-6f49-833a-96c5-01964647d95a" class="" dir="auto">4. 복잡한 애플리케이션 로직은 구조 설계가 중요함</h3><p id="6aa720e4-6f49-82ef-9555-812a2b04794a" class="" dir="auto">작은 함수가 많아질수록 전체 흐름 관리가 중요해짐.</p><p id="a9e720e4-6f49-82ae-889a-81dcc8c11318" class="" dir="auto">즉, Lambda는 강력하지만 <strong>모든 워크로드를 Lambda로 해결하려고 하면 오히려 구조가 복잡해질 수 있음.</strong></p><hr id="75d720e4-6f49-8289-aa92-81fbdf49152e" dir="auto"/><h1 id="81d720e4-6f49-8301-ab0e-01ffb80be168" class="" dir="auto">11.9 Amazon API Gateway 개요</h1><p id="9e6720e4-6f49-83e3-9204-0172f7076413" class="" dir="auto">API Gateway는 클라이언트 요청을 받아 백엔드 서비스에 전달하는 관리형 API 프론트도어 서비스임.</p><p id="f29720e4-6f49-8296-8762-81b88dc95d24" class="" dir="auto">쉽게 말하면 다음 역할을 함.</p><ul id="29b720e4-6f49-83ea-a08b-01ff5f52a496" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 요청 수신</li></ul><ul id="751720e4-6f49-8376-bb87-811d2a63bfab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">경로/메서드 관리</li></ul><ul id="d84720e4-6f49-8364-becd-81cdf1762340" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증/인가 연계</li></ul><ul id="f4f720e4-6f49-8365-8616-8172e79adb63" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 제한</li></ul><ul id="fd6720e4-6f49-8331-90db-012502c88634" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드 연결</li></ul><ul id="03f720e4-6f49-83f1-a7f9-818070ee210e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모니터링</li></ul><p id="029720e4-6f49-82b4-a7b4-818791669d75" class="" dir="auto">즉, API Gateway는 서버리스 아키텍처에서 <strong>외부 요청의 진입점</strong> 역할을 함.</p><hr id="391720e4-6f49-833f-a1cf-010e96f1a49f" dir="auto"/><h1 id="7f3720e4-6f49-8339-944e-81fdbac71680" class="" dir="auto">11.10 API Gateway가 필요한 이유</h1><p id="61d720e4-6f49-83dd-9270-816bc4ccb609" class="" dir="auto">Lambda를 직접 외부에 공개하는 것이 아니라 API Gateway를 앞단에 두는 이유는 다음과 같음.</p><h3 id="fb8720e4-6f49-8278-9a25-0119a23b1269" class="" dir="auto">1. 표준 API 인터페이스 제공</h3><p id="046720e4-6f49-83e2-a7e7-01232884284b" class="" dir="auto">HTTP/HTTPS 방식으로 외부 요청을 받을 수 있음.</p><h3 id="5d2720e4-6f49-82f6-899a-011cc0a0da34" class="" dir="auto">2. 라우팅 관리</h3><p id="a1f720e4-6f49-8344-8d42-0165f17284ac" class="" dir="auto">경로와 메서드별로 다른 백엔드에 연결 가능함.</p><h3 id="82b720e4-6f49-82e2-9fde-0105fff22ff3" class="" dir="auto">3. 인증/인가 연계</h3><p id="fa0720e4-6f49-83e5-a870-01624ac54c5b" class="" dir="auto">IAM, Cognito, Lambda Authorizer 등과 연결 가능함.</p><h3 id="9fc720e4-6f49-82c7-88e7-01a841cd08f9" class="" dir="auto">4. 운영 기능 제공</h3><p id="74f720e4-6f49-822e-a875-01da58ccfde4" class="" dir="auto">Throttling, Logging, Monitoring, Versioning 등을 관리 가능함.</p><p id="293720e4-6f49-82a0-acb1-813b78ae836d" class="" dir="auto">즉, API Gateway는 단순 전달자가 아니라 <strong>API 운영 계층</strong>임.</p><hr id="5b6720e4-6f49-8221-ab07-01042d37d8cf" dir="auto"/><h1 id="ea9720e4-6f49-8304-877e-01034ac96fc4" class="" dir="auto">11.11 API Gateway의 역할</h1><p id="c7a720e4-6f49-8353-a295-81fd1bdb80a1" class="" dir="auto">예를 들어 다음 구조를 생각하면</p><pre id="b11720e4-6f49-8322-ac8c-8159f5198a54" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+   │
+API Gateway
+   │
+Lambda
+   │
+DynamoDB</code></pre><p id="681720e4-6f49-8217-82a9-81ca3c2d7a46" class="" dir="auto">API Gateway는</p><ul id="f35720e4-6f49-8381-9f3b-01d70a150d97" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청을 받아들이고</li></ul><ul id="478720e4-6f49-8287-9e87-0181eac95583" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda에 전달하고</li></ul><ul id="2ca720e4-6f49-8391-b59f-01f023f4ef6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">응답을 다시 사용자에게 돌려주는</li></ul><p id="270720e4-6f49-83ec-a026-01dea7e455c8" class="" dir="auto">역할을 수행함.</p><p id="6b8720e4-6f49-82ec-9b58-01c5a8d42ebb" class="" dir="auto">즉, 서버리스 API 구조에서는 ALB 대신 API Gateway가 진입점이 되는 경우가 많음.</p><hr id="069720e4-6f49-839b-9e08-01a04a9cb2f6" dir="auto"/><h1 id="ffb720e4-6f49-8276-ab47-014af7111a8d" class="" dir="auto">11.12 API Gateway가 적합한 경우</h1><ul id="2ee720e4-6f49-8388-9889-0109f12a7f1a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모바일 앱 백엔드 API</li></ul><ul id="44f720e4-6f49-83b2-93bd-81e643f42d2a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 프론트엔드용 API</li></ul><ul id="c2e720e4-6f49-836e-b2d0-014f8b53aa44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버리스 백엔드 구성</li></ul><ul id="ea4720e4-6f49-82c1-b2ac-01c61f74902a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">마이크로서비스 API 노출</li></ul><ul id="1df720e4-6f49-83c7-bc66-8172e6c5963a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 파트너 API 제공</li></ul><p id="b46720e4-6f49-82f2-b974-817189c8dd9f" class="" dir="auto">즉, HTTP API를 서버리스 방식으로 구성할 때 핵심 서비스라고 보면 됨.</p><hr id="9aa720e4-6f49-83a6-9834-011c2007b68d" dir="auto"/><h1 id="bd6720e4-6f49-8331-94a3-0136b115a4dc" class="" dir="auto">11.13 비동기 처리의 필요성</h1><p id="d28720e4-6f49-834b-8288-0149cb5acea3" class="" dir="auto">서버리스 아키텍처를 이해할 때 중요한 또 하나의 개념이 <strong>비동기 처리</strong>임.</p><p id="3eb720e4-6f49-839d-bd6a-016c24059607" class="" dir="auto">모든 작업을 사용자 요청 처리 안에서 즉시 끝내려고 하면 다음 문제가 발생할 수 있음.</p><ul id="a4e720e4-6f49-8333-a5c0-817ebb019caa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">응답 시간이 길어짐</li></ul><ul id="826720e4-6f49-8384-b416-0119f9bc4410" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실패 영향이 커짐</li></ul><ul id="719720e4-6f49-83cf-989b-010182136ea8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부하가 집중됨</li></ul><ul id="27f720e4-6f49-8399-875c-814685fdf5fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장성이 떨어짐</li></ul><p id="f84720e4-6f49-82b9-bd51-81c59c455afe" class="" dir="auto">예를 들어 사용자가 주문 버튼을 눌렀을 때 다음 작업이 동시에 일어난다고 가정하면</p><ul id="9ef720e4-6f49-82b8-8f41-81af5eab3414" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주문 저장</li></ul><ul id="fb2720e4-6f49-8383-83ef-017d48b747cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결제 처리</li></ul><ul id="1c5720e4-6f49-823a-82b4-019da9234c80" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이메일 발송</li></ul><ul id="da1720e4-6f49-8256-b404-010709241905" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문자 발송</li></ul><ul id="27b720e4-6f49-8221-b4f8-01711780dc29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재고 차감</li></ul><ul id="b39720e4-6f49-822b-b4b5-817d874e48b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 분석 이벤트 전송</li></ul><p id="916720e4-6f49-833c-9f46-016f17a92b55" class="" dir="auto">이 모든 것을 동기적으로 처리하면 응답이 느려질 수 있음.</p><p id="b1e720e4-6f49-8396-b607-81708efafcb9" class="" dir="auto">따라서 핵심 응답과 후속 처리를 분리하는 구조가 필요함.</p><p id="6c2720e4-6f49-8207-a49e-810cd83d8b71" class="" dir="auto">이때 중요한 서비스가 SQS, SNS, Kinesis 같은 메시징/이벤트 서비스임.</p><hr id="2eb720e4-6f49-8381-a3d3-8172a9ebf960" dir="auto"/><h1 id="774720e4-6f49-82fe-9ef3-01434ffd7bb9" class="" dir="auto">11.14 Amazon SQS 개요</h1><p id="36e720e4-6f49-821f-aa5e-0165062457cd" class="" dir="auto">SQS는 <strong>Simple Queue Service</strong>의 약자이며, 관리형 메시지 큐 서비스임.</p><p id="b67720e4-6f49-835a-b1c5-81c7aa862039" class="" dir="auto">메시지를 큐에 저장하고, 소비자가 나중에 꺼내 처리할 수 있게 해줌.</p><p id="816720e4-6f49-83b6-a2ba-01f81ffd2d3b" class="" dir="auto">즉, SQS의 핵심은 다음과 같음.</p><pre id="f27720e4-6f49-83e9-871e-815fac71c03a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">보내는 쪽과 처리하는 쪽을 분리한다.</code></pre><p id="e0a720e4-6f49-831e-a037-81a2b23e06b3" class="" dir="auto">예를 들어 웹 애플리케이션이 작업 요청을 큐에 넣고, 백엔드 처리기가 나중에 꺼내 처리할 수 있음.</p><hr id="056720e4-6f49-829a-9b5b-81d90bf7ee47" dir="auto"/><h1 id="960720e4-6f49-8261-9a7a-81b51b21aa80" class="" dir="auto">11.15 SQS가 필요한 이유</h1><p id="cfd720e4-6f49-8310-86f5-013f22f91331" class="" dir="auto">SQS를 사용하는 이유는 시스템 간 결합도를 낮추기 위해서임.</p><p id="043720e4-6f49-8208-bd29-0116c783ec6e" class="" dir="auto">예를 들어 주문 서비스가 알림 서비스에 직접 의존하면, 알림 서비스 장애가 주문 처리까지 영향을 줄 수 있음.</p><p id="6a6720e4-6f49-8382-94dd-814d93a73abd" class="" dir="auto">반면 큐를 중간에 두면 주문 서비스는 메시지만 넣고 빠르게 끝낼 수 있음.</p><p id="00f720e4-6f49-8210-b42d-0176d44b3fc2" class="" dir="auto">장점</p><h3 id="a41720e4-6f49-821c-b322-81e838d12387" class="" dir="auto">1. Decoupling</h3><p id="9fa720e4-6f49-83b7-9d05-01275cf8592c" class="" dir="auto">생산자와 소비자를 분리할 수 있음.</p><h3 id="062720e4-6f49-82ee-917b-01467d44c670" class="" dir="auto">2. 부하 완충</h3><p id="8bc720e4-6f49-8334-a450-8149a4a85059" class="" dir="auto">순간적으로 요청이 몰려도 큐에 저장해 두고 천천히 처리 가능함.</p><h3 id="ef9720e4-6f49-83c2-92e1-81fd6687a1d2" class="" dir="auto">3. 장애 격리</h3><p id="6dd720e4-6f49-8215-94bf-810cde6c3e2d" class="" dir="auto">소비자 장애가 생산자 전체를 즉시 중단시키지 않음.</p><h3 id="04a720e4-6f49-83ea-b744-817e0add7a93" class="" dir="auto">4. 비동기 처리</h3><p id="b17720e4-6f49-8399-943a-011181f4b7e8" class="" dir="auto">사용자 응답과 후속 작업을 분리할 수 있음.</p><p id="819720e4-6f49-8204-8dde-0161dec97b9a" class="" dir="auto">즉, SQS는 서버리스에서 <strong>안정적인 비동기 처리의 핵심 구성요소</strong>임.</p><hr id="49d720e4-6f49-8322-a822-812fa186e556" dir="auto"/><h1 id="927720e4-6f49-82ed-8d18-01667fbbe06c" class="" dir="auto">11.16 SQS의 주요 개념</h1><p id="b1a720e4-6f49-836a-b32c-81494ac196b0" class="" dir="auto">SQS를 이해할 때 중요한 개념</p><ul id="82c720e4-6f49-82ac-9129-0123e395c41a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Queue</li></ul><ul id="fc7720e4-6f49-822e-9bb0-015ba2829c07" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Message</li></ul><ul id="90a720e4-6f49-83c0-85d1-817fd67f4002" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Producer</li></ul><ul id="fa1720e4-6f49-837f-a780-814a8b1db591" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Consumer</li></ul><ul id="6d7720e4-6f49-82e3-bc67-81069ee9b08b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Visibility Timeout</li></ul><ul id="04e720e4-6f49-8351-9252-8171bf375c38" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dead-Letter Queue</li></ul><hr id="eae720e4-6f49-8392-ac6c-01a0c4c61037" dir="auto"/><h2 id="ad2720e4-6f49-8258-8bf6-01b915a9081b" class="" dir="auto">11.16.1 Queue</h2><p id="7ab720e4-6f49-8234-b9a3-81892a65eacc" class="" dir="auto">메시지가 쌓이는 저장소임.</p><h2 id="888720e4-6f49-833d-a1e7-014b979b7136" class="" dir="auto">11.16.2 Producer</h2><p id="dc6720e4-6f49-82f4-9780-019216ea5df0" class="" dir="auto">메시지를 보내는 쪽임.</p><h2 id="037720e4-6f49-8293-9286-81b0502c4f75" class="" dir="auto">11.16.3 Consumer</h2><p id="5eb720e4-6f49-82fe-a51b-816a9add2e30" class="" dir="auto">메시지를 꺼내 처리하는 쪽임.</p><h2 id="b63720e4-6f49-82cd-8a40-01529a85fa51" class="" dir="auto">11.16.4 Visibility Timeout</h2><p id="b0e720e4-6f49-820c-be47-81f659cc78be" class="" dir="auto">소비자가 메시지를 가져간 뒤 일정 시간 동안 다른 소비자에게 안 보이게 하는 시간임.</p><h2 id="683720e4-6f49-8368-b766-81e2e947cd82" class="" dir="auto">11.16.5 Dead-Letter Queue</h2><p id="d37720e4-6f49-8308-ba4b-81bb863db726" class="" dir="auto">반복 실패한 메시지를 별도로 격리하는 큐임.</p><p id="db3720e4-6f49-82b2-9138-816286edc43d" class="" dir="auto">즉, SQS는 단순 적재소가 아니라 <strong>재시도와 실패 격리까지 고려한 처리 구조</strong>를 제공함.</p><hr id="e58720e4-6f49-820a-96fd-81f6bfb96c92" dir="auto"/><h1 id="4d9720e4-6f49-8358-bfcc-010be40b8e6b" class="" dir="auto">11.17 Standard Queue와 FIFO Queue</h1><p id="e2f720e4-6f49-83dc-905f-81ea4e2eb62b" class="" dir="auto">SQS는 대표적으로 두 가지 유형이 있음.</p><h3 id="975720e4-6f49-825f-99a6-813cc733a399" class="" dir="auto">Standard Queue</h3><ul id="d9a720e4-6f49-829d-8fcc-01d5e4e7d7cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">높은 처리량</li></ul><ul id="5f7720e4-6f49-8394-b9ee-01b5b22fe356" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최소 1회 전달 보장</li></ul><ul id="2d2720e4-6f49-83aa-ba47-8165614c52f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">순서 보장은 엄격하지 않을 수 있음</li></ul><h3 id="e61720e4-6f49-8243-8f76-81253b43d8b9" class="" dir="auto">FIFO Queue</h3><ul id="2e6720e4-6f49-8266-85b8-81cc8de604d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">순서 보장</li></ul><ul id="966720e4-6f49-82d3-b3e5-81a62408f345" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중복 처리 방지 강화</li></ul><ul id="1ee720e4-6f49-8262-8bf7-0113128f94ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">처리량은 상대적으로 제약이 있을 수 있음</li></ul><p id="edd720e4-6f49-8299-8ece-815921a3e23b" class="" dir="auto">즉,</p><ul id="976720e4-6f49-8299-90a5-8173c2257921" class="bulleted-list" dir="auto"><li style="list-style-type:disc">순서가 크게 중요하지 않으면 Standard</li></ul><ul id="b2e720e4-6f49-8373-8079-01754a61da2f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">순서와 중복 제어가 중요하면 FIFO</li></ul><p id="294720e4-6f49-8289-abba-8131fcff0c13" class="" dir="auto">로 이해하면 됨.</p><hr id="81e720e4-6f49-83d8-9799-0110b07937d9" dir="auto"/><h1 id="9e2720e4-6f49-831b-a1d5-81db593ba0be" class="" dir="auto">11.18 Amazon SNS 개요</h1><p id="2e0720e4-6f49-83c4-b911-013d66f1b7eb" class="" dir="auto">SNS는 <strong>Simple Notification Service</strong>의 약자이며, 관리형 pub/sub 메시징 서비스임.</p><p id="f4e720e4-6f49-8275-84bb-81e872454f5a" class="" dir="auto">SNS의 핵심은 다음과 같음.</p><pre id="842720e4-6f49-82f1-b3a4-819c7fd60682" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">하나의 이벤트를 여러 구독자에게 동시에 전달한다.</code></pre><p id="5da720e4-6f49-8325-b6ee-01f7c607ecc4" class="" dir="auto">즉, SQS가 큐 기반 1차원 적재 구조라면, SNS는 <strong>발행-구독(Publish-Subscribe)</strong> 구조임.</p><hr id="1dc720e4-6f49-8298-b054-0197aaee1391" dir="auto"/><h1 id="adc720e4-6f49-8342-90ea-01ced9c42b13" class="" dir="auto">11.19 SNS가 필요한 이유</h1><p id="0e7720e4-6f49-8330-92fd-815525052b4d" class="" dir="auto">같은 이벤트를 여러 시스템이 각각 받아야 하는 경우가 있음.</p><p id="b21720e4-6f49-8303-a116-013d50aac958" class="" dir="auto">예</p><ul id="fe2720e4-6f49-82d9-83a0-810307a284c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주문 완료</li></ul><ul id="2c1720e4-6f49-82d3-9dfc-01b122ab39e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이메일 알림</li></ul><ul id="bf9720e4-6f49-8264-918c-81705f369f8c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문자 알림</li></ul><ul id="ba5720e4-6f49-8252-9fc6-01b6baea98af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">감사 로그 저장</li></ul><ul id="2b7720e4-6f49-822d-8baa-811741c05ac4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분석 시스템 이벤트 전송</li></ul><p id="ca9720e4-6f49-8345-80ee-01594087af5a" class="" dir="auto">이런 경우 발행자는 한 번만 이벤트를 발행하고, 여러 구독자가 각자 받아 처리하면 됨.</p><p id="640720e4-6f49-827d-9700-01c7b7f19461" class="" dir="auto">즉, SNS는 이벤트 팬아웃(fan-out)에 적합함.</p><hr id="697720e4-6f49-82dc-8fac-01c9124f2aca" dir="auto"/><h1 id="ec9720e4-6f49-8330-9dab-01a0ce35138f" class="" dir="auto">11.20 SNS의 특징</h1><h3 id="61e720e4-6f49-8287-a615-01348b02debe" class="" dir="auto">1. Pub/Sub 구조</h3><p id="db5720e4-6f49-83cd-a073-0192ac62597f" class="" dir="auto">하나의 발행자가 여러 구독자에게 전달 가능함.</p><h3 id="2fe720e4-6f49-83e4-8264-8137f89d2bdf" class="" dir="auto">2. 다양한 구독 대상</h3><p id="484720e4-6f49-8280-bb69-012d3d5b2047" class="" dir="auto">SQS, Lambda, HTTP Endpoint, Email 등과 연계 가능함.</p><h3 id="200720e4-6f49-824d-b40f-8115d589eb3d" class="" dir="auto">3. 이벤트 전파에 적합</h3><p id="06b720e4-6f49-8391-843e-81719b6e9d72" class="" dir="auto">시스템 간 느슨한 결합 구조를 만들기 좋음.</p><p id="da2720e4-6f49-83fa-ad96-019b42527fbc" class="" dir="auto">즉, SNS는 “한 번 발생한 이벤트를 여러 방향으로 전달하는 서비스”라고 이해하면 됨.</p><hr id="51a720e4-6f49-822e-938b-01897f089f89" dir="auto"/><h1 id="b5c720e4-6f49-823e-88f0-815e0d9fd4bc" class="" dir="auto">11.21 SQS와 SNS 차이</h1><p id="a1e720e4-6f49-828d-8da8-01a0d7a765d2" class="" dir="auto">이 둘은 자주 함께 쓰이지만 역할이 다름.</p><table id="52c720e4-6f49-82dd-9a4f-81857f2cc517" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="0c3720e4-6f49-8323-91d3-0101427e85cb" dir="ltr"><th id="^PRT" class="simple-table-header-color simple-table-header">항목</th><th id="_|rF" class="simple-table-header-color simple-table-header">SQS</th><th id="ZoCB" class="simple-table-header-color simple-table-header">SNS</th></tr></thead><tbody><tr id="32a720e4-6f49-8323-966d-81db0e2ad905" dir="ltr"><td id="^PRT" class="">구조</td><td id="_|rF" class="">큐</td><td id="ZoCB" class="">Pub/Sub</td></tr><tr id="88b720e4-6f49-8241-b08f-81a0ecdc9cfa" dir="ltr"><td id="^PRT" class="">목적</td><td id="_|rF" class="">비동기 작업 적재</td><td id="ZoCB" class="">이벤트 팬아웃</td></tr><tr id="ba3720e4-6f49-8226-ac96-0101d3e18877" dir="ltr"><td id="^PRT" class="">소비 방식</td><td id="_|rF" class="">보통 한 소비자 흐름</td><td id="ZoCB" class="">여러 구독자 동시 전달</td></tr><tr id="cd6720e4-6f49-8357-9452-81bc1d414484" dir="ltr"><td id="^PRT" class="">대표 용도</td><td id="_|rF" class="">작업 처리</td><td id="ZoCB" class="">알림/이벤트 배포</td></tr></tbody></table><p id="f2e720e4-6f49-82e7-a318-018b0d4571ee" class="" dir="auto">즉,</p><ul id="5fb720e4-6f49-8278-995d-01321bd47d18" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>작업을 나중에 처리하려면 SQS</strong></li></ul><ul id="f3a720e4-6f49-83a4-aafc-81b678fba987" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>이벤트를 여러 곳에 뿌리려면 SNS</strong></li></ul><p id="b6f720e4-6f49-8371-8f7c-816e5d2fdba6" class="" dir="auto">라고 정리하면 됨.</p><hr id="b2a720e4-6f49-83c6-a2d1-81d789fddd6c" dir="auto"/><h1 id="376720e4-6f49-8278-9e3e-01f463b66b5e" class="" dir="auto">11.22 SQS와 SNS 조합</h1><p id="363720e4-6f49-8390-8062-81d0e2240e9d" class="" dir="auto">실무에서는 SNS와 SQS를 함께 사용하는 경우가 많음.</p><p id="f0b720e4-6f49-8224-bf8e-01b8054ab62d" class="" dir="auto">예</p><pre id="26e720e4-6f49-8262-828e-01c9544fe730" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">주문 완료 이벤트
+   │
+SNS Topic
+   ├ SQS-알림큐
+   ├ SQS-정산큐
+   └ SQS-분석큐</code></pre><p id="68c720e4-6f49-83be-bd83-812f17e1e40f" class="" dir="auto">이 구조의 장점</p><ul id="b7c720e4-6f49-82ed-add8-011d1b741ce8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트는 한 번 발행</li></ul><ul id="5c8720e4-6f49-8254-82f5-0100cfb43b6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 후속 시스템이 독립적으로 소비</li></ul><ul id="9d8720e4-6f49-82a5-b38f-8146323674f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 소비 시스템은 자기 속도로 처리 가능</li></ul><p id="5b9720e4-6f49-8202-ab6f-0137877ac6d6" class="" dir="auto">즉, SNS+SQS 조합은 서버리스 이벤트 아키텍처에서 매우 자주 등장하는 패턴임.</p><hr id="216720e4-6f49-8295-a5ba-015704d35f8a" dir="auto"/><h1 id="b38720e4-6f49-8234-8f9d-01f215d53d39" class="" dir="auto">11.23 Amazon Kinesis 개요</h1><p id="0e8720e4-6f49-8301-90f4-810a5f3b5141" class="" dir="auto">Kinesis는 실시간 스트리밍 데이터 수집과 처리에 사용되는 서비스군임.</p><p id="55f720e4-6f49-832f-b0c4-81f168acb44d" class="" dir="auto">즉, 메시지를 한 건씩 단순 큐잉하는 것을 넘어, 대량의 연속 데이터 흐름(stream)을 처리하는 데 적합함.</p><p id="f46720e4-6f49-830f-b9e2-81d3eb0bca88" class="" dir="auto">예</p><ul id="a9a720e4-6f49-8271-b02c-813999b89d58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 스트림</li></ul><ul id="21a720e4-6f49-833e-9280-815eb24a246f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클릭스트림</li></ul><ul id="839720e4-6f49-826c-8bb5-81db99f1153f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IoT 센서 데이터</li></ul><ul id="a96720e4-6f49-8372-b98e-010814c484e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실시간 모니터링 데이터</li></ul><ul id="614720e4-6f49-82b7-935c-013be55c498a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대량 이벤트 수집</li></ul><p id="d09720e4-6f49-8280-b99d-012da1542b0a" class="" dir="auto">즉, Kinesis는 “메시지 큐”보다 <strong>실시간 데이터 스트림 처리</strong>에 더 초점이 맞춰져 있음.</p><hr id="c67720e4-6f49-8343-ac9a-01589d544449" dir="auto"/><h1 id="520720e4-6f49-827e-84a8-01ed082525e1" class="" dir="auto">11.24 Kinesis가 필요한 이유</h1><p id="a7d720e4-6f49-836d-83c9-819cea8af8f3" class="" dir="auto">SQS는 비동기 작업 처리에 매우 좋지만, 대량 연속 데이터 흐름을 시간 순서대로 수집·분석하는 용도로는 한계가 있을 수 있음.</p><p id="a1f720e4-6f49-83bf-a156-013445e9ffdb" class="" dir="auto">이때 Kinesis가 적합함.</p><p id="9e3720e4-6f49-833c-9255-016f5933835d" class="" dir="auto">장점</p><h3 id="817720e4-6f49-82d8-a73e-01c55f7673c0" class="" dir="auto">1. 대량 실시간 데이터 수집</h3><p id="bd6720e4-6f49-827b-a3c6-81b53451242e" class="" dir="auto">지속적으로 발생하는 이벤트를 받아들일 수 있음.</p><h3 id="f1d720e4-6f49-82dd-a43a-816275c6a359" class="" dir="auto">2. 스트리밍 처리</h3><p id="704720e4-6f49-828c-bb10-81e6c6c1fd57" class="" dir="auto">데이터가 들어오는 즉시 소비 가능함.</p><h3 id="a09720e4-6f49-831b-91a0-812a7d9c71f9" class="" dir="auto">3. 실시간 분석 연계</h3><p id="964720e4-6f49-8308-8224-01008ed157a8" class="" dir="auto">분석, 모니터링, 저장 파이프라인과 연결 가능함.</p><p id="dca720e4-6f49-83b1-8cfa-812fe789c403" class="" dir="auto">즉, Kinesis는 이벤트 처리 중에서도 <strong>스트리밍 데이터 파이프라인</strong>에 특화된 서비스임.</p><hr id="00c720e4-6f49-83d0-b99b-81d8e495a8a8" dir="auto"/><h1 id="85c720e4-6f49-82ce-86d0-8195d7ef67f8" class="" dir="auto">11.25 Kinesis 서비스군 개요</h1><p id="f5e720e4-6f49-838a-864d-01e4c8e7e65c" class="" dir="auto">Kinesis는 여러 구성요소로 나뉨.</p><p id="c69720e4-6f49-8264-a0e0-015014d0c2cb" class="" dir="auto">교육에서는 너무 깊게 다루기보다 큰 역할 중심으로 정리하는 것이 좋음.</p><p id="d15720e4-6f49-8348-9b4c-01fe0c099c37" class="" dir="auto">대표 구성</p><ul id="1fb720e4-6f49-8332-9383-8150cd8b4530" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kinesis Data Streams</li></ul><ul id="e9b720e4-6f49-8284-9c85-8117fb12cf83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kinesis Data Firehose</li></ul><ul id="00f720e4-6f49-8220-a6ea-0134d7e85565" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kinesis Data Analytics</li></ul><hr id="7c9720e4-6f49-821d-8ffb-81590354dc31" dir="auto"/><h2 id="ec5720e4-6f49-82cc-8567-01358e603197" class="" dir="auto">11.25.1 Kinesis Data Streams</h2><p id="93c720e4-6f49-8369-9ebc-8142435227b1" class="" dir="auto">실시간 스트리밍 데이터를 수집하고 여러 소비자가 읽을 수 있는 서비스임.</p><h2 id="575720e4-6f49-83f7-b1b0-01ca3d7cbf77" class="" dir="auto">11.25.2 Kinesis Data Firehose</h2><p id="ed6720e4-6f49-82a9-a203-0170be7d391d" class="" dir="auto">스트리밍 데이터를 S3, OpenSearch, Redshift 등으로 적재하는 데 최적화된 서비스임.</p><h2 id="6d4720e4-6f49-8278-8a3c-01bab54d6c3b" class="" dir="auto">11.25.3 Kinesis Data Analytics</h2><p id="001720e4-6f49-8289-aaae-01f8a2a2f5c7" class="" dir="auto">스트리밍 데이터를 실시간 분석하는 데 사용됨.</p><p id="399720e4-6f49-832a-94bd-81be0df39152" class="" dir="auto">즉, Kinesis는 수집, 전달, 분석까지 이어지는 실시간 데이터 처리 체계를 구성할 수 있음.</p><hr id="d51720e4-6f49-8374-ae58-818d8a2d633f" dir="auto"/><h1 id="195720e4-6f49-82c5-9ae9-8183cc5b2745" class="" dir="auto">11.26 SQS와 Kinesis 차이</h1><p id="79e720e4-6f49-82dd-85dc-811a179fe780" class="" dir="auto">이 둘도 혼동하기 쉬움.</p><table id="29b720e4-6f49-83d6-8f90-814a1c5995fd" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="2c0720e4-6f49-8274-a843-01641c6bcea4" dir="ltr"><th id="lpoS" class="simple-table-header-color simple-table-header">항목</th><th id="rI&gt;;" class="simple-table-header-color simple-table-header">SQS</th><th id="dhsy" class="simple-table-header-color simple-table-header">Kinesis</th></tr></thead><tbody><tr id="fc1720e4-6f49-821e-8d95-011a5b782025" dir="ltr"><td id="lpoS" class="">목적</td><td id="rI&gt;;" class="">비동기 작업 큐</td><td id="dhsy" class="">실시간 데이터 스트림</td></tr><tr id="762720e4-6f49-83ea-8284-017b1561f5e3" dir="ltr"><td id="lpoS" class="">처리 방식</td><td id="rI&gt;;" class="">메시지 단위 적재/소비</td><td id="dhsy" class="">연속 스트림 처리</td></tr><tr id="d0c720e4-6f49-830a-8ca3-816bc8e46820" dir="ltr"><td id="lpoS" class="">대표 용도</td><td id="rI&gt;;" class="">작업 분리, decoupling</td><td id="dhsy" class="">로그/이벤트/실시간 분석</td></tr><tr id="795720e4-6f49-82b9-8d27-01d7e991b202" dir="ltr"><td id="lpoS" class="">소비 모델</td><td id="rI&gt;;" class="">큐 소비자 중심</td><td id="dhsy" class="">스트림 소비자 중심</td></tr></tbody></table><p id="a94720e4-6f49-82d5-99dc-818efb2f6689" class="" dir="auto">즉,</p><ul id="8e7720e4-6f49-8272-b87a-81a0d7b25cfc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>업무 작업 분리</strong>면 SQS</li></ul><ul id="558720e4-6f49-82e2-9dd1-81ff416e9ed5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>실시간 대량 데이터 흐름</strong>이면 Kinesis</li></ul><p id="ff4720e4-6f49-836b-bf0d-81f2f5c30d4c" class="" dir="auto">라고 정리하면 됨.</p><hr id="e4c720e4-6f49-833f-8e1b-81adb442b909" dir="auto"/><h1 id="bbf720e4-6f49-82fa-b4c3-01ce7f224774" class="" dir="auto">11.27 AWS Step Functions 개요</h1><p id="076720e4-6f49-821f-bee5-81f668486e00" class="" dir="auto">Step Functions는 여러 작업 단계를 순서와 조건에 따라 연결하는 서버리스 워크플로우 서비스임.</p><p id="f5b720e4-6f49-83ad-8e6f-814148f642c9" class="" dir="auto">즉, 단순히 Lambda 하나 실행하는 것이 아니라,</p><p id="a06720e4-6f49-8376-a1e1-01a22bd86048" class="" dir="auto">여러 Lambda 또는 여러 AWS 서비스 호출을 <strong>상태 기반 흐름</strong>으로 관리할 수 있게 해줌.</p><p id="511720e4-6f49-83ea-b051-81bb7bc765a5" class="" dir="auto">핵심은 다음과 같음.</p><pre id="2e9720e4-6f49-8380-9a8a-819a961079b2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">복잡한 처리 절차를 코드에 하드코딩하지 않고
+워크플로우로 분리해서 관리한다.</code></pre><hr id="bea720e4-6f49-83c2-9702-01789f99d933" dir="auto"/><h1 id="f1d720e4-6f49-8219-91ee-01c721157094" class="" dir="auto">11.28 Step Functions가 필요한 이유</h1><p id="d07720e4-6f49-829f-a208-01e8e6cb76f1" class="" dir="auto">예를 들어 주문 처리 업무를 생각하면 다음 단계가 있을 수 있음.</p><ul id="5e8720e4-6f49-82e1-92e8-81a21537016a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주문 검증</li></ul><ul id="9c4720e4-6f49-8309-a33c-8135f206a3e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결제 승인</li></ul><ul id="4c0720e4-6f49-82e0-99ac-81cab9de1090" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재고 차감</li></ul><ul id="dbe720e4-6f49-83d4-9415-013577d0710a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배송 요청</li></ul><ul id="921720e4-6f49-83bf-b55e-0131616bca79" class="bulleted-list" dir="auto"><li style="list-style-type:disc">알림 발송</li></ul><ul id="023720e4-6f49-8365-99cb-01d34f978170" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실패 시 보상 처리</li></ul><p id="fb8720e4-6f49-8358-af41-81d7b04a5016" class="" dir="auto">이 모든 흐름을 하나의 Lambda 안에 넣으면 코드가 매우 복잡해질 수 있음.</p><p id="48e720e4-6f49-8203-b6b9-81c6df12c4fa" class="" dir="auto">또한 어느 단계에서 실패했는지 추적도 어려워짐.</p><p id="959720e4-6f49-83c2-a09a-010e51577919" class="" dir="auto">Step Functions를 사용하면</p><ul id="f90720e4-6f49-8356-a3c8-8121c8f90c50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단계별 흐름을 명시적으로 정의 가능</li></ul><ul id="b04720e4-6f49-83f4-ab30-81726785c696" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조건 분기 가능</li></ul><ul id="f4b720e4-6f49-8384-99b7-0110dbe0f373" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재시도 정책 설정 가능</li></ul><ul id="b08720e4-6f49-82b7-929a-01c8a6c28c37" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실패 처리 흐름 정의 가능</li></ul><ul id="929720e4-6f49-835b-91f7-813de72284a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태 추적 가능</li></ul><p id="93c720e4-6f49-83ed-b51b-816e0dbcf9e4" class="" dir="auto">즉, Step Functions는 서버리스 환경의 <strong>오케스트레이션 계층</strong>임.</p><hr id="a9b720e4-6f49-836e-bc05-8167c6fe481e" dir="auto"/><h1 id="f49720e4-6f49-83b7-870b-813565ec09ae" class="" dir="auto">11.29 Step Functions의 핵심 개념</h1><p id="036720e4-6f49-8270-8539-819f3e3efc79" class="" dir="auto">주요 개념</p><ul id="d0c720e4-6f49-8373-92dd-0193151c284c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">State Machine</li></ul><ul id="ef8720e4-6f49-828c-880c-0118659ebb28" class="bulleted-list" dir="auto"><li style="list-style-type:disc">State</li></ul><ul id="4f5720e4-6f49-83e3-97bd-81330865dead" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Transition</li></ul><ul id="a65720e4-6f49-83ab-a4f1-018fe33cbed9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Choice</li></ul><ul id="cf9720e4-6f49-82fd-9409-81f7fb96a5eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Retry / Catch</li></ul><hr id="a97720e4-6f49-8220-b048-01c91ec3f3be" dir="auto"/><h2 id="422720e4-6f49-8239-8914-010343109b27" class="" dir="auto">11.29.1 State Machine</h2><p id="eed720e4-6f49-8340-893d-81c8cbe30688" class="" dir="auto">전체 워크플로우 정의 자체임.</p><h2 id="e21720e4-6f49-83b9-b0f6-01b6362c8314" class="" dir="auto">11.29.2 State</h2><p id="fe1720e4-6f49-827d-8f9a-0174e709de56" class="" dir="auto">하나의 처리 단계임.</p><h2 id="8ef720e4-6f49-828d-bd76-81e9f2d7afec" class="" dir="auto">11.29.3 Transition</h2><p id="f66720e4-6f49-82d5-ba72-81784f084e4c" class="" dir="auto">다음 단계로 넘어가는 흐름임.</p><h2 id="384720e4-6f49-8249-9aaa-01a28fc583a7" class="" dir="auto">11.29.4 Choice</h2><p id="090720e4-6f49-831c-a54d-81d3fc1d54f3" class="" dir="auto">조건에 따라 분기하는 상태임.</p><h2 id="d22720e4-6f49-82f7-ba94-01585f675aac" class="" dir="auto">11.29.5 Retry / Catch</h2><p id="433720e4-6f49-8327-8d95-81cebb61e963" class="" dir="auto">실패 재시도와 예외 처리 흐름임.</p><p id="d88720e4-6f49-8319-b0af-0185ab859ee4" class="" dir="auto">즉, Step Functions는 “함수 실행”보다는 <strong>프로세스 흐름 제어</strong>에 초점이 있음.</p><hr id="2ac720e4-6f49-822f-9c35-01d5584c0cce" dir="auto"/><h1 id="647720e4-6f49-82de-86e7-81cc3ac05729" class="" dir="auto">11.30 Lambda와 Step Functions 차이</h1><table id="eb9720e4-6f49-8237-b6b3-0162ea2f2743" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="0f5720e4-6f49-821c-bcb3-01bad4d494f4" dir="ltr"><th id="SHQ&gt;" class="simple-table-header-color simple-table-header">항목</th><th id="Zvig" class="simple-table-header-color simple-table-header">Lambda</th><th id="?r_|" class="simple-table-header-color simple-table-header">Step Functions</th></tr></thead><tbody><tr id="d0c720e4-6f49-821e-9e2b-81b34479d383" dir="ltr"><td id="SHQ&gt;" class="">역할</td><td id="Zvig" class="">개별 코드 실행</td><td id="?r_|" class="">여러 단계 흐름 제어</td></tr><tr id="6a8720e4-6f49-82f1-8215-018619dad418" dir="ltr"><td id="SHQ&gt;" class="">중심 개념</td><td id="Zvig" class="">함수</td><td id="?r_|" class="">워크플로우</td></tr><tr id="227720e4-6f49-82d9-941f-811935efabed" dir="ltr"><td id="SHQ&gt;" class="">적합한 용도</td><td id="Zvig" class="">단일 작업 처리</td><td id="?r_|" class="">다단계 프로세스 관리</td></tr></tbody></table><p id="d04720e4-6f49-833a-9a0a-01d68b1808f4" class="" dir="auto">즉,</p><ul id="df5720e4-6f49-825f-a0f9-81141f8fa360" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>실제 작업 수행은 Lambda</strong></li></ul><ul id="eb2720e4-6f49-82f3-86bb-018654f79776" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>작업 순서와 분기는 Step Functions</strong></li></ul><p id="504720e4-6f49-8365-885b-8184eac91ee6" class="" dir="auto">라고 이해하면 됨.</p><hr id="f2d720e4-6f49-83f1-ae71-01207f15a2a4" dir="auto"/><h1 id="fe1720e4-6f49-82a0-93ec-01e07b477cb1" class="" dir="auto">11.31 서버리스의 데이터 저장 원칙</h1><p id="e86720e4-6f49-8385-8651-011a1423e163" class="" dir="auto">서버리스 함수 자체는 상태를 오래 보존하는 계층이 아님.</p><p id="8b5720e4-6f49-8323-ac94-8169c691c5d8" class="" dir="auto">따라서 데이터는 외부 관리형 서비스에 저장하는 것이 일반적임.</p><p id="ec6720e4-6f49-83ca-ab93-01fa3a7cc9c9" class="" dir="auto">예</p><ul id="556720e4-6f49-82e5-be9c-81c902c2f132" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관계형 데이터 → RDS/Aurora</li></ul><ul id="c47720e4-6f49-8250-adcb-01cf2b182f4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">키-값 상태 → DynamoDB</li></ul><ul id="178720e4-6f49-8210-a63e-01be1b329f37" class="bulleted-list" dir="auto"><li style="list-style-type:disc">세션/캐시 → Redis</li></ul><ul id="d1a720e4-6f49-8351-8001-01ba031f5c29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 → S3</li></ul><ul id="c60720e4-6f49-8231-9f3e-014f55e1ebf1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비동기 메시지 → SQS</li></ul><ul id="c2d720e4-6f49-82f0-8c9b-812d459e54b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스트리밍 데이터 → Kinesis</li></ul><p id="cdb720e4-6f49-8358-b472-014e936f3193" class="" dir="auto">즉, 서버리스 아키텍처도 결국은 <strong>컴퓨팅과 데이터 계층을 분리해서 설계</strong>해야 함.</p><hr id="cbc720e4-6f49-83be-855b-810e9ad9f813" dir="auto"/><h1 id="761720e4-6f49-8231-93b1-81791c266067" class="" dir="auto">11.32 서버리스 아키텍처의 장점</h1><h3 id="700720e4-6f49-82fd-8524-01446af29827" class="" dir="auto">1. 운영 부담 감소</h3><p id="a3d720e4-6f49-8207-94f7-81664c06c5f2" class="" dir="auto">서버 관리 책임이 크게 줄어듦.</p><h3 id="fae720e4-6f49-82b5-84bd-81f8b036cddd" class="" dir="auto">2. 빠른 개발</h3><p id="186720e4-6f49-826d-8e59-011a5091dd97" class="" dir="auto">인프라보다 기능 구현에 집중하기 쉬움.</p><h3 id="04b720e4-6f49-833c-bb33-014e6883516a" class="" dir="auto">3. 자동 확장</h3><p id="125720e4-6f49-8317-ba00-012c236933fa" class="" dir="auto">요청 기반으로 유연하게 확장 가능함.</p><h3 id="d98720e4-6f49-8311-9215-016c3586530a" class="" dir="auto">4. 이벤트 기반 구조에 적합</h3><p id="a98720e4-6f49-8364-adfa-8173d8194d83" class="" dir="auto">비동기 처리와 느슨한 결합을 설계하기 좋음.</p><h3 id="47b720e4-6f49-82f4-8cd7-81e00fdb9843" class="" dir="auto">5. 사용량 기반 비용 구조</h3><p id="b84720e4-6f49-83a1-993e-8144c2250246" class="" dir="auto">간헐적 요청 워크로드에 유리할 수 있음.</p><p id="91a720e4-6f49-8322-a124-018e9dd6f56f" class="" dir="auto">즉, 서버리스는 <strong>작고 독립적인 기능의 조합</strong>에서 큰 장점을 보임.</p><hr id="675720e4-6f49-8362-9d7d-013d81c8a444" dir="auto"/><h1 id="fa1720e4-6f49-822c-a7a1-816ab2434dea" class="" dir="auto">11.33 서버리스 아키텍처의 한계</h1><h3 id="319720e4-6f49-82aa-bb01-8166ecafc2ae" class="" dir="auto">1. 긴 실행 시간, 지속 연결 작업 제약</h3><p id="b05720e4-6f49-8357-97b8-81cc72dd14b8" class="" dir="auto">특정 워크로드는 EC2/컨테이너가 더 적합할 수 있음.</p><h3 id="4d6720e4-6f49-83b1-8c97-8165a65fa60f" class="" dir="auto">2. 복잡한 흐름 관리 필요</h3><p id="875720e4-6f49-8300-93af-01080f82b65d" class="" dir="auto">함수가 많아질수록 전체 구조 파악이 어려워질 수 있음.</p><h3 id="24b720e4-6f49-8298-b03d-81e70dd32ba9" class="" dir="auto">3. 디버깅과 추적 복잡성</h3><p id="a57720e4-6f49-8245-9c2f-01f8813d1e68" class="" dir="auto">분산 이벤트 기반 구조에서는 추적 체계가 중요함.</p><h3 id="dcc720e4-6f49-826b-90a3-010edfe2eca0" class="" dir="auto">4. 서비스 간 제약 이해 필요</h3><p id="ed7720e4-6f49-8272-98ea-01a53a3d682f" class="" dir="auto">동기/비동기, 재시도, 중복 처리, 순서 보장 등을 설계해야 함.</p><p id="3f2720e4-6f49-82e7-a834-8129ccde6dcf" class="" dir="auto">즉, 서버리스는 편하지만 구조를 잘못 잡으면 오히려 시스템 이해가 어려워질 수 있음.</p><hr id="bc2720e4-6f49-8324-8e75-01c60ef6933d" dir="auto"/><h1 id="598720e4-6f49-8293-97c6-81898cce23db" class="" dir="auto">11.34 대표 서버리스 패턴</h1><h2 id="fa1720e4-6f49-8283-a62f-01c091987c1a" class="" dir="auto">1. API 백엔드 패턴</h2><pre id="848720e4-6f49-8319-93c7-01acd3eb2236" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Client → API Gateway → Lambda → DynamoDB</code></pre><h2 id="ea7720e4-6f49-8311-b720-81a25f36232b" class="" dir="auto">2. 비동기 작업 처리 패턴</h2><pre id="cc8720e4-6f49-836f-840d-81be0c76f882" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">App → SQS → Lambda</code></pre><h2 id="23a720e4-6f49-82b1-a5a2-017b52f38573" class="" dir="auto">3. 이벤트 팬아웃 패턴</h2><pre id="54e720e4-6f49-8368-bbf4-81cb171fc8dd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Event → SNS → 여러 SQS/Lambda</code></pre><h2 id="459720e4-6f49-83f3-ab9a-01f08bc2b12b" class="" dir="auto">4. 파일 처리 패턴</h2><pre id="d35720e4-6f49-8228-b1c0-81edafd77d87" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3 업로드 → Lambda 실행</code></pre><h2 id="950720e4-6f49-820a-af9f-01df54384ef4" class="" dir="auto">5. 워크플로우 오케스트레이션 패턴</h2><pre id="e13720e4-6f49-82c4-95d9-812dd6ab7d9a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Step Functions → 여러 Lambda / AWS 서비스</code></pre><p id="cf4720e4-6f49-830c-b1b1-01c677e78d52" class="" dir="auto">이런 패턴을 함께 보여주면 학생들이 서비스 역할을 더 쉽게 연결할 수 있음.</p><hr id="b9e720e4-6f49-83a1-9c34-819497c2e68e" dir="auto"/><h1 id="b5c720e4-6f49-82a8-a02e-815d2993ae2a" class="" dir="auto">11.35 서비스 역할 한 번에 정리</h1><h2 id="1ed720e4-6f49-8317-807f-012c8ecd638f" class="" dir="auto">Lambda</h2><p id="db2720e4-6f49-82d3-a7b2-81a4376f7278" class="" dir="auto">이벤트가 들어오면 코드를 실행하는 서버리스 컴퓨팅 서비스임.</p><h2 id="cf1720e4-6f49-8255-8367-01c7441fa3d6" class="" dir="auto">API Gateway</h2><p id="d8e720e4-6f49-834f-8e90-01a566afe58e" class="" dir="auto">외부 요청을 받아 서버리스 백엔드로 전달하는 API 진입점임.</p><h2 id="f99720e4-6f49-82be-b19a-819278bc20b8" class="" dir="auto">SQS</h2><p id="5eb720e4-6f49-8322-9f0c-81dcef2a05c5" class="" dir="auto">비동기 작업 처리를 위한 메시지 큐 서비스임.</p><h2 id="729720e4-6f49-831b-ba82-81c115fd3327" class="" dir="auto">SNS</h2><p id="fd1720e4-6f49-8252-9fad-815edec57f9d" class="" dir="auto">하나의 이벤트를 여러 구독자에게 전달하는 Pub/Sub 서비스임.</p><h2 id="3ef720e4-6f49-826a-9ea2-01c45c17fdce" class="" dir="auto">Kinesis</h2><p id="cb2720e4-6f49-83f8-bf9b-018b80199f3d" class="" dir="auto">실시간 대량 데이터 스트림을 수집·처리하는 서비스임.</p><h2 id="3e6720e4-6f49-8322-aab1-8137a3db0578" class="" dir="auto">Step Functions</h2><p id="c7e720e4-6f49-838d-871e-0103a607451a" class="" dir="auto">여러 작업 단계를 순서와 조건에 따라 연결하는 워크플로우 서비스임.</p><hr id="d4e720e4-6f49-8352-96b3-01401a657559" dir="auto"/><h1 id="982720e4-6f49-82a0-9b9c-01f1c5d90e4a" class="" dir="auto">11.36 멀티 티어 아키텍처와 서버리스의 연결</h1><p id="1ed720e4-6f49-8237-99f4-01d2b0ca89aa" class="" dir="auto">기존의 EC2 중심 멀티 티어 구조를 서버리스 관점으로 일부 대체하면 다음처럼 볼 수 있음.</p><pre id="be9720e4-6f49-8352-a562-811162d81ff3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+   │
+API Gateway
+   │
+Lambda
+   ├ DynamoDB
+   ├ SQS
+   ├ SNS
+   ├ S3
+   └ Step Functions</code></pre><p id="43a720e4-6f49-8209-b96e-015e073bba19" class="" dir="auto">즉, 웹/앱 계층 일부 또는 전체를 서버리스 방식으로 구성할 수 있음.</p><p id="7c9720e4-6f49-83fb-a8b3-81e9f837e145" class="" dir="auto">특히 이벤트 처리, 비동기 처리, API 백엔드, 후처리 작업은 서버리스로 옮기기 좋음.</p><hr id="49d720e4-6f49-8392-a199-01596bab523c" dir="auto"/><h1 id="2c6720e4-6f49-824e-9b9a-8143e8105427" class="" dir="auto">11.37 운영 관점의 설계 포인트</h1><h3 id="ee8720e4-6f49-821d-b7e1-01b882ac150d" class="" dir="auto">1. 동기와 비동기를 구분해야 함</h3><p id="096720e4-6f49-8351-b8f9-814edf7dfb17" class="" dir="auto">모든 작업을 요청-응답 안에서 끝내려고 하지 않는 것이 중요함.</p><h3 id="135720e4-6f49-82a2-bf02-8108aa26eac7" class="" dir="auto">2. 중복 처리 고려</h3><p id="45c720e4-6f49-82b6-a48f-81b16dc8cd59" class="" dir="auto">이벤트 기반 구조에서는 중복 실행에 대비한 설계가 필요함.</p><h3 id="c6f720e4-6f49-83e9-9275-01bac0486b20" class="" dir="auto">3. 실패 처리 설계</h3><p id="cbb720e4-6f49-8345-a6ef-81942573ff36" class="" dir="auto">재시도, DLQ, Catch, 보상 처리 등을 함께 봐야 함.</p><h3 id="68b720e4-6f49-83f3-aabc-015fdfbc31b3" class="" dir="auto">4. 상태 저장 분리</h3><p id="60a720e4-6f49-8364-b756-81ab75a5433c" class="" dir="auto">Lambda 내부가 아니라 외부 저장소에 상태를 둬야 함.</p><h3 id="7d5720e4-6f49-829d-b404-01764db563f5" class="" dir="auto">5. 관찰 가능성 확보</h3><p id="046720e4-6f49-8313-980d-019522a8b6aa" class="" dir="auto">CloudWatch Logs, Metrics, Tracing이 매우 중요함.</p><p id="279720e4-6f49-82bf-be62-81d3eb0e6a43" class="" dir="auto">즉, 서버리스는 인프라 부담은 줄지만 <strong>아키텍처 설계 책임은 여전히 중요함.</strong></p><hr id="435720e4-6f49-82b1-89b9-81e8f5dcbb98" dir="auto"/><h1 id="3ae720e4-6f49-82ba-83f2-01387d21ba25" class="" dir="auto">11.38 장 요약</h1><ul id="526720e4-6f49-832e-bfda-0190fd6c045b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버리스 아키텍처 개념</li></ul><ul id="4df720e4-6f49-82f9-beb2-81505a573e11" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 기반 아키텍처와 서버리스의 관계</li></ul><ul id="254720e4-6f49-8335-8b1d-01dcd19f4fcd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda의 역할과 특징</li></ul><ul id="b2b720e4-6f49-8215-a5db-0145155a9dd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway의 역할</li></ul><ul id="828720e4-6f49-83ed-bdb0-8146bf98e744" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비동기 처리와 Decoupling 필요성</li></ul><ul id="447720e4-6f49-831b-80f8-0121b1718c7d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQS와 SNS 차이</li></ul><ul id="fde720e4-6f49-8325-98ee-017cc5c6ed45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kinesis의 실시간 스트리밍 역할</li></ul><ul id="b96720e4-6f49-835d-b84f-81dabba7d27f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Step Functions의 워크플로우 오케스트레이션 역할</li></ul><ul id="b21720e4-6f49-83aa-a647-01ef5a7e25cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버리스 패턴과 데이터 저장 원칙</li></ul><ul id="f80720e4-6f49-8309-aa86-81f8707d2712" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 관점의 설계 포인트</li></ul><hr id="348720e4-6f49-826e-9ef6-8160df05d0ba" dir="auto"/><h1 id="f54720e4-6f49-82cc-9b63-014142b37b95" class="" dir="auto">11.39 한 줄 정리</h1><pre id="25b720e4-6f49-835e-b38e-0115d6c6906d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Lambda는 코드를 실행한다.
+API Gateway는 요청의 진입점이 된다.
+SQS는 작업을 비동기화한다.
+SNS는 이벤트를 여러 곳으로 전파한다.
+Kinesis는 실시간 데이터 흐름을 처리한다.
+Step Functions는 여러 단계를 하나의 워크플로우로 연결한다.</code></pre></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

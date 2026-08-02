@@ -1,0 +1,785 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>서버 모니터링 &amp; 알람 시스템</title><meta name="data-notion-page-icon" content="📝"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%93%9D%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="535720e4-6f49-8388-b741-01c1e95b4bca" class="page sans" data-notion-page-icon="📝"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="📝"></span></div><h1 class="page-title" dir="auto">서버 모니터링 &amp; 알람 시스템</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h3 id="1a2720e4-6f49-8287-83a9-818174b2bd44" class="" dir="auto">(Frontend + MySQL · Redis · MongoDB · PostgreSQL)</h3><hr id="f77720e4-6f49-833a-8ada-81c8115c0583" dir="auto"/><h2 id="8a4720e4-6f49-8244-bac2-01d8e5bfa975" class="" dir="auto">0. 실습 개요</h2><blockquote id="496720e4-6f49-8244-8985-01525ed582c4" class="" dir="auto">✔ 여러 시스템이 <strong>어떤 역할로 분리되는지</strong><p id="63f720e4-6f49-82b9-b9b9-017079992b7e" class="" dir="auto">✔ 데이터가 <strong>어디서 생성되고, 어디에 저장되며, 어디서 조회되는지</strong></p><p id="115720e4-6f49-8388-ac80-8178018b8755" class="" dir="auto">✔ 장애가 나면 <strong>어디를 먼저 봐야 하는지</strong>를 이해하는 <strong> 인프라 엔지니어 실습</strong>.</p></blockquote><hr id="d11720e4-6f49-82cc-b019-8170624eb7c1" dir="auto"/><h2 id="1fc720e4-6f49-825a-87a3-818e1291b704" class="" dir="auto">1. 전체 시스템 관계도</h2><h3 id="1c5720e4-6f49-8340-8360-812539755d28" class="" dir="auto">전체 흐름 한 줄 요약</h3><blockquote id="8b5720e4-6f49-8309-b1b9-816a78483174" class="" dir="auto"><strong>Frontend(브라우저)</strong> 는 상태를 “보여주기만” 하고, <strong>Node 서버(VM1)</strong> 는 각 DB를 연결·중계하며,<p id="004720e4-6f49-8336-adb8-81b51e7d38c9" class="" dir="auto"><strong>DB들은 각자 다른 성격의 데이터를 맡는다.</strong></p></blockquote><figure id="d63720e4-6f49-83be-9caf-815eea586c98" class="image" data-notion-image="%EC%84%9C%EB%B2%84%20%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81%20&amp;%20%EC%95%8C%EB%9E%8C%20%EC%8B%9C%EC%8A%A4%ED%85%9C/image.png" dir="ltr"><a href="%EC%84%9C%EB%B2%84%20%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81%20&amp;%20%EC%95%8C%EB%9E%8C%20%EC%8B%9C%EC%8A%A4%ED%85%9C/image.png"><img style="width:710.0000610351562px" src="%EC%84%9C%EB%B2%84%20%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81%20&amp;%20%EC%95%8C%EB%9E%8C%20%EC%8B%9C%EC%8A%A4%ED%85%9C/image.png"/></a></figure><figure id="97d720e4-6f49-821e-9331-0139d31bec14" class="image" data-notion-image="%EC%84%9C%EB%B2%84%20%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81%20&amp;%20%EC%95%8C%EB%9E%8C%20%EC%8B%9C%EC%8A%A4%ED%85%9C/image%201.png" dir="ltr"><a href="%EC%84%9C%EB%B2%84%20%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81%20&amp;%20%EC%95%8C%EB%9E%8C%20%EC%8B%9C%EC%8A%A4%ED%85%9C/image%201.png"><img style="width:709.984375px" src="%EC%84%9C%EB%B2%84%20%EB%AA%A8%EB%8B%88%ED%84%B0%EB%A7%81%20&amp;%20%EC%95%8C%EB%9E%8C%20%EC%8B%9C%EC%8A%A4%ED%85%9C/image%201.png"/></a></figure><hr id="596720e4-6f49-83a5-9ad4-819301dcc6dd" dir="auto"/><h2 id="b46720e4-6f49-836c-b494-816bf3adaf5c" class="" dir="auto">2. 시스템 구성 요소별 역할 설명</h2><h3 id="aa9720e4-6f49-8340-8515-01526d5bdf65" class="" dir="auto">VM 구성</h3><table id="931720e4-6f49-83b8-b73f-0189fa9f4076" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="4f0720e4-6f49-8242-b892-019685aeb8b4" dir="ltr"><th id="}I{r" class="simple-table-header-color simple-table-header">VM</th><th id="UeVH" class="simple-table-header-color simple-table-header">IP</th><th id="arZw" class="simple-table-header-color simple-table-header">역할</th></tr></thead><tbody><tr id="192720e4-6f49-82a9-9a59-01b0dcb50a6b" dir="ltr"><td id="}I{r" class="">VM1</td><td id="UeVH" class="">192.168.80.110</td><td id="arZw" class="">Web UI + API + 수집기</td></tr><tr id="691720e4-6f49-836c-aa65-0132ac13b6b7" dir="ltr"><td id="}I{r" class="">VM2</td><td id="UeVH" class="">192.168.80.120</td><td id="arZw" class="">MySQL, Redis</td></tr><tr id="008720e4-6f49-82a2-a330-81560c9486a8" dir="ltr"><td id="}I{r" class="">VM3</td><td id="UeVH" class="">192.168.80.130</td><td id="arZw" class="">PostgreSQL, MongoDB</td></tr></tbody></table><hr id="164720e4-6f49-82bf-9dd3-81716e920dac" dir="auto"/><h3 id="281720e4-6f49-83fe-84c8-0161eb9b1ccc" class="" dir="auto">데이터 흐름 관점에서 본 역할</h3><h3 id="774720e4-6f49-826d-95df-81b8a304c069" class="" dir="auto">1️⃣ Frontend (브라우저)</h3><ul id="b34720e4-6f49-8364-8806-81a33bfc718c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 <strong>웹 화면만 사용</strong></li></ul><ul id="97c720e4-6f49-8386-b60f-81996fc8ec35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">직접 DB에 접근 ❌</li></ul><ul id="4cb720e4-6f49-82e4-9d27-019bd3bad415" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 요청은 <strong>VM1(Node API)</strong> 로 전달</li></ul><p id="494720e4-6f49-836a-b344-019a73e918c8" class="" dir="auto">하는 일:</p><ul id="a48720e4-6f49-8341-9d7f-8151c7c64c2d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 목록 보기</li></ul><ul id="7d6720e4-6f49-8342-8cc5-013e0136f3c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 상태 보기</li></ul><ul id="ad2720e4-6f49-8266-a286-016da7113338" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 로그 보기</li></ul><ul id="fbf720e4-6f49-83a1-a69c-814b5f904857" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정 변경 요청 보내기</li></ul><p id="e15720e4-6f49-8244-ab25-81a5ca265b7e" class="" dir="auto">👉 <strong>Frontend는 “제어판”일 뿐, 판단은 하지 않음</strong></p><hr id="113720e4-6f49-8212-b4ae-81134c7d8af9" dir="auto"/><h3 id="6dd720e4-6f49-82f9-a5b4-0176d2d86040" class="" dir="auto">2️⃣ VM1 – Node.js (API 서버)</h3><p id="1ea720e4-6f49-82e6-a790-01084a46883f" class="" dir="auto">VM1은 <strong>모든 것을 연결하는 중간 관리자 역할</strong>.</p><p id="2df720e4-6f49-8336-b084-81bd2eb7d300" class="" dir="auto">하는 일:</p><ul id="b15720e4-6f49-8306-a1c9-815e14aee7eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Frontend 요청 수신</li></ul><ul id="0cf720e4-6f49-8339-b786-8153d2c778fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DB별 조회/저장 중계</li></ul><ul id="48f720e4-6f49-82d2-9abf-810620cf22a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주기적으로 서버 상태 수집</li></ul><ul id="11f720e4-6f49-82ce-9835-01e696510f98" class="bulleted-list" dir="auto"><li style="list-style-type:disc">임계치 초과 여부 판단</li></ul><hr id="536720e4-6f49-8374-9ebb-01ca7f889b5a" dir="auto"/><h3 id="2a3720e4-6f49-8263-a025-814237eb9009" class="" dir="auto">3️⃣ MySQL – 서버 자산 정보 (정형 데이터)</h3><p id="159720e4-6f49-8313-bd1b-81966ebd4087" class="" dir="auto">저장하는 것:</p><ul id="3a2720e4-6f49-8362-bcd7-81ae3272d134" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 목록</li></ul><ul id="a62720e4-6f49-83a9-8c2f-018e22f4b4e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP</li></ul><ul id="1ce720e4-6f49-8211-9032-01efad57cd48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경(dev/prod)</li></ul><ul id="0c7720e4-6f49-8388-be19-81ce99e68622" class="bulleted-list" dir="auto"><li style="list-style-type:disc">활성화 여부</li></ul><p id="cf7720e4-6f49-824d-b944-815809ff15d3" class="" dir="auto">특징:</p><ul id="35a720e4-6f49-8385-9d47-81593707d520" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자주 안 바뀜</li></ul><ul id="2dc720e4-6f49-83d5-9814-0197adc9b721" class="bulleted-list" dir="auto"><li style="list-style-type:disc">틀리면 안 됨</li></ul><ul id="23f720e4-6f49-82f7-bbe9-81ba180b92b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관계형 구조 적합</li></ul><p id="69a720e4-6f49-82db-ae6c-81641f4eaad9" class="" dir="auto">👉 <strong>“서버 대장”</strong></p><hr id="9b5720e4-6f49-83bd-9fd2-81fac9918561" dir="auto"/><h3 id="732720e4-6f49-8329-b2cb-0195c633611a" class="" dir="auto">4️⃣ Redis – 현재 상태 / 휘발성 데이터</h3><p id="2aa720e4-6f49-838b-97ea-81aa596a5ae6" class="" dir="auto">저장하는 것:</p><ul id="816720e4-6f49-837a-86d4-01886dc125a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 CPU/메모리 값</li></ul><ul id="2ba720e4-6f49-82a3-8a05-8136d6064190" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TTL 있는 상태 정보</li></ul><p id="fd6720e4-6f49-8228-97ad-01e85641c94e" class="" dir="auto">특징:</p><ul id="82b720e4-6f49-82a5-aa87-010a741a3d57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계속 바뀜</li></ul><ul id="993720e4-6f49-827d-8f1a-0168fa428f58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">없어져도 됨</li></ul><ul id="775720e4-6f49-82bd-be70-01da6ebd072c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빠른 접근 필요</li></ul><p id="856720e4-6f49-82b9-980d-01ca8902ef8b" class="" dir="auto">👉 <strong>“지금 이 순간 상태”</strong></p><hr id="e1b720e4-6f49-8270-afe8-015e974a7fe2" dir="auto"/><h3 id="b1f720e4-6f49-836c-943f-01e96a0d05d5" class="" dir="auto">5️⃣ MongoDB – 설정 정보 (유연한 문서)</h3><p id="7c4720e4-6f49-83b6-8446-010044efbe94" class="" dir="auto">저장하는 것:</p><ul id="947720e4-6f49-833d-b338-0149174be764" class="bulleted-list" dir="auto"><li style="list-style-type:disc">임계치(cpu, mem 등)</li></ul><ul id="534720e4-6f49-83fb-873c-8157001234c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">쿨다운 시간</li></ul><ul id="b7c720e4-6f49-82f2-ba87-8162cf936333" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그</li></ul><p id="ca6720e4-6f49-8379-82b8-81af73808de9" class="" dir="auto">특징:</p><ul id="98b720e4-6f49-8203-9748-019f62118f14" class="bulleted-list" dir="auto"><li style="list-style-type:disc">구조 자주 변경</li></ul><ul id="fd5720e4-6f49-8281-bd77-01804663a7b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필드 추가 자유</li></ul><ul id="500720e4-6f49-83d2-92ce-01c0e44c1127" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정 성격</li></ul><p id="080720e4-6f49-8252-b1b8-01a4c16426a8" class="" dir="auto">👉 <strong>“운영 정책 문서”</strong></p><hr id="4d8720e4-6f49-82e4-85f9-013fc6a99799" dir="auto"/><h3 id="86e720e4-6f49-835e-affb-01b29a299e3e" class="" dir="auto">6️⃣ PostgreSQL – 이벤트 로그 (JSONB)</h3><p id="b43720e4-6f49-8215-9377-816f6e39e9e8" class="" dir="auto">저장하는 것:</p><ul id="ac3720e4-6f49-83e0-a728-8146611ceb07" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU 초과 이벤트</li></ul><ul id="327720e4-6f49-839a-bb85-812dc0f8fcc7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">언제, 왜 발생했는지</li></ul><ul id="219720e4-6f49-824a-babb-01d79d77fba3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">당시 설정/값(JSONB)</li></ul><p id="16d720e4-6f49-8229-a0f2-01a24cbf227b" class="" dir="auto">특징:</p><ul id="60b720e4-6f49-8360-94b9-81220d900ddb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">삭제하지 않음</li></ul><ul id="47f720e4-6f49-8364-8b36-816df7e821ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분석 대상</li></ul><ul id="a65720e4-6f49-8324-bcc4-015c8e135898" class="bulleted-list" dir="auto"><li style="list-style-type:disc">과거 이력</li></ul><p id="8d6720e4-6f49-82ac-b3cb-017a88e5ad9a" class="" dir="auto">👉 <strong>“감사/분석 로그”</strong></p><hr id="692720e4-6f49-83be-9584-010189b87b54" dir="auto"/><h2 id="39b720e4-6f49-83ce-933a-01ab9cc56c4d" class="" dir="auto">3. Frontend 포함 전체 흐름 정리</h2><h3 id="85b720e4-6f49-82ee-be79-01444966c994" class="" dir="auto">CPU 임계치 초과 상황 예시</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="753720e4-6f49-83db-95df-819fa5f68f87" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. Node가 주기적으로 서버 상태 수집
+2. Redis에 현재 CPU 저장 (TTL)
+3. MongoDB 설정에서 임계치 조회
+4. 초과 판단
+5. PostgreSQL에 이벤트 기록
+6. Frontend에서 이벤트 로그 조회</code></pre><p id="fd9720e4-6f49-8373-8383-81ac2e863188" class="" dir="auto">👉 <strong>Frontend는 판단하지 않고, 결과만 본다</strong></p><hr id="906720e4-6f49-83f7-93b3-01f1aeec2014" dir="auto"/><h2 id="0ab720e4-6f49-8330-a281-01a381c8651c" class="" dir="auto">4. Frontend 실습 (학생 수행)</h2><h3 id="a7e720e4-6f49-8272-b7be-011673013fed" class="" dir="auto">4-1. 웹 접속</h3><p id="832720e4-6f49-83e6-9308-811fb4bbcd3f" class="" dir="auto">브라우저에서 접속:</p><pre id="58f720e4-6f49-8359-ac44-81f7aff5677d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://192.168.80.110:8080</code></pre><p id="ebc720e4-6f49-83fd-91b7-01b875a7a6bf" class="" dir="auto">확인할 것:</p><ul id="42f720e4-6f49-837b-a8dd-81b4d415306b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 목록 표시</li></ul><ul id="e59720e4-6f49-83de-af3d-01d900e9e0a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 상태 표시</li></ul><ul id="982720e4-6f49-83ba-a70b-01c2c5b72bc6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 로그 영역</li></ul><p id="4dd720e4-6f49-8211-8a80-011f15e37ed9" class="" dir="auto">✍️ 질문</p><blockquote id="150720e4-6f49-8314-a183-811a5ea1aa1e" class="" dir="auto">웹 화면의 데이터는 각각 어느 DB에서 온 것인가?</blockquote><hr id="a81720e4-6f49-83a7-8337-01b3596e288f" dir="auto"/><h2 id="eab720e4-6f49-82e4-9e51-016a8e79583d" class="" dir="auto">5. 실습 단계별 워크북</h2><hr id="d7d720e4-6f49-8257-8943-01b39b5430ef" dir="auto"/><h3 id="f29720e4-6f49-8336-87cd-01f03d5e0ce8" class="" dir="auto">실습 1️⃣ MySQL – 서버 자산 제어</h3><h3 id="e65720e4-6f49-83e0-ba16-817f868122e5" class="" dir="auto">서버 비활성화</h3><p id="ec1720e4-6f49-83c3-a864-81dd69e4542e" class="" dir="auto">웹 화면에서 <strong>Disable</strong> 클릭</p><p id="312720e4-6f49-83c8-becc-81a30ec275c2" class="" dir="auto">관찰:</p><ul id="765720e4-6f49-820a-9a2d-018d6168d1a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 상태 갱신 중단</li></ul><ul id="475720e4-6f49-82a3-8a80-81a6c3933375" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 발생 중단</li></ul><p id="4b4720e4-6f49-8316-a617-81a3b4de63fa" class="" dir="auto">✍️ 서술</p><blockquote id="b68720e4-6f49-836c-b466-0107f02138a3" class="" dir="auto">MySQL의 enabled 값이 시스템 전체 흐름에 미치는 영향을 설명하시오.</blockquote><hr id="8cb720e4-6f49-82ec-a4f5-816ec9ad86ad" dir="auto"/><h3 id="969720e4-6f49-821c-b79b-81010d65c9df" class="" dir="auto">실습 2️⃣ Redis – TTL 체감</h3><p id="e46720e4-6f49-82df-b6de-8196c35bf37d" class="" dir="auto">VM2에서:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="bf8720e4-6f49-8215-a411-811497bb7142" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">redis-cli GET m:192.168.80.110
+redis-cli TTL m:192.168.80.110</code></pre><p id="cc7720e4-6f49-83b7-8fc6-013ea13ac1b7" class="" dir="auto">관찰:</p><ul id="6c7720e4-6f49-8251-a2b4-0110dd23070b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">TTL 감소</li></ul><ul id="c8c720e4-6f49-827c-9949-817bd3b9a93d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일정 시간 후 삭제</li></ul><ul id="cee720e4-6f49-82e0-805e-8154a2c042f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다시 수집되면 재생성</li></ul><p id="4fe720e4-6f49-824f-8a2f-01821f1418e4" class="" dir="auto">✍️ 서술</p><blockquote id="2b4720e4-6f49-83aa-a1ad-812896f279e6" class="" dir="auto">이 데이터를 PostgreSQL에 저장하지 않는 이유는?</blockquote><hr id="5df720e4-6f49-8358-8f5d-81ddcdd1c05a" dir="auto"/><h3 id="15b720e4-6f49-835e-8446-818ed7a48768" class="" dir="auto">실습 3️⃣ MongoDB – 설정 변경으로 동작 제어</h3><p id="f11720e4-6f49-8323-b96e-016c7d4c0eba" class="" dir="auto">VM3에서:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js" integrity="sha512-m3JYEI6gx5fh9jF10FjGoMzVKcV2N6nchcDcqPCdI1L3R2WQV7br2XVNR8iTLb2daOMRl3zldbcfT40xU2ntVw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="ba1720e4-6f49-826e-9612-81170a82405e" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">use mon
+db.configs.updateOne(
+  { serverIp: &quot;192.168.80.110&quot; },
+  { $set: { &quot;thresholds.cpu&quot;: 20 } }
+)</code></pre><p id="af0720e4-6f49-83ec-b928-0131411fb6b8" class="" dir="auto">관찰:</p><ul id="94c720e4-6f49-8325-a459-81429b7f7223" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 수정 ❌</li></ul><ul id="c82720e4-6f49-83ce-8c90-01300288b08b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재시작 ❌</li></ul><ul id="b6c720e4-6f49-824e-bbec-81363a0c8d00" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 발생 패턴 변화 ⭕</li></ul><p id="e0f720e4-6f49-820b-bec9-81015b620d6a" class="" dir="auto">✍️ 서술</p><blockquote id="d86720e4-6f49-8282-bec8-013db692fa8c" class="" dir="auto">설정과 코드가 분리되어 있을 때의 장점은?</blockquote><hr id="6fb720e4-6f49-83a5-8975-81a34759e414" dir="auto"/><h3 id="3b4720e4-6f49-83aa-a9d7-01064b30d624" class="" dir="auto">실습 4️⃣ PostgreSQL – 이벤트 분석</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js" integrity="sha512-sijCOJblSCXYYmXdwvqV0tak8QJW5iy2yLB1wAbbLc3OOIueqymizRFWUS/mwKctnzPKpNdPJV3aK1zlDMJmXQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="8e8720e4-6f49-8342-bb5c-816f356844e3" class="code code-wrap" data-notion-code-syntax="sql"><code class="language-sql" style="white-space:pre-wrap;word-break:break-all">SELECT
+  metric,
+  level,
+  data-&gt;&gt;&#x27;threshold&#x27; AS threshold,
+  data-&gt;&gt;&#x27;value&#x27; AS value,
+  created_at
+FROM events
+ORDER BY event_id DESC
+LIMIT 10;</code></pre><p id="897720e4-6f49-825d-bb08-014095809d5b" class="" dir="auto">관찰:</p><ul id="754720e4-6f49-8324-8825-81518756b59f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSONB에 당시 상황 저장</li></ul><ul id="946720e4-6f49-8294-8ce0-8122b63b82ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트는 사라지지 않음</li></ul><p id="013720e4-6f49-83f2-b4f0-8119d88ef9c8" class="" dir="auto">✍️ 서술</p><blockquote id="f5c720e4-6f49-82f2-86c9-81b70eaf9d17" class="" dir="auto">이 데이터를 Redis에 두면 안 되는 이유는?</blockquote><hr id="054720e4-6f49-8375-a7b3-013e48d6b0ec" dir="auto"/><h2 id="b2f720e4-6f49-8275-b398-818308e75ae5" class="" dir="auto">6. Frontend + Backend + DB 역할 요약 표</h2><table id="4f4720e4-6f49-836d-ac71-817f1129df7f" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="161720e4-6f49-8363-9a0d-01672e5e28ab" dir="ltr"><th id="XcBj" class="simple-table-header-color simple-table-header">구성요소</th><th id="qay{" class="simple-table-header-color simple-table-header">역할</th><th id="jQDN" class="simple-table-header-color simple-table-header">판단 여부</th></tr></thead><tbody><tr id="e24720e4-6f49-83f6-927b-811f25535d66" dir="ltr"><td id="XcBj" class="">Frontend</td><td id="qay{" class="">조회/입력 UI</td><td id="jQDN" class="">❌</td></tr><tr id="ba0720e4-6f49-824f-8677-017176429642" dir="ltr"><td id="XcBj" class="">Node(API)</td><td id="qay{" class="">판단/중계</td><td id="jQDN" class="">⭕</td></tr><tr id="182720e4-6f49-83c2-b420-8126dde3a816" dir="ltr"><td id="XcBj" class="">MySQL</td><td id="qay{" class="">자산 정보</td><td id="jQDN" class="">❌</td></tr><tr id="b9b720e4-6f49-8344-b686-817fc99cecd7" dir="ltr"><td id="XcBj" class="">Redis</td><td id="qay{" class="">현재 상태</td><td id="jQDN" class="">❌</td></tr><tr id="72b720e4-6f49-823e-917f-816e343a0b81" dir="ltr"><td id="XcBj" class="">MongoDB</td><td id="qay{" class="">정책/설정</td><td id="jQDN" class="">❌</td></tr><tr id="e5f720e4-6f49-8329-9b2e-81e07f7936a5" dir="ltr"><td id="XcBj" class="">PostgreSQL</td><td id="qay{" class="">이력/분석</td><td id="jQDN" class="">❌</td></tr></tbody></table><p id="ba1720e4-6f49-83af-bc9d-011091d6327d" class="" dir="auto">👉 <strong>판단은 Node 한 곳에서만</strong></p><hr id="1fe720e4-6f49-83c9-a6f1-019425bd6214" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

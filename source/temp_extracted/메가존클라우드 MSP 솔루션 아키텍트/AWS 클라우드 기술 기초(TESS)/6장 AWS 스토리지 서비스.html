@@ -1,0 +1,873 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>6장 AWS 스토리지 서비스</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="318720e4-6f49-825a-a74e-811ac20ff295" class="page sans"><header><h1 class="page-title" dir="auto">6장 AWS 스토리지 서비스</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="df9720e4-6f49-82bd-98d7-81c831f22e51" class="" dir="auto">6.1 스토리지 서비스란 무엇인가</h2><p id="cc8720e4-6f49-838c-9d36-0192a5177b21" class="" dir="auto">스토리지 서비스는 데이터를 저장하기 위한 서비스이다.</p><p id="46f720e4-6f49-834e-9169-81575fb1af94" class="" dir="auto">애플리케이션은 단순히 실행만 되는 것이 아니라, 실행 과정에서 지속적으로 데이터를 생성하고 읽고 수정하고 보관한다.</p><p id="791720e4-6f49-8318-bae6-013beb4a859b" class="" dir="auto">따라서 컴퓨팅 자원만으로는 서비스를 운영할 수 없고, 반드시 데이터를 담아둘 저장소가 필요하다.</p><p id="e9d720e4-6f49-82f4-ada4-0108601cb6a1" class="" dir="auto">예를 들어 웹 서비스를 운영한다고 가정하면 다음과 같은 데이터가 존재한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="b28720e4-6f49-822d-ba96-0114ce656421" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">웹 애플리케이션 실행 파일
+운영체제 파일
+사용자가 업로드한 이미지와 문서
+데이터베이스가 저장하는 레코드
+시스템 로그와 애플리케이션 로그
+백업 파일과 아카이브 데이터</code></pre><p id="df7720e4-6f49-8260-829e-81da0402da2b" class="" dir="auto">이러한 데이터는 모두 성격이 다르다.</p><ul id="0b4720e4-6f49-827e-b682-813467ab81f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영체제와 애플리케이션 실행 파일은 서버에 직접 연결된 디스크 형태가 적합함</li></ul><ul id="eca720e4-6f49-827c-8f8e-81e8bf8bf21b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 서버가 동시에 접근해야 하는 파일은 공유 파일 시스템이 적합함</li></ul><ul id="8dc720e4-6f49-8211-9c7d-01665a2fa20a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지, 로그, 백업처럼 대량으로 저장해야 하는 데이터는 객체 스토리지가 적합함</li></ul><p id="f3e720e4-6f49-821b-983f-010f788cf9b3" class="" dir="auto">즉, 모든 데이터를 하나의 저장 방식으로 처리하지 않음.</p><p id="53b720e4-6f49-82d1-b573-01a4cf8916f4" class="" dir="auto">데이터의 성격과 접근 방식에 따라 적절한 스토리지 유형을 선택해야 함.</p><p id="b3c720e4-6f49-8373-9ffc-01c1cb1ae4e9" class="" dir="auto">온프레미스 환경에서는 이러한 저장소를 직접 설계하고 구축해야 했음.</p><p id="d56720e4-6f49-820a-adcc-811fae5c9dbe" class="" dir="auto">예를 들어 다음과 같은 작업이 필요했음.</p><pre id="77f720e4-6f49-83b2-8846-01c4551141f2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">디스크 용량 산정
+스토리지 서버 구매
+RAID 구성
+SAN / NAS 장비 연결
+백업 장비 운영
+장애 복구 구성
+확장 시 장비 증설</code></pre><p id="671720e4-6f49-8202-b4f7-01d7a5b1374c" class="" dir="auto">이 방식은 초기 비용이 크고, 확장에 시간이 많이 들며, 운영 복잡도가 높았음.</p><p id="8e7720e4-6f49-83b5-b69d-81d47c43e3c9" class="" dir="auto">AWS에서는 이러한 스토리지 기능을 관리형 서비스 형태로 제공한다.</p><p id="c59720e4-6f49-82e0-8698-019f9483335b" class="" dir="auto">즉 사용자는 장비 구매나 물리적 설치보다, 어떤 유형의 저장소를 사용할지에 집중하면 된다.</p><p id="6a3720e4-6f49-83e1-b388-01f28bd19d6b" class="" dir="auto">대표적인 AWS 스토리지 서비스는 다음과 같다.</p><pre id="be8720e4-6f49-83a9-8f12-819f62e2a10e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon EBS
+Amazon EFS
+Amazon S3</code></pre><p id="f3a720e4-6f49-825c-813b-01fdf93564b3" class="" dir="auto">각 서비스는 저장 구조와 접근 방식, 성능 특성, 비용 모델이 다르다.</p><p id="143720e4-6f49-82a8-b026-01f446d67a34" class="" dir="auto">따라서 스토리지 서비스는 단순히 “데이터를 저장하는 곳”이 아니라, <strong>시스템 구조와 성능, 운영 방식에 직접 영향을 주는 핵심 구성 요소</strong>라고 볼 수 있다.</p><hr id="236720e4-6f49-822e-bfc7-813c3e6446fe" dir="auto"/><h2 id="dfd720e4-6f49-820d-a9b0-8168b3eba06f" class="" dir="auto">6.2 스토리지 유형</h2><p id="43b720e4-6f49-83aa-badb-01117cdef266" class="" dir="auto">클라우드 스토리지는 크게 세 가지 유형으로 구분된다.</p><pre id="15c720e4-6f49-8273-85d6-81fbb6c8d141" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Block Storage
+File Storage
+Object Storage</code></pre><p id="f7b720e4-6f49-8206-be0e-812949fc1a24" class="" dir="auto">이 세 가지는 단순한 이름 차이가 아니라, 데이터를 바라보는 방식 자체가 다르다.</p><hr id="c51720e4-6f49-8274-ae2d-810d95ba8b9b" dir="auto"/><h2 id="491720e4-6f49-836f-88ed-016ee096b24f" class="" dir="auto">6.2.1 Block Storage</h2><p id="c0f720e4-6f49-827a-bd3e-81d4cf002d59" class="" dir="auto">Block Storage는 데이터를 작은 블록 단위로 나누어 저장하는 방식이다.</p><p id="cd8720e4-6f49-82ff-98ed-818342e138f7" class="" dir="auto">운영체제는 이 블록들을 디스크처럼 인식하고 파일 시스템을 생성해서 사용한다.</p><p id="b23720e4-6f49-835b-8289-01dbc45b45f5" class="" dir="auto">즉 애플리케이션 입장에서는 “저장 서비스”라기보다 “하드디스크”처럼 보인다.</p><p id="012720e4-6f49-83af-a164-017170b096d3" class="" dir="auto">대표 서비스는 Amazon EBS이다.</p><p id="a22720e4-6f49-82d7-983f-812b598b6df1" class="" dir="auto">구조는 다음과 같이 이해하면 된다.</p><pre id="56f720e4-6f49-83b6-8216-0184cdcb16f2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2
+ └ EBS Volume</code></pre><p id="b30720e4-6f49-826d-88de-010bad68ba77" class="" dir="auto">특징은 다음과 같다.</p><pre id="bae720e4-6f49-8352-b577-8197aff59ea4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영체제 설치 가능
+낮은 지연시간
+고성능 입출력 처리 가능
+데이터베이스 워크로드에 적합
+EC2에 직접 연결해서 사용</code></pre><p id="c27720e4-6f49-8286-857c-81a82ca94bbb" class="" dir="auto">Block Storage는 디스크 수준의 제어가 가능하기 때문에 다음과 같은 용도에 적합하다.</p><pre id="be2720e4-6f49-8299-8136-8121abb34554" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">운영체제 루트 볼륨
+데이터베이스 저장소
+애플리케이션 전용 디스크
+고성능 파일 시스템 구성</code></pre><p id="16c720e4-6f49-8378-b5d1-018c1ddc9386" class="" dir="auto">즉 Block Storage는 “서버에 붙는 디스크”라고 이해하면 된다.</p><hr id="02b720e4-6f49-82af-82a4-817a411f6cda" dir="auto"/><h2 id="dce720e4-6f49-82be-9bb9-01db6a1b265a" class="" dir="auto">6.2.2 File Storage</h2><p id="81f720e4-6f49-82e0-bde8-012851713e28" class="" dir="auto">File Storage는 파일 시스템 형태로 데이터를 저장하는 방식이다.</p><p id="e83720e4-6f49-8346-9e92-016337e4d16a" class="" dir="auto">사용자는 디렉터리와 파일 구조를 기준으로 데이터를 접근한다.</p><p id="cc1720e4-6f49-837d-9d92-018f4d9e11a0" class="" dir="auto">여러 서버가 같은 파일 시스템을 공유할 수 있다는 점이 큰 특징이다.</p><p id="d56720e4-6f49-82ef-837f-817ec92ce8ee" class="" dir="auto">대표 서비스는 Amazon EFS이다.</p><p id="2b7720e4-6f49-83b2-b9e6-0185b04c962c" class="" dir="auto">구조는 다음과 같다.</p><pre id="ec4720e4-6f49-8370-aa60-8130cbbcadfb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2
+ ├ EFS
+EC2
+ └ EFS</code></pre><p id="d7f720e4-6f49-8383-b7d4-01a734957657" class="" dir="auto">특징은 다음과 같다.</p><pre id="193720e4-6f49-8232-8152-8137f22064bc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">표준 파일 시스템 제공
+여러 서버가 동시에 접근 가능
+공유 디렉터리 구성 가능
+파일 단위 접근 가능</code></pre><p id="ce9720e4-6f49-82c5-bdbd-01850fd08282" class="" dir="auto">예를 들면 다음과 같은 상황에서 사용한다.</p><pre id="317720e4-6f49-829d-a11b-01270718c118" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">여러 웹 서버가 같은 업로드 디렉터리를 사용해야 하는 경우
+애플리케이션 서버가 공통 설정 파일을 공유해야 하는 경우
+분산 환경에서 동일한 파일 시스템이 필요한 경우</code></pre><p id="242720e4-6f49-82ba-abef-81185c68a2b1" class="" dir="auto">즉 File Storage는 “공유 네트워크 드라이브”처럼 이해하면 된다.</p><hr id="5fe720e4-6f49-8392-8a62-01661491b9b7" dir="auto"/><h2 id="ac7720e4-6f49-83a5-b65d-81f8ee8ad887" class="" dir="auto">6.2.3 Object Storage</h2><p id="68d720e4-6f49-83d8-bc78-01d19e88719e" class="" dir="auto">Object Storage는 데이터를 객체 단위로 저장하는 방식이다.</p><p id="da5720e4-6f49-82de-9c69-81b233425339" class="" dir="auto">이 방식에서는 파일을 블록으로 직접 관리하거나 운영체제의 파일 시스템처럼 마운트해서 다루는 것이 아니라, 각 데이터를 하나의 독립된 객체로 저장한다.</p><p id="a95720e4-6f49-839f-a594-815fa6de3ab5" class="" dir="auto">대표 서비스는 Amazon S3이다.</p><p id="0d4720e4-6f49-8277-9648-010779d774e9" class="" dir="auto">객체는 보통 다음 요소로 구성된다.</p><pre id="3c4720e4-6f49-83ee-9f52-8148f60d3eb0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">실제 데이터
+메타데이터
+고유한 식별자(Key)</code></pre><p id="a6c720e4-6f49-835a-b067-0136a1d09ebd" class="" dir="auto">특징은 다음과 같다.</p><pre id="80b720e4-6f49-8288-9cab-81deedf556e0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">대규모 확장에 유리
+매우 높은 내구성
+HTTP API 기반 접근
+정적 데이터 저장에 적합</code></pre><p id="1b3720e4-6f49-82cf-82ac-8171aca82197" class="" dir="auto">Object Storage는 다음과 같은 용도에 적합하다.</p><pre id="810720e4-6f49-8301-8f40-016fd5c50fe1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이미지 파일 저장
+동영상 저장
+백업 파일 저장
+로그 파일 저장
+데이터 레이크 저장소
+정적 웹 자원 저장</code></pre><p id="4f3720e4-6f49-8235-891e-0176abdb2622" class="" dir="auto">즉 Object Storage는 “대규모 파일 보관소”이자 “API 기반 데이터 저장소”로 이해하면 된다.</p><hr id="9fe720e4-6f49-8280-92a3-01cf7602999c" dir="auto"/><h2 id="294720e4-6f49-82e1-b3c2-81797bc22f75" class="" dir="auto">6.2.4 세 가지 스토리지 유형의 차이</h2><p id="911720e4-6f49-82fe-9f8d-812fbfc63d6a" class="" dir="auto">세 가지 유형은 모두 데이터를 저장하지만, 사용하는 방식이 다르다.</p><table id="605720e4-6f49-83a3-bb84-816a428362d8" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="5c3720e4-6f49-834f-99cf-018cd80c837d" dir="ltr"><th id="rtCh" class="simple-table-header-color simple-table-header">구분</th><th id="g?Kg" class="simple-table-header-color simple-table-header">저장 방식</th><th id="P?FO" class="simple-table-header-color simple-table-header">접근 방식</th><th id="knHl" class="simple-table-header-color simple-table-header">대표 서비스</th><th id="`[Z@" class="simple-table-header-color simple-table-header">적합한 용도</th></tr></thead><tbody><tr id="9af720e4-6f49-8377-bbf1-818c05164985" dir="ltr"><td id="rtCh" class="">Block Storage</td><td id="g?Kg" class="">블록 단위</td><td id="P?FO" class="">디스크처럼 연결</td><td id="knHl" class="">EBS</td><td id="`[Z@" class="">운영체제, DB, 고성능 저장소</td></tr><tr id="8b9720e4-6f49-82be-97e1-810835040bb7" dir="ltr"><td id="rtCh" class="">File Storage</td><td id="g?Kg" class="">파일 시스템</td><td id="P?FO" class="">파일/디렉터리 접근</td><td id="knHl" class="">EFS</td><td id="`[Z@" class="">공유 파일 시스템</td></tr><tr id="955720e4-6f49-82fd-9893-81dd98a96219" dir="ltr"><td id="rtCh" class="">Object Storage</td><td id="g?Kg" class="">객체 단위</td><td id="P?FO" class="">API/HTTP 접근</td><td id="knHl" class="">S3</td><td id="`[Z@" class="">이미지, 백업, 로그, 정적 콘텐츠</td></tr></tbody></table><p id="8df720e4-6f49-82c5-94fa-812add1dd5a1" class="" dir="auto">이 차이를 정확히 이해해야 AWS 스토리지 서비스를 올바르게 선택할 수 있다.</p><hr id="e24720e4-6f49-833d-9f74-817fa8125aa8" dir="auto"/><h1 id="eca720e4-6f49-82f8-9383-81f318d38d73" class="" dir="auto">6.3 Amazon EBS</h1><p id="270720e4-6f49-8257-8024-01c6171d706a" class="" dir="auto">EBS는 Elastic Block Store의 약자이다.</p><p id="9b9720e4-6f49-83a5-8f5a-8185dc23dc59" class="" dir="auto">Amazon EC2에 연결해서 사용하는 블록 스토리지 서비스이다.</p><p id="e64720e4-6f49-8396-9b7f-817935fa64f8" class="" dir="auto">EBS는 EC2 인스턴스의 외장 디스크이자, 경우에 따라서는 루트 디스크 역할도 한다.</p><p id="669720e4-6f49-82fc-bff4-81bd882d6692" class="" dir="auto">구조는 다음과 같다.</p><pre id="5ee720e4-6f49-82f1-aa36-8146c9f74c94" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 Instance
+ └ EBS Volume</code></pre><p id="e3f720e4-6f49-83e8-a6ba-01d31fcc6640" class="" dir="auto">EBS의 핵심 특징은 다음과 같다.</p><pre id="085720e4-6f49-8388-a182-815ca8d970e9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">블록 스토리지
+지속성 보장
+스냅샷 지원
+고성능 입출력 처리 가능
+EC2와 함께 사용</code></pre><p id="725720e4-6f49-820f-a168-81354b9dce61" class="" dir="auto">여기서 중요한 점은 <strong>지속성(Persistence)</strong> 이다.</p><p id="32f720e4-6f49-839c-9857-01be372f7e0c" class="" dir="auto">EC2 인스턴스를 중지했다가 다시 시작하더라도, 연결된 EBS 볼륨의 데이터는 유지된다.</p><p id="b33720e4-6f49-8363-b478-016b534272ac" class="" dir="auto">즉 컴퓨팅 자원과 저장 자원을 어느 정도 분리해서 운영할 수 있다.</p><hr id="7f2720e4-6f49-8209-9266-81ae4026568a" dir="auto"/><h2 id="61e720e4-6f49-83cc-891a-01d73eb7e552" class="" dir="auto">6.3.1 EBS의 역할</h2><p id="e8b720e4-6f49-83a7-891e-017e92fdfcfd" class="" dir="auto">EBS는 다음과 같은 역할로 자주 사용된다.</p><pre id="96e720e4-6f49-83a3-9696-81bc3b8132d2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2의 루트 볼륨
+데이터베이스 디스크
+애플리케이션 로그 저장소
+트랜잭션 처리용 고성능 스토리지</code></pre><p id="785720e4-6f49-83c6-a4cb-012c50275aba" class="" dir="auto">예를 들어 MySQL, PostgreSQL, Oracle 같은 데이터베이스는 지연시간과 입출력 성능이 중요하기 때문에 주로 EBS 위에서 운영한다.</p><hr id="fc5720e4-6f49-8337-a5f9-01df4993d9b8" dir="auto"/><h2 id="9b3720e4-6f49-8278-a9a2-012916859f0c" class="" dir="auto">6.3.2 EBS의 특징</h2><h3 id="816720e4-6f49-8359-a977-01a61ea62108" class="" dir="auto">1) EC2에 연결해서 사용</h3><p id="50f720e4-6f49-8382-92eb-01a001f83e08" class="" dir="auto">EBS는 독립적으로 사용하는 저장소가 아니라, 기본적으로 EC2와 연결해서 사용하는 디스크이다.</p><p id="b73720e4-6f49-826c-bd09-81e004022d40" class="" dir="auto">즉 EBS만 단독으로 웹에서 접근하는 형태가 아니라, EC2가 EBS를 파일 시스템으로 마운트해서 사용한다.</p><hr id="20c720e4-6f49-839d-a0af-810a6a7a8927" dir="auto"/><h3 id="d14720e4-6f49-8233-bdb4-01c9c9fd2d40" class="" dir="auto">2) 데이터 지속성 보장</h3><p id="7fc720e4-6f49-83c7-a426-818bca4afc94" class="" dir="auto">인스턴스를 재부팅하거나 중지해도 EBS 자체가 삭제되지 않는 한 데이터는 유지된다.</p><p id="1e1720e4-6f49-839d-b0c8-01d8f37d4c5a" class="" dir="auto">이는 임시 스토리지와 구분되는 중요한 특징이다.</p><hr id="730720e4-6f49-82f0-80ec-01b68663298c" dir="auto"/><h3 id="e41720e4-6f49-83da-a089-010141bc1adf" class="" dir="auto">3) Snapshot 지원</h3><p id="264720e4-6f49-8217-aea3-01692a288a25" class="" dir="auto">EBS는 특정 시점의 데이터를 스냅샷으로 백업할 수 있다.</p><p id="72e720e4-6f49-8349-a816-8148d07e2fee" class="" dir="auto">스냅샷은 Amazon S3 기반으로 저장되며, 다음과 같은 용도로 활용된다.</p><pre id="504720e4-6f49-829a-a421-01b1815ad856" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">백업
+복구
+새 볼륨 생성
+운영환경 복제
+재해 복구 구성</code></pre><hr id="b6f720e4-6f49-83cd-a919-81eca194cd51" dir="auto"/><h3 id="4b2720e4-6f49-8365-8c32-01b8bd5394d3" class="" dir="auto">4) 성능 특화 스토리지</h3><p id="20a720e4-6f49-830c-be89-817691b89806" class="" dir="auto">EBS는 범용 SSD, 프로비저닝 IOPS SSD, 처리량 최적화 HDD 등 다양한 볼륨 유형을 제공한다.</p><p id="965720e4-6f49-83f4-aced-814b8cc10467" class="" dir="auto">따라서 워크로드 특성에 따라 비용과 성능을 조정할 수 있다.</p><p id="4b1720e4-6f49-829d-80cf-01abff932d97" class="" dir="auto">즉 EBS는 단순 디스크가 아니라, <strong>성능 요구사항에 맞춰 선택하는 클라우드 블록 스토리지</strong>이다.</p><hr id="de7720e4-6f49-8278-b4d1-016c209ab9e6" dir="auto"/><h1 id="142720e4-6f49-824f-8a6e-8136014d8083" class="" dir="auto">6.4 Amazon EFS</h1><p id="7d3720e4-6f49-83eb-bed6-81c9cd6e3600" class="" dir="auto">EFS는 Elastic File System의 약자이다.</p><p id="c0e720e4-6f49-82b7-9da4-8118d039cde5" class="" dir="auto">AWS에서 제공하는 관리형 파일 스토리지 서비스이다.</p><p id="4c3720e4-6f49-8322-bb28-0187ac40ed77" class="" dir="auto">EFS는 여러 EC2 인스턴스가 동시에 같은 파일 시스템에 접근할 수 있도록 설계되었다.</p><p id="f49720e4-6f49-82aa-937b-81bcb65dc6a9" class="" dir="auto">구조는 다음과 같다.</p><pre id="de4720e4-6f49-820f-bd29-01f4e40c058d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 A ─┐
+EC2 B ─┼─ EFS
+EC2 C ─┘</code></pre><hr id="2b8720e4-6f49-83ce-bd58-81b238b05c78" dir="auto"/><h2 id="e03720e4-6f49-829c-8bd1-81817909e05e" class="" dir="auto">6.4.1 EFS의 특징</h2><pre id="edc720e4-6f49-837a-9430-01579a6bd56b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">파일 시스템 기반 저장소
+여러 인스턴스에서 동시 접근 가능
+자동 확장
+관리형 서비스
+리눅스 기반 공유 스토리지로 적합</code></pre><p id="44b720e4-6f49-83c6-b3d3-015259323623" class="" dir="auto">EFS는 다음과 같은 환경에 잘 어울린다.</p><pre id="ff7720e4-6f49-8205-8a7e-81b466e5b9c8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">웹 서버 팜의 공용 업로드 디렉터리
+공유 콘텐츠 저장소
+컨테이너 기반 애플리케이션의 공용 파일 영역
+분산 애플리케이션의 공통 파일 시스템</code></pre><p id="1b2720e4-6f49-83a6-a6f1-01aa72b8b794" class="" dir="auto">즉 EFS는 “여러 서버가 함께 쓰는 파일 저장소”라는 점이 핵심이다.</p><hr id="f70720e4-6f49-8234-aa5d-810456188d25" dir="auto"/><h2 id="374720e4-6f49-8358-bd46-81f6a1e5ee08" class="" dir="auto">6.4.2 EBS와 EFS의 차이</h2><p id="dcd720e4-6f49-820d-b5d3-01cc394cfe97" class="" dir="auto">EBS와 EFS는 이름이 비슷하지만 목적이 다르다.</p><table id="7cf720e4-6f49-8363-9efc-81c596b466fe" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="251720e4-6f49-82cf-af9b-8159a206699e" dir="ltr"><th id="uzIL" class="simple-table-header-color simple-table-header">항목</th><th id="XYZd" class="simple-table-header-color simple-table-header">EBS</th><th id="IZ|M" class="simple-table-header-color simple-table-header">EFS</th></tr></thead><tbody><tr id="5fa720e4-6f49-82c8-b9e8-018dccb597ef" dir="ltr"><td id="uzIL" class="">저장 방식</td><td id="XYZd" class="">블록 스토리지</td><td id="IZ|M" class="">파일 스토리지</td></tr><tr id="6e3720e4-6f49-82d9-8454-81e0485b2f80" dir="ltr"><td id="uzIL" class="">연결 대상</td><td id="XYZd" class="">보통 단일 EC2 중심</td><td id="IZ|M" class="">여러 EC2 동시 접근</td></tr><tr id="e2e720e4-6f49-8362-a1de-013da7522328" dir="ltr"><td id="uzIL" class="">사용 목적</td><td id="XYZd" class="">OS, DB, 고성능 디스크</td><td id="IZ|M" class="">공유 파일 시스템</td></tr><tr id="a31720e4-6f49-827d-8109-012985616c93" dir="ltr"><td id="uzIL" class="">접근 방식</td><td id="XYZd" class="">디스크처럼 연결</td><td id="IZ|M" class="">파일 시스템 마운트</td></tr></tbody></table><p id="f9e720e4-6f49-82c7-b121-018c12cc7fa7" class="" dir="auto">정리하면 다음과 같다.</p><pre id="3ac720e4-6f49-8277-84ec-01ff02e06a12" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EBS는 서버 전용 디스크
+EFS는 서버 공동 사용 파일 시스템</code></pre><hr id="297720e4-6f49-8271-87f6-0116e0b66d64" dir="auto"/><h1 id="610720e4-6f49-8246-8c71-017978739996" class="" dir="auto">6.5 Amazon S3</h1><p id="459720e4-6f49-839a-aba5-8109ce42ca50" class="" dir="auto">S3는 Simple Storage Service의 약자이다.</p><p id="a04720e4-6f49-83b0-90df-815af75faca0" class="" dir="auto">AWS에서 제공하는 대표적인 객체 스토리지 서비스이다.</p><p id="ee6720e4-6f49-827a-b293-81d46610d153" class="" dir="auto">S3는 AWS 환경에서 매우 자주 사용되며, 단순 파일 저장소를 넘어 백업, 로그 저장, 정적 웹 호스팅, 데이터 분석 기반 저장소 등 다양한 역할을 수행한다.</p><p id="e4e720e4-6f49-83e4-bcca-8113545a42e5" class="" dir="auto">S3의 기본 구조는 다음과 같다.</p><pre id="ba7720e4-6f49-823c-a4de-814b2cadb5df" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Bucket
+ └ Object</code></pre><hr id="e63720e4-6f49-83a1-aaca-81ee532e7bbf" dir="auto"/><h2 id="736720e4-6f49-8321-925e-81eeffad0c75" class="" dir="auto">6.5.1 Bucket</h2><p id="0aa720e4-6f49-837e-a2d1-8109ae282bb3" class="" dir="auto">Bucket은 객체를 저장하는 논리적 컨테이너이다.</p><p id="f8a720e4-6f49-832d-92ca-81ac48743d8c" class="" dir="auto">쉽게 말하면 파일을 담는 최상위 저장 공간이다.</p><p id="0f5720e4-6f49-829a-8977-81f2b40bf85f" class="" dir="auto">예시는 다음과 같다.</p><pre id="62c720e4-6f49-83d3-9540-01cf1fcbee3b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">my-company-images
+my-backup-data
+my-log-storage</code></pre><p id="adb720e4-6f49-82b6-8fb2-016d2eb3c218" class="" dir="auto">Bucket의 특징은 다음과 같다.</p><pre id="fbd720e4-6f49-838b-ba32-01adbbbb5299" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">전 세계에서 유일한 이름 사용
+특정 Region에 생성
+객체 저장의 최상위 단위
+권한 관리와 정책 적용의 기준 단위</code></pre><p id="567720e4-6f49-8257-9e80-011c28e6d9b2" class="" dir="auto">여기서 “전 세계에서 유일한 이름”이라는 점이 중요하다.</p><p id="0b9720e4-6f49-8347-9527-81da29392eb5" class="" dir="auto">S3는 글로벌 네임스페이스를 사용하므로 동일한 버킷 이름을 다른 사용자가 이미 사용 중이면 생성할 수 없다.</p><hr id="931720e4-6f49-8226-bca4-817ae7b81ae5" dir="auto"/><h2 id="a16720e4-6f49-82c9-bc23-81b3bdef5604" class="" dir="auto">6.5.2 Object</h2><p id="e11720e4-6f49-83ee-84d8-81b6b2ffe384" class="" dir="auto">Object는 S3에 저장되는 실제 데이터이다.</p><p id="93b720e4-6f49-8260-9166-01bd278eec22" class="" dir="auto">Object는 단순히 파일만 의미하지 않는다.</p><p id="1fa720e4-6f49-835c-a9b7-018527ee136f" class="" dir="auto">S3 내부에서는 각 데이터를 객체로 저장하며, 이 객체는 파일 내용뿐 아니라 추가 정보도 함께 가진다.</p><p id="15f720e4-6f49-8267-851f-016b4bfe5f59" class="" dir="auto">구성 요소는 다음과 같다.</p><pre id="ed8720e4-6f49-837b-845a-81ee1312c10c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Object Data
+Metadata
+Key</code></pre><p id="5f1720e4-6f49-82b1-9459-81c66b620264" class="" dir="auto">설명하면 다음과 같다.</p><ul id="ce1720e4-6f49-83a2-8420-817a0e2461c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Object Data</strong>: 실제 파일 내용</li></ul><ul id="e83720e4-6f49-82f1-91b4-015c4143812f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Metadata</strong>: 콘텐츠 타입, 생성 정보 등 부가 정보</li></ul><ul id="c29720e4-6f49-835b-994f-010e46881ee6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Key</strong>: 객체를 식별하는 이름</li></ul><p id="0fe720e4-6f49-82df-a393-014bd94b591f" class="" dir="auto">예를 들어 다음과 같은 형태가 가능하다.</p><pre id="bba720e4-6f49-835f-b6b1-019fd62757e5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">images/logo.png
+videos/intro.mp4
+backup/2026-03-23/db-backup.zip</code></pre><p id="b15720e4-6f49-82e4-848e-81a4eebc6138" class="" dir="auto">여기서 <code>images/logo.png</code> 같은 문자열이 Key이다.</p><p id="115720e4-6f49-82f9-af7b-81f43632e020" class="" dir="auto">중요한 점은 S3는 전통적인 파일 시스템의 폴더를 실제로 가지는 것이 아니라, <strong>Key 이름을 통해 폴더처럼 보이게 표현</strong>한다는 점이다.</p><p id="e31720e4-6f49-83bc-931f-819c16f9a20c" class="" dir="auto">즉 다음 구조는 실제 디렉터리 구조라기보다 논리적 표현이다.</p><pre id="a2f720e4-6f49-8358-90f0-81e244c13a34" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">images/
+ └ logo.png</code></pre><p id="004720e4-6f49-8264-8bea-01266e63c5ee" class="" dir="auto">실제로는 하나의 Key 값일 뿐이다.</p><hr id="491720e4-6f49-82fc-81bd-01a08ca6a9da" dir="auto"/><h1 id="9f3720e4-6f49-827f-be8d-01646936a590" class="" dir="auto">6.6 S3의 핵심 특징</h1><h2 id="bf1720e4-6f49-8312-8313-81821c321971" class="" dir="auto">6.6.1 높은 내구성</h2><p id="389720e4-6f49-83c9-a61a-0118af88247f" class="" dir="auto">S3는 매우 높은 내구성을 제공한다.</p><p id="2d5720e4-6f49-83a2-9d92-81b1e43142fb" class="" dir="auto">AWS는 S3 객체를 여러 가용 영역 기반 인프라에 분산 저장하여 데이터 손실 가능성을 매우 낮춘다.</p><p id="32e720e4-6f49-83ac-86a8-810efa78915f" class="" dir="auto">일반적으로 다음과 같이 표현한다.</p><pre id="84b720e4-6f49-82d8-98a7-01590228cdaa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">99.999999999% durability</code></pre><p id="1fe720e4-6f49-8277-a4bb-019806d6c0a9" class="" dir="auto">이를 흔히 <strong>11 9&#x27;s durability</strong>라고 부른다.</p><p id="8ae720e4-6f49-8344-9471-819d2060d17f" class="" dir="auto">여기서 중요한 것은 <strong>내구성(Durability)</strong> 과 <strong>가용성(Availability)</strong> 을 구분하는 것이다.</p><ul id="f18720e4-6f49-83df-b144-817b912e5a5a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내구성은 데이터가 손실되지 않을 가능성</li></ul><ul id="4c2720e4-6f49-8395-a981-817f60484fe4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가용성은 필요할 때 접근할 수 있는 가능성</li></ul><p id="2d0720e4-6f49-82cd-baf1-81bec8806dfd" class="" dir="auto">즉 내구성이 높다는 말은 “데이터가 잘 보존된다”는 의미이지, 항상 100% 즉시 접근 가능하다는 의미와는 다르다.</p><hr id="f18720e4-6f49-82d0-92d4-013896450206" dir="auto"/><h2 id="c42720e4-6f49-8227-813f-81fb4be7000a" class="" dir="auto">6.6.2 높은 확장성</h2><p id="c80720e4-6f49-822a-a49e-012635bb9845" class="" dir="auto">S3는 저장 용량을 미리 할당하지 않는다.</p><p id="5eb720e4-6f49-82f6-b950-0162af08c00d" class="" dir="auto">즉 사용자는 디스크를 증설하거나 파티션을 조정할 필요 없이 필요한 만큼 데이터를 저장하면 된다.</p><p id="090720e4-6f49-83db-802d-01d26366433e" class="" dir="auto">이 특성 때문에 다음과 같은 대규모 데이터 저장에 적합하다.</p><pre id="7b2720e4-6f49-838f-8d08-0111a4513ef8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">대량 이미지 저장
+로그 축적
+백업 아카이브
+분석용 원천 데이터 저장</code></pre><p id="408720e4-6f49-8242-9ed9-813ee22b0d32" class="" dir="auto">운영자가 저장소 증설 작업에 직접 관여하지 않아도 된다는 점이 큰 장점이다.</p><hr id="299720e4-6f49-8288-b395-0189263287ae" dir="auto"/><h2 id="aa3720e4-6f49-8323-9349-01624f1cda16" class="" dir="auto">6.6.3 HTTP 및 API 기반 접근</h2><p id="1af720e4-6f49-823a-bbe9-01175df21e80" class="" dir="auto">S3는 HTTP, HTTPS, SDK, CLI, API를 통해 접근할 수 있다.</p><p id="c36720e4-6f49-838d-b3c8-012507bfcb72" class="" dir="auto">즉 서버에 디스크를 연결하듯 사용하는 방식이 아니라, 네트워크를 통해 객체를 요청하는 방식이다.</p><p id="21c720e4-6f49-8234-a0ef-812b99a507c8" class="" dir="auto">예를 들면 다음과 같은 URL 형식으로 접근할 수 있다.</p><pre id="df1720e4-6f49-82fa-8cea-014d1dcf5e75" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">https://bucket-name.s3.amazonaws.com/image.jpg</code></pre><p id="429720e4-6f49-83e1-af14-815a61478d3c" class="" dir="auto">또는 애플리케이션에서는 AWS SDK를 사용해서 객체 업로드와 다운로드를 수행한다.</p><p id="ebd720e4-6f49-8250-9519-01bf4fa7a6bb" class="" dir="auto">이 특성 때문에 S3는 웹 애플리케이션과 매우 잘 어울린다.</p><hr id="591720e4-6f49-82c9-889e-01c8558e17f4" dir="auto"/><h2 id="f55720e4-6f49-8277-a08e-017eb93b0593" class="" dir="auto">6.6.4 관리형 서비스</h2><p id="b7b720e4-6f49-83cf-bd5b-81b56aaa88c2" class="" dir="auto">S3는 사용자가 디스크 장애, RAID 구성, 스토리지 증설, 하드웨어 교체를 직접 처리하지 않아도 된다.</p><p id="5a8720e4-6f49-83ef-8e06-01c2bce48089" class="" dir="auto">즉 인프라 운영 부담을 줄이고, 데이터 저장 그 자체에 집중할 수 있게 해준다.</p><hr id="2fc720e4-6f49-83a1-a8bf-81f4f4f5880a" dir="auto"/><h2 id="274720e4-6f49-8358-aa1f-8105c0974bea" class="" dir="auto">6.6.5 높은 범용성</h2><p id="51f720e4-6f49-8202-9e6a-0136902fd813" class="" dir="auto">S3는 단순한 파일 저장소를 넘어 매우 다양한 AWS 서비스와 연계된다.</p><p id="4b7720e4-6f49-8299-bea0-81e95234d933" class="" dir="auto">예를 들면 다음과 같다.</p><pre id="7e8720e4-6f49-824c-b5c8-818294ddabe8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CloudFront와 연계한 정적 콘텐츠 배포
+Athena와 연계한 데이터 분석
+Glue와 연계한 ETL
+Backup 및 Archive 저장소
+CloudTrail / VPC Flow Logs 저장소</code></pre><p id="695720e4-6f49-82d3-ab50-013a1b9dd99d" class="" dir="auto">즉 S3는 AWS 데이터 저장의 중심 축에 가까운 서비스이다.</p><hr id="3dd720e4-6f49-835b-a153-81ebd85bd0b2" dir="auto"/><h1 id="eb7720e4-6f49-8239-b2b5-011d1dbce455" class="" dir="auto">6.7 S3 주요 사용 사례</h1><p id="ecf720e4-6f49-824c-8e2a-01433190600c" class="" dir="auto">S3는 매우 넓은 범위에서 사용된다.</p><hr id="d5d720e4-6f49-83de-a182-81bd8adc2884" dir="auto"/><h2 id="076720e4-6f49-834f-882d-0168c66aeb27" class="" dir="auto">6.7.1 정적 웹사이트 호스팅</h2><p id="79b720e4-6f49-8231-8fa2-014a38e554d0" class="" dir="auto">HTML, CSS, JavaScript, 이미지처럼 서버 측 연산이 필요 없는 정적 리소스를 S3에 저장하고 웹으로 제공할 수 있다.</p><p id="0ef720e4-6f49-822f-b426-8188b033f0a0" class="" dir="auto">대표 예시는 다음과 같다.</p><pre id="a7e720e4-6f49-829b-a75f-0138a4f79336" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">회사 소개 페이지
+문서 배포 사이트
+정적 프론트엔드 페이지</code></pre><p id="57a720e4-6f49-8309-9edf-813d352d1d07" class="" dir="auto">S3 자체 웹사이트 호스팅 기능을 사용할 수도 있고, CloudFront와 함께 구성할 수도 있다.</p><hr id="8fa720e4-6f49-8234-a63f-0139b1906486" dir="auto"/><h2 id="af8720e4-6f49-8201-8a51-818fd7bd072f" class="" dir="auto">6.7.2 이미지 및 미디어 저장</h2><p id="848720e4-6f49-823c-ac37-01e9130a5044" class="" dir="auto">사용자가 업로드하는 프로필 이미지, 상품 이미지, 동영상 파일 등을 저장하는 용도로 매우 많이 사용된다.</p><p id="66c720e4-6f49-822d-a0b9-81b5aaeff3b7" class="" dir="auto">장점은 다음과 같다.</p><pre id="103720e4-6f49-83d1-b69f-8199f618991d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">대용량 저장 가능
+확장 용이
+애플리케이션 서버와 저장소 분리 가능</code></pre><p id="fea720e4-6f49-8314-8a3d-81052e8d8c32" class="" dir="auto">즉 웹 서버 내부 디스크에 파일을 보관하지 않고, 외부 저장소로 분리해서 확장성과 관리성을 높일 수 있다.</p><hr id="5bb720e4-6f49-821a-91e3-81361610b2c7" dir="auto"/><h2 id="4f7720e4-6f49-8364-b87b-81bd5c92f577" class="" dir="auto">6.7.3 로그 저장</h2><p id="c2b720e4-6f49-8203-9d27-818075e745d8" class="" dir="auto">서버 로그, 애플리케이션 로그, 접근 로그, 감사 로그 등을 장기 저장하는 데 적합하다.</p><p id="1df720e4-6f49-83ad-ba6e-018da0348982" class="" dir="auto">예를 들어 다음 서비스들이 S3를 로그 저장소로 자주 사용한다.</p><pre id="894720e4-6f49-8306-88c4-81ea95ba0653" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CloudTrail
+ALB Access Log
+VPC Flow Log
+애플리케이션 백업 로그</code></pre><hr id="183720e4-6f49-8306-8749-81fabbeb3065" dir="auto"/><h2 id="e79720e4-6f49-83f6-85ea-01dbfb34fdde" class="" dir="auto">6.7.4 백업 및 아카이브</h2><p id="ec9720e4-6f49-8281-882e-01b05dbfa53c" class="" dir="auto">데이터베이스 덤프, 시스템 백업 파일, 장기 보관 문서를 저장하는 용도로 적합하다.</p><p id="743720e4-6f49-8290-b40f-81ef22d2de94" class="" dir="auto">필요에 따라 S3 스토리지 클래스를 조정하면 비용 최적화도 가능하다.</p><p id="c6e720e4-6f49-83d5-b177-01f2b6e5021e" class="" dir="auto">예를 들어 자주 접근하지 않는 데이터는 저비용 스토리지 클래스로 이동할 수 있다.</p><hr id="82d720e4-6f49-83ab-b1c8-014182f19c06" dir="auto"/><h2 id="ebc720e4-6f49-8226-91b6-01d069cf33c9" class="" dir="auto">6.7.5 데이터 분석 저장소</h2><p id="a4d720e4-6f49-8322-be6c-01137c4d3f71" class="" dir="auto">S3는 데이터 레이크의 중심 저장소로 자주 사용된다.</p><p id="9e1720e4-6f49-82c4-90f0-8167681bf8b5" class="" dir="auto">대량의 CSV, JSON, Parquet 같은 파일을 저장해 두고 Athena, EMR, Glue, Redshift Spectrum 같은 서비스가 이를 분석 대상으로 사용한다.</p><p id="336720e4-6f49-8287-b578-0136aac6beb7" class="" dir="auto">즉 S3는 단순 저장소이면서 동시에 분석 플랫폼의 기반 저장소가 되기도 한다.</p><hr id="583720e4-6f49-838c-b0ab-01724e7a760b" dir="auto"/><h1 id="3c3720e4-6f49-83c7-90ef-0159d316e023" class="" dir="auto">6.8 EBS, EFS, S3를 언제 선택하는가</h1><p id="1a5720e4-6f49-834b-9427-81c373721189" class="" dir="auto">스토리지 서비스를 비교할 때 가장 중요한 질문은 다음이다.</p><pre id="40a720e4-6f49-83ef-b21c-018ac5db7717" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이 데이터는 어떤 방식으로 접근되는가
+한 대의 서버만 쓰는가, 여러 대가 공유하는가
+운영체제 디스크처럼 필요한가
+파일 공유가 필요한가
+대량 객체 저장이 필요한가</code></pre><p id="9af720e4-6f49-826f-8d37-81806b624686" class="" dir="auto">선택 기준은 다음과 같이 정리할 수 있다.</p><hr id="001720e4-6f49-8251-850f-01c74c7a6bd2" dir="auto"/><h2 id="9f8720e4-6f49-828e-b2fc-0138c029154b" class="" dir="auto">EBS를 선택하는 경우</h2><pre id="fc5720e4-6f49-83bd-bc39-011f1d387133" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2에 디스크를 직접 붙여야 하는 경우
+운영체제 설치가 필요한 경우
+데이터베이스처럼 높은 성능이 필요한 경우
+저지연 블록 스토리지가 필요한 경우</code></pre><hr id="6bb720e4-6f49-8249-9121-81a14be2b034" dir="auto"/><h2 id="fcb720e4-6f49-82f1-b9b7-8178ebba87c1" class="" dir="auto">EFS를 선택하는 경우</h2><pre id="d6f720e4-6f49-8375-889b-01bb2eb7cb07" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">여러 EC2가 동시에 같은 파일을 사용해야 하는 경우
+공유 업로드 디렉터리가 필요한 경우
+파일 시스템 형태의 저장소가 필요한 경우</code></pre><hr id="b01720e4-6f49-8326-8d6a-010b390e47a6" dir="auto"/><h2 id="75f720e4-6f49-82b2-a7c9-8190dbefd314" class="" dir="auto">S3를 선택하는 경우</h2><pre id="c55720e4-6f49-8246-97f1-015860c99747" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">대량 파일을 저장해야 하는 경우
+정적 콘텐츠를 저장하는 경우
+로그와 백업을 보관하는 경우
+HTTP/API 기반 접근이 필요한 경우
+확장성과 내구성이 중요한 경우</code></pre><hr id="f91720e4-6f49-8319-877e-815ea754a5f6" dir="auto"/><h1 id="463720e4-6f49-8201-8168-0136404332c2" class="" dir="auto">6.9 스토리지 서비스 비교</h1><table id="174720e4-6f49-8336-9020-8128e7dced67" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="37f720e4-6f49-8312-9a36-81f617303231" dir="ltr"><th id="FWmx" class="simple-table-header-color simple-table-header">서비스</th><th id="S&lt;S{" class="simple-table-header-color simple-table-header">유형</th><th id="bMw;" class="simple-table-header-color simple-table-header">접근 방식</th><th id="wTEd" class="simple-table-header-color simple-table-header">대표 용도</th><th id="H[ld" class="simple-table-header-color simple-table-header">핵심 특징</th></tr></thead><tbody><tr id="6ec720e4-6f49-821b-b89a-018450b7c4ba" dir="ltr"><td id="FWmx" class="">EBS</td><td id="S&lt;S{" class="">Block Storage</td><td id="bMw;" class="">EC2에 디스크처럼 연결</td><td id="wTEd" class="">OS, DB, 애플리케이션 디스크</td><td id="H[ld" class="">고성능, 저지연</td></tr><tr id="68c720e4-6f49-838d-a73d-811a906e044e" dir="ltr"><td id="FWmx" class="">EFS</td><td id="S&lt;S{" class="">File Storage</td><td id="bMw;" class="">여러 인스턴스가 파일 시스템으로 접근</td><td id="wTEd" class="">공유 파일 영역</td><td id="H[ld" class="">동시 공유 가능</td></tr><tr id="f7e720e4-6f49-83ce-913a-8136d877b6de" dir="ltr"><td id="FWmx" class="">S3</td><td id="S&lt;S{" class="">Object Storage</td><td id="bMw;" class="">HTTP/API 기반 접근</td><td id="wTEd" class="">이미지, 로그, 백업, 정적 웹</td><td id="H[ld" class="">대규모 확장, 높은 내구성</td></tr></tbody></table><hr id="deb720e4-6f49-8276-9ec8-81c6405e5103" dir="auto"/><h1 id="d4c720e4-6f49-83ac-be04-814cd757c034" class="" dir="auto">6.10 핵심 정리</h1><p id="80e720e4-6f49-83ee-a1fd-0148c7cee1c1" class="" dir="auto">AWS의 대표적인 스토리지 서비스는 저장 방식에 따라 다음과 같이 구분된다.</p><pre id="a49720e4-6f49-8332-b696-81d5aee0adcf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Block Storage  → Amazon EBS
+File Storage   → Amazon EFS
+Object Storage → Amazon S3</code></pre><p id="1d7720e4-6f49-8219-9019-81daa8db034c" class="" dir="auto">각 서비스는 서로 대체 관계라기보다, 목적이 다른 서비스이다.</p><ul id="704720e4-6f49-8292-98b2-0179472dadd5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EBS는 EC2에 연결하는 디스크</li></ul><ul id="fad720e4-6f49-83d6-b0aa-81dc3e93449d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS는 여러 서버가 공유하는 파일 시스템</li></ul><ul id="da7720e4-6f49-83f9-826b-01404efcb389" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3는 대규모 객체 저장소</li></ul><p id="a3a720e4-6f49-82a7-a2a1-011c6d9dec2b" class="" dir="auto">특히 Amazon S3는 다음과 같은 이유로 매우 중요하다.</p><pre id="925720e4-6f49-8393-9268-014a224f14a9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">높은 내구성
+무제한에 가까운 확장성
+HTTP/API 기반 접근
+정적 콘텐츠, 로그, 백업, 분석 저장소로 폭넓게 활용 가능</code></pre><p id="746720e4-6f49-8260-9205-014a6a42b753" class="" dir="auto">스토리지 서비스를 올바르게 선택하는 것은 단순 저장 공간 확보 문제가 아니라,</p><p id="c33720e4-6f49-82fd-8f92-019ea3930e68" class="" dir="auto">애플리케이션 성능, 확장성, 운영 편의성, 비용 구조까지 결정하는 중요한 설계 요소이다.</p><hr id="751720e4-6f49-826e-8091-01801462c7e3" dir="auto"/><p id="e81720e4-6f49-8341-a7cc-0121812b522b" class="" dir="auto">원하면 다음 단계로 이어서</p><p id="fde720e4-6f49-8389-b625-81b3dce43594" class="" dir="auto"><strong>“S3 스토리지 클래스(Standard / IA / Glacier 등)”</strong> 까지 포함한 확장판으로 정리해드릴게요.</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

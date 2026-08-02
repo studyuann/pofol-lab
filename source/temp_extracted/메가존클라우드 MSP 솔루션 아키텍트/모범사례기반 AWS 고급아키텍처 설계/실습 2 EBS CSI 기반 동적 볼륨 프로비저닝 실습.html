@@ -1,0 +1,826 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습 2. EBS CSI 기반 동적 볼륨 프로비저닝 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="8dc720e4-6f49-8337-ba52-01d3eb1c5ed9" class="page sans"><header><h1 class="page-title" dir="auto">실습 2. EBS CSI 기반 동적 볼륨 프로비저닝 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="568720e4-6f49-8313-b417-81d34c6c8f3e" class="" dir="auto">1. 실습 목표</h2><p id="255720e4-6f49-82f4-97a1-81073518debb" class="" dir="auto">이번 실습에서는 EKS에서 <strong>Amazon EBS CSI Driver</strong>를 설치하고, PVC를 생성했을 때 <strong>Amazon EBS 볼륨이 자동 생성</strong>되어 Pod에 연결되는 과정을 확인함.</p><p id="b21720e4-6f49-8299-90cb-81d44767c90d" class="" dir="auto">이 실습을 통해 다음을 이해할 수 있음.</p><ul id="bec720e4-6f49-820b-a796-81a5664d5bae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EBS CSI Driver가 왜 필요한가</li></ul><ul id="9d1720e4-6f49-8318-bf66-01658401fe43" class="bulleted-list" dir="auto"><li style="list-style-type:disc">StorageClass, PV, PVC 관계</li></ul><ul id="ca8720e4-6f49-8256-9652-810532d668bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동적 프로비저닝 개념</li></ul><ul id="c2d720e4-6f49-8246-ab9e-01247fbf6180" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EKS와 Amazon EBS의 연동 방식</li></ul><ul id="277720e4-6f49-8291-8e9c-01d51ae10ed3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">온프레미스 스토리지 구성과 EKS 스토리지 구성의 차이</li></ul><p id="2d3720e4-6f49-826d-a45c-81c2d393bab2" class="" dir="auto">AWS는 Amazon EBS CSI driver가 Kubernetes 볼륨 수명주기와 Amazon EBS API를 연결하는 CSI 플러그인이라고 설명함.</p><hr id="8dd720e4-6f49-831f-a0f6-819756c6f6c9" dir="auto"/><h2 id="13f720e4-6f49-8231-b60d-81ff32f9fe2c" class="" dir="auto">2. 실습 개요</h2><p id="04b720e4-6f49-8216-b79c-01875904c439" class="" dir="auto">Kubernetes에서 스토리지는 보통 아래 흐름으로 이해하면 됨.</p><ul id="b62720e4-6f49-82ca-9753-01c959a97e08" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>StorageClass</strong>: 어떤 방식으로 스토리지를 만들지 정의</li></ul><ul id="cec720e4-6f49-8366-8f7b-81ca460f20f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>PersistentVolumeClaim(PVC)</strong>: 사용자가 저장소를 요청</li></ul><ul id="fca720e4-6f49-838b-941a-010b5cc2b616" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>PersistentVolume(PV)</strong>: 실제 제공되는 저장소</li></ul><ul id="4e1720e4-6f49-83bb-b26a-812b17280e47" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Pod</strong>: PVC를 마운트해서 사용</li></ul><p id="cde720e4-6f49-8367-bb11-818b1332afa4" class="" dir="auto">온프레미스에서는 NFS, Ceph, SAN/NAS, CSI 드라이버, 백엔드 스토리지 구성을 직접 준비하는 경우가 많음.</p><p id="a1c720e4-6f49-8282-aca5-01276aaddcb6" class="" dir="auto">반면 EKS에서는 EBS CSI driver가 설치되어 있으면 PVC 요청이 실제 <strong>EBS 볼륨 생성</strong>으로 이어질 수 있음. </p><hr id="20d720e4-6f49-8246-8be3-815ed3fd0b81" dir="auto"/><h2 id="d93720e4-6f49-82c6-88a5-0106b2a07ab1" class="" dir="auto">3. 실습 전 확인 사항</h2><p id="8c2720e4-6f49-83bc-ad74-815c9e47c53c" class="" dir="auto">다음 조건이 준비되어 있어야 함.</p><ol type="1" id="377720e4-6f49-832c-8005-81584e8e78ee" class="numbered-list" start="1" dir="auto"><li>EKS 클러스터가 생성되어 있어야 함</li></ol><ol type="1" id="43f720e4-6f49-8230-8e03-012c459e97c9" class="numbered-list" start="2" dir="auto"><li><code>kubectl</code>과 <code>aws cli</code> 가 사용 가능해야 함</li></ol><ol type="1" id="d82720e4-6f49-82fd-ae49-01f8ad7ed94f" class="numbered-list" start="3" dir="auto"><li>워커 노드는 <strong>EC2 기반 노드</strong>여야 함</li></ol><ol type="1" id="4f1720e4-6f49-82e7-97fd-01630c19429e" class="numbered-list" start="4" dir="auto"><li><code>aws-ebs-csi-driver</code> add-on이 설치되어 있어야 함</li></ol><ol type="1" id="c59720e4-6f49-8292-a099-81a3922e5003" class="numbered-list" start="5" dir="auto"><li>add-on이 사용할 IAM 권한이 준비되어 있어야 함</li></ol><p id="b64720e4-6f49-83ac-86c3-81b0e6ce4545" class="" dir="auto">AWS는 EBS 볼륨을 Fargate Pod에 마운트할 수 없다고 명시하고 있음. 또한 EBS CSI 컨트롤러는 설치 가능하지만, 실제 노드 측 DaemonSet은 EC2 인스턴스에서만 동작한다고 설명함. </p><p id="25a720e4-6f49-824b-b96d-01257f0406fb" class="" dir="auto">먼저 노드 상태를 확인함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="850720e4-6f49-8221-aad8-81f09894f6d0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes -o wide</code></pre><hr id="418720e4-6f49-8219-b6e6-814bc9a6c97f" dir="auto"/><h2 id="78d720e4-6f49-82bb-819a-01b7daa67a22" class="" dir="auto">4. EBS CSI Driver 설치 여부 확인</h2><p id="4c6720e4-6f49-8350-9911-81896c5ff566" class="" dir="auto">현재 add-on 설치 상태를 확인함.</p><pre id="20e720e4-6f49-83ff-88ff-0132d64416bc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws eks list-addons --cluster-name my-eks-cluster --region ap-northeast-2</code></pre><p id="9ba720e4-6f49-8323-93e0-81972f2cb7a0" class="" dir="auto">출력에 <code>aws-ebs-csi-driver</code>가 보이면 add-on이 설치된 상태임. EKS add-on 이름은 <code>aws-ebs-csi-driver</code>임.</p><p id="92b720e4-6f49-83fe-a69c-0150e1d9fca8" class="" dir="auto">조금 더 자세히 확인하려면 다음 명령도 가능함.</p><pre id="c9d720e4-6f49-837e-ba93-013aebbb6c25" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws eks describe-addon --cluster-name my-eks-cluster --addon-name aws-ebs-csi-driver --region ap-northeast-2</code></pre><p id="b5b720e4-6f49-83c4-812c-8108cdb52468" class="" dir="auto">Kubernetes 쪽에서도 확인 가능함.</p><pre id="06e720e4-6f49-82e1-b5be-8188bc365ca1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -n kube-system</code></pre><p id="7a5720e4-6f49-826c-949f-81c206332e6a" class="" dir="auto"><code>ebs-csi-controller</code> 관련 Pod가 보이면 설치된 상태일 가능성이 높음.</p><hr id="7f2720e4-6f49-82e9-829f-016ca9d75b0d" dir="auto"/><h2 id="0a8720e4-6f49-824f-9b17-01346e2872e3" class="" dir="auto">5. IAM 역할 준비</h2><h2 id="934720e4-6f49-83ac-90d0-019771bc7e77" class="" dir="auto">EBS CSI Driver용 권한</h2><p id="ffa720e4-6f49-8237-89ca-819b9971546e" class="" dir="auto">EBS CSI driver는 AWS API를 호출해 EBS 볼륨을 생성하고 연결해야 하므로 IAM 권한이 필요함. AWS는 이 권한을 위해 <code><strong>AmazonEBSCSIDriverPolicy</strong></code> 관리형 정책을 사용하도록 안내함. 또한 권한 부여 방식으로는 <strong>EKS Pod Identity</strong> 사용을 권장하고, 준비되지 않았다면 <strong>IRSA</strong>를 사용할 수 있다고 설명함. (<a href="https://docs.aws.amazon.com/eks/latest/userguide/ebs-csi.html?utm_source=chatgpt.com">docs.aws.amazon.com</a>)</p><h3 id="c46720e4-6f49-82e6-b475-010e681e0621" class="" dir="auto">5-1. Pod Identity Agent 설치 여부 확인</h3><pre id="de5720e4-6f49-82e6-a623-01a61cd2eb97" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws eks list-addons --cluster-name my-eks-cluster --region ap-northeast-2</code></pre><p id="b71720e4-6f49-8352-8e96-013a85fefab3" class="" dir="auto">여기에 <code>eks-pod-identity-agent</code>가 없으면 먼저 설치함.</p><pre id="23a720e4-6f49-839b-bf9f-01aca33e1f59" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">eksctl create addon --cluster my-eks-cluster --name eks-pod-identity-agent --region ap-northeast-2</code></pre><p id="b92720e4-6f49-83ca-9de5-01463b53d03a" class="" dir="auto">AWS는 Pod Identity를 사용하려면 Pod Identity Agent add-on이 필요하다고 설명함. </p><h3 id="982720e4-6f49-824b-b799-01424b162d48" class="" dir="auto">5-2. EBS CSI Driver용 IAM 역할 생성</h3><p id="713720e4-6f49-822a-806f-019d7ff08f63" class="" dir="auto">먼저 trust policy 파일을 만듦.</p><p id="ebe720e4-6f49-82bd-a26b-81742cafca0e" class="" dir="auto">아래 내용을 <code>ebs-csi-trust-policy.json</code> 파일로 저장함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="7b7720e4-6f49-8212-8c44-01b075b1826c" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;: &quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;: &quot;AllowEksAuthToAssumeRoleForPodIdentity&quot;,
+      &quot;Effect&quot;: &quot;Allow&quot;,
+      &quot;Principal&quot;: {
+        &quot;Service&quot;: &quot;pods.eks.amazonaws.com&quot;
+      },
+      &quot;Action&quot;: [
+        &quot;sts:AssumeRole&quot;,
+        &quot;sts:TagSession&quot;
+      ]
+    }
+  ]
+}</code></pre><p id="2d1720e4-6f49-82e0-a330-810fb58b561b" class="" dir="auto">작성:</p><pre id="fa8720e4-6f49-83e1-b40e-811ce40b796f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">notepad ebs-csi-trust-policy.json</code></pre><p id="fbb720e4-6f49-827d-acc4-01bafc2ba2f9" class="" dir="auto">역할 생성:</p><pre id="787720e4-6f49-83d7-b51d-01a7fe12886f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws iam create-role --role-name AmazonEKS_EBS_CSI_DriverRole --assume-role-policy-document file://ebs-csi-trust-policy.json</code></pre><p id="2fd720e4-6f49-83c6-aadb-01445ac530ff" class="" dir="auto">정책 연결:</p><pre id="40a720e4-6f49-8283-8ab7-81d6a43d0168" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws iam attach-role-policy --role-name AmazonEKS_EBS_CSI_DriverRole --policy-arn arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy</code></pre><p id="4c2720e4-6f49-82ba-8d50-8175d05ac7cb" class="" dir="auto">EBS CSI driver에 <code>AmazonEBSCSIDriverPolicy</code>를 연결</p><h3 id="b7b720e4-6f49-829a-9c17-811c80fcacb8" class="" dir="auto">5-3. 역할 ARN 확인</h3><pre id="906720e4-6f49-82f9-b3ae-81b5d16f0318" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws iam get-role --role-name AmazonEKS_EBS_CSI_DriverRole</code></pre><p id="f17720e4-6f49-8327-b663-01e9bb37f828" class="" dir="auto">출력의 <code>Arn</code> 값을 복사해 둠.</p><p id="3bc720e4-6f49-8213-9f02-81772b076116" class="" dir="auto">예시:</p><pre id="da7720e4-6f49-82e3-9e86-81227701d5c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">arn:aws:iam::123456789012:role/AmazonEKS_EBS_CSI_DriverRole</code></pre><hr id="5fe720e4-6f49-828c-a155-016147c106cd" dir="auto"/><h2 id="ec1720e4-6f49-82a5-92d0-0125b87612c7" class="" dir="auto">6. EBS CSI Driver add-on 설치</h2><p id="160720e4-6f49-82b4-81d2-814d877b95d0" class="" dir="auto">이제 EBS CSI driver add-on을 설치함.</p><p id="14b720e4-6f49-82c3-83b7-816fc5ebccdd" class="" dir="auto">EKS add-on은 AWS CLI, 콘솔, <code>eksctl</code>로 만들 수 있음. AWS는 add-on 생성 방법으로 이 세 가지를 안내함. </p><h3 id="101720e4-6f49-8213-9470-817eac2c7a01" class="" dir="auto">6-1. AWS CLI로 설치</h3><pre id="72f720e4-6f49-82f3-b71b-016f9a52aae1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws eks create-addon --cluster-name my-eks-cluster --addon-name aws-ebs-csi-driver --pod-identity-associations serviceAccount=ebs-csi-controller-sa,roleArn=arn:aws:iam::123456789012:role/AmazonEKS_EBS_CSI_DriverRole --region ap-northeast-2</code></pre><p id="e26720e4-6f49-82b2-8f54-0189162726c9" class="" dir="auto">이 명령은 <code>aws-ebs-csi-driver</code> add-on을 만들고, <code>ebs-csi-controller-sa</code> 서비스어카운트에 IAM 역할을 연결함. AWS는 add-on 생성 시 Pod Identity association을 함께 지정할 수 있다고 설명함. </p><h3 id="faa720e4-6f49-8216-9aeb-017b4adc2c37" class="" dir="auto">6-2. eksctl로 설치</h3><h2 id="631720e4-6f49-83da-b7b5-8187efcee80a" class="" dir="auto">대체 방법</h2><p id="9fc720e4-6f49-839d-a17d-81762e82167c" class="" dir="auto"><code>eksctl</code>을 쓰고 싶다면 add-on 생성도 가능함.</p><pre id="0f9720e4-6f49-8363-8d4c-815918b6a7f8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">eksctl create addon --cluster my-eks-cluster --name aws-ebs-csi-driver --region ap-northeast-2</code></pre><p id="dfd720e4-6f49-83fd-8800-01c030f78b81" class="" dir="auto">다만 권한 연결까지 포함하려면 AWS CLI 방식이 더 분명함. <code>eksctl</code>은 EKS add-on 관리 기능을 제공함. </p><h3 id="a41720e4-6f49-82b1-920f-01d5fc0a5b71" class="" dir="auto">6-3. 설치 확인</h3><pre id="c06720e4-6f49-82e9-ae71-811809eebe26" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws eks list-addons --cluster-name my-eks-cluster --region ap-northeast-2
+aws eks describe-addon --cluster-name my-eks-cluster --addon-name aws-ebs-csi-driver --region ap-northeast-2
+kubectl get pods -n kube-system</code></pre><hr id="df7720e4-6f49-82fd-b239-01ee2e39c9ae" dir="auto"/><h2 id="73f720e4-6f49-83da-8f87-81f368aa42ad" class="" dir="auto">7. StorageClass 확인</h2><p id="05a720e4-6f49-8211-8050-81ebada6d663" class="" dir="auto">EBS CSI driver가 준비되었으면 StorageClass를 확인함.</p><pre id="33e720e4-6f49-830b-8365-014fe1750b9e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get storageclass</code></pre><p id="eb2720e4-6f49-83cd-8cee-01bfd6d58dd2" class="" dir="auto">예상 예시는 다음과 비슷함.</p><pre id="055720e4-6f49-83f7-b46d-812be93d618c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">NAME            PROVISIONER         RECLAIMPOLICY   VOLUMEBINDINGMODE      ALLOWVOLUMEEXPANSION   AGE
+ebs-sc          ebs.csi.aws.com     Delete          WaitForFirstConsumer   true                   10m</code></pre><p id="9f0720e4-6f49-82cf-ac35-010467f2df76" class="" dir="auto">핵심은 <code>PROVISIONER</code>가 <code>ebs.csi.aws.com</code>인지 확인하는 것임. AWS는 EBS CSI driver의 프로비저너 이름으로 <code>ebs.csi.aws.com</code>을 사용함.</p><hr id="d70720e4-6f49-83fd-ac4b-019a0f9bb6a3" dir="auto"/><h2 id="61b720e4-6f49-8291-a1f7-01777b66b69f" class="" dir="auto">8. StorageClass 생성</h2><h2 id="ebb720e4-6f49-827d-ab08-0167be0f0ea0" class="" dir="auto">없는 경우만 수행</h2><p id="a65720e4-6f49-82bd-81ed-01dc925fa971" class="" dir="auto">기본 StorageClass가 없다면 직접 생성함.</p><p id="de9720e4-6f49-8310-a097-01d5e1b5a79c" class="" dir="auto">아래 내용을 <code>ebs-sc.yaml</code> 파일로 저장함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="2db720e4-6f49-8201-b812-0106c4ce5adb" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: ebs-sc
+provisioner: ebs.csi.aws.com
+volumeBindingMode: WaitForFirstConsumer
+allowVolumeExpansion: true
+parameters:
+  type: gp3</code></pre><p id="135720e4-6f49-82b2-b669-815cc2a01bab" class="" dir="auto">작성:</p><pre id="941720e4-6f49-83cc-a77c-010357ca788c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">notepad ebs-sc.yaml</code></pre><p id="f88720e4-6f49-8399-a086-013068a8fb69" class="" dir="auto">적용:</p><pre id="54a720e4-6f49-8296-a5c7-0150ef663b5a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f ebs-sc.yaml</code></pre><h3 id="163720e4-6f49-83f7-a527-81fb266aabe6" class="" dir="auto">항목 설명</h3><ul id="af6720e4-6f49-829d-a31a-813af6960225" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provisioner: ebs.csi.aws.com</code><p id="e25720e4-6f49-8384-aed8-01f3c2f48716" class="" dir="auto">EBS CSI driver가 실제 볼륨을 생성함</p></li></ul><ul id="263720e4-6f49-8317-aa19-014661984073" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>volumeBindingMode: WaitForFirstConsumer</code><p id="4c3720e4-6f49-82f6-aa1a-81376be69147" class="" dir="auto">Pod가 실제로 스케줄될 때까지 볼륨 생성을 지연함</p></li></ul><ul id="1a3720e4-6f49-8342-8cb4-01480bddf196" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allowVolumeExpansion: true</code><p id="224720e4-6f49-83a2-88be-81f4fc6be07c" class="" dir="auto">나중에 볼륨 크기 확장을 허용함</p></li></ul><ul id="6e1720e4-6f49-8323-b093-81a18b7a50d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>type: gp3</code><p id="1a9720e4-6f49-82e2-8fb0-81f41219b5ae" class="" dir="auto">EBS 볼륨 유형을 <code>gp3</code>로 지정함</p></li></ul><p id="fb1720e4-6f49-8371-97c6-81fe93c0d0ef" class="" dir="auto">AWS는 EBS CSI driver와 EBS 볼륨 사용을 연결하고, 일반적인 EBS 스토리지 사용 시 add-on을 통해 driver를 설치하도록 안내함.</p><hr id="0b1720e4-6f49-8348-8f9b-011718a01bb4" dir="auto"/><h2 id="369720e4-6f49-82e9-b1eb-015ce50eeaac" class="" dir="auto">9. PVC 생성</h2><p id="420720e4-6f49-8231-b876-0131d607806a" class="" dir="auto">이제 EBS 볼륨을 요청하는 PVC를 생성함.</p><p id="6c4720e4-6f49-82ab-beb8-012f7a640cab" class="" dir="auto">아래 내용을 <code>ebs-pvc.yaml</code> 파일로 저장함.</p><pre id="da7720e4-6f49-827a-9149-816d120c01ae" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: ebs-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: ebs-sc
+  resources:
+    requests:
+      storage: 4Gi</code></pre><p id="b0f720e4-6f49-8394-8c18-8120ca6b1449" class="" dir="auto">적용:</p><pre id="154720e4-6f49-8259-9078-8111e788f53a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f ebs-pvc.yaml</code></pre><h3 id="62f720e4-6f49-8318-9375-016261383902" class="" dir="auto">항목 설명</h3><ul id="c08720e4-6f49-8274-b05e-0172f16a42e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ReadWriteOnce</code><p id="412720e4-6f49-82f8-bc1f-012ef5d4aaca" class="" dir="auto">일반적인 EBS 블록 스토리지 사용 방식에 맞는 접근 모드임</p></li></ul><ul id="bfe720e4-6f49-838c-9ab0-017027ea435a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>storageClassName: ebs-sc</code><p id="e45720e4-6f49-82c1-b40d-01a073af6984" class="" dir="auto">앞에서 만든 StorageClass 사용</p></li></ul><ul id="30b720e4-6f49-8386-a033-81a15eced9f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>storage: 4Gi</code><p id="2ab720e4-6f49-83e8-b943-819e1b041f63" class="" dir="auto">4Gi 크기 요청</p></li></ul><hr id="d0d720e4-6f49-82a3-b9a0-81cd9ddcaa86" dir="auto"/><h2 id="4b2720e4-6f49-825d-adae-81f7ef433f01" class="" dir="auto">10. PVC 상태 확인</h2><pre id="4f1720e4-6f49-8279-8e1e-01be52931aef" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pvc</code></pre><p id="836720e4-6f49-8201-bf3b-813a56f40dde" class="" dir="auto">처음에는 다음처럼 <code>Pending</code>일 수 있음.</p><pre id="e28720e4-6f49-83f6-8d01-81afda5cac9a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">NAME      STATUS    VOLUME   CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+ebs-pvc   Pending                                      ebs-sc         10s</code></pre><p id="962720e4-6f49-8343-a6b1-817ca6af3a92" class="" dir="auto">이 상태는 <code>WaitForFirstConsumer</code> 모드 때문에 이상한 것이 아닐 수 있음. Pod가 이 PVC를 실제로 사용하려 할 때 PV 생성이 이어질 수 있음. </p><hr id="9aa720e4-6f49-8246-91d9-0137acaa7e5e" dir="auto"/><h2 id="7a5720e4-6f49-825b-9f5c-819bf383739a" class="" dir="auto">11. PVC를 사용하는 Pod 생성</h2><p id="129720e4-6f49-832c-9351-8181baaf5d06" class="" dir="auto">아래 내용을 <code>app-ebs.yaml</code> 파일로 저장함.</p><pre id="840720e4-6f49-83bb-933d-0105a709662a" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: app-ebs
+spec:
+  containers:
+    - name: app
+      image: nginx
+      volumeMounts:
+        - mountPath: /usr/share/nginx/html
+          name: ebs-volume
+  volumes:
+    - name: ebs-volume
+      persistentVolumeClaim:
+        claimName: ebs-pvc</code></pre><p id="5f6720e4-6f49-82ad-87a0-81e76f6d1ce3" class="" dir="auto">적용:</p><pre id="de5720e4-6f49-8201-870f-81ccaadb2657" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f app-ebs.yaml</code></pre><hr id="5e6720e4-6f49-827a-8a40-810bd928c255" dir="auto"/><h2 id="4b4720e4-6f49-8230-a8fa-014ce1b24488" class="" dir="auto">12. Pod, PVC, PV 확인</h2><pre id="a5e720e4-6f49-83ba-aba6-81818bc80269" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods
+kubectl get pvc
+kubectl get pv</code></pre><p id="153720e4-6f49-8290-957f-0171b58f9639" class="" dir="auto">정상 흐름은 다음과 같음.</p><ul id="13d720e4-6f49-8209-ae3d-8118692ff64a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod → <code>Running</code></li></ul><ul id="6d7720e4-6f49-82a2-b896-81a15a0af5ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC → <code>Bound</code></li></ul><ul id="a3f720e4-6f49-83b3-80f2-019350f48888" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PV → 자동 생성됨</li></ul><p id="fcb720e4-6f49-8389-8e0b-8168132a32bb" class="" dir="auto">예상 예시:</p><pre id="9fc720e4-6f49-82a2-8ba7-8111d93b1b69" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">NAME      READY   STATUS    RESTARTS   AGE
+app-ebs   1/1     Running   0          1m</code></pre><pre id="19e720e4-6f49-8382-9a55-815a6a09c8c6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">NAME      STATUS   VOLUME                                     CAPACITY   ACCESS MODES   STORAGECLASS   AGE
+ebs-pvc   Bound    pvc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx   4Gi        RWO            ebs-sc         2m</code></pre><pre id="fe7720e4-6f49-8249-a3a8-819a75405127" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">NAME                                       CAPACITY   ACCESS MODES   RECLAIM POLICY   STATUS   CLAIM             STORAGECLASS   AGE
+pvc-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx   4Gi        RWO            Delete           Bound    default/ebs-pvc   ebs-sc         2m</code></pre><hr id="6d8720e4-6f49-82c5-9279-01b171169c8a" dir="auto"/><h2 id="918720e4-6f49-824a-a589-011df7e13f4e" class="" dir="auto">13. Pod 안에서 쓰기 확인</h2><pre id="8f5720e4-6f49-82a2-b6ce-813be306181e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it app-ebs -- sh</code></pre><p id="51e720e4-6f49-8282-be35-01cbe2dcf53a" class="" dir="auto">컨테이너 안에서 실행:</p><pre id="b29720e4-6f49-8374-9fb6-81c08a8dc309" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">echo EBS Volume Test &gt; /usr/share/nginx/html/index.html
+cat /usr/share/nginx/html/index.html</code></pre><p id="31c720e4-6f49-826e-ab77-01430b5b549c" class="" dir="auto">정상이라면 다음처럼 보임.</p><pre id="ab9720e4-6f49-8329-bc06-814592f780e5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EBS Volume Test</code></pre><p id="fdb720e4-6f49-83ea-bd3a-010b3370babb" class="" dir="auto">이 파일은 컨테이너 로컬 디스크가 아니라, PVC를 통해 연결된 EBS 볼륨 위에 기록되는 것임.</p><hr id="d58720e4-6f49-8227-a527-0193d766073c" dir="auto"/><h2 id="52c720e4-6f49-8277-9d25-01a444b8d3ec" class="" dir="auto">14. 온프레미스 Kubernetes와 비교 포인트</h2><h3 id="f8f720e4-6f49-83db-9678-018ada9db98f" class="" dir="auto">온프레미스 Kubernetes</h3><ul id="101720e4-6f49-8301-baa2-01fa4c3d4098" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CSI 드라이버와 스토리지 백엔드를 직접 구성해야 하는 경우가 많음</li></ul><ul id="e75720e4-6f49-8307-b36c-8171cf2c9337" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NFS, Ceph, SAN/NAS 설계를 직접 해야 할 수 있음</li></ul><h3 id="dd2720e4-6f49-83b6-8ad1-816663622fd3" class="" dir="auto">EKS</h3><ul id="97a720e4-6f49-8273-b04e-81074eb4b1b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EBS CSI driver add-on 설치</li></ul><ul id="d52720e4-6f49-82cf-a580-0113652f92b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 권한 연결</li></ul><ul id="01f720e4-6f49-835c-b06a-01deb8773a5f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PVC 생성 시 실제 EBS 볼륨 자동 생성 가능</li></ul><hr id="8cd720e4-6f49-83d5-a09f-81b26e737476" dir="auto"/><h2 id="166720e4-6f49-823b-885c-0114b5efc11b" class="" dir="auto">15. 실습 후 정리</h2><pre id="a5a720e4-6f49-8265-9c14-010e8861aaa0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete pod app-ebs
+kubectl delete pvc ebs-pvc
+kubectl delete -f ebs-sc.yaml</code></pre></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

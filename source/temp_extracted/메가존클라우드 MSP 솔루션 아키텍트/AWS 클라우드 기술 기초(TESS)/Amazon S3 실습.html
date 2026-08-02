@@ -1,0 +1,805 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Amazon S3 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="0ef720e4-6f49-830e-bd08-01e816b46355" class="page sans"><header><h1 class="page-title" dir="auto">Amazon S3 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h1 id="30f720e4-6f49-82cf-b587-811a995f7b13" class="" dir="auto">1. 실습 목표</h1><p id="75a720e4-6f49-8245-95f3-81992bad8906" class="" dir="auto">이 실습에서는 Amazon S3에서 제공하는 다양한 접근제어 방식을 실습한다.</p><p id="ba5720e4-6f49-82fe-a856-01d2ba6e9797" class="" dir="auto">실습을 통해 다음 내용을 이해한다.</p><ul id="7c9720e4-6f49-82ed-bb38-01b4daa730b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 Bucket 생성</li></ul><ul id="44b720e4-6f49-82e5-a73e-01d9781b53a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 객체 업로드</li></ul><ul id="c66720e4-6f49-825f-b55b-013366ee7800" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ACL 기반 접근제어</li></ul><ul id="bc2720e4-6f49-820c-adac-014b13cb846d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bucket Policy 기반 접근제어</li></ul><ul id="049720e4-6f49-8338-84a9-81b7b2c904ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Role 기반 접근제어</li></ul><ul id="e83720e4-6f49-8346-848a-01fa8b06a9ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pre-Signed URL 생성</li></ul><ul id="84d720e4-6f49-821f-921f-012d5f396735" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Static Website Hosting 구성</li></ul><hr id="c48720e4-6f49-8328-bcb5-8152f54a45bf" dir="auto"/><h1 id="06d720e4-6f49-83aa-9a90-8189e665cdbf" class="" dir="auto">2. S3 기본 구조 이해</h1><p id="37a720e4-6f49-82e0-9afc-818d51ff25ae" class="" dir="auto">S3는 <strong>Object Storage</strong> 서비스이다.</p><p id="2b1720e4-6f49-8327-bb23-01f0e6fbc887" class="" dir="auto">구조는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="d26720e4-6f49-82b5-acfc-8107630a0714" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3
+ └ Bucket
+     └ Object
+          ├ image.jpg
+          ├ log.txt
+          └ index.html</code></pre><p id="0ea720e4-6f49-82cb-bf34-81125969f967" class="" dir="auto">구성 요소</p><table id="dc9720e4-6f49-83d8-b2cb-01e070ae4a1e" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="98d720e4-6f49-836a-9297-013498a5859c" dir="ltr"><th id="dnYO" class="simple-table-header-color simple-table-header">구성요소</th><th id="?_`^" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="793720e4-6f49-8263-a7c8-01b8a990823f" dir="ltr"><td id="dnYO" class="">Bucket</td><td id="?_`^" class="">객체 저장 컨테이너</td></tr><tr id="0bb720e4-6f49-83a7-8557-8181202acbe1" dir="ltr"><td id="dnYO" class="">Object</td><td id="?_`^" class="">실제 데이터</td></tr><tr id="3e0720e4-6f49-82e4-9069-01e4cda26216" dir="ltr"><td id="dnYO" class="">Key</td><td id="?_`^" class="">객체 이름</td></tr><tr id="447720e4-6f49-824b-8b0d-01edc61a6e25" dir="ltr"><td id="dnYO" class="">Metadata</td><td id="?_`^" class="">객체 정보</td></tr></tbody></table><hr id="2c5720e4-6f49-834d-b3af-015a75bfd0f8" dir="auto"/><h1 id="7e0720e4-6f49-8288-a4c4-81c282dc8920" class="" dir="auto">3. S3 버킷 생성 실습</h1><h2 id="753720e4-6f49-835a-8253-010d99b2b168" class="" dir="auto">3.1 S3 콘솔 접속</h2><pre id="9bd720e4-6f49-82d2-84c7-01dd71890b7a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS Console → S3</code></pre><p id="44d720e4-6f49-8265-bbbe-812f46e5ecf0" class="" dir="auto">버킷 생성</p><pre id="dcd720e4-6f49-821b-b35c-811b10efefe2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">버킷 만들기</code></pre><p id="ee8720e4-6f49-8383-a33d-81a9980802a6" class="" dir="auto">버킷 설정</p><pre id="b0d720e4-6f49-8358-8697-81294bedf8b8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">버킷 이름
+이니셜-s3-bucket-{ACCOUNT_ID}</code></pre><p id="d76720e4-6f49-82b1-8f1a-014e36f396a7" class="" dir="auto">리전</p><pre id="c19720e4-6f49-8329-b286-01a60c1af5a2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-2</code></pre><p id="b46720e4-6f49-82b4-bf18-01a9d29801f7" class="" dir="auto">버킷 생성 클릭</p><hr id="7d8720e4-6f49-83fb-9b10-01d7da15afcb" dir="auto"/><h1 id="236720e4-6f49-8264-8a7f-819b488e4522" class="" dir="auto">4. 테스트 파일 업로드</h1><p id="ed4720e4-6f49-83c5-b41f-01cfa6dc6a1a" class="" dir="auto">버킷 선택</p><pre id="2b8720e4-6f49-8269-b5d8-010aa2d796f0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-s3-bucket-{ACCOUNT_ID}</code></pre><p id="416720e4-6f49-83c5-8fd3-018364a2637d" class="" dir="auto">업로드</p><pre id="87b720e4-6f49-828b-8e67-81b31a1b07ce" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">업로드
+ → 파일 추가</code></pre><p id="25b720e4-6f49-834c-9e12-01961fd9dcd8" class="" dir="auto">테스트 HTML 생성</p><pre id="a66720e4-6f49-8394-9287-81f6ba502bbd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">index.html</code></pre><p id="ad3720e4-6f49-83f1-b555-813d94b7afca" class="" dir="auto">내용</p><pre id="409720e4-6f49-82f9-b0ed-81b1323508a9" class="code code-wrap" data-notion-code-syntax="html"><code class="language-html" style="white-space:pre-wrap;word-break:break-all">&lt;html&gt;
+&lt;body&gt;
+&lt;h1&gt;S3 Access Control Test&lt;/h1&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre><p id="912720e4-6f49-83ea-9b1a-0155e50cb116" class="" dir="auto">업로드</p><hr id="75f720e4-6f49-8251-8309-819f37417347" dir="auto"/><h1 id="b21720e4-6f49-8356-929d-81cb2962334c" class="" dir="auto">5. 객체 접근 테스트</h1><p id="798720e4-6f49-82e4-b194-014903f7a259" class="" dir="auto">객체 클릭</p><pre id="428720e4-6f49-82b8-a32a-81bc506d0c6a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">index.html</code></pre><p id="5e9720e4-6f49-8230-8786-01b72433f5f8" class="" dir="auto">객체 URL 확인</p><pre id="7d1720e4-6f49-8386-b1e2-819256478e70" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">https://이니셜-s3-bucket-ACCOUNT_ID.s3.ap-northeast-2.amazonaws.com/index.html</code></pre><p id="6d1720e4-6f49-8351-9f61-813a23062cf3" class="" dir="auto">브라우저 접속</p><p id="1e0720e4-6f49-8206-818b-810f63455f75" class="" dir="auto">결과</p><pre id="600720e4-6f49-836c-acb1-0168188d4020" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AccessDenied</code></pre><p id="dd8720e4-6f49-83c7-b50f-815e347945e8" class="" dir="auto">S3 기본 권한은 <strong>Private</strong>이다.</p><hr id="3f6720e4-6f49-8231-9360-017f7b8e4a1d" dir="auto"/><h1 id="1f8720e4-6f49-8307-af0b-81816986ca26" class="" dir="auto">6. ACL 기반 접근제어 실습</h1><p id="593720e4-6f49-8250-a22b-01f249d1f954" class="" dir="auto">ACL은 객체 단위 접근제어 방식이다.</p><h2 id="e0b720e4-6f49-83ed-b7ea-014a88217a32" class="" dir="auto">6.1aws ACL 활성화</h2><p id="fbd720e4-6f49-8395-82bc-015d715df7f8" class="" dir="auto">버킷</p><pre id="2d4720e4-6f49-8213-8a58-81d8ece0f0f3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">권한 탭</code></pre><p id="73d720e4-6f49-8389-adaf-81dce0209822" class="" dir="auto">객체 소유권</p><pre id="736720e4-6f49-8293-a7cf-01effd597cbd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">편집</code></pre><p id="3cb720e4-6f49-8304-8c05-01cb459751e7" class="" dir="auto">설정</p><pre id="4df720e4-6f49-82e3-bc21-81fe078a56b7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ACL 활성화</code></pre><p id="e1b720e4-6f49-8300-9f9f-01cee69f484a" class="" dir="auto">저장</p><hr id="b51720e4-6f49-82a7-82ca-01184b2d245b" dir="auto"/><h2 id="065720e4-6f49-83a4-b44c-817eb5045749" class="" dir="auto">6.2 Public Access Block 비활성화</h2><p id="e08720e4-6f49-83a3-b26c-81235bbe730b" class="" dir="auto">권한 탭</p><pre id="430720e4-6f49-828a-8a17-01d88b7a01f7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">퍼블릭 액세스 차단</code></pre><p id="1d2720e4-6f49-82bb-ad5c-81ddb92ccd7d" class="" dir="auto">편집</p><p id="dd2720e4-6f49-8212-bc72-012754a077c5" class="" dir="auto">다음 체크 해제</p><pre id="f68720e4-6f49-83ab-a7a3-81287cd9e249" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">모든 퍼블릭 액세스 차단</code></pre><p id="ef6720e4-6f49-8358-a827-01bd2e996032" class="" dir="auto">저장</p><hr id="eff720e4-6f49-8233-9eeb-813e12e47d18" dir="auto"/><h2 id="106720e4-6f49-8287-bd01-81fc474d8668" class="" dir="auto">6.3 객체 Public 설정</h2><p id="502720e4-6f49-8242-8dbc-015c9c0f8d7e" class="" dir="auto">객체 선택</p><pre id="297720e4-6f49-8301-94ad-015a4ac94bac" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">작업
+ → ACL을 사용하여 퍼블릭으로 설정</code></pre><p id="9ff720e4-6f49-8269-ad9d-8101214d1e88" class="" dir="auto">설정</p><pre id="5fe720e4-6f49-83b9-8d1d-8141c4c03a86" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">퍼블릭 읽기 허용</code></pre><hr id="ddf720e4-6f49-82c9-9b1d-0115400cbdf8" dir="auto"/><h2 id="c7a720e4-6f49-8310-b378-813b5c8bcd08" class="" dir="auto">6.4 접근 테스트</h2><p id="4ac720e4-6f49-824a-8622-8175cd2e5c9a" class="" dir="auto">객체 URL 접속</p><pre id="4a1720e4-6f49-827f-8fc2-81e10ae69fc0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">브라우저</code></pre><p id="db3720e4-6f49-820c-81de-81ead6ea1aa4" class="" dir="auto">결과</p><pre id="d21720e4-6f49-8299-be7d-81a389a543a8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">파일 정상 출력</code></pre><hr id="d7b720e4-6f49-82b9-a26d-8139c3291586" dir="auto"/><h1 id="349720e4-6f49-8334-8ee2-81e5d3369a04" class="" dir="auto">7. Bucket Policy 기반 접근제어</h1><p id="4a2720e4-6f49-82cf-a4e7-81acf9e503ee" class="" dir="auto">ACL은 객체 단위 제어이다.</p><p id="28e720e4-6f49-82d9-aa38-01dfd5e24d74" class="" dir="auto">Bucket Policy는 <strong>버킷 단위 정책 제어 방식</strong>이다.</p><hr id="83d720e4-6f49-82c4-8227-8146a47caddf" dir="auto"/><h2 id="84a720e4-6f49-8288-8e0d-010c8e8161a5" class="" dir="auto">7.1 Bucket Policy 설정</h2><p id="f07720e4-6f49-8365-a1da-0137a62e7d4c" class="" dir="auto">S3 콘솔</p><pre id="55a720e4-6f49-8350-a14d-018f0257b92e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">버킷
+ → 권한
+ → 버킷 정책
+ → 편집</code></pre><p id="090720e4-6f49-8341-a13c-81f3ea973cbd" class="" dir="auto">정책 입력</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="5cf720e4-6f49-8355-8c6d-01ece6e30d3c" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+ &quot;Version&quot;:&quot;2012-10-17&quot;,
+ &quot;Statement&quot;:[
+  {
+   &quot;Effect&quot;:&quot;Allow&quot;,
+   &quot;Principal&quot;:&quot;*&quot;,
+   &quot;Action&quot;:&quot;s3:GetObject&quot;,
+   &quot;Resource&quot;:&quot;arn:aws:s3:::이니셜-s3-bucket-ACCOUNT_ID/*&quot;
+  }
+ ]
+}</code></pre><p id="38e720e4-6f49-82c3-887e-81aaf43ce787" class="" dir="auto">저장</p><hr id="3c0720e4-6f49-8375-8056-811b03505a71" dir="auto"/><h2 id="88f720e4-6f49-8315-8dca-015028dde0e9" class="" dir="auto">7.2 접근 테스트</h2><p id="89d720e4-6f49-82ba-b271-01c76b44a30c" class="" dir="auto">객체 URL 접속</p><pre id="ed3720e4-6f49-8385-825a-8149655c2bd5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">브라우저</code></pre><p id="3fc720e4-6f49-825c-beff-011e55e6db37" class="" dir="auto">결과</p><pre id="8f4720e4-6f49-83cc-8af9-01d289f65473" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">파일 정상 접근</code></pre><hr id="697720e4-6f49-82c1-bbbe-019e4d70172f" dir="auto"/><h1 id="d30720e4-6f49-82cf-9fe0-81a4ffc0c61e" class="" dir="auto">8. IAM Role 기반 접근제어</h1><p id="db9720e4-6f49-8215-9bfa-81971278bf11" class="" dir="auto">이번 실습은 <strong>EC2 → S3 접근 제어</strong>이다.</p><hr id="e45720e4-6f49-82d7-bfb3-018cbdb2a351" dir="auto"/><h1 id="e0b720e4-6f49-821c-87ef-0172aa603bdc" class="" dir="auto">8.1 IAM Role 생성</h1><p id="992720e4-6f49-8314-859a-01bd46668415" class="" dir="auto">AWS 콘솔</p><pre id="765720e4-6f49-839e-93a6-81fe33974bf7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">IAM → 역할 → 역할 생성</code></pre><p id="63d720e4-6f49-832e-a743-01396d286e19" class="" dir="auto">설정</p><pre id="984720e4-6f49-826f-b939-015fc8debd04" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">신뢰할 수 있는 엔터티
+AWS 서비스</code></pre><p id="60c720e4-6f49-82de-9abe-81cd569f1f66" class="" dir="auto">사용 사례</p><pre id="76f720e4-6f49-83c4-b329-81fe98844a9d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2</code></pre><p id="ba1720e4-6f49-83de-87a4-01f3f8df9e3a" class="" dir="auto">권한 추가</p><pre id="f46720e4-6f49-83bf-81c3-817d9d22dd51" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AmazonS3FullAccess</code></pre><p id="9ad720e4-6f49-82b5-9919-818defb5170f" class="" dir="auto">역할 이름</p><pre id="fe5720e4-6f49-8372-97df-815d8dfa358d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-role-s3</code></pre><p id="59a720e4-6f49-8394-8ba5-017663d794df" class="" dir="auto">생성</p><hr id="a3b720e4-6f49-83a4-88fb-01e6d2a86f98" dir="auto"/><h1 id="62d720e4-6f49-828f-96a7-012fe5bbe4f9" class="" dir="auto">8.2 EC2에 IAM Role 연결</h1><p id="a11720e4-6f49-82c1-ba48-01c5e81ee5bd" class="" dir="auto">EC2 콘솔</p><p id="7f7720e4-6f49-826f-88c6-81e6e05d54df" class="" dir="auto">인스턴스 선택</p><pre id="926720e4-6f49-8380-a65b-0187f0bb5435" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-ec2-web</code></pre><p id="86c720e4-6f49-8258-83d4-819c9eae2808" class="" dir="auto">작업</p><pre id="72b720e4-6f49-836c-83c2-819ba501fb0c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">보안
+ → IAM 역할 수정</code></pre><p id="163720e4-6f49-8204-8ec8-810230818e1a" class="" dir="auto">선택</p><pre id="561720e4-6f49-83aa-80a4-8142e63aa63c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-role-s3</code></pre><p id="eb3720e4-6f49-82e3-8c62-81e07b0d091e" class="" dir="auto">업데이트</p><hr id="9a1720e4-6f49-83cb-80ab-01c32893ce9f" dir="auto"/><h1 id="31b720e4-6f49-8258-a2c2-81ab7bab9561" class="" dir="auto">8.3 EC2에서 S3 접근 테스트</h1><p id="b02720e4-6f49-832f-8d57-81410e69a923" class="" dir="auto">EC2 접속</p><pre id="f11720e4-6f49-83aa-bfa6-81e9514042b3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh ec2-user@EC2-IP</code></pre><p id="b01720e4-6f49-83bf-8c62-81b9da0c40dc" class="" dir="auto">S3 버킷 조회</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="298720e4-6f49-83d9-8c22-018a6e65caa7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws s3 ls</code></pre><p id="13b720e4-6f49-8282-a23d-010378ccf153" class="" dir="auto">특정 버킷 조회</p><pre id="d68720e4-6f49-832e-82f0-01c3a0779a9e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws s3 ls s3://이니셜-s3-bucket-ACCOUNT_ID</code></pre><p id="7e2720e4-6f49-8236-855b-818bee70c5af" class="" dir="auto">결과</p><pre id="234720e4-6f49-83e8-8615-814cbbffaf00" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">index.html</code></pre><hr id="abf720e4-6f49-8273-9c5c-815db9f37be3" dir="auto"/><h1 id="629720e4-6f49-827b-a0e4-811163b95385" class="" dir="auto">9. Pre-Signed URL 실습</h1><p id="a43720e4-6f49-82ae-8878-8190a326bb7d" class="" dir="auto">Pre-Signed URL은 <strong>일시적으로 접근을 허용하는 URL</strong>이다.</p><hr id="b8a720e4-6f49-83a9-b87f-8105fb13bca2" dir="auto"/><h2 id="f59720e4-6f49-82f2-a83e-01283320d801" class="" dir="auto">9.1 Pre-Signed URL 생성</h2><p id="5e0720e4-6f49-8261-b695-815cfa4a5563" class="" dir="auto">CLI 실행</p><pre id="c81720e4-6f49-82ae-9984-013621a7e945" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws s3 presign s3://이니셜-s3-bucket-ACCOUNT_ID/index.html --expires-in 60</code></pre><p id="6ba720e4-6f49-82df-bb0a-0137c8c91417" class="" dir="auto">설명</p><pre id="04d720e4-6f49-83f1-a8ce-817e2fe0f5cb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">60초 동안 접근 가능</code></pre><hr id="9a4720e4-6f49-8351-9dfa-0101d135359a" dir="auto"/><h2 id="43f720e4-6f49-8388-b3de-81ec00eda63a" class="" dir="auto">9.2 접근 테스트</h2><p id="d69720e4-6f49-831d-a47a-81f9533bf206" class="" dir="auto">브라우저 접속</p><pre id="8ff720e4-6f49-8304-ba8d-01e96da637df" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">PreSigned URL</code></pre><p id="7d2720e4-6f49-821d-a26f-01693b4591bc" class="" dir="auto">결과</p><pre id="5e0720e4-6f49-8255-9217-015ae4af298f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">파일 접근 가능</code></pre><p id="97c720e4-6f49-82c2-9f35-8192dccf9ed3" class="" dir="auto">1분 후</p><pre id="c15720e4-6f49-831b-ac72-014b5d8d2837" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AccessDenied</code></pre><hr id="4fb720e4-6f49-83e6-8a72-0131be9907f7" dir="auto"/><h1 id="786720e4-6f49-823d-b6cd-8160b7f9f967" class="" dir="auto">10. Static Website Hosting 실습</h1><p id="9a1720e4-6f49-82da-9bd8-0164815609a2" class="" dir="auto">S3는 정적 웹사이트 서버로 사용할 수 있다.</p><hr id="e91720e4-6f49-8232-bb92-018c28ee104a" dir="auto"/><h1 id="50b720e4-6f49-8276-96ae-818b60768d57" class="" dir="auto">10.1 Static Website 활성화</h1><p id="65b720e4-6f49-83db-abe5-81d76c5b0a82" class="" dir="auto">버킷</p><pre id="619720e4-6f49-8248-a10c-81f24dcd78d5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">속성
+ → Static website hosting</code></pre><p id="3ae720e4-6f49-82b1-98ec-81aea40aadcf" class="" dir="auto">설정</p><pre id="52c720e4-6f49-8290-a02d-01141e737dbc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Enable</code></pre><p id="df6720e4-6f49-83f5-b2cb-810ed7eb34ab" class="" dir="auto">Index document</p><pre id="462720e4-6f49-839c-88f2-8159e7502e32" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">index.html</code></pre><hr id="89b720e4-6f49-83c2-9e64-81aed97a19be" dir="auto"/><h1 id="745720e4-6f49-830f-a25d-81fb7f08abe1" class="" dir="auto">10.2 Bucket Policy 설정</h1><p id="db9720e4-6f49-837a-b2e5-81663ff475c4" class="" dir="auto">정적 웹사이트 접근 허용 정책</p><pre id="4d8720e4-6f49-831c-af7e-8173ced4bd3c" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+ &quot;Version&quot;:&quot;2012-10-17&quot;,
+ &quot;Statement&quot;:[
+  {
+   &quot;Effect&quot;:&quot;Allow&quot;,
+   &quot;Principal&quot;:&quot;*&quot;,
+   &quot;Action&quot;:&quot;s3:GetObject&quot;,
+   &quot;Resource&quot;:&quot;arn:aws:s3:::이니셜-s3-bucket-ACCOUNT_ID/*&quot;
+  }
+ ]
+}</code></pre><hr id="138720e4-6f49-8285-b37a-018bf1d3f5a6" dir="auto"/><h1 id="b5c720e4-6f49-837c-b7ad-81177351152c" class="" dir="auto">10.3 웹사이트 접속</h1><p id="370720e4-6f49-8329-abad-01b59a6ea1e7" class="" dir="auto">웹사이트 URL</p><pre id="f05720e4-6f49-82f0-a19f-81caedd9595f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://이니셜-s3-bucket-ACCOUNT_ID.s3-website-ap-northeast-2.amazonaws.com</code></pre><p id="6bc720e4-6f49-821e-9d5c-01a6197f0824" class="" dir="auto">접속 결과</p><pre id="e3b720e4-6f49-833c-9821-81f59ecf8d45" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">S3 Access Control Test</code></pre><hr id="fcc720e4-6f49-826a-8e04-01e8ec428e3a" dir="auto"/><h1 id="b6a720e4-6f49-83cd-b314-01e91f6dc72d" class="" dir="auto">11. S3 접근제어 방식 비교</h1><table id="022720e4-6f49-8324-abec-81f71eae652a" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="fb9720e4-6f49-83f6-8534-015b31ad2648" dir="ltr"><th id="YVmU" class="simple-table-header-color simple-table-header">방식</th><th id="Po?y" class="simple-table-header-color simple-table-header">특징</th></tr></thead><tbody><tr id="569720e4-6f49-8368-969c-01e3f49371af" dir="ltr"><td id="YVmU" class="">ACL</td><td id="Po?y" class="">객체 단위 권한</td></tr><tr id="13a720e4-6f49-822b-95fb-8139501b33ff" dir="ltr"><td id="YVmU" class="">Bucket Policy</td><td id="Po?y" class="">버킷 정책 기반 제어</td></tr><tr id="fbd720e4-6f49-83f6-a9a4-016e14d4b9b9" dir="ltr"><td id="YVmU" class="">IAM Policy</td><td id="Po?y" class="">사용자 / 역할 기반</td></tr><tr id="afa720e4-6f49-83b7-ac03-0178a4941065" dir="ltr"><td id="YVmU" class="">PreSigned URL</td><td id="Po?y" class="">임시 접근</td></tr><tr id="f5d720e4-6f49-83fc-afde-81791811126d" dir="ltr"><td id="YVmU" class="">Static Website</td><td id="Po?y" class="">웹사이트 공개</td></tr></tbody></table><hr id="7ea720e4-6f49-8396-a7e1-0139ae81db09" dir="auto"/><h1 id="6bb720e4-6f49-83df-bc97-0197086bc279" class="" dir="auto">12. 실습 문제</h1><h3 id="3c5720e4-6f49-831a-bf3e-0169c7c04f1d" class="" dir="auto">문제 1</h3><p id="f26720e4-6f49-827c-9941-81b27134de5e" class="" dir="auto">다음 버킷 생성</p><pre id="eeb720e4-6f49-8334-9961-0188da572ce3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-s3-lab</code></pre><p id="eb5720e4-6f49-827d-b210-81246fe7f1be" class="" dir="auto">조건</p><ul id="22e720e4-6f49-83b6-b759-816915d6a31b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">index.html 업로드</li></ul><ul id="c2f720e4-6f49-8306-8fbf-01d81d901f93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ACL로 Public 접근 허용</li></ul><hr id="e04720e4-6f49-8320-9e22-0147b3edc847" dir="auto"/><h3 id="167720e4-6f49-821b-97aa-814077b8319d" class="" dir="auto">문제 2</h3><p id="b65720e4-6f49-828d-9030-01b800a30d82" class="" dir="auto">Bucket Policy로 다음 조건 구현</p><pre id="4c6720e4-6f49-8349-9516-016bdeaab3d7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">특정 객체만 Public 접근</code></pre><hr id="d1e720e4-6f49-83fe-8651-8132e4ef1953" dir="auto"/><h3 id="4a5720e4-6f49-8205-9e35-81a0d6450d0f" class="" dir="auto">문제 3</h3><p id="16f720e4-6f49-8216-b52f-0192f896470b" class="" dir="auto">PreSigned URL 생성</p><p id="6c3720e4-6f49-821c-a63e-81e7923384a4" class="" dir="auto">조건</p><pre id="2e6720e4-6f49-8203-b5d8-01b04ed18f05" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">30초 동안만 접근 가능</code></pre></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

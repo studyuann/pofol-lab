@@ -1,0 +1,887 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습과제: ec2_func 패키지를 이용한 EC2 운영 자동화 스크립트 작성</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="6c4720e4-6f49-8343-856c-81b27af27796" class="page sans"><header><h1 class="page-title" dir="auto">실습과제: <code>ec2_func</code> 패키지를 이용한 EC2 운영 자동화 스크립트 작성</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="b28720e4-6f49-8368-b3ad-015e41fb1b0d" class="" dir="auto">1. 과제 개요</h2><p id="47d720e4-6f49-82df-8e9a-818b4c8f7ca2" class="" dir="auto">이전 실습에서 작성한 <code>ec2_func</code> 패키지를 이용해서 EC2 인스턴스 운영 상태를 점검하는 최종 자동화 스크립트를 작성한다.</p><p id="592720e4-6f49-8341-ae89-0167731c630c" class="" dir="auto">이번 과제의 핵심은 <strong>패키지 재사용</strong>이다.</p><hr id="b2f720e4-6f49-830c-acca-819d28ef77ba" dir="auto"/><h2 id="dc8720e4-6f49-83c4-b471-81475f9b5cf1" class="" dir="auto">2. 과제 목표</h2><p id="d6e720e4-6f49-832e-b936-8178ed515e4e" class="" dir="auto">다음 기능을 수행하는 실행 스크립트를 작성해야 한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="0e1720e4-6f49-83c0-8fb8-01eadc6ed69f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 명령행 옵션으로 profile, region, state, output 값을 입력받는다.
+2. ec2_func 패키지에서 필요한 함수를 import한다.
+3. 입력받은 profile, region 기준으로 EC2 클라이언트를 생성한다.
+4. EC2 인스턴스 목록을 조회한다.
+5. 사용자가 지정한 상태값에 따라 인스턴스를 필터링한다.
+6. 필터링된 인스턴스 목록을 터미널에 표 형태로 출력한다.
+7. 필터링된 인스턴스 목록을 CSV 파일로 저장한다.
+8. 운영 점검 시작/종료 메시지를 출력한다.</code></pre><hr id="c3b720e4-6f49-8317-a843-016bd7997baf" dir="auto"/><h2 id="578720e4-6f49-8291-a9db-811414e89eb2" class="" dir="auto">3. 제공된 패키지</h2><p id="e40720e4-6f49-825f-a63a-81b04f8bfa7e" class="" dir="auto">이미 아래와 같은 <code>ec2_func</code> 패키지를 가지고 있다.</p><pre id="c2e720e4-6f49-830b-b561-013b72692517" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">실습 디렉터리/
+├── ec2_func.py
+└── ec2_daily_check.py</code></pre><p id="e01720e4-6f49-83ac-abfc-81232cbd6e2a" class="" dir="auto">새로 작성할 파일은 다음이다.</p><pre id="88a720e4-6f49-82a7-8496-81bf807be487" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ec2_daily_check.py</code></pre><hr id="6ab720e4-6f49-8295-9167-019b35480483" dir="auto"/><h2 id="171720e4-6f49-839f-8e71-01d9d0f8d605" class="" dir="auto">4. 사용할 수 있는 <code>ec2_func</code> 함수</h2><p id="a9d720e4-6f49-821b-8e9f-81b141b06271" class="" dir="auto"><code>ec2_func</code> 패키지에는 다음 함수들이 이미 작성되어 있다고 가정한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="f8d720e4-6f49-83ae-9260-81a34b072388" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">create_ec2_client(profile, region)
+get_instances(ec2)
+filter_instance_by_state(instances, state)
+extract_instance_info(reservations)
+print_instance_table(instances)
+save_to_csv(data, filename)</code></pre><p id="38e720e4-6f49-8372-b35a-01d432e66183" class="" dir="auto">각 함수의 역할은 다음과 같다.</p><table id="4fd720e4-6f49-83a4-83a7-01e77c260ce4" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="9a3720e4-6f49-828d-9e1f-0160765e9782" dir="ltr"><th id="Cvfb" class="simple-table-header-color simple-table-header">함수명</th><th id="cgM_" class="simple-table-header-color simple-table-header">역할</th></tr></thead><tbody><tr id="052720e4-6f49-82d5-920d-018e672f50ab" dir="ltr"><td id="Cvfb" class=""><code>create_ec2_client(profile, region)</code></td><td id="cgM_" class="">AWS 프로파일과 리전을 기준으로 EC2 클라이언트를 생성</td></tr><tr id="406720e4-6f49-826a-9b91-81771e43b809" dir="ltr"><td id="Cvfb" class=""><code>get_instances(ec2)</code></td><td id="cgM_" class="">EC2 인스턴스 목록을 조회하고 <code>Reservations</code> 반환</td></tr><tr id="02a720e4-6f49-83ad-9625-0167c66882bf" dir="ltr"><td id="Cvfb" class=""><code>filter_instance_by_state(instances, state)</code></td><td id="cgM_" class="">인스턴스 상태값 기준으로 필터링</td></tr><tr id="edb720e4-6f49-834c-80da-815995b97673" dir="ltr"><td id="Cvfb" class=""><code>extract_instance_info(reservations)</code></td><td id="cgM_" class="">EC2 인스턴스 정보 중 CSV 저장에 필요한 항목 추출</td></tr><tr id="f30720e4-6f49-8393-a139-813182aaa166" dir="ltr"><td id="Cvfb" class=""><code>print_instance_table(instances)</code></td><td id="cgM_" class="">EC2 인스턴스 목록을 터미널 표 형태로 출력</td></tr><tr id="abb720e4-6f49-825b-9bad-019853e85534" dir="ltr"><td id="Cvfb" class=""><code>save_to_csv(data, filename)</code></td><td id="cgM_" class="">추출된 인스턴스 정보를 CSV 파일로 저장</td></tr></tbody></table><hr id="3f7720e4-6f49-83c0-9582-81057a701d0f" dir="auto"/><h1 id="16a720e4-6f49-8227-9685-01eba0046e93" class="" dir="auto">5. 작성해야 할 내용</h1><h2 id="780720e4-6f49-820c-82de-0160255859d2" class="" dir="auto">5.1 실행 스크립트 파일 생성</h2><p id="631720e4-6f49-822e-b1d6-0198961a92c4" class="" dir="auto">아래 파일을 새로 만든다.</p><pre id="85e720e4-6f49-8224-a5e2-817fdcad9e40" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ec2_daily_check.py</code></pre><p id="c2f720e4-6f49-824a-b9fc-01a79dd10ae6" class="" dir="auto">이 파일은 <code>ec2_func</code> 패키지를 가져와서 사용하는 최종 실행 파일이다.</p><hr id="b9e720e4-6f49-8257-9ac5-8129ec90ba70" dir="auto"/><h2 id="bd7720e4-6f49-830f-b943-01e3386cc675" class="" dir="auto">5.2 <code>ec2_func</code> 패키지 import</h2><p id="8ca720e4-6f49-83a4-afe4-81f07befc232" class="" dir="auto"><code>ec2_func.py</code>가 같은 디렉터리에 있다면 다음과 같이 import한다.</p><pre id="4cc720e4-6f49-8232-a040-0107e6bb2553" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from ec2_func import (
+    create_ec2_client,
+    get_instances,
+    filter_instance_by_state,
+    extract_instance_info,
+    print_instance_table,
+    save_to_csv
+)</code></pre><p id="abc720e4-6f49-831c-bc02-01b86b28916a" class="" dir="auto">패키지 폴더 구조라면 구조에 맞게 import 경로를 사용한다.</p><p id="579720e4-6f49-8256-b784-014bdd691a82" class="" dir="auto">예시:</p><pre id="f6c720e4-6f49-833c-b805-81ad7cce43c9" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from ec2_func.ec2_ops import (
+    create_ec2_client,
+    get_instances,
+    filter_instance_by_state,
+    extract_instance_info,
+    print_instance_table,
+    save_to_csv
+)</code></pre><hr id="e7a720e4-6f49-8378-9281-01612456c691" dir="auto"/><h2 id="16e720e4-6f49-8341-b36f-0153d2105fbc" class="" dir="auto">5.3 명령행 옵션 구현</h2><p id="cfc720e4-6f49-8365-8690-81b51dd46464" class="" dir="auto"><code>argparse</code>를 이용해 다음 옵션을 입력받는다.</p><table id="d95720e4-6f49-82aa-b7bf-81aa6b0ac377" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="ebd720e4-6f49-8288-8a74-81564c450324" dir="ltr"><th id="}`Fs" class="simple-table-header-color simple-table-header">옵션</th><th id="v]Xu" class="simple-table-header-color simple-table-header">설명</th><th id="X_zy" class="simple-table-header-color simple-table-header">기본값</th></tr></thead><tbody><tr id="651720e4-6f49-82d4-8e66-01a0929c47a6" dir="ltr"><td id="}`Fs" class=""><code>--profile</code></td><td id="v]Xu" class="">사용할 AWS CLI 프로파일 이름</td><td id="X_zy" class=""><code>default</code></td></tr><tr id="f87720e4-6f49-820c-9411-015c7c05b939" dir="ltr"><td id="}`Fs" class=""><code>--region</code></td><td id="v]Xu" class="">조회할 AWS 리전</td><td id="X_zy" class=""><code>ap-northeast-2</code></td></tr><tr id="8a5720e4-6f49-8312-aa0d-013a129876ac" dir="ltr"><td id="}`Fs" class=""><code>--state</code></td><td id="v]Xu" class="">조회할 인스턴스 상태</td><td id="X_zy" class=""><code>all</code></td></tr><tr id="c8b720e4-6f49-8286-b79a-81d36657b269" dir="ltr"><td id="}`Fs" class=""><code>--output</code></td><td id="v]Xu" class="">CSV 저장 파일명</td><td id="X_zy" class=""><code>ec2-daily-report.csv</code></td></tr></tbody></table><ul id="e35720e4-6f49-83fe-98f7-8129668aad63" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-state</code> 옵션은 다음 값만 허용한다.</li></ul><pre id="5cb720e4-6f49-8224-a8a8-01306d66c06f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">all
+pending
+running
+stopping
+stopped
+shutting-down
+terminated</code></pre><hr id="d78720e4-6f49-82ab-a5b9-0124b4f9d02c" dir="auto"/><h2 id="afe720e4-6f49-83c9-aadf-8189195052c6" class="" dir="auto">5.4 운영 자동화 흐름 구현</h2><p id="307720e4-6f49-82e6-8b1c-81b6191fc74f" class="" dir="auto"><code>ec2_daily_check.py</code>는 아래 순서로 실행되어야 한다.</p><pre id="f1c720e4-6f49-8243-8f8a-81269a5686e0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. 명령행 옵션을 읽는다.
+2. 운영 점검 시작 메시지를 출력한다.
+3. EC2 클라이언트를 생성한다.
+4. EC2 인스턴스 목록을 조회한다.
+5. Reservations 구조를 인스턴스 리스트로 변환한다.
+6. 상태 조건에 따라 인스턴스를 필터링한다.
+7. 필터링된 인스턴스 목록을 터미널에 출력한다.
+8. 필터링된 인스턴스 목록을 CSV 저장용 데이터로 변환한다.
+9. CSV 파일로 저장한다.
+10. 운영 점검 종료 메시지를 출력한다.</code></pre><hr id="aeb720e4-6f49-83aa-8945-017fbcf71f8f" dir="auto"/><h1 id="744720e4-6f49-828a-8f92-81bcd75eb7f3" class="" dir="auto">6. 구현 조건</h1><h2 id="9d5720e4-6f49-83be-b7ee-8135547043e2" class="" dir="auto">6.1 패키지 함수 재작성 금지</h2><p id="18a720e4-6f49-8243-be9b-8132dc507e5e" class="" dir="auto">이번 과제에서는 아래 함수들을 새로 작성하지 않는다.</p><pre id="ec4720e4-6f49-8319-a507-01abce0b8261" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">create_ec2_client()
+get_instances()
+filter_instance_by_state()
+extract_instance_info()
+print_instance_table()
+save_to_csv()</code></pre><p id="71e720e4-6f49-8340-a868-8179910f6603" class="" dir="auto">위 함수들은 반드시 <code>ec2_func</code>에서 import해서 사용한다.</p><hr id="b23720e4-6f49-83ba-8cd9-81eb873d9a73" dir="auto"/><h2 id="abb720e4-6f49-83a2-ae97-81c9bf337bec" class="" dir="auto">6.2 최종 스크립트에서 작성해도 되는 함수</h2><p id="5ea720e4-6f49-837e-b39c-0140400eb689" class="" dir="auto"><code>ec2_daily_check.py</code>에서는 실행 흐름 제어를 위한 함수만 작성한다.</p><p id="a6f720e4-6f49-83ca-9638-8156e221a877" class="" dir="auto">예시:</p><pre id="f7b720e4-6f49-8284-857b-815d46f67c2c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">parse_args()
+flatten_reservations()
+main()</code></pre><p id="009720e4-6f49-83fb-ab66-81f6e0e724fb" class="" dir="auto"><code>flatten_reservations()</code>는 <code>get_instances()</code>의 반환값인 <code>Reservations</code> 구조를 단순 인스턴스 리스트로 변환하기 위해 작성해도 된다.</p><hr id="8f1720e4-6f49-8369-9bb5-0198eefef154" dir="auto"/><h2 id="d09720e4-6f49-83ca-a5e6-016ed678a1ed" class="" dir="auto">6.3 <code>Reservations</code> 구조 처리</h2><p id="2fb720e4-6f49-8318-9823-8169edb8aa07" class="" dir="auto"><code>get_instances(ec2)</code> 함수가 반환하는 값은 보통 다음 구조다.</p><pre id="2a9720e4-6f49-82ee-8021-01fd30b64e54" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">[
+    {
+        &quot;Instances&quot;: [
+            {
+                &quot;InstanceId&quot;: &quot;i-0123456789abcdef0&quot;,
+                &quot;InstanceType&quot;: &quot;t3.micro&quot;,
+                &quot;State&quot;: {
+                    &quot;Name&quot;: &quot;running&quot;
+                }
+            }
+        ]
+    }
+]</code></pre><p id="c0f720e4-6f49-82d0-8570-8128f6423282" class="" dir="auto">하지만 <code>filter_instance_by_state()</code>와 <code>print_instance_table()</code>은 일반적으로 인스턴스 딕셔너리 리스트를 대상으로 동작한다.</p><p id="fd9720e4-6f49-823d-a030-01135617d3aa" class="" dir="auto">따라서 최종 실행 스크립트에서는 다음처럼 구조를 변환해야 한다.</p><pre id="a66720e4-6f49-83cb-96f9-81f83e14034b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Reservations
+    ↓
+Instances 리스트</code></pre><p id="b2f720e4-6f49-82fb-995e-01beeaaacbb1" class="" dir="auto">예시:</p><pre id="936720e4-6f49-83ac-87e9-01e0281cebee" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">instances = flatten_reservations(reservations)</code></pre><hr id="d7b720e4-6f49-832e-92d6-81e3d6b89a8e" dir="auto"/><h1 id="2fe720e4-6f49-8201-8395-81e8d0a7e0be" class="" dir="auto">7. 실행 예시와 출력 예시</h1><h2 id="084720e4-6f49-822f-8c5d-8167f5963609" class="" dir="auto">예시 1. 전체 인스턴스 조회</h2><p id="0ee720e4-6f49-83ea-8efd-81cafa9b52f8" class="" dir="auto">실행 명령:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="885720e4-6f49-82b0-a051-81723db285b4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python ec2_daily_check.py \
+  --profile default \
+  --region ap-northeast-2 \
+  --state all \
+  --output ec2-daily-report.csv</code></pre><p id="ff5720e4-6f49-822c-85bc-81b79e391448" class="" dir="auto">출력 예시:</p><pre id="f0f720e4-6f49-825e-86ee-813bde4a46f9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[INFO] EC2 운영 점검을 시작함
+[INFO] profile=default, region=ap-northeast-2, state=all
+[INFO] EC2 인스턴스 조회 완료
+
+NAME                InstanceId            InstanceType State       PrivateIp       PublicIp
+----------------------------------------------------------------------------------------------------
+web-server          i-0123456789abcdef0    t3.micro     running     10.0.1.10       3.35.100.10
+db-server           i-0abcdef1234567890    t3.small     stopped     10.0.2.20       -
+batch-server        i-0a1b2c3d4e5f67890    t3.micro     running     10.0.3.15       -
+
+CSV 파일 저장 완료: ec2-daily-report.csv
+[INFO] EC2 운영 점검 종료</code></pre><hr id="6d7720e4-6f49-82b0-80de-01d834054380" dir="auto"/><h2 id="fb2720e4-6f49-834e-a050-81848eb0583b" class="" dir="auto">예시 2. 실행 중인 인스턴스만 조회</h2><p id="483720e4-6f49-83f3-8218-016add62f92f" class="" dir="auto">실행 명령:</p><pre id="cd1720e4-6f49-824d-8d15-01db5b9ac6e4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python ec2_daily_check.py \
+  --profile default \
+  --region ap-northeast-2 \
+  --state running \
+  --output running-report.csv</code></pre><p id="03d720e4-6f49-82c0-8de7-0124520b5227" class="" dir="auto">출력 예시:</p><pre id="fa8720e4-6f49-82c2-a8fa-010a1bd47718" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[INFO] EC2 운영 점검을 시작함
+[INFO] profile=default, region=ap-northeast-2, state=running
+[INFO] EC2 인스턴스 조회 완료
+
+NAME                InstanceId            InstanceType State       PrivateIp       PublicIp
+----------------------------------------------------------------------------------------------------
+web-server          i-0123456789abcdef0    t3.micro     running     10.0.1.10       3.35.100.10
+batch-server        i-0a1b2c3d4e5f67890    t3.micro     running     10.0.3.15       -
+
+CSV 파일 저장 완료: running-report.csv
+[INFO] EC2 운영 점검 종료</code></pre><hr id="b60720e4-6f49-8373-9053-015e7522b29e" dir="auto"/><h2 id="378720e4-6f49-82fb-9edc-8177e9140835" class="" dir="auto">예시 3. 중지된 인스턴스만 조회</h2><p id="a09720e4-6f49-83fe-897f-8176712fcaa7" class="" dir="auto">실행 명령:</p><pre id="0d9720e4-6f49-83d6-965d-81230f19bbb7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python ec2_daily_check.py \
+  --profile default \
+  --region ap-northeast-2 \
+  --state stopped \
+  --output stopped-report.csv</code></pre><p id="f59720e4-6f49-83f1-97d9-81bceb7ff5cd" class="" dir="auto">출력 예시:</p><pre id="0cc720e4-6f49-8254-bb5b-81c56e1d2231" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[INFO] EC2 운영 점검을 시작함
+[INFO] profile=default, region=ap-northeast-2, state=stopped
+[INFO] EC2 인스턴스 조회 완료
+
+NAME                InstanceId            InstanceType State       PrivateIp       PublicIp
+----------------------------------------------------------------------------------------------------
+db-server           i-0abcdef1234567890    t3.small     stopped     10.0.2.20       -
+
+CSV 파일 저장 완료: stopped-report.csv
+[INFO] EC2 운영 점검 종료</code></pre><hr id="b6d720e4-6f49-8379-898e-81b625f2c1f8" dir="auto"/><h2 id="7d7720e4-6f49-8290-9c7e-010a530b181c" class="" dir="auto">예시 4. 조회 결과가 없는 경우</h2><p id="a5a720e4-6f49-824c-8603-81b0da37cd03" class="" dir="auto">실행 명령:</p><pre id="cde720e4-6f49-834e-941f-0119584747d1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python ec2_daily_check.py \
+  --profile default \
+  --region ap-northeast-2 \
+  --state terminated \
+  --output terminated-report.csv</code></pre><p id="285720e4-6f49-83b2-9d4f-81ce019dc995" class="" dir="auto">출력 예시:</p><pre id="e09720e4-6f49-830f-8468-012b525a5cae" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[INFO] EC2 운영 점검을 시작함
+[INFO] profile=default, region=ap-northeast-2, state=terminated
+[INFO] EC2 인스턴스 조회 완료
+
+조회된 인스턴스가 없음
+저장할 데이터가 없음
+[INFO] EC2 운영 점검 종료</code></pre><hr id="be2720e4-6f49-83b4-b6c2-01685fa3c384" dir="auto"/><h2 id="e36720e4-6f49-8382-928c-81d0b3edd0ff" class="" dir="auto">예시 5. 잘못된 상태값 입력</h2><p id="62d720e4-6f49-82c2-b7ef-812ce392fb92" class="" dir="auto">실행 명령:</p><pre id="e42720e4-6f49-8277-9724-813c2689c8b6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">python ec2_daily_check.py --state start</code></pre><p id="620720e4-6f49-833b-b1ab-0105478c6dce" class="" dir="auto">출력 예시:</p><pre id="b1d720e4-6f49-8229-8943-81b5e6cc12b6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">usage: ec2_daily_check.py [-h] [--profile PROFILE] [--region REGION]
+                          [--state {all,pending,running,stopping,stopped,shutting-down,terminated}]
+                          [--output OUTPUT]
+
+ec2_daily_check.py: error: argument --state: invalid choice: &#x27;start&#x27;</code></pre><hr id="07c720e4-6f49-8237-bee2-0163b0e20472" dir="auto"/><h1 id="4a5720e4-6f49-83ae-8f26-810358cb753b" class="" dir="auto">8. 제출 </h1><p id="61e720e4-6f49-8311-b7dc-81493bcce4f8" class="" dir="auto">각 실행 예시 캡처후 업로드</p><hr id="f64720e4-6f49-82f8-bc11-017b7a92b4b6" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

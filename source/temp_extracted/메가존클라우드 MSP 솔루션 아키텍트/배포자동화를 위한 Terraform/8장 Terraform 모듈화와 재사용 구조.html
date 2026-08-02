@@ -1,0 +1,1124 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>8장. Terraform 모듈화와 재사용 구조</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="730720e4-6f49-823e-92cd-818d74e23724" class="page sans"><header><h1 class="page-title" dir="auto">8장. Terraform 모듈화와 재사용 구조</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="8ca720e4-6f49-834e-b3d1-01e0367c2a8a" class="" dir="auto">장 목표</h2><p id="e56720e4-6f49-824e-973b-819e4b6fe333" class="" dir="auto">이 장에서는 Terraform 코드의 재사용성과 유지보수성을 높이기 위한 핵심 개념인 <strong>모듈(module)</strong> 을 학습한다.</p><p id="4ce720e4-6f49-8220-8507-814b99cc403f" class="" dir="auto">앞 장까지는 하나의 디렉터리 안에서 <code>main.tf</code>, <code>variables.tf</code>, <code>outputs.tf</code>, <code>locals.tf</code> 같은 파일을 나눠 관리하는 수준까지 왔다. 이 정도만으로도 소규모 실습은 충분히 가능하다. 하지만 실제 인프라 코드가 커지면 파일 분리만으로는 한계가 생긴다.</p><p id="78d720e4-6f49-8261-a5f5-810e099d6587" class="" dir="auto">예를 들어 다음과 같은 상황을 생각해볼 수 있다.</p><ul id="dae720e4-6f49-83b2-aede-81f2d4cfb40d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 형태의 VPC 구성을 여러 프로젝트에서 반복 사용해야 함</li></ul><ul id="6ef720e4-6f49-824d-9379-01a48cbc6a63" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 방식의 EC2 구성을 여러 환경에서 재사용해야 함</li></ul><ul id="562720e4-6f49-8347-812e-8146dbfc6bb7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발, 스테이징, 운영 환경에서 구조는 같고 값만 달라야 함</li></ul><ul id="b5d720e4-6f49-8385-b1f7-01e41677f73d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">팀 내 공통 네트워크 모듈을 여러 서비스 팀이 함께 사용해야 함</li></ul><ul id="5fb720e4-6f49-83c0-aa0c-817e2dccfdd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"> <code>main.tf</code> 파일이 너무 커져서 읽기 어려워짐</li></ul><p id="784720e4-6f49-8342-8606-8152eb66a820" class="" dir="auto">이런 문제를 해결하기 위해 Terraform은 <strong>모듈화</strong> 기능을 제공한다.</p><ul id="cf6720e4-6f49-8251-b56d-8170842f5c69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈의 의미와 역할을 설명할 수 있음</li></ul><ul id="71a720e4-6f49-82b4-915d-819c7deeca41" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root module과 child module의 차이를 설명할 수 있음</li></ul><ul id="f72720e4-6f49-82ff-8911-0150b43ae480" class="bulleted-list" dir="auto"><li style="list-style-type:disc">module 블록의 기본 구조를 설명할 수 있음</li></ul><ul id="36c720e4-6f49-83a9-bdf0-01d5f40f6df4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈 입력값과 출력값의 흐름을 설명할 수 있음</li></ul><ul id="beb720e4-6f49-8300-80a3-01696ef21d7d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈 디렉터리 구조를 설계할 수 있음</li></ul><ul id="49e720e4-6f49-8303-8622-01813cb968dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈화 전후 코드 차이를 설명할 수 있음</li></ul><ul id="873720e4-6f49-82f3-80e6-81ff4b448da0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재사용 가능한 Terraform 코드 구조를 이해할 수 있음</li></ul><hr id="80a720e4-6f49-8244-be17-01ad8bbfee51" dir="auto"/><h2 id="7a1720e4-6f49-8394-997a-014e21bfbeca" class="" dir="auto">1. 왜 모듈화가 필요한가</h2><p id="8ba720e4-6f49-8386-9b88-011fb1c5b844" class="" dir="auto">Terraform 입문 단계에서는 보통 리소스를 직접 작성한다.</p><p id="74b720e4-6f49-8277-ab0a-0148c6165a80" class="" dir="auto">예를 들어 다음처럼 VPC를 만들고, Subnet을 만들고, Security Group과 EC2를 하나의 디렉터리 안에서 모두 관리할 수 있다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="9cb720e4-6f49-8309-ac45-818e22459065" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.10.0.0/16&quot;
+}
+
+resource &quot;aws_subnet&quot; &quot;public&quot; {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = &quot;10.10.1.0/24&quot;
+}
+
+resource &quot;aws_security_group&quot; &quot;web_sg&quot; {
+  vpc_id = aws_vpc.main.id
+}
+
+resource &quot;aws_instance&quot; &quot;web&quot; {
+  subnet_id              = aws_subnet.public.id
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+}</code></pre><p id="b6d720e4-6f49-82b4-894b-01c0022a0924" class="" dir="auto">소규모 실습에서는 이 방식이 단순하고 이해하기 쉽다.</p><p id="348720e4-6f49-8349-ad60-01a740b3b9af" class="" dir="auto">하지만 실제 환경에서는 다음 문제가 생긴다.</p><ul id="d4d720e4-6f49-82ac-9550-011e8aebbd00" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 코드를 복사해서 다른 프로젝트에 붙여넣게 됨</li></ul><ul id="6bc720e4-6f49-824b-84af-814f159b82e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">값만 다르고 구조는 같은 코드가 여러 군데 생김</li></ul><ul id="e22720e4-6f49-8299-8601-818f0853d616" class="bulleted-list" dir="auto"><li style="list-style-type:disc">수정이 필요할 때 모든 파일을 각각 수정해야 함</li></ul><ul id="dde720e4-6f49-83a8-bd03-81196cb28d70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 중복이 증가함</li></ul><ul id="c05720e4-6f49-8365-9965-8102a1af5bc0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 구조를 표준화하기 어려움</li></ul><p id="48a720e4-6f49-8234-ace0-815a07b2e7c1" class="" dir="auto">즉, 코드가 커질수록 중요한 것은 <strong>어떻게 같은 구조를 반복 사용하고 관리할 것인가</strong>가 된다.</p><p id="441720e4-6f49-839a-b573-81a1d976bb9f" class="" dir="auto">이때 모듈이 필요하다.</p><hr id="0c9720e4-6f49-8202-98b1-810228558fff" dir="auto"/><h2 id="3ce720e4-6f49-835b-85ba-8160bb848b13" class="" dir="auto">2. 모듈이란 무엇인가</h2><figure id="59d720e4-6f49-838c-b503-819cba4c7627" class="image" data-notion-image="8%EC%9E%A5%20Terraform%20%EB%AA%A8%EB%93%88%ED%99%94%EC%99%80%20%EC%9E%AC%EC%82%AC%EC%9A%A9%20%EA%B5%AC%EC%A1%B0/image.png" dir="ltr"><a href="8%EC%9E%A5%20Terraform%20%EB%AA%A8%EB%93%88%ED%99%94%EC%99%80%20%EC%9E%AC%EC%82%AC%EC%9A%A9%20%EA%B5%AC%EC%A1%B0/image.png"><img style="width:679.96875px" src="8%EC%9E%A5%20Terraform%20%EB%AA%A8%EB%93%88%ED%99%94%EC%99%80%20%EC%9E%AC%EC%82%AC%EC%9A%A9%20%EA%B5%AC%EC%A1%B0/image.png"/></a></figure><p id="513720e4-6f49-83ae-8612-012bbdd44d3d" class="" dir="auto">Terraform 모듈은 단일 디렉터리에 있는 Terraform 설정 파일들의 집합이다. 하나 이상의 <code>.tf</code>파일이 있는 단일 디렉터리로 구성된 간단한 설정이라도 모듈에 해당한다. 이러한 디렉터리에서 Terraform 명령을 직접 실행하면 해당 디렉터리가 <strong>루트 모듈</strong> 로 간주된다 . 따라서 모든 Terraform 설정은 모듈의 일부라고 할 수 있다.  </p><p id="1c4720e4-6f49-837e-90ad-81f7fd22df75" class="" dir="auto">예를 들어 다음을 하나의 모듈로 만들 수 있다.</p><ul id="f88720e4-6f49-836a-a96c-811f50b58705" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC + Subnet + Route Table + Internet Gateway</li></ul><ul id="84b720e4-6f49-8239-9c3d-01596ad2e9db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 + Security Group</li></ul><ul id="f60720e4-6f49-8374-8c2f-81c663ed83a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB + Target Group + Listener</li></ul><ul id="093720e4-6f49-8253-9327-01ef6ad191b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷 + 정책 + 버전 관리 설정</li></ul><p id="686720e4-6f49-83bd-bf8b-814aa6c9aabf" class="" dir="auto">즉, Terraform에서 모듈은 <strong>관련된 리소스들을 하나의 묶음으로 캡슐화한 재사용 가능한 구성 단위</strong>다.</p><hr id="435720e4-6f49-827a-a625-814e23134992" dir="auto"/><h2 id="7de720e4-6f49-8302-80b5-0139449d521a" class="" dir="auto">3. root module과 child module</h2><h2 id="805720e4-6f49-830e-bcc9-81e7d584c22c" class="" dir="auto">3.1 root module</h2><p id="bc8720e4-6f49-8339-b9b6-018656095810" class="" dir="auto">사용자가 현재 실행하는 Terraform 디렉터리 자체를 root module이라고 한다.</p><p id="e3e720e4-6f49-830f-b2ba-016b3effddb1" class="" dir="auto">예를 들어 현재 디렉터리에 다음 파일들이 있다고 하자.</p><pre id="1a4720e4-6f49-838b-8680-01a12a8c8164" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">project-a/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+└── terraform.tfvars</code></pre><p id="730720e4-6f49-8373-8c5a-0110c38cebb3" class="" dir="auto">여기서 <code>terraform init</code>, <code>terraform plan</code>, <code>terraform apply</code>를 실행하는 이 디렉터리 전체가 root module이다.</p><p id="d8e720e4-6f49-8273-89a8-8136104ea918" class="" dir="auto">즉, Terraform CLI가 직접 실행되는 대상이 root module이다.</p><hr id="5d2720e4-6f49-83b0-8bf4-8134e3293e46" dir="auto"/><h2 id="bb2720e4-6f49-8205-9a9a-0199f6df26d3" class="" dir="auto">3.2 child module</h2><p id="6ce720e4-6f49-83f2-b367-81c70e56d927" class="" dir="auto">root module 안에서 <code>module</code> 블록을 사용해 불러오는 별도 디렉터리의 Terraform 구성을 child module이라고 한다.</p><p id="09a720e4-6f49-8268-9785-8133daa8735c" class="" dir="auto">예를 들어 다음 구조가 있다고 하자.</p><pre id="2c7720e4-6f49-83ee-850c-0115d3a5ce81" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">project-a/
+├── main.tf
+└── modules/
+    └── network/
+        ├── main.tf
+        ├── variables.tf
+        └── outputs.tf</code></pre><p id="ce9720e4-6f49-8284-82c8-0122cdcf1d8f" class="" dir="auto">이때 <code>modules/network</code> 디렉터리는 child module이 된다.  modules 디렉토리는 고정된 디렉토리명이 아니지만 모듈을 모아둔 디렉토리임을 명시하기 위해 일반적으로 사용됨.</p><p id="64a720e4-6f49-82da-b668-816aad74dde6" class="" dir="auto">즉, root module이 child module을 호출해서 사용하는 구조다.</p><hr id="ec5720e4-6f49-8231-a833-01626921ab30" dir="auto"/><h2 id="ceb720e4-6f49-8289-9fdd-810f7dba0592" class="" dir="auto">3.3 쉽게 비유하면</h2><ul id="f8c720e4-6f49-82a9-8578-01ec6b25da3c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root module → 메인 작업 공간</li></ul><ul id="118720e4-6f49-8329-9dc8-81c35bd14e4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">child module → 재사용 가능한 부품</li></ul><p id="252720e4-6f49-82d7-985b-017dadf11fad" class="" dir="auto">즉, root module은 전체 인프라를 만드는 역할을 하고,</p><p id="b88720e4-6f49-839f-b192-818a8a012f2d" class="" dir="auto">child module은 재사용 가능한 부품을 제공한다.</p><hr id="57d720e4-6f49-82df-8342-81fd304a53a6" dir="auto"/><h2 id="4a3720e4-6f49-831f-949c-015b8a517beb" class="" dir="auto">4. module 블록 기본 구조</h2><p id="a16720e4-6f49-8246-a7c5-01b9109f97d7" class="" dir="auto">Terraform에서 모듈을 사용할 때는 <code>module</code> 블록을 쓴다.</p><p id="809720e4-6f49-829e-a801-015cbf4d0e00" class="" dir="auto">기본 구조는 다음과 같다.</p><pre id="ae6720e4-6f49-829c-96d1-81791a19ad5c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">module &quot;이름&quot; {
+  source = &quot;모듈경로&quot;
+
+  입력변수1 = 값
+  입력변수2 = 값
+}</code></pre><p id="1dc720e4-6f49-82dd-b159-01d3a105f070" class="" dir="auto">예시:</p><pre id="faf720e4-6f49-8253-a7f5-8163adfc92fe" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">module &quot;network&quot; {
+  source = &quot;./modules/network&quot;
+
+  vpc_cidr           = &quot;10.10.0.0/16&quot;
+  public_subnet_cidr = &quot;10.10.1.0/24&quot;
+  availability_zone  = &quot;ap-northeast-2a&quot;
+}</code></pre><p id="efd720e4-6f49-8328-98c6-018454580021" class="" dir="auto">이 코드는 <code>./modules/network</code> 디렉터리에 있는 Terraform 구성을 불러와 사용한다는 뜻이다.</p><hr id="15f720e4-6f49-83f1-8f64-81d98e277d3f" dir="auto"/><h2 id="02c720e4-6f49-8330-a158-81dd2ecbf106" class="" dir="auto">5. source의 의미</h2><p id="a35720e4-6f49-82ee-855a-81e3d089b65e" class="" dir="auto"><code>source</code>는 모듈 코드를 어디서 가져올지 지정하는 값이다.</p><p id="b6d720e4-6f49-8300-a6d7-81e5c6378257" class="" dir="auto">가장 기본적인 예시는 로컬 경로다.</p><pre id="174720e4-6f49-8331-85a5-01505909e0aa" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">source = &quot;./modules/network&quot;</code></pre><p id="ccb720e4-6f49-8398-bda4-81fcf60ff5c5" class="" dir="auto">즉, 현재 root module 기준으로 <code>modules/network</code> 디렉터리에 있는 모듈을 사용하겠다는 뜻이다.</p><p id="377720e4-6f49-83bd-81d0-81f7ee253bc6" class="" dir="auto">실무에서는 로컬 경로 외에도 다음 같은 source를 사용할 수 있다.</p><ul id="ea5720e4-6f49-8222-b0e5-01615ba5f1fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다른 Git 저장소</li></ul><ul id="f82720e4-6f49-82e8-88d8-818171669928" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform Registry</li></ul><ul id="c9b720e4-6f49-8378-927b-013751c5606b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사내 표준 모듈 저장소</li></ul><p id="ee8720e4-6f49-820f-9d8f-0196355b13b7" class="" dir="auto">하지만 입문 단계에서는 로컬 경로 기반 child module부터 이해하는 것이 가장 좋다.</p><hr id="9d0720e4-6f49-8356-a61b-0151428347e3" dir="auto"/><h2 id="7bd720e4-6f49-837a-8ead-019488bd20d7" class="" dir="auto">6. 모듈 입력값과 출력값</h2><p id="9b3720e4-6f49-8256-aa86-819e90c63973" class="" dir="auto">모듈은 함수처럼 생각하면 이해가 빠르다.</p><ul id="f0e720e4-6f49-83c7-89d4-01d78836702a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">variable → 모듈 입력값</li></ul><ul id="12c720e4-6f49-82d4-ad5f-8100aaf6e779" class="bulleted-list" dir="auto"><li style="list-style-type:disc">output → 모듈 출력값</li></ul><p id="8fb720e4-6f49-83cf-9b76-81640f583285" class="" dir="auto">즉, root module은 child module에 값을 넘기고,</p><p id="b85720e4-6f49-833f-8f49-818ca3e51036" class="" dir="auto">child module은 필요한 값을 다시 root module에 반환할 수 있다.</p><hr id="123720e4-6f49-8319-9dc3-815ae735c9a3" dir="auto"/><h2 id="998720e4-6f49-8284-9462-81ab8e5c9e7f" class="" dir="auto">6.1 입력값</h2><p id="52b720e4-6f49-83d2-b022-01a9a044ebc4" class="" dir="auto">child module 안에 다음처럼 변수가 선언되어 있다고 하자.</p><pre id="1d9720e4-6f49-8234-b3ea-01edb6a064dd" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;vpc_cidr&quot; {
+  type = string
+}</code></pre><p id="30d720e4-6f49-8381-875d-814b0e809838" class="" dir="auto">그러면 root module에서는 module 블록에서 이 값을 넘길 수 있다.</p><pre id="88f720e4-6f49-8347-b349-810d704296d9" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">module &quot;network&quot; {
+  source   = &quot;./modules/network&quot;
+  vpc_cidr = &quot;10.10.0.0/16&quot;
+}</code></pre><p id="e77720e4-6f49-83ce-b3b9-01e955d0a379" class="" dir="auto">즉, module 블록 안의 인자는 child module의 variable에 대응된다.</p><hr id="e92720e4-6f49-82cf-8047-814066d502cc" dir="auto"/><h2 id="7ed720e4-6f49-827b-8b0e-81f98449c0de" class="" dir="auto">6.2 출력값</h2><p id="6e9720e4-6f49-83b2-a84d-81f675bfe23e" class="" dir="auto">child module 안에 다음 output이 있다고 하자.</p><pre id="102720e4-6f49-837c-a19c-8113c24f9c58" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;vpc_id&quot; {
+  value = aws_vpc.main.id
+}</code></pre><p id="b5a720e4-6f49-8307-b6f5-81559c0828f9" class="" dir="auto">그러면 root module에서는 이 값을 다음처럼 참조할 수 있다.</p><pre id="f04720e4-6f49-838f-81a3-8125d251c170" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">module.network.vpc_id</code></pre><p id="3c5720e4-6f49-824e-ab4a-019a554885eb" class="" dir="auto">즉, module 출력값은 <code>module.모듈이름.출력명</code> 형식으로 접근한다.</p><hr id="bb0720e4-6f49-83c1-926a-81f45ec89b5e" dir="auto"/><h2 id="8fa720e4-6f49-83e9-9482-01429955e7ed" class="" dir="auto">6.3 흐름 요약</h2><p id="dbf720e4-6f49-8205-bcf2-817ba6e2c07c" class="" dir="auto">모듈의 데이터 흐름은 다음과 같다.</p><ol type="1" id="8a8720e4-6f49-82d2-9499-8106c0b5ad8a" class="numbered-list" start="1" dir="auto"><li>root module이 child module에 입력값 전달</li></ol><ol type="1" id="077720e4-6f49-8264-a2de-813ab0f3c301" class="numbered-list" start="2" dir="auto"><li>child module 내부에서 리소스 생성</li></ol><ol type="1" id="287720e4-6f49-8293-8f7d-8121d774d766" class="numbered-list" start="3" dir="auto"><li>child module이 output으로 결과 노출</li></ol><ol type="1" id="943720e4-6f49-83df-beeb-81236c351216" class="numbered-list" start="4" dir="auto"><li>root module이 그 값을 참조</li></ol><p id="1b2720e4-6f49-83ce-af48-015da997fca7" class="" dir="auto">이 흐름을 이해하면 모듈은 훨씬 단순하게 보인다.</p><hr id="e08720e4-6f49-8203-b88b-0144e8bcb43b" dir="auto"/><h2 id="1b7720e4-6f49-821a-a0ca-010093f2b6b9" class="" dir="auto">7. 모듈 디렉터리 구조</h2><p id="fdf720e4-6f49-82fc-aab8-81bbaaa411ea" class="" dir="auto">입문 단계에서 가장 많이 사용하는 child module 구조는 다음과 같다.</p><pre id="3b9720e4-6f49-8233-a799-01b67b87cfe2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">modules/
+└── network/
+    ├── main.tf
+    ├── variables.tf
+    └── outputs.tf</code></pre><p id="6b4720e4-6f49-8270-83c4-81eca3b587e0" class="" dir="auto">각 파일의 역할은 root module과 동일하다.</p><h3 id="a11720e4-6f49-8244-a63c-01221cc02b06" class="" dir="auto"><code>main.tf</code></h3><p id="b8a720e4-6f49-830c-9bb9-01bcf001d02b" class="" dir="auto">실제 리소스 정의</p><h3 id="c0c720e4-6f49-82ec-9ca9-012c90feadbb" class="" dir="auto"><code>variables.tf</code></h3><p id="3b0720e4-6f49-83d2-9081-81cae5584c5e" class="" dir="auto">모듈 입력 변수 선언</p><h3 id="9e3720e4-6f49-82b1-a8f2-81a8ba0b88dd" class="" dir="auto"><code>outputs.tf</code></h3><p id="001720e4-6f49-8322-bdd1-8145bf92a25d" class="" dir="auto">모듈이 밖으로 노출할 값 정의</p><p id="b3b720e4-6f49-8392-9cd2-011109f028f3" class="" dir="auto">즉, child module도 하나의 독립된 Terraform 구성처럼 동작한다.</p><hr id="ef8720e4-6f49-82df-917e-0184a4f7cc00" dir="auto"/><h2 id="195720e4-6f49-82f9-9588-018db96bace7" class="" dir="auto">8. 모듈화 전후 비교</h2><h2 id="5f6720e4-6f49-838d-985f-81be8e9e81af" class="" dir="auto">8.1 모듈화 전</h2><p id="d54720e4-6f49-8331-ae65-817d79b08953" class="" dir="auto">모든 코드를 root module에 직접 작성하는 구조다.</p><pre id="172720e4-6f49-8280-a898-0119cf944be3" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = &quot;10.10.0.0/16&quot;
+}
+
+resource &quot;aws_subnet&quot; &quot;public&quot; {
+  vpc_id     = aws_vpc.main.id
+  cidr_block = &quot;10.10.1.0/24&quot;
+}
+
+resource &quot;aws_internet_gateway&quot; &quot;igw&quot; {
+  vpc_id = aws_vpc.main.id
+}</code></pre><p id="211720e4-6f49-83ce-9cbe-81061faa1131" class="" dir="auto">이 구조는 작을 때는 괜찮지만,</p><p id="6e1720e4-6f49-8369-b870-018d889f22cf" class="" dir="auto">리소스가 많아질수록 코드가 길어지고 역할 구분이 어려워진다.</p><hr id="a7c720e4-6f49-82e4-8d56-0166c182d3d3" dir="auto"/><h2 id="0d3720e4-6f49-82f1-bd7c-0148b2f63ea6" class="" dir="auto">8.2 모듈화 후</h2><p id="d79720e4-6f49-8341-9e28-81177f59bbe6" class="" dir="auto">네트워크 구성을 child module로 분리한 구조다.</p><h3 id="686720e4-6f49-8342-ab89-811265adc082" class="" dir="auto">root module</h3><pre id="38e720e4-6f49-8265-af54-01d939d49e2b" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">module &quot;network&quot; {
+  source = &quot;./modules/network&quot;
+
+  vpc_cidr           = &quot;10.10.0.0/16&quot;
+  public_subnet_cidr = &quot;10.10.1.0/24&quot;
+  availability_zone  = &quot;ap-northeast-2a&quot;
+}</code></pre><h3 id="c88720e4-6f49-8314-84b2-815bdc5251ce" class="" dir="auto">child module 내부</h3><p id="a77720e4-6f49-83c4-b9fe-81917774f8dc" class="" dir="auto">VPC, Subnet, IGW, Route Table 등을 모두 포함</p><p id="191720e4-6f49-8304-9681-0112be3d3117" class="" dir="auto">이렇게 되면 root module은 전체 인프라 조립에 집중하고,</p><p id="ff3720e4-6f49-8381-bb7a-01c1066db353" class="" dir="auto">세부 구현은 child module이 담당하게 된다.</p><p id="d04720e4-6f49-8286-8bfe-815b2566b45d" class="" dir="auto">즉, 모듈화는 코드를 줄이는 것보다 <strong>책임을 분리하는 것</strong>에 더 가깝다.</p><hr id="5fc720e4-6f49-8209-a6e5-8141168877ab" dir="auto"/><h2 id="d2a720e4-6f49-828c-9991-01a7fa518cac" class="" dir="auto">9. 모듈의 장점</h2><p id="df9720e4-6f49-8367-ba01-81cca3155a25" class="" dir="auto">모듈화는 다음 장점을 가진다.</p><h3 id="a00720e4-6f49-8251-8aaf-0160979cbe6d" class="" dir="auto">9.1 재사용성</h3><p id="0da720e4-6f49-8289-a083-8123d30cb2b3" class="" dir="auto">같은 네트워크 모듈을 여러 프로젝트에서 재사용할 수 있다.</p><p id="800720e4-6f49-82f9-ad75-81b3f223e410" class="" dir="auto">예:</p><ul id="06a720e4-6f49-8264-8e78-810d51d59e27" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로젝트 A에서 사용</li></ul><ul id="d86720e4-6f49-83af-a455-01d9f1ab95c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로젝트 B에서 사용</li></ul><ul id="817720e4-6f49-839b-95b5-01f43b0c9a9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경만 다르게 적용</li></ul><hr id="50a720e4-6f49-83a0-acf0-8140c836e3ce" dir="auto"/><h3 id="0a6720e4-6f49-8361-af5c-018d4ea0eee6" class="" dir="auto">9.2 일관성</h3><p id="be2720e4-6f49-8213-957b-012f23e9d652" class="" dir="auto">모든 팀이 같은 표준 모듈을 사용하면 구조가 일관된다.</p><p id="801720e4-6f49-82e7-a6d9-01ad542b34ac" class="" dir="auto">예:</p><ul id="a0b720e4-6f49-837e-b3ed-019f9741112a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC naming 규칙 통일</li></ul><ul id="739720e4-6f49-8386-98c0-8115f3b9dfb7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 태그 정책 적용</li></ul><ul id="ac7720e4-6f49-83f9-9c94-8160216d5575" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통 Security Group 패턴 재사용</li></ul><hr id="c37720e4-6f49-82ee-a891-814e7a10fd6c" dir="auto"/><h3 id="f6a720e4-6f49-82c7-ad3d-01f9bf177626" class="" dir="auto">9.3 유지보수성</h3><p id="682720e4-6f49-83e2-9a7b-013fc96d1242" class="" dir="auto">네트워크 정책이 바뀌면 모듈 수정만으로 여러 구성에 반영할 수 있다.</p><p id="598720e4-6f49-8329-be59-01e911581f8b" class="" dir="auto">물론 적용 범위와 버전 관리는 신중해야 하지만, 기본적으로 중복 수정이 줄어든다.</p><hr id="28b720e4-6f49-83ee-9c51-01d1ab59febf" dir="auto"/><h3 id="b57720e4-6f49-82bd-9fc7-81d272e33dc4" class="" dir="auto">9.4 가독성</h3><p id="2e8720e4-6f49-83c3-97a9-01fd9b3a2927" class="" dir="auto">root module에서는 전체 아키텍처 흐름이 더 잘 보인다.</p><p id="b18720e4-6f49-8377-b07e-8162722df153" class="" dir="auto">예:</p><pre id="f1c720e4-6f49-8295-bfb2-8150d6e02206" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">module &quot;network&quot; { ... }
+module &quot;compute&quot; { ... }
+module &quot;database&quot; { ... }</code></pre><p id="846720e4-6f49-82d8-adab-0108bc812ac1" class="" dir="auto">이렇게 되면 “무엇을 조립하는가”가 명확해진다.</p><hr id="a76720e4-6f49-8281-8d97-01866462e963" dir="auto"/><h2 id="e42720e4-6f49-830b-b8fe-0154941c5a1b" class="" dir="auto">10. 모듈 입력값 설계</h2><p id="559720e4-6f49-8336-adb4-81120df64bd1" class="" dir="auto">입력값 설계를 잘못하면 오히려 사용하기 어려운 모듈이 된다.</p><p id="715720e4-6f49-833c-be00-815a60b433c3" class="" dir="auto">좋은 입력값 설계의 기본은 다음과 같다.</p><ul id="e12720e4-6f49-8386-af2b-01c661e6295c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">너무 많은 세부값을 강제로 노출하지 않음</li></ul><ul id="eb9720e4-6f49-83f3-8caa-81edeab29750" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 입장에서 바꿔야 할 값만 변수로 뺌</li></ul><ul id="074720e4-6f49-825b-8f02-818e09ab729b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공통으로 고정 가능한 값은 모듈 내부에 둠</li></ul><ul id="a0c720e4-6f49-837b-aba1-01554730c8b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">description을 잘 적음</li></ul><ul id="3eb720e4-6f49-83c2-8ccc-815dfb5de5d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">타입을 명확히 지정함</li></ul><p id="4c5720e4-6f49-8250-b9a2-0131a7482c73" class="" dir="auto">예를 들어 network 모듈이라면 보통 다음 정도는 입력으로 받을 수 있다.</p><ul id="5d2720e4-6f49-8328-a546-81d1c4b22172" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>vpc_cidr</code></li></ul><ul id="340720e4-6f49-8291-a2f6-01562663dc1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>public_subnet_cidr</code></li></ul><ul id="3ae720e4-6f49-832d-a50d-810b593bf466" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>availability_zone</code></li></ul><p id="5ae720e4-6f49-8369-bf1f-0189dae4e99b" class="" dir="auto">즉, 모듈 입력값은 많다고 좋은 것이 아니라</p><p id="b88720e4-6f49-8376-9e37-01bfe97ac5ff" class="" dir="auto"><strong>사용자가 조정해야 할 핵심만 적절히 노출하는 것</strong>이 중요하다.</p><hr id="e9f720e4-6f49-8351-bb22-01d92783647b" dir="auto"/><h2 id="b9c720e4-6f49-82d1-9bcb-8137edba32de" class="" dir="auto">11. 모듈 출력값 설계</h2><p id="9dc720e4-6f49-820c-bdb8-013d66ca18c1" class="" dir="auto">출력값도 마찬가지다.</p><p id="a42720e4-6f49-822e-bee7-81109df58f48" class="" dir="auto">모듈 내부의 모든 값을 다 output으로 내보낼 필요는 없다.</p><p id="134720e4-6f49-823b-9d24-015cf0bbf9d6" class="" dir="auto">보통 다음처럼 <strong>다음 단계에서 실제로 필요한 값</strong>만 output으로 내보낸다.</p><p id="31a720e4-6f49-8388-bb65-016976c3f4b7" class="" dir="auto">예:</p><ul id="da7720e4-6f49-82cb-a843-01e647be0eb0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>vpc_id</code></li></ul><ul id="f51720e4-6f49-82a6-b81f-01e617e6169e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>public_subnet_id</code></li></ul><ul id="acd720e4-6f49-8391-a8df-012ba6ca1d15" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>security_group_id</code></li></ul><ul id="5d2720e4-6f49-830d-8900-0186a209ae70" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>instance_id</code></li></ul><ul id="5fa720e4-6f49-82fd-8985-81f5f60a5cd5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>instance_public_ip</code></li></ul><p id="747720e4-6f49-83e8-aabe-81f52971b002" class="" dir="auto">즉, output은 <strong>다른 모듈이나 root module이 실제로 사용할 값</strong> 위주로 설계하는 것이 좋다.</p><h2 id="365720e4-6f49-8252-a9e7-018cf89b7aef" class="" dir="auto">12. 모듈 간 연결</h2><p id="505720e4-6f49-836c-a403-01340c5c648b" class="" dir="auto">Terraform에서는 한 모듈의 output을 다른 모듈의 입력값으로 연결할 수 있다.</p><p id="0b6720e4-6f49-82d4-898d-01b484b05cde" class="" dir="auto">예를 들어 다음처럼 가능하다.</p><pre id="5cd720e4-6f49-83b0-9b7a-8100911f7799" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">module &quot;network&quot; {
+  source = &quot;./modules/network&quot;
+
+  vpc_cidr           = &quot;10.10.0.0/16&quot;
+  public_subnet_cidr = &quot;10.10.1.0/24&quot;
+  availability_zone  = &quot;ap-northeast-2a&quot;
+}
+
+module &quot;compute&quot; {
+  source = &quot;./modules/compute&quot;
+
+  subnet_id = module.network.public_subnet_id
+  vpc_id    = module.network.vpc_id
+}</code></pre><p id="ddf720e4-6f49-8254-8c48-813a1e336cb2" class="" dir="auto">즉,</p><ul id="9dc720e4-6f49-83f6-906d-8102f70de968" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>network</code> 모듈이 VPC와 Subnet 생성</li></ul><ul id="2b4720e4-6f49-836c-b009-01d138ad6f60" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>compute</code> 모듈이 그 결과를 받아 EC2 생성</li></ul><p id="ba1720e4-6f49-8254-a1fb-814af349748d" class="" dir="auto">이런 식으로 역할을 나눌 수 있다.</p><p id="875720e4-6f49-827d-9458-016fdd255551" class="" dir="auto">이 구조가 바로 모듈화의 핵심이다.</p><p id="365720e4-6f49-837a-baee-0107dd26ea51" class="" dir="auto">즉, 인프라를 <strong>기능 단위로 분리하고, 필요한 값만 연결해서 조립</strong>하는 방식이다.</p><hr id="3ce720e4-6f49-8361-bf1a-81a5f4c8cb94" dir="auto"/><h2 id="533720e4-6f49-82e7-98e8-81301771e4fe" class="" dir="auto">13. 재사용 가능한 코드 구조</h2><pre id="f3a720e4-6f49-836d-b2ee-81fac9c7ef94" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">project-a/
+├── main.tf
+├── variables.tf
+├── outputs.tf
+├── terraform.tfvars
+└── modules/
+    ├── network/
+    │   ├── main.tf
+    │   ├── variables.tf
+    │   └── outputs.tf
+    └── compute/
+        ├── main.tf
+        ├── variables.tf
+        └── outputs.tf</code></pre><p id="7d5720e4-6f49-823c-99fc-814ba1359181" class="" dir="auto">이 구조의 의미는 다음과 같다.</p><ul id="8ec720e4-6f49-8317-af66-01e0813e3c4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root module → 전체 서비스 조립</li></ul><ul id="3b4720e4-6f49-82d9-8d1f-81c2264a085a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>modules/network</code> → 네트워크 담당</li></ul><ul id="b6d720e4-6f49-82e9-acc2-01704130836e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>modules/compute</code> → 서버 담당</li></ul><p id="72d720e4-6f49-82eb-8deb-01e0d83a064e" class="" dir="auto">즉, root module이 child module들을 조립하는 구조다.</p><hr id="275720e4-6f49-82ff-99bd-816f64ddb515" dir="auto"/><h2 id="61b720e4-6f49-8201-b78b-012c0f475a4c" class="" dir="auto">14. 모듈 설계 기준</h2><h3 id="ed5720e4-6f49-8287-9cab-81315ff895b9" class="" dir="auto">14.1 이 리소스들은 항상 함께 쓰이는가</h3><p id="262720e4-6f49-8373-979f-814f1ca48e7a" class="" dir="auto">항상 함께 배포된다면 하나의 모듈로 묶을 수 있다.</p><h3 id="d3e720e4-6f49-83a4-b5c9-01877e28b7c5" class="" dir="auto">14.2 다른 프로젝트에서도 같은 구조를 쓸 가능성이 있는가</h3><p id="b35720e4-6f49-8219-8bf6-812bbbc1a8fc" class="" dir="auto">그렇다면 모듈화 가치가 높다.</p><h3 id="581720e4-6f49-82a9-924b-01a5fc829b01" class="" dir="auto">14.3 입력과 출력 인터페이스를 명확히 만들 수 있는가</h3><p id="6f9720e4-6f49-82f8-8035-0165392e5538" class="" dir="auto">그렇다면 모듈화하기 좋은 후보다.</p><h3 id="d45720e4-6f49-8365-b6ed-01ccd31e5971" class="" dir="auto">14.4 root module에서 전체 흐름이 더 잘 보이는가</h3><p id="ecf720e4-6f49-8301-b8bd-015524022502" class="" dir="auto">모듈화 후 root가 더 읽기 쉬워진다면 잘 나눈 것이다.</p><hr id="428720e4-6f49-82f3-85c8-817fef4899dd" dir="auto"/><h2 id="7d6720e4-6f49-826e-a453-81250d48ec57" class="" dir="auto">15. 정리</h2><ul id="16b720e4-6f49-8330-9925-817855013f6f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈은 관련된 Terraform 리소스를 묶은 재사용 가능한 구성 단위다.</li></ul><ul id="733720e4-6f49-8253-887b-014f1f6c1985" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root module이 불러와 사용하는 하위 구성은 child module이다.</li></ul><ul id="f85720e4-6f49-827e-ad23-01a72b27f7b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">child module은 variable로 입력을 받고 output으로 값을 반환한다.</li></ul><ul id="594720e4-6f49-8225-9c43-81b78a9cad06" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root module은 <code>module</code> 블록을 사용해 child module을 호출한다.</li></ul><ul id="a78720e4-6f49-83b1-b3ee-81c392d175ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한 모듈의 output을 다른 모듈의 입력으로 연결할 수 있다.</li></ul><ul id="129720e4-6f49-8248-bf80-01c41a2c41c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈화의 핵심은 코드 길이 단축보다 재사용성, 책임 분리, 가독성, 유지보수성 향상에 있다.</li></ul><ul id="e97720e4-6f49-826d-9519-0172334d4938" class="bulleted-list" dir="auto"><li style="list-style-type:disc">좋은 모듈은 입력과 출력이 명확하고, 과도하게 복잡하지 않아야 한다.</li></ul><hr id="2d2720e4-6f49-8279-9527-01fa819f5308" dir="auto"/><figure id="14e720e4-6f49-839b-9c82-815c1aa8f235" class="link-to-page"><a href="8%EC%9E%A5%20Terraform%20%EB%AA%A8%EB%93%88%ED%99%94%EC%99%80%20%EC%9E%AC%EC%82%AC%EC%9A%A9%20%EA%B5%AC%EC%A1%B0/module%20%EC%98%88%EC%A0%9C%2014e720e46f49839b9c82815c1aa8f235.html" data-notion-page-id="14e720e4-6f49-839b-9c82-815c1aa8f235" data-notion-space-id="56e9dfa9-059a-473f-a2ad-357c52ceb825">module 예제</a></figure><h1 id="a0d720e4-6f49-827e-b61b-0135988b763a" class="" dir="auto">실습. Terraform 모듈화와 재사용 구조 실습</h1><h2 id="ff3720e4-6f49-83da-adce-813e52929dd7" class="" dir="auto">실습 목표</h2><p id="efb720e4-6f49-83ce-89e3-018eabfcd18a" class="" dir="auto">이 실습에서는 다음을 확인한다.</p><ul id="2de720e4-6f49-8263-8691-81db5c355d0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">child module 생성</li></ul><ul id="bb5720e4-6f49-8338-948a-0184539f929b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root module에서 child module 호출</li></ul><ul id="cf4720e4-6f49-83c3-9f02-01805dfed6cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈 입력값 전달</li></ul><ul id="ab0720e4-6f49-8338-b1f8-012e5a944c50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈 output 참조</li></ul><ul id="503720e4-6f49-82c6-be53-81c6cf45d889" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크와 컴퓨트를 분리한 기본 모듈 구조 이해</li></ul><ul id="ffc720e4-6f49-836c-be2b-019437bcb50e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모듈화 전후 코드 차이 체감</li></ul><hr id="376720e4-6f49-835e-a25a-817827d1412b" dir="auto"/><h2 id="e78720e4-6f49-82fd-8cf5-0197ce183b5c" class="" dir="auto">실습 구성 개요</h2><p id="0fd720e4-6f49-82fd-8040-011bb0f54dd0" class="" dir="auto">이번 실습에서는 다음 구조를 만든다.</p><ul id="120720e4-6f49-8248-b09a-0125d7cee3b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>network</code> 모듈<ul id="1c2720e4-6f49-8263-a305-81312bac72e1" class="bulleted-list" dir="auto"><li style="list-style-type:circle">VPC</li></ul><ul id="42e720e4-6f49-822e-b1a6-01d5f77fa5fb" class="bulleted-list" dir="auto"><li style="list-style-type:circle">퍼블릭 Subnet</li></ul><ul id="319720e4-6f49-8222-bba0-817702d1af2f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Internet Gateway</li></ul><ul id="ffc720e4-6f49-83ae-8a9f-013628fc91d7" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Route Table</li></ul><ul id="394720e4-6f49-838f-9fb3-010ebb79bcab" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Route Table Association</li></ul></li></ul><ul id="0e2720e4-6f49-83bd-8f95-8196b905d6ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>compute</code> 모듈<ul id="86a720e4-6f49-832d-b919-817edf6f2ec1" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Security Group</li></ul><ul id="6f9720e4-6f49-83ff-958d-014758301495" class="bulleted-list" dir="auto"><li style="list-style-type:circle">EC2</li></ul></li></ul><ul id="13e720e4-6f49-83b6-8508-81a4faf5a3d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root module<ul id="39b720e4-6f49-8357-a469-81f65a51adc2" class="bulleted-list" dir="auto"><li style="list-style-type:circle">두 모듈을 조립</li></ul><ul id="09d720e4-6f49-8284-8867-818575b5d80f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">network 출력값을 compute 입력값으로 전달</li></ul></li></ul><hr id="acc720e4-6f49-83ab-b3c5-01bd7d0b5f2f" dir="auto"/><h2 id="d3c720e4-6f49-8394-84ea-8185c2e4fcaa" class="" dir="auto">실습 1. 디렉터리 구조 만들기</h2><pre id="e8a720e4-6f49-8242-9a5b-01c2430893c9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform-modules-lab/
+├── main.tf
+├── variables.tf
+├── terraform.tfvars
+├── outputs.tf
+└── modules/
+    ├── network/
+    │   ├── main.tf
+    │   ├── variables.tf
+    │   └── outputs.tf
+    └── compute/
+        ├── main.tf
+        ├── variables.tf
+        └── outputs.tf</code></pre><p id="bac720e4-6f49-83d7-9d68-815bfdb8b7c0" class="" dir="auto">이 구조에서 바깥쪽이 root module이고,</p><p id="8f2720e4-6f49-8275-8915-013f10e2741c" class="" dir="auto"><code>modules/network</code>, <code>modules/compute</code>가 child module이다.</p><hr id="99f720e4-6f49-826e-b78f-81c7012866ab" dir="auto"/><h2 id="368720e4-6f49-8264-9279-017df3d4d261" class="" dir="auto">실습 2. network 모듈 작성</h2><h2 id="866720e4-6f49-833f-a619-012694c8aaab" class="" dir="auto">2.1 <code>modules/network/variables.tf</code></h2><pre id="cea720e4-6f49-833e-ba58-01d399976281" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;vpc_cidr&quot; {
+  type        = string
+  description = &quot;VPC CIDR block&quot;
+}
+
+variable &quot;public_subnet_cidr&quot; {
+  type        = string
+  description = &quot;Public subnet CIDR block&quot;
+}
+
+variable &quot;availability_zone&quot; {
+  type        = string
+  description = &quot;Availability Zone for public subnet&quot;
+}</code></pre><hr id="ead720e4-6f49-836c-9ecf-018f76d4bde4" dir="auto"/><h2 id="e35720e4-6f49-8226-a24e-818447f67d3b" class="" dir="auto">2.2 <code>modules/network/main.tf</code></h2><pre id="2cd720e4-6f49-8208-b009-81be8cdd3b51" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">resource &quot;aws_vpc&quot; &quot;main&quot; {
+  cidr_block = var.vpc_cidr
+
+  tags = {
+    Name = &quot;module-main-vpc&quot;
+  }
+}
+
+resource &quot;aws_subnet&quot; &quot;public&quot; {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = var.public_subnet_cidr
+  availability_zone       = var.availability_zone
+  map_public_ip_on_launch = true
+
+  tags = {
+    Name = &quot;module-public-subnet&quot;
+  }
+}
+
+resource &quot;aws_internet_gateway&quot; &quot;igw&quot; {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = &quot;module-main-igw&quot;
+  }
+}
+
+resource &quot;aws_route_table&quot; &quot;public&quot; {
+  vpc_id = aws_vpc.main.id
+
+  tags = {
+    Name = &quot;module-public-rt&quot;
+  }
+}
+
+resource &quot;aws_route&quot; &quot;public_internet_access&quot; {
+  route_table_id         = aws_route_table.public.id
+  destination_cidr_block = &quot;0.0.0.0/0&quot;
+  gateway_id             = aws_internet_gateway.igw.id
+}
+
+resource &quot;aws_route_table_association&quot; &quot;public_assoc&quot; {
+  subnet_id      = aws_subnet.public.id
+  route_table_id = aws_route_table.public.id
+}</code></pre><hr id="a5f720e4-6f49-82f1-b588-81c143b84ff9" dir="auto"/><h2 id="54f720e4-6f49-82b9-a281-815b179a0197" class="" dir="auto">2.3 <code>modules/network/outputs.tf</code></h2><pre id="9da720e4-6f49-83b6-aa45-01da599896ee" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;vpc_id&quot; {
+  description = &quot;Created VPC ID&quot;
+  value       = aws_vpc.main.id
+}
+
+output &quot;public_subnet_id&quot; {
+  description = &quot;Created public subnet ID&quot;
+  value       = aws_subnet.public.id
+}</code></pre><hr id="381720e4-6f49-82c9-a943-81d3142bbd76" dir="auto"/><h2 id="0b2720e4-6f49-82ba-ac71-8165ce8b93a1" class="" dir="auto">실습 3. compute 모듈 작성</h2><h2 id="4fd720e4-6f49-8221-aa8a-81cef80ad73e" class="" dir="auto">3.1 <code>modules/compute/variables.tf</code></h2><pre id="4b3720e4-6f49-83ed-b83e-019a11969568" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;subnet_id&quot; {
+  type        = string
+  description = &quot;Subnet ID for EC2&quot;
+}
+
+variable &quot;vpc_id&quot; {
+  type        = string
+  description = &quot;VPC ID for Security Group&quot;
+}
+
+variable &quot;instance_type&quot; {
+  type        = string
+  description = &quot;EC2 instance type&quot;
+}
+
+variable &quot;instance_name&quot; {
+  type        = string
+  description = &quot;EC2 Name tag&quot;
+}
+
+variable &quot;key_name&quot; {
+  type        = string
+  description = &quot;Existing AWS key pair name&quot;
+}</code></pre><hr id="e08720e4-6f49-829f-869c-8177930aef53" dir="auto"/><h2 id="caa720e4-6f49-82fd-b2e0-01aad8cb1112" class="" dir="auto">3.2 <code>modules/compute/main.tf</code></h2><pre id="0e6720e4-6f49-82a1-800c-01ada361a9c7" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">data &quot;aws_ami&quot; &quot;amazon_linux&quot; {
+  most_recent = true
+
+  owners = [&quot;amazon&quot;]
+
+  filter {
+    name   = &quot;name&quot;
+    values = [&quot;al2023-ami-2023.*-x86_64&quot;]
+  }
+}
+
+resource &quot;aws_security_group&quot; &quot;web_sg&quot; {
+  name        = &quot;module-web-sg&quot;
+  description = &quot;Allow SSH and HTTP&quot;
+  vpc_id      = var.vpc_id
+
+  ingress {
+    description = &quot;SSH&quot;
+    from_port   = 22
+    to_port     = 22
+    protocol    = &quot;tcp&quot;
+    cidr_blocks = [&quot;0.0.0.0/0&quot;]
+  }
+
+  ingress {
+    description = &quot;HTTP&quot;
+    from_port   = 80
+    to_port     = 80
+    protocol    = &quot;tcp&quot;
+    cidr_blocks = [&quot;0.0.0.0/0&quot;]
+  }
+
+  egress {
+    description = &quot;All outbound&quot;
+    from_port   = 0
+    to_port     = 0
+    protocol    = &quot;-1&quot;
+    cidr_blocks = [&quot;0.0.0.0/0&quot;]
+  }
+
+  tags = {
+    Name = &quot;module-web-sg&quot;
+  }
+}
+
+resource &quot;aws_instance&quot; &quot;web&quot; {
+  ami                    = data.aws_ami.amazon_linux.id
+  instance_type          = var.instance_type
+  subnet_id              = var.subnet_id
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  key_name               = var.key_name
+
+  tags = {
+    Name = var.instance_name
+  }
+}</code></pre><hr id="f9f720e4-6f49-8379-97e7-01363b9378af" dir="auto"/><h2 id="57c720e4-6f49-83b1-b849-811b221e10e9" class="" dir="auto">3.3 <code>modules/compute/outputs.tf</code></h2><pre id="e72720e4-6f49-8238-8ae3-81c84672709f" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;instance_id&quot; {
+  description = &quot;Created EC2 instance ID&quot;
+  value       = aws_instance.web.id
+}
+
+output &quot;instance_public_ip&quot; {
+  description = &quot;Created EC2 public IP&quot;
+  value       = aws_instance.web.public_ip
+}
+
+output &quot;security_group_id&quot; {
+  description = &quot;Created security group ID&quot;
+  value       = aws_security_group.web_sg.id
+}</code></pre><hr id="b1a720e4-6f49-82b5-a0d5-816aaba7574e" dir="auto"/><h2 id="905720e4-6f49-8367-a2a7-01083dbf734a" class="" dir="auto">실습 4. root module 작성</h2><h2 id="30d720e4-6f49-834a-9b6a-013ce33f3547" class="" dir="auto">4.1 <code>variables.tf</code></h2><pre id="066720e4-6f49-8345-8d74-016623604a7f" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">variable &quot;region&quot; {
+  type        = string
+  description = &quot;AWS region&quot;
+  default     = &quot;ap-northeast-2&quot;
+}
+
+variable &quot;vpc_cidr&quot; {
+  type        = string
+  description = &quot;VPC CIDR block&quot;
+  default     = &quot;10.10.0.0/16&quot;
+}
+
+variable &quot;public_subnet_cidr&quot; {
+  type        = string
+  description = &quot;Public subnet CIDR block&quot;
+  default     = &quot;10.10.1.0/24&quot;
+}
+
+variable &quot;availability_zone&quot; {
+  type        = string
+  description = &quot;Availability Zone for public subnet&quot;
+  default     = &quot;ap-northeast-2a&quot;
+}
+
+variable &quot;instance_type&quot; {
+  type        = string
+  description = &quot;EC2 instance type&quot;
+  default     = &quot;t3.micro&quot;
+}
+
+variable &quot;instance_name&quot; {
+  type        = string
+  description = &quot;EC2 Name tag&quot;
+  default     = &quot;module-web-01&quot;
+}
+
+variable &quot;key_name&quot; {
+  type        = string
+  description = &quot;Existing AWS key pair name&quot;
+}</code></pre><hr id="90e720e4-6f49-826b-868c-01efc224677b" dir="auto"/><h2 id="ffb720e4-6f49-82cb-b272-0113b52e3620" class="" dir="auto">4.2 <code>main.tf</code></h2><pre id="14d720e4-6f49-8355-a3e4-8161b1833f14" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+	required_providers {
+		aws = {
+			source  = &quot;hashicorp/aws&quot;
+			version = &quot;6.41.0&quot;
+		}
+	}
+}
+
+provider &quot;aws&quot; {
+  region = var.region
+}
+
+module &quot;network&quot; {
+  source = &quot;./modules/network&quot;
+
+  vpc_cidr           = var.vpc_cidr
+  public_subnet_cidr = var.public_subnet_cidr
+  availability_zone  = var.availability_zone
+}
+
+module &quot;compute&quot; {
+  source = &quot;./modules/compute&quot;
+
+  subnet_id     = module.network.public_subnet_id
+  vpc_id        = module.network.vpc_id
+  instance_type = var.instance_type
+  instance_name = var.instance_name
+  key_name      = var.key_name
+}</code></pre><hr id="df9720e4-6f49-8228-b15f-01f7661227da" dir="auto"/><h2 id="a89720e4-6f49-83a2-8bf2-813d8d614195" class="" dir="auto">4.3 <code>outputs.tf</code></h2><pre id="0e9720e4-6f49-83b3-9e7c-811846ea0551" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">output &quot;vpc_id&quot; {
+  value = module.network.vpc_id
+}
+
+output &quot;public_subnet_id&quot; {
+  value = module.network.public_subnet_id
+}
+
+output &quot;instance_id&quot; {
+  value = module.compute.instance_id
+}
+
+output &quot;instance_public_ip&quot; {
+  value = module.compute.instance_public_ip
+}
+
+output &quot;security_group_id&quot; {
+  value = module.compute.security_group_id
+}</code></pre><hr id="091720e4-6f49-82ba-b33c-81935bcd1d4e" dir="auto"/><h2 id="041720e4-6f49-83f3-ba9d-01afff4abb41" class="" dir="auto">4.4 <code>terraform.tfvars</code></h2><pre id="873720e4-6f49-82ab-a3eb-816491991bd8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">key_name = &quot;my-keypair&quot;
+instance_type = &quot;t3.micro&quot;
+instance_name = &quot;이니셜-tf-demo-svr&quot;
+vpc_cidr = &quot;10.X.0.0/16&quot;
+public_subnet_cidr = &quot;10.X.0.0/24&quot;</code></pre><hr id="c60720e4-6f49-82e5-a64c-01d3a953dc0f" dir="auto"/><h2 id="dd4720e4-6f49-8352-bb8b-8175779fe41f" class="" dir="auto">실습 5. 실행 순서</h2><pre id="825720e4-6f49-8386-a6bf-01b37d571044" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform init
+terraform fmt
+terraform validate
+terraform plan
+terraform apply -auto-approve
+terraform output</code></pre><hr id="ed9720e4-6f49-82c0-b629-016eb20a7b05" dir="auto"/><h2 id="54e720e4-6f49-820b-b0ad-01967386510a" class="" dir="auto">실습 6. plan 결과에서 확인할 포인트</h2><p id="695720e4-6f49-836a-ba3b-01ce41edbbff" class="" dir="auto"><code>terraform plan</code> 결과를 볼 때 다음을 확인한다.</p><ul id="fcd720e4-6f49-8296-9db0-01cf9f392b45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root module 안에 직접 리소스가 많지 않다는 점</li></ul><ul id="dfd720e4-6f49-8287-9cae-8140b06ccdce" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>module.network</code> 와 <code>module.compute</code>가 각각 어떤 리소스를 포함하는지 보이는 점</li></ul><ul id="eec720e4-6f49-836a-a2c3-01111ae68b31" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>compute</code> 모듈이 <code>network</code> 모듈의 output 값을 입력으로 사용한다는 점</li></ul><ul id="7a2720e4-6f49-8344-8dd1-0140b03a3b15" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최종적으로는 VPC, Subnet, IGW, Route Table, Security Group, EC2가 모두 생성된다는 점</li></ul><p id="534720e4-6f49-83ff-9835-01ddece30aa2" class="" dir="auto">즉, root module은 세부 구현보다</p><p id="4a6720e4-6f49-83d7-ab20-81ad04937629" class="" dir="auto"><strong>어떤 모듈을 어떤 값으로 조립하는가</strong>에 집중하게 된다.</p><hr id="97a720e4-6f49-8210-8426-0112631ab09f" dir="auto"/><h2 id="74e720e4-6f49-82f6-8c50-813b6ec045da" class="" dir="auto">실습 8. 모듈화 전후 비교</h2><p id="bbb720e4-6f49-827f-9a9f-81ec2f744aef" class="" dir="auto">실습 후 다음 차이를 비교해보면 좋다.</p><h3 id="e76720e4-6f49-8350-b05f-01a7d00f842f" class="" dir="auto">모듈화 전</h3><ul id="344720e4-6f49-8346-92ef-013aa1802823" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 리소스가 한 디렉터리의 <code>main.tf</code> 또는 몇 개 파일에 직접 존재</li></ul><ul id="477720e4-6f49-82cd-99ca-013bf51ae3a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스 수가 많아질수록 root가 복잡해짐</li></ul><ul id="783720e4-6f49-8322-a43a-811a575a839b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재사용이 어려움</li></ul><h3 id="c06720e4-6f49-8302-a537-8122bea8c101" class="" dir="auto">모듈화 후</h3><ul id="e54720e4-6f49-83a7-8642-81496a7778a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">역할별로 코드가 나뉨</li></ul><ul id="2bb720e4-6f49-82f2-b269-016a9478f616" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root module은 전체 구조 조립에 집중</li></ul><ul id="6df720e4-6f49-83ba-900d-812efc70e67e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">child module은 세부 구현 담당</li></ul><ul id="da6720e4-6f49-83c3-b63e-81b4c341abbd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 network 모듈, compute 모듈을 다른 프로젝트에서도 재사용 가능</li></ul><hr id="413720e4-6f49-833d-be66-01afc96ad81b" dir="auto"/><h2 id="da7720e4-6f49-830f-b4f9-8198fbff1bd8" class="" dir="auto">실습 9. 리소스 정리</h2><p id="8f5720e4-6f49-83cd-9982-81c8fa202c6d" class="" dir="auto">실습이 끝났으면 반드시 삭제한다.</p><pre id="20d720e4-6f49-838f-ab12-01cccedc9eff" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform destroy -auto-approve</code></pre><p id="8fa720e4-6f49-8216-8528-81f270c16d1c" class="" dir="auto">이 명령은 root module 기준으로 실행하지만,</p><p id="0e6720e4-6f49-83fb-a53f-81be0390c553" class="" dir="auto">실제로는 child module 안에서 생성한 리소스까지 함께 삭제된다.</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

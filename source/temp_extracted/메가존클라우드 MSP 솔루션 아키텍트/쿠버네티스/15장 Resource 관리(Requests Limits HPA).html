@@ -1,0 +1,1038 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>15장. Resource 관리(Requests / Limits / HPA)</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="e1a720e4-6f49-82d3-9256-8123124df62e" class="page sans"><header><h1 class="page-title" dir="auto">15장. Resource 관리(Requests / Limits / HPA)</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="fbd720e4-6f49-82d7-98b6-81bcd64e3dfe" class="" dir="auto">0. 학습 목표</h2><ul id="c5d720e4-6f49-8379-8d05-81d235687e2d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">requests/limits 개념과 동작 원리 이해한다</li></ul><ul id="d46720e4-6f49-826c-b60f-812571f68c4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod QoS 클래스(Guaranteed/Burstable/BestEffort) 구분한다</li></ul><ul id="7e6720e4-6f49-8207-826d-816ac77d8c85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">requests/limits로 <strong>스케줄링/자원 격리</strong>를 제어한다</li></ul><ul id="8fd720e4-6f49-8338-baeb-01725858bee9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">metrics-server 기반으로 HPA 동작시킨다</li></ul><ul id="6f5720e4-6f49-8246-9c53-0115a15d9612" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HPA v2로 CPU/메모리 기준 자동 확장 실습한다</li></ul><hr id="fcc720e4-6f49-82e6-8be1-810eaa5e9e9a" dir="auto"/><h2 id="e8d720e4-6f49-83be-9d0c-81ee17989c46" class="" dir="auto">1. 핵심 개념 정리</h2><h3 id="05e720e4-6f49-8248-8bd3-017874418026" class="" dir="auto">1.1 requests vs limits</h3><ul id="1a1720e4-6f49-8313-818c-81e5f1fe67d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>requests</strong><ul id="06a720e4-6f49-8334-8257-81253eb8e68b" class="bulleted-list" dir="auto"><li style="list-style-type:circle">스케줄러가 “이 파드가 최소로 필요로 하는 자원”으로 간주한다</li></ul><ul id="63c720e4-6f49-82ae-9bfd-81f1cc45d3ed" class="bulleted-list" dir="auto"><li style="list-style-type:circle">노드에 파드를 배치할 때, 노드의 allocatable에서 requests 합을 보고 배치한다</li></ul><ul id="5d1720e4-6f49-83d9-b4d0-01271dbc8b5f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">즉 <strong>배치(스케줄링)의 기준</strong>이 된다</li></ul></li></ul><ul id="ca2720e4-6f49-821a-9848-81cb437a4994" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>limits</strong><ul id="050720e4-6f49-83b0-8356-81ad737d84c6" class="bulleted-list" dir="auto"><li style="list-style-type:circle">컨테이너가 “최대로 쓸 수 있는 자원 상한”이다</li></ul><ul id="791720e4-6f49-82ab-8e32-01104199ca8b" class="bulleted-list" dir="auto"><li style="list-style-type:circle">CPU는 CFS quota로 제한한다</li></ul><ul id="a83720e4-6f49-8242-bc66-01f6d347d37f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Memory는 초과하면 OOMKilled 날 수 있다</li></ul><ul id="97b720e4-6f49-8390-ad3e-810567a9854f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">즉 <strong>실행 중 자원 사용 상한(격리)의 기준</strong>이 된다</li></ul></li></ul><h3 id="6ec720e4-6f49-8293-9cf2-011cdd7db0ad" class="" dir="auto">1.2 CPU 단위</h3><ul id="67e720e4-6f49-828a-bb66-81b04fa6e5c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>500m</code> = 0.5 코어를 의미한다</li></ul><ul id="9f8720e4-6f49-8339-9504-8105b06a4451" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>1</code> = 1 코어를 의미한다</li></ul><ul id="37f720e4-6f49-83cd-a13d-81754b1587e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU는 <strong>압박 시 throttling</strong>(느려짐)으로 나타나는 경우가 많다</li></ul><h3 id="96b720e4-6f49-83ea-a8a2-01550f91d645" class="" dir="auto">1.3 Memory 단위</h3><ul id="004720e4-6f49-83ce-96b9-815abf3eca19" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Mi</code>, <code>Gi</code> 같은 이진 단위 쓴다</li></ul><ul id="efd720e4-6f49-8206-9b6a-81e1a5a5243a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Memory는 limits 초과 시 <strong>OOMKilled</strong>로 종료되는 형태가 흔하다</li></ul><h3 id="841720e4-6f49-82f9-ba2c-01116dd9f01b" class="" dir="auto">1.4 QoS 클래스</h3><ul id="e85720e4-6f49-8349-bd9e-819a61f80428" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Guaranteed</strong><ul id="465720e4-6f49-824d-8839-0141bc7ccb14" class="bulleted-list" dir="auto"><li style="list-style-type:circle"> <code>requests == limits</code>로 CPU/Memory를 모두 지정한 경우</li></ul></li></ul><ul id="75a720e4-6f49-83bc-867a-01a036d4a6be" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Burstable</strong><ul id="d0b720e4-6f49-82ea-bcdf-81f38c197501" class="bulleted-list" dir="auto"><li style="list-style-type:circle"> <code>requests &lt; limits</code>인 경우</li></ul></li></ul><ul id="2a5720e4-6f49-8307-a294-81f351cf2734" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>BestEffort</strong><ul id="860720e4-6f49-838d-baa0-0129113f6670" class="bulleted-list" dir="auto"><li style="list-style-type:circle">requests/limits 둘 다 미지정인 경우</li></ul></li></ul><ul id="f91720e4-6f49-8218-82ad-01fe4753a3d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드 메모리 부족 같은 상황에서 퇴출(eviction) 우선순위:  <code>BestEffort → Burstable → Guaranteed</code> </li></ul><p id="5ba720e4-6f49-82c6-bb9d-812203a63cc5" class="" dir="auto">
+</p><hr id="9b6720e4-6f49-83b4-a690-81930311cae6" dir="auto"/><h2 id="e2e720e4-6f49-821b-84a8-813eb96963da" class="" dir="auto">2. 실습 준비</h2><h3 id="138720e4-6f49-8396-8b50-01a006ff6579" class="" dir="auto">2.1 네임스페이스 생성</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="aeb720e4-6f49-8333-be88-815ecd2a2881" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create ns resource-lab</code></pre><ul id="be4720e4-6f49-8381-b5e8-81e3f7f5d124" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>create ns</code>는 namespace 오브젝트를 생성한다</li></ul><ul id="71d720e4-6f49-82d9-aabc-01094ae6acbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분리된 실습 공간을 만들어 리소스쿼터/리밋레인지 적용을 안전하게 실습한다</li></ul><h3 id="bd8720e4-6f49-8377-9f07-81fdce702936" class="" dir="auto">2.2 현재 클러스터 자원 확인</h3><pre id="9c5720e4-6f49-8269-9e92-019b22013f67" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes
+kubectl describe node &lt;노드이름&gt; | egrep -n &quot;Allocatable|Capacity|cpu|memory|Pods&quot;</code></pre><figure id="b20720e4-6f49-82e8-8cd3-81f90f2857c4" class="image" data-notion-image="15%EC%9E%A5%20Resource%20%EA%B4%80%EB%A6%AC(Requests%20Limits%20HPA)/image.png" dir="ltr"><a href="15%EC%9E%A5%20Resource%20%EA%B4%80%EB%A6%AC(Requests%20Limits%20HPA)/image.png"><img style="width:709.9642944335938px" src="15%EC%9E%A5%20Resource%20%EA%B4%80%EB%A6%AC(Requests%20Limits%20HPA)/image.png"/></a></figure><ul id="ff8720e4-6f49-83f0-a84b-814c5943bfab" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Capacity</code>는 노드 물리/가상 머신의 전체 자원이다</li></ul><ul id="26f720e4-6f49-8259-bed7-81b3781ac58d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Allocatable</code>은 쿠버네티스가 파드에 할당 가능한 자원이다(시스템/쿠버네티스 예약분 제외)</li></ul><ul id="152720e4-6f49-83b3-8be6-816f172bdc74" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Non-terminated Pods</strong></li></ul><p id="b6d720e4-6f49-82d5-8af5-0163c46b4953" class="" dir="auto">현재 이 노드에서 실행 중인 16개 Pod가 자원을 얼마나 점유하고 있는지 보여주는 가장 중요한 부분.</p><ul id="763720e4-6f49-82bc-a9e1-81d91c3d49ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>CPU (440m, 22%):</strong><ul id="2aa720e4-6f49-82e4-aec4-817ef2ba40fa" class="bulleted-list" dir="auto"><li style="list-style-type:circle">현재 실행 중인 Pod들이 요청(Requests)한 CPU 총합이 <strong>440m</strong>(0.44코어)이다.</li></ul><ul id="84c720e4-6f49-82e1-865b-814c807e1c04" class="bulleted-list" dir="auto"><li style="list-style-type:circle">이는 전체 가용 CPU(2코어)의 22%를 차지하고 있다는 의미.</li></ul></li></ul><ul id="863720e4-6f49-83a4-9880-01f0f73b44ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Memory (120Mi, 3% / 170Mi, 4%):</strong><ul id="82d720e4-6f49-831c-bce6-81f4dbc4c989" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><strong>앞의 숫자(120Mi, 3%):</strong> Pod들이 최소한 이만큼은 보장해달라고 요청한 <strong>Requests</strong> 합계.</li></ul><ul id="daa720e4-6f49-8359-83c7-815cbf41bc35" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><strong>뒤의 숫자(170Mi, 4%):</strong> Pod들이 최대 이만큼까지 쓸 수 있도록 설정된 <strong>Limits</strong> 합계.</li></ul></li></ul><hr id="101720e4-6f49-8297-a1a9-01c729f9540b" dir="auto"/><h2 id="9e3720e4-6f49-834c-8e5c-01ec64562edd" class="" dir="auto">3. Requests/Limits 기본 실습</h2><h3 id="6e1720e4-6f49-82ff-a1e3-817ad3d737ed" class="" dir="auto">3.1 requests/limits 미지정 파드(BestEffort) 생성</h3><p id="f71720e4-6f49-8230-9f7f-0169f4f0a8ed" class="" dir="auto"><code>besteffort.yaml</code></p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="67f720e4-6f49-833d-b6e6-8174733e2c7b" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: besteffort-pod
+  namespace: resource-lab
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25</code></pre><p id="977720e4-6f49-8256-bb17-81a7b002dfef" class="" dir="auto">적용</p><pre id="4d7720e4-6f49-83e0-9c07-01f2d42e13ab" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f besteffort.yaml
+kubectl get pod -n resource-lab -o wide
+kubectl describe po besteffort-pod | egrep -A 2 &quot;Requests|Limits|QoS Class&quot; | egrep -v &quot;\--&quot; | egrep &quot;Requests|Limits|QoS Class|cpu|memory&quot;</code></pre><p id="86b720e4-6f49-830a-a202-8171c3995b34" class="" dir="auto">해설</p><ul id="d37720e4-6f49-825d-b1ce-0178f08812a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>resources:</code>가 없으므로 requests/limits 둘 다 없음 → QoS <code>BestEffort</code>로 잡힌다</li></ul><ul id="e10720e4-6f49-8361-993b-013c0f9d1c7e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>describe</code> 출력에서 <code>QoS Class</code>가 무엇인지 확인한다</li></ul><hr id="118720e4-6f49-83c7-afcc-01c4e363975e" dir="auto"/><h3 id="9ea720e4-6f49-8359-acb3-81e1ce0f1380" class="" dir="auto">3.2 Burstable 파드 생성 (requests만 지정)</h3><p id="cf9720e4-6f49-8252-84cc-8127bd09332f" class="" dir="auto"><code>burstable.yaml</code></p><pre id="e79720e4-6f49-8267-8ae9-0136d054054c" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: burstable-pod
+  namespace: resource-lab
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25
+    resources:
+      requests:
+        cpu: &quot;200m&quot;
+        memory: &quot;128Mi&quot;</code></pre><p id="02a720e4-6f49-828a-ba5e-81f320eb27f1" class="" dir="auto">적용/확인</p><pre id="0d1720e4-6f49-83b7-a25b-81bd53dc007f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f burstable.yaml
+kubectl describe pod burstable-pod -n resource-lab | egrep -A 2 &quot;Requests|Limits|QoS Class&quot; | egrep -v &quot;\--&quot; | egrep &quot;Requests|Limits|QoS Class|cpu|memory&quot;</code></pre><p id="67c720e4-6f49-8257-a4c8-01700e8d92a4" class="" dir="auto">해설</p><ul id="d14720e4-6f49-83c5-8005-81ea4c94a9f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">requests만 있으므로 QoS <code>Burstable</code>이 된다</li></ul><ul id="20a720e4-6f49-83b5-aad0-01e25db8d5e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스케줄러는 이 파드를 노드에 배치할 때 <code>cpu 200m</code>, <code>mem 128Mi</code>를 “점유한 것”처럼 계산한다</li></ul><hr id="95e720e4-6f49-82b1-94fe-817721fe231b" dir="auto"/><h3 id="ccd720e4-6f49-82f3-94a8-01dd7f71881f" class="" dir="auto">3.3 Guaranteed 파드 생성 (requests == limits)</h3><p id="535720e4-6f49-82ee-a01c-81b23be0a653" class="" dir="auto"><code>guaranteed.yaml</code></p><pre id="479720e4-6f49-83e0-9b1c-01b1198d44d4" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: guaranteed-pod
+  namespace: resource-lab
+spec:
+  containers:
+  - name: app
+    image: nginx:1.25
+    resources:
+      requests:
+        cpu: &quot;300m&quot;
+        memory: &quot;256Mi&quot;
+      limits:
+        cpu: &quot;300m&quot;
+        memory: &quot;256Mi&quot;</code></pre><p id="425720e4-6f49-8338-8de2-0193be555e47" class="" dir="auto">적용/확인</p><pre id="efc720e4-6f49-837e-90fa-81d7b395e919" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f guaranteed.yaml
+kubectl describe pod guaranteed-pod -n resource-lab | egrep -A 2 &quot;Requests|Limits|QoS Class&quot; | egrep -v &quot;\--&quot; | egrep &quot;Requests|Limits|QoS Class|cpu|memory&quot;</code></pre><p id="feb720e4-6f49-825c-8749-01eaf7e07270" class="" dir="auto">해설</p><ul id="f56720e4-6f49-82d5-af18-01ea56cdb7db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU/Memory 모두 requests==limits → QoS <code>Guaranteed</code>가 된다</li></ul><ul id="37f720e4-6f49-82fc-9b40-019d44b8e528" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드 압박 시 상대적으로 퇴출 우선순위에서 유리한 편이다</li></ul><hr id="c8b720e4-6f49-82a5-981c-018e6f642df9" dir="auto"/><h2 id="6a3720e4-6f49-8313-86f4-01e13f389f36" class="" dir="auto">4. Limits 동작 확인 실습 (메모리 OOMKilled)</h2><h3 id="bea720e4-6f49-83b9-910a-014a2efcb04e" class="" dir="auto">4.1 메모리 제한을 걸고, 의도적으로 메모리 초과를 유도한다</h3><p id="52b720e4-6f49-8222-9b4a-01deaaafde7d" class="" dir="auto"><code>oom.yaml</code></p><pre id="8ec720e4-6f49-8389-a0f4-81efe6f65672" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: oom-pod
+  namespace: resource-lab
+spec:
+  containers:
+  - name: stress
+    image: polinux/stress
+    args: [&quot;--vm&quot;, &quot;1&quot;, &quot;--vm-bytes&quot;, &quot;200M&quot;, &quot;--vm-hang&quot;, &quot;1&quot;]
+    resources:
+      requests:
+        memory: &quot;64Mi&quot;
+        cpu: &quot;100m&quot;
+      limits:
+        memory: &quot;100Mi&quot;
+        cpu: &quot;200m&quot;</code></pre><p id="bda720e4-6f49-82c5-a8c7-01133f405399" class="" dir="auto">적용</p><pre id="6b7720e4-6f49-8210-9430-0148b6a48931" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f oom.yaml
+kubectl get pod -n resource-lab -w</code></pre><p id="2fe720e4-6f49-82d9-ba55-815f3d827dea" class="" dir="auto">상태 확인</p><pre id="bb9720e4-6f49-82da-827a-011acee7552e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe pod oom-pod -n resource-lab
+kubectl get pod oom-pod -n resource-lab -o jsonpath=&#x27;{.status.containerStatuses[0].state.terminated.reason}{&quot;\n&quot;}&#x27;</code></pre><p id="876720e4-6f49-821d-a013-01f5202d191f" class="" dir="auto">해설</p><ul id="a80720e4-6f49-83e4-93c1-81419f5eb90c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>stress</code>가 200MB를 쓰려 하는데 limits 100Mi라서 초과한다</li></ul><ul id="12b720e4-6f49-82b1-ab06-8101eb35a8b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 경우 컨테이너가 <strong>OOMKilled</strong>로 종료될 수 있다</li></ul><ul id="fb7720e4-6f49-83de-b922-8188f5defd7f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU는 초과해도 보통 느려짐(throttling)인데, Memory는 초과 시 종료가 빈번하다</li></ul><p id="e68720e4-6f49-82bc-aa8e-013fdd9e8c16" class="" dir="auto">정리</p><pre id="9b2720e4-6f49-839f-b57e-81744a02d941" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete pod oom-pod -n resource-lab</code></pre><hr id="19f720e4-6f49-8388-9a37-01981d76dca6" dir="auto"/><h2 id="5de720e4-6f49-82f7-ab45-01af01261082" class="" dir="auto">5. 조직 정책 적용 (ResourceQuota/LimitRange)</h2><table id="557720e4-6f49-823c-8fbb-814c8f0c5446" class="simple-table" dir="ltr"><tbody><tr id="859720e4-6f49-8351-a8f8-815488111216" dir="ltr"><td id="kAii" class=""><strong>구분</strong></td><td id="T@N?" class=""><strong>ResourceQuota (자원 할당량)</strong></td><td id="je|v" class="" style="width:298.00001525878906px"><strong>LimitRange (자원 범위 제한)</strong></td></tr><tr id="709720e4-6f49-83d2-ae9f-81f6a6750c4f" dir="ltr"><td id="kAii" class=""><strong>관리 대상</strong></td><td id="T@N?" class=""><strong>네임스페이스 전체</strong>의 자원 합계</td><td id="je|v" class="" style="width:298.00001525878906px"><strong>개별 컨테이너/파드</strong>의 자원 설정</td></tr><tr id="6ca720e4-6f49-8392-be91-011b2c167cb7" dir="ltr"><td id="kAii" class=""><strong>주요 목적</strong></td><td id="T@N?" class="">특정 팀/프로젝트의 자원 독점 방지</td><td id="je|v" class="" style="width:298.00001525878906px">개별 파드의 잘못된 설정 방지 및 자동화</td></tr><tr id="c75720e4-6f49-82b6-9cef-8122cffd6e70" dir="ltr"><td id="kAii" class=""><strong>주요 기능</strong></td><td id="T@N?" class="">CPU/Mem 합계, 파드 개수, PVC 개수 제한</td><td id="je|v" class="" style="width:298.00001525878906px">기본값 부여(Default), 최소/최대 범위 강제</td></tr></tbody></table><h3 id="da8720e4-6f49-83b7-849e-813ff62715c6" class="" dir="auto">5.1 ResourceQuota로 네임스페이스 총량 제한</h3><p id="018720e4-6f49-8384-96ab-815e5e35a24b" class="" dir="auto"><code>quota.yaml</code></p><pre id="b7d720e4-6f49-8371-a62f-01fe49b59018" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: ResourceQuota
+metadata:
+  name: ns-quota
+  namespace: resource-lab
+spec:
+  hard:
+    Pods: &quot;2&quot;
+    requests.cpu: &quot;1&quot;
+    requests.memory: &quot;1Gi&quot;
+    limits.cpu: &quot;2&quot;
+    limits.memory: &quot;2Gi&quot;
+    pods: &quot;20&quot;</code></pre><p id="db4720e4-6f49-8397-9a41-01b71fa90413" class="" dir="auto">적용/확인</p><pre id="b6f720e4-6f49-830b-9b01-0185deb0e7b6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f quota.yaml
+kubectl describe quota ns-quota -n resource-lab</code></pre><p id="cc3720e4-6f49-83d2-91c4-8156e7bfdf2d" class="" dir="auto">해설</p><ul id="0df720e4-6f49-83bd-912a-0114ac93fef4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네임스페이스 단위로 “requestss/limits 총량”을 제한한다</li></ul><ul id="7e3720e4-6f49-82ba-9e33-010bf28c325b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">팀별 멀티테넌시 환경에서 필수로 쓰는 정책이다</li></ul><p id="207720e4-6f49-83f0-ba1b-81856d62aeda" class="" dir="auto">
+</p><ul id="d25720e4-6f49-8221-9d81-015cd0c1828a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동작테스트</li></ul><p id="0eb720e4-6f49-836d-9759-8112a65af7aa" class="" dir="auto">다음 Pod 2개 생성 가능.</p><pre id="48e720e4-6f49-8311-a6a0-012e751a3214" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: test-pod-1
+  namespace: resource-lab
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+    resources:
+      requests:
+        cpu:&quot;500m&quot;
+        memory:&quot;512Mi&quot;
+      limits:
+        cpu:&quot;1&quot;
+        memory:&quot;1Gi&quot;</code></pre><p id="991720e4-6f49-8347-bd03-8171cdc80dc0" class="" dir="auto">3번째 Pod 생성 시:</p><pre id="2f5720e4-6f49-8362-ba31-01e49b06eee8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Error from server (Forbidden): exceeded quota</code></pre><p id="905720e4-6f49-8273-9fce-819d6b823704" class="" dir="auto">생성 거부됨.</p><hr id="9c3720e4-6f49-8385-b63b-017857612710" dir="auto"/><h3 id="ce8720e4-6f49-8233-afcd-01566807f2e4" class="" dir="auto">5.2 LimitRange로 “기본값/최소/최대” 강제한다</h3><p id="982720e4-6f49-8249-90d1-01c17e60f2b9" class="" dir="auto"><code>limitrange.yaml</code></p><pre id="71c720e4-6f49-8301-87db-01e93c7566b4" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: LimitRange
+metadata:
+  name: default-limits
+  namespace: resource-lab
+spec:
+  limits:
+  - type: Container
+    default:
+      cpu: &quot;300m&quot;
+      memory: &quot;256Mi&quot;
+    defaultRequest:
+      cpu: &quot;100m&quot;
+      memory: &quot;128Mi&quot;
+    min:
+      cpu: &quot;50m&quot;
+      memory: &quot;64Mi&quot;
+    max:
+      cpu: &quot;1000m&quot;
+      memory: &quot;1024Mi&quot;</code></pre><p id="164720e4-6f49-8297-87c3-01497784f6be" class="" dir="auto">적용/확인</p><pre id="e1b720e4-6f49-83c8-99be-0138277b430e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f limitrange.yaml
+kubectl describe limitrange default-limits -n resource-lab</code></pre><p id="08c720e4-6f49-836a-9ac9-01febf6fdcdc" class="" dir="auto">해설</p><ul id="3e9720e4-6f49-827e-9ac5-01e4352977e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>default</code>는 limits 기본값이다</li></ul><ul id="e85720e4-6f49-83ad-b8aa-01489edf19ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>defaultRequest</code>는 requests 기본값이다</li></ul><ul id="85e720e4-6f49-82da-81da-8180917c8dca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발자가 resources를 안 적어도, 네임스페이스 정책이 자동으로 채워준다</li></ul><ul id="bc8720e4-6f49-83b5-84a9-016f6ae11340" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>min/max</code>는 범위를 벗어나면 생성 자체가 거부된다</li></ul><p id="cb2720e4-6f49-834a-aef0-0174e69fd232" class="" dir="auto">
+</p><p id="644720e4-6f49-839b-b73c-0166039edbb8" class="" dir="auto"><strong>자원 미지정 Pod 생성</strong></p><pre id="b2e720e4-6f49-8299-b789-81f3a557d5f8" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: default-test
+  namespace: resource-lab
+spec:
+  containers:
+  - name: nginx
+    image: nginx</code></pre><p id="f02720e4-6f49-83c9-bfc2-013d738ee8f2" class="" dir="auto">생성 후 확인:</p><pre id="a8f720e4-6f49-83d9-9e55-01a60436092f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kubectlget pod default-test-o yaml-n resource-lab</code></pre><p id="88b720e4-6f49-83aa-a19f-018c50e8b678" class="" dir="auto">→ 자동으로 defaultRequest / default 적용됨.</p><hr id="d58720e4-6f49-8324-b0bf-0121571a24c0" dir="auto"/><p id="41d720e4-6f49-83b1-bcfd-81a4953a8046" class="" dir="auto">
+</p><p id="f03720e4-6f49-82e8-969e-01e67da045e6" class="" dir="auto">최소값 위반 테스트</p><pre id="1c8720e4-6f49-832d-92d1-81c2d0aefb5a" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">resources:
+  requests:
+    cpu:&quot;50m&quot;
+    memory:&quot;64Mi&quot;</code></pre><p id="f65720e4-6f49-83ba-b68c-816c4f606f14" class="" dir="auto">결과:</p><pre id="eb6720e4-6f49-8351-b1ef-014794dae9a3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Error from server: minimum cpu usage per Container is 100m</code></pre><p id="099720e4-6f49-83f9-84b9-81cf4a5ec360" class="" dir="auto">생성 거부됨.</p><hr id="34e720e4-6f49-8294-8cb4-812d83d5768a" dir="auto"/><p id="e78720e4-6f49-82cb-aa79-01a7b062f1c9" class="" dir="auto"><strong>최대값 초과 테스트</strong></p><pre id="f9b720e4-6f49-8232-ae47-015dd5cefa63" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">resources:
+  limits:
+    cpu:&quot;2&quot;</code></pre><p id="9a7720e4-6f49-8336-a8c7-812e68eb7169" class="" dir="auto">→ max 1 초과</p><p id="04d720e4-6f49-8371-8e35-81a6c9cd9ee4" class="" dir="auto">→ 생성 거부됨.</p><hr id="d70720e4-6f49-8368-b327-81cc074c5636" dir="auto"/><h2 id="d2a720e4-6f49-838b-afc7-81c73c1795b6" class="" dir="auto">6. <strong>Horizontal Pod Autoscaling</strong></h2><p id="a8b720e4-6f49-825e-811e-816542418fd9" class="" dir="auto">HPA는 replicas를 사용하는 리소스에 적용되며, cpu,memory 등의 사용량을 측정해 정해진 값 이상으로 수치가 넘어가면 replicas를 수평 확장하고  정해진 값 아래로 수치가 내려가면  replicas를 줄인다.</p><h3 id="996720e4-6f49-83fb-9f34-0188d201a94f" class="" dir="auto">HPA 실습 (CPU/Memory 기반 자동 확장)</h3><h3 id="730720e4-6f49-8349-bb47-019273742d66" class="" dir="auto">6.1 사전조건: metrics-server 설치/동작 확인</h3><p id="9a1720e4-6f49-83d4-a911-81ef68a23182" class="" dir="auto">HPA는 메트릭 없으면 동작하지 않는다.</p><ul id="720720e4-6f49-83a5-ac0f-014cd4875c81" class="bulleted-list" dir="auto"><li style="list-style-type:disc">metric-server 설치</li></ul><h3 id="eb4720e4-6f49-833e-9431-019d2c267aa4" class="" dir="auto"><strong>1. 공식 YAML 파일 다운로드</strong></h3><p id="c45720e4-6f49-836c-b1ce-01c752e12a3e" class="" dir="auto">먼저 최신 버전의 선언형 파일을 로컬로 다운로드합니다. (직접 수정이 필요하므로 바로 <code>apply</code> 하지 않음.)</p><pre id="1e1720e4-6f49-83c3-8c8b-81816da35545" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">wget https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml</code></pre><hr id="829720e4-6f49-82c9-8f01-0191bdbcab25" dir="auto"/><h3 id="17f720e4-6f49-8339-8965-810fba466281" class="" dir="auto"><strong>2. YAML 파일 핵심 수정 (3가지 포인트)</strong></h3><p id="b03720e4-6f49-83a2-8935-01f7a952d4ec" class="" dir="auto">다운로드한 <code>components.yaml</code> 파일을 열어 <code>Deployment</code> 섹션을 아래와 같이 수정한다.</p><ul id="f99720e4-6f49-82cd-ac88-01a5c699eebc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>인증서 무시:</strong> 사설 인증서를 사용하는 온프레미스 환경을 위해 <code>-kubelet-insecure-tls</code> 옵션이 필수이다.</li></ul><ul id="3e8720e4-6f49-8314-84ca-817c768e6b6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>포트 우회:</strong> Kubelet(10250)과의 충돌을 피하기 위해 전용 포트(<strong>4443</strong>)를 수정한다. 클라우드서비스 사용시에는 변경 불필요.</li></ul><ul id="04f720e4-6f49-820f-8662-81acc82688dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>서비스(Service) 포트 매핑: </strong>외부(API 서버)는 443으로 들어오고, 내부(Pod)는 4443으로 전달되도록 <code>Service</code> 섹션을 수정한다.</li></ul><pre id="4e1720e4-6f49-8304-99d5-81252ab38a11" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+spec:
+  ports:
+  - appProtocol: https
+    name: https
+    port: 443
+    protocol: TCP
+    targetPort: 4443
+  selector:
+    k8s-app: metrics-server
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    k8s-app: metrics-server
+  name: metrics-server
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      k8s-app: metrics-server
+  strategy:
+    rollingUpdate:
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        k8s-app: metrics-server
+    spec:
+      containers:
+      - args:
+        - --cert-dir=/tmp
+        - --secure-port=4443
+        - --kubelet-preferred-address-types=InternalIP,ExternalIP,Hostname
+        - --kubelet-use-node-status-port
+        - --kubelet-insecure-tls
+        - --metric-resolution=15s
+        image: registry.k8s.io/metrics-server/metrics-server:v0.8.1
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /livez
+            port: https
+            scheme: HTTPS
+          periodSeconds: 10
+        name: metrics-server
+        ports:
+        - containerPort: 4443
+          name: https
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /readyz
+            port: https
+            scheme: HTTPS
+          initialDelaySeconds: 20
+          periodSeconds: 10
+</code></pre><hr id="2a2720e4-6f49-83d4-b87e-0195d5aef66c" dir="auto"/><pre id="34f720e4-6f49-8210-97ed-0169ecd6f70f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f components.yaml
+kubectl get apiservice v1beta1.metrics.k8s.io
+
+kubectl get apiservices | grep metrics
+kubectl top nodes
+kubectl top pods -A | head</code></pre><ul id="1f0720e4-6f49-8296-9f78-81099c839f71" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>kubectl top</code>이 동작해야 한다</li></ul><ul id="63d720e4-6f49-82ba-bc7a-01f0338bf382" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동작하지 않으면 metrics-server 미설치/미정상 가능성이 높다</li></ul><hr id="cb2720e4-6f49-823c-9f29-015b7cd07d64" dir="auto"/><h3 id="ea6720e4-6f49-8205-b70a-013cd2188c43" class="" dir="auto">6.2 HPA 대상 Deployment 생성 (requests 필수)</h3><p id="8d0720e4-6f49-82be-bf82-81e6193357cb" class="" dir="auto">HPA는 보통 “목표 사용률(%)”을 계산하므로 <strong>requests가 반드시 있어야</strong> 의미 있는 비율이 나온다.</p><p id="c40720e4-6f49-8259-804c-81cf607a3772" class="" dir="auto"><code>deploy.yaml</code></p><pre id="7b7720e4-6f49-828d-bd77-01fd4e6bfedc" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: web
+  namespace: resource-lab
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: web
+  template:
+    metadata:
+      labels:
+        app: web
+    spec:
+      containers:
+      - name: web
+        image: nginx:1.25
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            cpu: &quot;100m&quot;
+            memory: &quot;128Mi&quot;
+          limits:
+            cpu: &quot;300m&quot;
+            memory: &quot;256Mi&quot;</code></pre><p id="d66720e4-6f49-82b7-b89e-01d79ceda421" class="" dir="auto">적용</p><pre id="c33720e4-6f49-82be-b48e-011734fc3c7a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f deploy.yaml
+kubectl get deploy,po -n resource-lab -o wide</code></pre><hr id="e0f720e4-6f49-837b-8515-8186a0987cc3" dir="auto"/><h3 id="85f720e4-6f49-82d2-82f2-01835d59e8a9" class="" dir="auto">6.3 부하 발생용 Service 생성</h3><p id="d39720e4-6f49-83b5-8284-810225c5d52c" class="" dir="auto"><code>svc.yaml</code></p><pre id="c15720e4-6f49-826a-bb21-01d72c4910d6" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Service
+metadata:
+  name: web-svc
+  namespace: resource-lab
+spec:
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80
+  type: ClusterIP</code></pre><p id="8c3720e4-6f49-839d-910c-8130904459ca" class="" dir="auto">적용</p><pre id="328720e4-6f49-824f-82b1-81d16d0868c7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f svc.yaml
+kubectl get svc -n resource-lab</code></pre><hr id="3de720e4-6f49-834c-b05e-81da29fc2a18" dir="auto"/><h3 id="563720e4-6f49-8320-a422-8139603035ea" class="" dir="auto">6.4 HPA(v2) 생성: CPU + Memory 기준</h3><p id="dc9720e4-6f49-837c-aa00-81ae281ba71c" class="" dir="auto">테스트를 위해 설정값을 낮게 잡음.</p><p id="10a720e4-6f49-833c-81cb-81e33d289315" class="" dir="auto"><code>hpa.yaml</code></p><pre id="cf9720e4-6f49-8270-90bd-01967b8dceeb" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: web-hpa
+  namespace: resource-lab
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: web
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+  - type: Resource
+    resource:
+      name: cpu
+      target:
+        type: Utilization
+        averageUtilization: 10
+  - type: Resource
+    resource:
+      name: memory
+      target:
+        type: Utilization
+        averageUtilization: 10</code></pre><p id="ac5720e4-6f49-8225-be43-01ea1ea61902" class="" dir="auto">적용/확인</p><pre id="3a2720e4-6f49-8286-9f45-01b224db4110" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f hpa.yaml
+kubectl get hpa -n resource-lab
+kubectl describe hpa web-hpa -n resource-lab</code></pre><p id="417720e4-6f49-82fb-823f-01525cb4f750" class="" dir="auto">해설</p><ul id="1f1720e4-6f49-82c7-a3a4-810cec1072ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>averageUtilization</code>은 “requests 대비 사용률”이다</li></ul><ul id="c44720e4-6f49-823f-8021-818c9a895c3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU 50%면 <code>100m requests</code> 기준으로 평균 50m 이상이면 확장 방향으로 평가한다</li></ul><ul id="6a3720e4-6f49-8380-9cf3-81b1456b2f59" class="bulleted-list" dir="auto"><li style="list-style-type:disc">메모리도 동일한 방식으로 requests 대비 비율로 평가한다</li></ul><p id="524720e4-6f49-83a7-922c-016cc364aa05" class="" dir="auto">hpa는 replicas를 줄일때 안정적인 운영을 위해 5분정도를 기다린다.  다음 옵션 수정으로 1분으로 줄여 테스트한다.  운영시에는 변경하지 않음.</p><pre id="b85720e4-6f49-8384-a3ae-81fa1d65ec50" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">spec:
+  # ... 기존 설정들 (maxReplicas, minReplicas 등) ...
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 60  # 5분(300초) 대신 1분(60초)으로 수정</code></pre><hr id="f22720e4-6f49-82bb-8d5a-01424e79847e" dir="auto"/><h2 id="f3b720e4-6f49-8310-9314-818efe0d2c39" class="" dir="auto">7. HPA 동작 확인 (부하 발생 → 확장 → 부하 제거 → 축소)</h2><h3 id="f20720e4-6f49-82b4-af26-81bd2c373eb3" class="" dir="auto">7.1 임시 부하 파드 실행(클러스터 내부에서 요청)</h3><p id="7ab720e4-6f49-8354-9496-812b52e1aa9e" class="" dir="auto">아래는 busybox로 무한 루프 요청을 보내는 방식이다.</p><pre id="2cf720e4-6f49-82c9-968e-813fa5db38e8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl run -n resource-lab -it --rm loadgen \
+  --image=busybox:1.36 \
+  --restart=Never \
+  -- /bin/sh</code></pre><p id="e3e720e4-6f49-8364-81fd-01aa9a75b754" class="" dir="auto">busybox 쉘 안에서 실행</p><pre id="70d720e4-6f49-8230-8f30-013bcbbe4789" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">while true; do
+  wget -q -O- http://web-svc.resource-lab.svc.cluster.local &gt;/dev/null
+done</code></pre><p id="0dc720e4-6f49-8300-9ea3-0125ce097260" class="" dir="auto">설명</p><ul id="81c720e4-6f49-8300-95af-813cc0070657" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>kubectl run ... -it --rm</code><ul id="42a720e4-6f49-8298-b7fd-01885943c889" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>it</code>는 터미널 상호작용 모드로 접속한다</li></ul><ul id="636720e4-6f49-822c-906a-812bd026dc1a" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>-rm</code>은 종료 시 파드를 자동 삭제한다</li></ul><ul id="7bb720e4-6f49-83a7-ae23-015f2413c30c" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>-restart=Never</code>는 Deployment가 아니라 “1회성 Pod”로 뜨게 한다</li></ul></li></ul><ul id="4ea720e4-6f49-82cf-bf77-8188ed94390f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부 DNS로 Service를 호출한다<ul id="4d0720e4-6f49-8319-b10a-8118b927ebe9" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>서비스명.네임스페이스.svc.cluster.local</code> 형식이다</li></ul></li></ul><hr id="bd2720e4-6f49-8394-824b-811b0b4e4b59" dir="auto"/><h3 id="a2c720e4-6f49-82d6-87fe-014704b03aa4" class="" dir="auto">7.2 HPA 상태 관찰</h3><p id="b1a720e4-6f49-8319-bbc5-01995a45dd13" class="" dir="auto">다른 터미널에서 실행</p><pre id="d66720e4-6f49-835d-bd54-81f549283bbe" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get hpa -n resource-lab -w</code></pre><p id="271720e4-6f49-83bc-9b77-01d53322f2d1" class="" dir="auto">또는</p><pre id="48d720e4-6f49-823a-b603-81bfd3cdd28d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get deploy -n resource-lab -w
+kubectl top pods -n resource-lab</code></pre><p id="396720e4-6f49-836c-b9de-018d16e6b4d2" class="" dir="auto">기대 결과</p><ul id="747720e4-6f49-8336-87a9-01cf7f104d3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일정 시간 후 replicas가 2,3…으로 증가한다</li></ul><ul id="7fa720e4-6f49-82f0-b7bd-81730e2355e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부하 제거하면 안정화 구간 지나 replicas가 다시 감소한다</li></ul><p id="2db720e4-6f49-8206-a29a-819210412b3f" class="" dir="auto">부하 중단</p><ul id="597720e4-6f49-8353-bd3b-018cc9be46ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">busybox 터미널에서 <code>Ctrl+C</code> 후 <code>exit</code> 한다</li></ul><ul id="b0f720e4-6f49-82d9-8cb2-81b6ba8feb3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-rm</code>라서 파드 자동 삭제됨</li></ul><hr id="3e9720e4-6f49-8296-addb-8169a860bc28" dir="auto"/><h2 id="5d2720e4-6f49-8310-a507-8153b452da46" class="" dir="auto">8. 운영에서 자주 막히는 포인트 (트러블슈팅)</h2><h3 id="5a2720e4-6f49-829f-a251-01f408c46a21" class="" dir="auto">8.1 HPA가 <code>&lt;unknown&gt;</code> 뜨는 경우</h3><p id="0c8720e4-6f49-823d-8975-01fb17e3323c" class="" dir="auto">확인</p><pre id="eff720e4-6f49-8229-8abb-014cdf2ed6ec" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe hpa web-hpa -n resource-lab
+kubectl top pods -n resource-lab
+kubectl get apiservices | grep metrics</code></pre><p id="518720e4-6f49-8388-87d1-81c03ca4a90b" class="" dir="auto">원인 후보</p><ul id="03c720e4-6f49-823c-ad56-819292c881ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">metrics-server 미설치/비정상</li></ul><ul id="a3d720e4-6f49-8328-84dd-01aee7d375a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API aggregation TLS 문제(환경 따라 발생)</li></ul><ul id="98a720e4-6f49-8348-903b-812d6b6b5cc6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">requests 미지정(비율 계산 자체가 의미 없거나 동작이 제한되는 구성)</li></ul><hr id="751720e4-6f49-8356-ae0f-813fe2a07f72" dir="auto"/><h3 id="7b2720e4-6f49-82c7-8170-8129db68a6c2" class="" dir="auto">8.2 CPU는 제한했는데 “느려지기만 하고 죽지는 않음”</h3><ul id="c1b720e4-6f49-8216-9e56-81de3a86bbc4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU limits는 초과 시 throttling이 일반적이다</li></ul><ul id="593720e4-6f49-8313-ae95-0104dda9fca4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">메모리 limits는 초과 시 OOMKilled가 흔하다</li></ul><ul id="b54720e4-6f49-83c9-b688-81c91db24e6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">즉 “CPU는 성능저하, Memory는 종료”로 관찰되는 경우가 많다</li></ul><hr id="1a1720e4-6f49-8392-a58f-018edcc699ce" dir="auto"/><h2 id="a82720e4-6f49-837c-821d-81caf18f9d6e" class="" dir="auto">9. 정리 과제(실습 문제)</h2><ol type="1" id="22c720e4-6f49-8339-89d2-8182228c7394" class="numbered-list" start="1" dir="auto"><li>Burstable 파드를 하나 만들고, Guaranteed로 바꿔 QoS 변화를 확인한다</li></ol><ol type="1" id="17c720e4-6f49-8263-a643-816ed1c6971a" class="numbered-list" start="2" dir="auto"><li>ResourceQuota를 더 낮춰서(예: requests.cpu=300m) Deployment replicas를 늘리려 하면 어떤 에러가 나는지 확인한다</li></ol><ol type="1" id="22c720e4-6f49-82ac-87bf-81dce1136086" class="numbered-list" start="3" dir="auto"><li>HPA의 <code>maxReplicas</code>를 2로 제한하고 부하를 걸어 확장이 더 이상 못 되는 상황을 만든다</li></ol><hr id="e1d720e4-6f49-826b-a8cd-0144f888976a" dir="auto"/><h2 id="adc720e4-6f49-828d-b633-81337f7958ae" class="" dir="auto">10. 실습 리소스 일괄 정리</h2><pre id="a15720e4-6f49-824c-b54f-817af5f58861" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete ns resource-lab</code></pre><ul id="4be720e4-6f49-82a6-8fc6-0120b5220bd9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">namespace 삭제로 실습 리소스가 한 번에 정리된다</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

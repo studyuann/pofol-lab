@@ -1,0 +1,786 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>3장. VPC, Subnet, Firewall</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="2dd720e4-6f49-8297-ab07-01de5b0144c7" class="page sans"><header><h1 class="page-title" dir="auto">3장. VPC, Subnet, Firewall</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="2c4720e4-6f49-8211-bb1d-81a50311fb13" class="" dir="auto">1. 장 개요</h2><p id="0f3720e4-6f49-83c6-ac9e-818d909adb0c" class="" dir="auto">이 장에서는 Google Cloud 네트워크의 기본이 되는 VPC, Subnet, Route, Firewall Rule을 학습한다.</p><p id="b50720e4-6f49-83d4-9421-8163c8e6587f" class="" dir="auto">앞 장에서 Project와 IAM을 다뤘다면, 이제는 그 프로젝트 안에서 실제 워크로드가 연결될 <strong>네트워크 기반</strong>을 이해하는 단계다.</p><p id="58f720e4-6f49-8273-9da1-81f8b08eb3b8" class="" dir="auto">AWS를 먼저 학습한 상태에서는 보통 다음 감각이 익숙하다.</p><ul id="d4f720e4-6f49-8207-81be-01e6aaa319c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC는 리전 단위 네트워크임</li></ul><ul id="a2c720e4-6f49-83c8-a17e-019bc821b5c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷은 AZ 단위로 나뉨</li></ul><ul id="2f3720e4-6f49-83aa-abf6-0181d65a5e18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group이 인스턴스 단위 방화벽 역할을 함</li></ul><ul id="08f720e4-6f49-82b6-8f57-012255137637" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table을 서브넷과 연결해 경로를 제어함</li></ul><p id="eab720e4-6f49-83f3-9725-01126c136e08" class="" dir="auto">하지만 GCP는 이 지점에서 운영 감각이 다르게 들어온다.</p><ul id="b7c720e4-6f49-82e4-80c2-811dc6cd7ce2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>VPC는 글로벌 리소스</strong>임</li></ul><ul id="a44720e4-6f49-8389-a1ee-81626ad338fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>서브넷은 리전 리소스</strong>임</li></ul><ul id="e96720e4-6f49-830b-b5e3-819ea42af883" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>방화벽 제어는 VPC Firewall Rule 중심</strong>으로 봄</li></ul><ul id="f3e720e4-6f49-822b-9141-01179133b162" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 대상 지정에 <strong>네트워크 태그</strong>나 <strong>서비스 계정</strong>을 활용할 수 있음</li></ul><ul id="844720e4-6f49-8270-a480-017a3135d51c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 VPC에는 기본적으로 <strong>암시적(implied) 방화벽 규칙</strong>이 존재함 (<a href="https://docs.cloud.google.com/vpc/docs/overview?utm_source=chatgpt.com">Google Cloud Documentation</a>)</li></ul><p id="5ec720e4-6f49-825b-af1d-017f2f46bbf7" class="" dir="auto">즉, 이 장은 단순히 네트워크를 만드는 법을 배우는 장이 아니라,</p><p id="4ec720e4-6f49-82dd-adb4-812e4560d0f8" class="" dir="auto"><strong>GCP 네트워크를 어떤 사고방식으로 다뤄야 하는지</strong>를 익히는 장이라고 보면 된다.</p><hr id="38c720e4-6f49-8330-90a7-0147f02aa939" dir="auto"/><h2 id="193720e4-6f49-8218-8902-8155e395e7c0" class="" dir="auto">2. 학습 목표</h2><p id="792720e4-6f49-82ca-a17f-0175a23f4284" class="" dir="auto">이 장을 마치면 다음이 가능해야 한다.</p><ul id="4ea720e4-6f49-8208-9a34-01fa29dcc9f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP VPC가 글로벌 리소스라는 의미를 설명할 수 있음</li></ul><ul id="6b2720e4-6f49-83a6-b8ff-01449ccbbde3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet이 리전 리소스라는 점을 설명할 수 있음</li></ul><ul id="57d720e4-6f49-8281-b5b8-818a248e5cb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto mode VPC와 Custom mode VPC의 차이를 설명할 수 있음</li></ul><ul id="1d7720e4-6f49-830a-880f-81d7545eb7a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule의 구성 요소와 동작 방식을 설명할 수 있음</li></ul><ul id="65a720e4-6f49-833e-b5df-019c3775a978" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 태그와 서비스 계정을 대상 지정에 활용하는 방법을 설명할 수 있음</li></ul><ul id="e29720e4-6f49-83cc-ba54-8117e3af8fd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP Firewall Rule과 AWS Security Group의 차이를 비교할 수 있음</li></ul><ul id="744720e4-6f49-8285-9646-815c26d413d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CLI와 콘솔을 사용해 VPC, Subnet, Firewall Rule을 생성할 수 있음</li></ul><ul id="a9b720e4-6f49-83bd-9b44-81314e681808" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본적인 VM 통신을 위한 네트워크를 구성할 수 있음 (<a href="https://docs.cloud.google.com/vpc/docs/overview?utm_source=chatgpt.com">Google Cloud Documentation</a>)</li></ul><hr id="bd9720e4-6f49-8303-84c7-81ea34f28637" dir="auto"/><h2 id="56c720e4-6f49-830e-96c6-81a272c8918d" class="" dir="auto">3. 핵심 키워드</h2><ul id="1a5720e4-6f49-8279-b31e-81c8191f7c8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC</li></ul><ul id="ff7720e4-6f49-82d0-b1b9-0135c0f69ff5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Global Resource</li></ul><ul id="983720e4-6f49-824b-8644-818bb7845f69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet</li></ul><ul id="84d720e4-6f49-82ab-9f97-8199a13ae3d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Regional Resource</li></ul><ul id="de2720e4-6f49-83f0-baf2-81a65f9e2fe0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule</li></ul><ul id="a42720e4-6f49-82ff-a5c9-81fc86555786" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Implied Rules</li></ul><ul id="812720e4-6f49-8317-a3ca-8192575415b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Ingress</li></ul><ul id="b08720e4-6f49-8396-8c0a-81b1e4cecba4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Egress</li></ul><ul id="0db720e4-6f49-824b-8661-01840df53b3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route</li></ul><ul id="cd5720e4-6f49-8341-8145-0124703749b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Network Tag</li></ul><ul id="660720e4-6f49-839a-87e5-815696a501fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Target Service Account</li></ul><ul id="145720e4-6f49-8324-9246-81d009536201" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto mode</li></ul><ul id="bf9720e4-6f49-827a-b7d9-81fee38c66dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Custom mode</li></ul><hr id="1c6720e4-6f49-8313-b34e-0156d49f2d26" dir="auto"/><h1 id="96d720e4-6f49-83ae-87f1-8122659a9030" class="" dir="auto">4. GCP VPC란 무엇인가</h1><p id="c2e720e4-6f49-8353-aa7f-8114a36d1341" class="" dir="auto">GCP에서 VPC는 가상 네트워크를 의미한다.</p><p id="0f5720e4-6f49-834f-bc09-011391380953" class="" dir="auto">Compute Engine VM, 로드밸런서 백엔드, 내부 서비스 연결 등 대부분의 인프라 통신이 이 VPC 위에서 이루어진다.</p><p id="d40720e4-6f49-82b3-b466-81909435418c" class="" dir="auto">여기서 가장 중요한 특징은 다음이다.</p><h2 id="35a720e4-6f49-8397-8a54-019e3ca6ec69" class="" dir="auto">핵심 특징</h2><ul id="9d9720e4-6f49-82ed-8b7c-818b4ae8bc1a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>VPC 네트워크는 글로벌 리소스</strong>다</li></ul><ul id="352720e4-6f49-83bc-bd4d-8153e062c9c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하나의 VPC 안에 <strong>여러 리전의 서브넷</strong>을 둘 수 있다</li></ul><ul id="324720e4-6f49-8208-a9b2-81b6204552cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우트와 방화벽 규칙도 VPC와 함께 네트워크 차원에서 관리된다 </li></ul><p id="4d3720e4-6f49-83f9-8dff-816c36ba7f97" class="" dir="auto">즉, AWS처럼 “서울 리전에 VPC 하나, 도쿄 리전에 다른 VPC 하나”라는 감각으로 먼저 생각하기보다,</p><p id="bf5720e4-6f49-8229-b216-81c4b2550663" class="" dir="auto">GCP에서는 <strong>하나의 VPC가 여러 리전 자원을 포괄하는 구조</strong>를 먼저 떠올리는 것이 더 자연스럽다. </p><hr id="950720e4-6f49-8307-a8f4-81e65a7a65c5" dir="auto"/><h1 id="3a4720e4-6f49-830a-9d8b-01012c2af1ce" class="" dir="auto">5. AWS VPC와 GCP VPC의 차이</h1><h2 id="2b5720e4-6f49-8293-8ebd-01035432fbc9" class="" dir="auto">5.1 AWS에서 익숙한 구조</h2><ul id="dcd720e4-6f49-82c9-81d2-01bec64fb92f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC는 리전 단위</li></ul><ul id="ec9720e4-6f49-8296-9f59-01a1143f51af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷은 AZ 단위로 나뉨</li></ul><ul id="08f720e4-6f49-82c0-8f37-814542b1f062" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group이 인스턴스 방화벽 역할을 수행</li></ul><ul id="aaa720e4-6f49-83ef-bb7f-817454e7253b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table을 서브넷과 연결하는 감각이 강함</li></ul><h2 id="371720e4-6f49-8368-88e4-014359d7454f" class="" dir="auto">5.2 GCP에서의 구조</h2><ul id="6ab720e4-6f49-82d4-9962-01a63c7a168c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC는 글로벌 리소스</li></ul><ul id="873720e4-6f49-8306-b66e-819f6c61bfa2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷은 리전 리소스</li></ul><ul id="464720e4-6f49-82f3-9095-81892d774cc0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방화벽은 VPC 차원에서 정의</li></ul><ul id="950720e4-6f49-833a-ae06-01786a35c8ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상 인스턴스 선택 시 네트워크 태그나 서비스 계정을 사용 가능 </li></ul><hr id="043720e4-6f49-83c3-b233-8127cb2c7b7d" dir="auto"/><h1 id="a7d720e4-6f49-8364-bd31-01e43f0eb7c9" class="" dir="auto">6. VPC 네트워크의 종류</h1><p id="1e3720e4-6f49-8319-8413-819dbf6a2ba6" class="" dir="auto">GCP에서 VPC를 만들 때 대표적으로 두 가지 모드를 볼 수 있다.</p><ul id="07b720e4-6f49-8305-88ae-01df66c4a696" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto mode VPC</li></ul><ul id="9bb720e4-6f49-83a7-aaf6-81a54c0cf3f2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Custom mode VPC</li></ul><hr id="8a9720e4-6f49-83d9-a375-818da275d88a" dir="auto"/><h2 id="f3e720e4-6f49-82a2-b0e5-816cdb0e7440" class="" dir="auto">6.1 Auto mode VPC</h2><p id="2b4720e4-6f49-82b6-a725-01aa70b6d8a6" class="" dir="auto">Auto mode VPC는 Google Cloud가 미리 서브넷을 자동 생성해주는 방식이다.</p><p id="260720e4-6f49-83a0-9b27-814783f7cb50" class="" dir="auto">여러 리전에 대해 기본 대역의 서브넷이 자동으로 준비된다.</p><h3 id="33e720e4-6f49-82e0-bfa1-81af9c3c3496" class="" dir="auto">장점</h3><ul id="c05720e4-6f49-83ef-bf03-01eb90b4b668" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빠르게 시작 가능</li></ul><ul id="cad720e4-6f49-8284-904d-0104657dfb30" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습 초반에는 구조를 빨리 확인하기 쉬움</li></ul><h3 id="38c720e4-6f49-83b8-9ccf-81834b6aa5a5" class="" dir="auto">단점</h3><ul id="772720e4-6f49-83f6-a608-01a6345918c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 대역을 세밀하게 설계하기 어려움</li></ul><ul id="2b1720e4-6f49-83dc-8a1a-01be5c34b4de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무 환경에서는 주소 체계 충돌 가능성이 있음</li></ul><ul id="92a720e4-6f49-825b-ab23-8149afc4bf90" class="bulleted-list" dir="auto"><li style="list-style-type:disc">향후 확장이나 하이브리드 연결 시 불편할 수 있음</li></ul><hr id="28b720e4-6f49-82f5-8a9c-01a9bda9bd2b" dir="auto"/><h2 id="54c720e4-6f49-8280-883a-013b8c038e84" class="" dir="auto">6.2 Custom mode VPC</h2><p id="917720e4-6f49-82c0-b7e7-01155f2cf27f" class="" dir="auto">Custom mode VPC는 서브넷을 직접 설계하고 생성하는 방식이다.</p><p id="320720e4-6f49-839b-9da9-01ebb74c1ec4" class="" dir="auto">리전별로 필요한 서브넷과 CIDR 대역을 직접 정한다.</p><h3 id="21c720e4-6f49-83b1-b7a8-81c05ae31c14" class="" dir="auto">장점</h3><ul id="952720e4-6f49-83fb-8e3e-81e106758ed6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주소 체계를 명확히 설계 가능</li></ul><ul id="9e7720e4-6f49-8275-8199-01329d578621" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티리전, VPN, 하이브리드 연결 시 유리</li></ul><ul id="7b4720e4-6f49-829b-a8ee-017261cee7c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">교육에서도 네트워크 구조를 의도적으로 설명하기 좋음</li></ul><h3 id="9b5720e4-6f49-83a0-9fc6-81cce805aa87" class="" dir="auto">단점</h3><ul id="9d3720e4-6f49-833f-9140-817d3434e73a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">직접 설계해야 하므로 초기 설정이 약간 더 필요함</li></ul><hr id="851720e4-6f49-8258-aa8b-81ef5be7a38d" dir="auto"/><h1 id="239720e4-6f49-8318-a8d7-8138520a5ffd" class="" dir="auto">7. Subnet이란 무엇인가</h1><p id="355720e4-6f49-83de-b15e-0154a455d780" class="" dir="auto">서브넷은 VPC 안에서 IP 주소 범위를 실제로 나누어 사용하는 네트워크 세그먼트다.</p><p id="1df720e4-6f49-820d-a4a0-01270108fbb2" class="" dir="auto">중요한 점은 GCP에서 <strong>서브넷은 리전 리소스</strong>라는 것이다. 즉, 같은 VPC 안에도 서울 리전 서브넷, 도쿄 리전 서브넷을 각각 둘 수 있다.</p><p id="a62720e4-6f49-82ff-991c-016862d72e27" class="" dir="auto">예를 들어 아래처럼 설계할 수 있다.</p><ul id="5a5720e4-6f49-8200-936f-8141d6bbcc69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC: <code>camp-vpc</code><ul id="c14720e4-6f49-82ad-9b7f-81f6455e0f5c" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Seoul subnet: <code>10.10.1.0/24</code></li></ul><ul id="fe2720e4-6f49-83af-a72d-811055763fd4" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Tokyo subnet: <code>10.20.1.0/24</code></li></ul></li></ul><p id="cea720e4-6f49-8277-aea0-01b14f7d0dda" class="" dir="auto">이 둘은 하나의 글로벌 VPC 안에 속하지만, 각각 다른 리전에 존재한다.</p><h2 id="663720e4-6f49-82b5-9704-017682f0903d" class="" dir="auto">왜 중요한가</h2><p id="9d6720e4-6f49-8201-bd74-014637ae20d3" class="" dir="auto">이 구조 덕분에 GCP에서는 멀티리전 네트워크를 상대적으로 일관되게 설계할 수 있다.</p><p id="7af720e4-6f49-830e-9bb5-01d78b68f93a" class="" dir="auto">반면 주소 체계를 처음부터 잘 잡지 않으면 이후 VPN이나 Shared VPC 연결 시 복잡해질 수 있다.</p><hr id="e00720e4-6f49-824b-9d9e-0167f1facb6a" dir="auto"/><h1 id="461720e4-6f49-82a8-a28d-01ced8bcb27e" class="" dir="auto">8. Route란 무엇인가</h1><p id="757720e4-6f49-82b9-8856-818ece9707b3" class="" dir="auto">Route는 패킷이 어디로 나가야 하는지를 결정하는 경로 정보다.</p><h2 id="b30720e4-6f49-82e7-b4cf-817b7e11cfb3" class="" dir="auto">8.1 GCP 라우트의 기본 감각</h2><ul id="061720e4-6f49-838a-95a6-01cd196b82db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 네트워크에는 기본 라우트가 존재함</li></ul><ul id="791720e4-6f49-8243-ac40-019fcb046647" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 VPC 안의 서브넷 간 통신을 위한 경로가 자동으로 처리됨</li></ul><ul id="142720e4-6f49-838d-8f99-017c3c02701f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요 시 정적 라우트를 추가할 수 있음 </li></ul><h2 id="415720e4-6f49-83b2-86bb-01ab81589669" class="" dir="auto">8.2 AWS와의 차이 체감</h2><p id="2be720e4-6f49-83e2-b566-81415a06d9ee" class="" dir="auto">AWS에서는 Route Table을 서브넷과 연관시키는 개념을 자주 다룬다.</p><p id="bcd720e4-6f49-82b5-9cc6-81038aee1bb6" class="" dir="auto">GCP도 라우팅 개념은 동일하게 중요하지만, 방화벽과 VPC 구조 쪽에서 더 크게 나타난다.</p><ul id="496720e4-6f49-826e-a29a-81691d5f95a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 VPC 내부 통신은 기본 라우팅이 상당 부분 처리함</li></ul><ul id="6a1720e4-6f49-83a3-bbfc-0186dfee2d18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인터넷 방향 통신도 기본 경로가 관여함</li></ul><ul id="036720e4-6f49-8361-a6b9-0142a21bfd08" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN, 하이브리드, 특수 목적 경로는 이후 별도 설계가 필요함</li></ul><hr id="950720e4-6f49-821f-bb67-814f34f2ad79" dir="auto"/><h1 id="fc2720e4-6f49-83e0-806c-8111a1ab5bea" class="" dir="auto">9. GCP Firewall Rule이란 무엇인가</h1><p id="a54720e4-6f49-83ee-bb2e-01873066260f" class="" dir="auto">GCP의 VPC는 분산형 가상 방화벽을 구현하며, Firewall Rule로 어떤 트래픽을 허용하거나 차단할지 제어한다. </p><h2 id="195720e4-6f49-838d-a26d-81911007bb4e" class="" dir="auto">9.1 핵심 개념</h2><p id="a63720e4-6f49-8249-a4dd-816f247cb500" class="" dir="auto">방화벽 규칙은 다음을 기준으로 트래픽을 제어한다.</p><ul id="59c720e4-6f49-8354-8aab-01bb69e11ddb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 VPC 네트워크에 적용할지</li></ul><ul id="ca2720e4-6f49-83a5-9010-81b921cca375" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인바운드(INGRESS)인지 아웃바운드(EGRESS)인지</li></ul><ul id="898720e4-6f49-834c-aa5b-012dd51798d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">허용(allow)인지 거부(deny)인지</li></ul><ul id="022720e4-6f49-82d8-8d3b-011ce4a64d59" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 프로토콜과 포트인지</li></ul><ul id="8eb720e4-6f49-83ee-ba89-81fcadcaa589" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 소스 또는 목적지 범위인지</li></ul><ul id="9c1720e4-6f49-8229-bc54-8134885d9a23" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 대상 인스턴스에 적용할지 </li></ul><h2 id="e86720e4-6f49-8346-839c-018103b21c9b" class="" dir="auto">9.2 중요한 특징</h2><ul id="0ea720e4-6f49-82c6-ad04-81c397b9b5e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Firewall Rule은 <strong>네트워크 차원에서 정의</strong>된다</li></ul><ul id="d9e720e4-6f49-836d-bccd-81dad708ffcc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상 인스턴스를 <strong>태그</strong>나 <strong>서비스 계정</strong>으로 지정할 수 있다</li></ul><ul id="3a4720e4-6f49-837e-a9d9-81cff5cb9812" class="bulleted-list" dir="auto"><li style="list-style-type:disc">규칙마다 <strong>우선순위(priority)</strong> 가 있다</li></ul><ul id="a56720e4-6f49-83de-befb-018022fb9383" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본적으로 모든 VPC에는 <strong>암시적 인바운드 거부 / 아웃바운드 허용 규칙</strong>이 존재한다</li></ul><hr id="dae720e4-6f49-82b2-a6d2-018568408bbf" dir="auto"/><h1 id="364720e4-6f49-83f8-a2e9-010f5ed9c017" class="" dir="auto">10. 암시적 방화벽 규칙(Implied Rules)</h1><p id="80b720e4-6f49-8325-8cd6-01aa8eb969de" class="" dir="auto">이 부분은 꼭 짚어야 한다.</p><p id="af0720e4-6f49-835d-9f2d-81f0b7f2ccbb" class="" dir="auto">Google Cloud는 모든 VPC 네트워크에 대해 기본적으로 다음 두 가지 암시적 규칙을 둔다.</p><ul id="008720e4-6f49-83e5-b635-812106927e9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 <strong>인바운드 연결 차단</strong></li></ul><ul id="cc9720e4-6f49-82a5-8b4a-8172e17a2ccf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 <strong>아웃바운드 연결 허용</strong> </li></ul><p id="527720e4-6f49-82a4-9053-81d44d78f827" class="" dir="auto">즉, VM을 만들었다고 해서 외부에서 바로 SSH나 HTTP 접속이 가능한 것이 아니다.</p><p id="76a720e4-6f49-837c-b2c3-019bc87bdc14" class="" dir="auto">접속하려면 명시적으로 인바운드 허용 규칙을 만들어야 한다.</p><hr id="237720e4-6f49-82b2-aaf0-81a0648a0062" dir="auto"/><h1 id="11b720e4-6f49-8288-9ef6-817e3cb04d93" class="" dir="auto">11. Firewall Rule의 주요 구성 요소</h1><h2 id="aa2720e4-6f49-83cf-be6d-0155a5122f73" class="" dir="auto">11.1 Direction</h2><p id="3c0720e4-6f49-835f-99f2-01727763f7c3" class="" dir="auto">트래픽 방향을 의미한다.</p><ul id="d11720e4-6f49-8222-aeed-813d7c919853" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>INGRESS</code>: 외부 또는 다른 소스에서 VM으로 들어오는 트래픽</li></ul><ul id="29a720e4-6f49-82a5-bba3-81f3016a970d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>EGRESS</code>: VM에서 외부 또는 다른 대상으로 나가는 트래픽</li></ul><h2 id="218720e4-6f49-8326-834e-01cc3e7d9245" class="" dir="auto">11.2 Action</h2><p id="704720e4-6f49-82b1-b19b-814c4ec03e29" class="" dir="auto">규칙이 일치할 때 수행할 동작이다.</p><ul id="f09720e4-6f49-82c4-bb9e-0194e303a8b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow</code></li></ul><ul id="4a0720e4-6f49-83cd-b025-0131f9c8761d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>deny</code></li></ul><h2 id="cd1720e4-6f49-836e-8a3c-81c169b32dcf" class="" dir="auto">11.3 Protocol / Port</h2><p id="716720e4-6f49-8317-ba92-81825c51e0ff" class="" dir="auto">허용 또는 차단할 프로토콜과 포트를 지정한다.</p><p id="975720e4-6f49-82f9-8f0f-014b5081466d" class="" dir="auto">예시</p><ul id="a1a720e4-6f49-8294-b6cd-01f20515ded3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>tcp:22</code></li></ul><ul id="c71720e4-6f49-83f3-9860-81ae686d4052" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>tcp:80</code></li></ul><ul id="8e4720e4-6f49-8345-b534-81a9c8c17b9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>tcp:443</code></li></ul><h2 id="7ca720e4-6f49-8231-96c1-81656eb818e4" class="" dir="auto">11.4 Source / Destination</h2><p id="4ca720e4-6f49-83f3-aa5c-81599468206b" class="" dir="auto">어디서 오는 트래픽인지, 어디로 가는 트래픽인지 지정한다.</p><p id="0ae720e4-6f49-83de-a818-81918679ba05" class="" dir="auto">예시</p><ul id="7f1720e4-6f49-828e-999c-015ffd3f3ca5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>0.0.0.0/0</code></li></ul><ul id="ac7720e4-6f49-8299-b047-8167ba53b83d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>10.10.1.0/24</code></li></ul><h2 id="e96720e4-6f49-8272-a9cd-010f2a55b821" class="" dir="auto">11.5 Target</h2><p id="cc7720e4-6f49-83c9-832f-81b88ea05554" class="" dir="auto">규칙이 적용될 대상을 의미한다.</p><p id="ff4720e4-6f49-8349-b149-81e27de5a466" class="" dir="auto">Google Cloud에서는 모든 규칙이 네트워크 안의 모든 인스턴스에 적용될 수도 있고, 특정 <strong>타깃 태그</strong> 또는 <strong>타깃 서비스 계정</strong>을 기준으로 제한할 수도 있다.</p><hr id="147720e4-6f49-82a4-9ffb-011591935d72" dir="auto"/><h1 id="b62720e4-6f49-8325-8dd2-012d03614476" class="" dir="auto">12. 네트워크 태그(Network Tag)</h1><p id="9ac720e4-6f49-83d9-98be-01d57bcfe5d2" class="" dir="auto">네트워크 태그는 VM 인스턴스를 논리적으로 분류하는 데 사용하는 문자열이다.</p><p id="c6b720e4-6f49-83b0-aa98-0172a67784fe" class="" dir="auto">Firewall Rule에서 <code>target-tags</code> 로 지정하면, 해당 태그를 가진 VM에만 규칙이 적용된다. </p><p id="38a720e4-6f49-8236-b69c-81b179668a98" class="" dir="auto">예를 들어</p><ul id="8eb720e4-6f49-82c5-a3da-01da87980482" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버 VM: <code>web</code></li></ul><ul id="159720e4-6f49-8373-9b67-81e2e807f1b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리 서버 VM: <code>bastion</code></li></ul><ul id="0f1720e4-6f49-8259-a05c-810a8a120eb6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 서버 VM: <code>app</code></li></ul><p id="bfd720e4-6f49-82d2-875b-811d78f9f5de" class="" dir="auto">처럼 태그를 줄 수 있다.</p><p id="8a3720e4-6f49-82a1-b8fe-8101c1e3805f" class="" dir="auto">그리고 방화벽 규칙에서</p><ul id="2c5720e4-6f49-82ff-97d4-016eb364e5e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>target-tags=web</code></li></ul><ul id="4be720e4-6f49-83f8-8e2d-816b9610feb0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow tcp:80</code></li></ul><p id="8f7720e4-6f49-8278-85c8-81bf6afc1647" class="" dir="auto">로 설정하면, <code>web</code> 태그가 붙은 인스턴스만 HTTP를 받을 수 있다.</p><h2 id="f7e720e4-6f49-8267-8f35-01dc947a276e" class="" dir="auto">왜 유용한가</h2><p id="30b720e4-6f49-8201-9476-011683426521" class="" dir="auto">인스턴스 이름으로 일일이 관리하지 않고, 역할 기반으로 네트워크 제어가 가능해진다.</p><hr id="d75720e4-6f49-8345-8ae0-01d71c313118" dir="auto"/><h1 id="75b720e4-6f49-83eb-b05f-81f4988f5c34" class="" dir="auto">13. 서비스 계정을 대상 지정에 활용</h1><p id="71b720e4-6f49-8233-864d-814eea13f4e4" class="" dir="auto">방화벽 규칙 대상은 태그뿐 아니라 <strong>서비스 계정</strong>으로도 지정할 수 있다.</p><p id="68a720e4-6f49-83d1-9da0-81ba10b15655" class="" dir="auto">즉, 특정 서비스 계정이 연결된 VM 인스턴스 집합에만 규칙을 적용할 수 있다. </p><p id="b65720e4-6f49-836b-9722-815913f8adb5" class="" dir="auto">초반 실습은 태그 기반이 더 직관적이므로 태그 중심으로 진행하면 된다.</p><p id="c74720e4-6f49-8398-8ab5-01a5513ccade" class="" dir="auto">하지만 실무에서는 서비스 계정 기반 제어가 더 정교하고 관리 친화적인 경우가 많다.</p><p id="34e720e4-6f49-8383-8077-01c291075c48" class="" dir="auto">예를 들어</p><ul id="4cb720e4-6f49-82dd-82a1-81ee9aab62d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>web-sa</code> 서비스 계정을 가진 인스턴스만 특정 백엔드 포트에 접근 가능하게 설계</li></ul><hr id="584720e4-6f49-823f-8559-0110268d3e80" dir="auto"/><h1 id="ea0720e4-6f49-820f-a143-012c119ece4a" class="" dir="auto">14. GCP Firewall Rule과 AWS Security Group 비교</h1><h2 id="e38720e4-6f49-8207-95b6-81292fd91a43" class="" dir="auto">AWS Security Group</h2><ul id="9e5720e4-6f49-82d1-9346-81272e0f59a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스나 ENI에 연결되는 감각이 강함</li></ul><ul id="8ce720e4-6f49-83f9-b149-811114c31f9e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태 저장(stateful) 방화벽</li></ul><ul id="96b720e4-6f49-8239-b6a6-01fbb769a2e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리소스 부착형 보안 제어라는 인상이 강함</li></ul><h2 id="95c720e4-6f49-83c1-be92-810cc532aab0" class="" dir="auto">GCP Firewall Rule</h2><ul id="103720e4-6f49-83d1-a9f3-816d434c7f87" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 차원에서 정의</li></ul><ul id="9a2720e4-6f49-8381-ba60-813435443ef8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대상은 태그 또는 서비스 계정 등으로 지정</li></ul><ul id="1ba720e4-6f49-8287-ba25-011a51a65447" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 중심 제어라는 인상이 강함</li></ul><p id="205720e4-6f49-82dc-ad08-81009439762f" class="" dir="auto"><strong>AWS는 인스턴스에 보안그룹을 붙이는 감각이 강하고, GCP는 네트워크 위에 방화벽 규칙을 정의한 뒤 대상 VM을 지정하는 감각이 강함</strong></p><hr id="2b5720e4-6f49-8348-94b0-8181bd0d207e" dir="auto"/><h1 id="cbe720e4-6f49-837f-bd64-817c2c82792d" class="" dir="auto">15. 기본 네트워크 설계 예시</h1><h2 id="ca5720e4-6f49-8247-a57d-01237cc2ddf9" class="" dir="auto">예시 구조</h2><ul id="c2e720e4-6f49-826f-baf6-817c4b2e6dd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC: <code>initial-vpc</code></li></ul><ul id="6d5720e4-6f49-83ae-9c6b-012cb6dfe4ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Region: <code>asia-northeast3</code></li></ul><ul id="8cc720e4-6f49-83d5-bd6e-0163a60bb3c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet: <code>initial-subnet-web</code></li></ul><ul id="d5d720e4-6f49-83dc-b158-01f6e5899c8d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CIDR: <code>10.10.1.0/24</code></li></ul><h2 id="f04720e4-6f49-82d3-8bfe-0168bcb7f382" class="" dir="auto">방화벽 규칙</h2><ul id="bac720e4-6f49-8266-8026-8138ef37e8ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow-ssh</code>: TCP 22 허용</li></ul><ul id="dd0720e4-6f49-8350-a930-818a4ddc7fe6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow-http</code>: TCP 80 허용</li></ul><h2 id="5ed720e4-6f49-82e6-9822-818c86f1b624" class="" dir="auto">태그</h2><ul id="d30720e4-6f49-83f4-9097-8142926d70ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버 VM: <code>web</code></li></ul><p id="c9b720e4-6f49-832a-bd2e-814720e8136d" class="" dir="auto">이 구조면 이후 Compute Engine 장에서 웹 서버 VM을 올리고 접속 테스트하기 좋다.</p><hr id="e19720e4-6f49-8366-b334-0181cf4a239c" dir="auto"/><h1 id="2d0720e4-6f49-82f1-8900-0145589bf902" class="" dir="auto">16. 실습 1: Custom VPC 생성</h1><h2 id="7c2720e4-6f49-8393-abd7-811f911e9e98" class="" dir="auto">16.1 실습 목표</h2><ul id="475720e4-6f49-8398-99a8-01a276bdda4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Custom mode VPC를 직접 생성함</li></ul><ul id="85c720e4-6f49-8358-944d-814e19247fd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 생성 방식이 아닌 직접 설계 방식으로 네트워크를 준비함</li></ul><h2 id="268720e4-6f49-822c-9c84-81740a11ca7d" class="" dir="auto">16.2 콘솔 실습</h2><ol type="1" id="a81720e4-6f49-8332-adef-01673512e04b" class="numbered-list" start="1" dir="auto"><li>Google Cloud Console 접속</li></ol><ol type="1" id="861720e4-6f49-8260-a2c6-8113350b0e6d" class="numbered-list" start="2" dir="auto"><li><strong>VPC 네트워크</strong> 메뉴 이동</li></ol><ol type="1" id="974720e4-6f49-8278-aa07-018018780c10" class="numbered-list" start="3" dir="auto"><li><strong>VPC 네트워크 만들기</strong> 클릭</li></ol><ol type="1" id="e30720e4-6f49-826b-b8da-014fe577e636" class="numbered-list" start="4" dir="auto"><li>이름: <code>initial-vpc</code></li></ol><ol type="1" id="5f7720e4-6f49-82db-8088-0185c7a4e729" class="numbered-list" start="5" dir="auto"><li>서브넷 생성 모드: <strong>Custom</strong></li></ol><ol type="1" id="587720e4-6f49-8295-8280-810ddaa53c42" class="numbered-list" start="6" dir="auto"><li>저장</li></ol><h2 id="969720e4-6f49-8244-b8ce-01aa8b57a10c" class="" dir="auto">16.3 CLI 실습</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="186720e4-6f49-8333-95ed-017a6e5f920a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks create initial-vpc \
+  --subnet-mode=custom</code></pre><h3 id="e21720e4-6f49-8372-87c5-01c541d29ab1" class="" dir="auto">명령 설명</h3><ul id="792720e4-6f49-83df-beff-81a0250c9323" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud compute networks create</code><p id="66a720e4-6f49-823d-acec-01a6782cd8e6" class="" dir="auto">새 VPC 네트워크를 생성하는 명령이다.</p></li></ul><ul id="2a9720e4-6f49-837c-b7b8-018722360cd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>initial-vpc</code><p id="7f9720e4-6f49-832d-b917-0180a91d14aa" class="" dir="auto">생성할 VPC 이름이다.</p></li></ul><ul id="ec7720e4-6f49-82d4-a0a5-810f8230d2f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-subnet-mode=custom</code><p id="093720e4-6f49-8362-bbc7-01cbf5242b73" class="" dir="auto">자동 생성이 아니라 커스텀 모드로 만들겠다는 의미다.</p></li></ul><h3 id="33b720e4-6f49-8257-8258-8179452c4ddf" class="" dir="auto">확인 명령</h3><pre id="4c3720e4-6f49-8366-ae30-81571a231068" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks list</code></pre><h3 id="bbc720e4-6f49-8252-8ad7-81fe61bb9296" class="" dir="auto">설명</h3><p id="75e720e4-6f49-8223-bad0-014c98c46646" class="" dir="auto">생성된 VPC 네트워크 목록을 조회한다.</p><hr id="7e3720e4-6f49-839e-85c2-015893a86311" dir="auto"/><h1 id="302720e4-6f49-8292-bcef-810aa6b431fb" class="" dir="auto">17. 실습 2: 서브넷 생성</h1><h2 id="3f3720e4-6f49-8317-8dda-811f7e1f5288" class="" dir="auto">17.1 실습 목표</h2><ul id="f9e720e4-6f49-830e-91ee-8115a8663890" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 리전에 서브넷을 직접 생성함</li></ul><ul id="7a1720e4-6f49-8251-8dca-01efb8123c85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷이 리전 리소스라는 점을 확인함</li></ul><h2 id="84c720e4-6f49-82ee-8848-814eacf299b8" class="" dir="auto">17.2 CLI 실습</h2><pre id="51c720e4-6f49-8391-beb0-01d7e1cdf5fe" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks subnets create initial-subnet-web \
+  --network=initial-vpc \
+  --region=asia-northeast3 \
+  --range=10.10.1.0/24</code></pre><h3 id="97a720e4-6f49-83b4-b594-815c5e25b4ae" class="" dir="auto">명령 설명</h3><ul id="89a720e4-6f49-8257-bf9f-018eaf15ff18" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud compute networks subnets create</code><p id="604720e4-6f49-8248-af89-81be06564068" class="" dir="auto">새 서브넷을 생성하는 명령이다.</p></li></ul><ul id="e44720e4-6f49-835c-8530-81e879c3088d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>initial-subnet-web</code><p id="a4f720e4-6f49-823f-9e36-01211e89d1bc" class="" dir="auto">서브넷 이름이다.</p></li></ul><ul id="f58720e4-6f49-82d2-873d-810d9e7eaee0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-network=initial-vpc</code><p id="e2d720e4-6f49-827d-b23f-01035844b47c" class="" dir="auto">어느 VPC에 속할지 지정한다.</p></li></ul><ul id="79c720e4-6f49-823f-92e3-0112bfef3f4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-region=asia-northeast3</code><p id="edc720e4-6f49-83fd-a237-019c08b9f301" class="" dir="auto">서브넷이 위치할 리전을 지정한다.</p></li></ul><ul id="033720e4-6f49-822d-af29-011fa41c7a6c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-range=10.10.1.0/24</code><p id="fd3720e4-6f49-82c3-a812-017c7fa3ba75" class="" dir="auto">사용할 IP 주소 범위를 CIDR 형식으로 지정한다.</p></li></ul><h3 id="b19720e4-6f49-831c-b15c-8171b81017a9" class="" dir="auto">확인 명령</h3><pre id="dfa720e4-6f49-8284-bf2a-81e4f52b5da2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks subnets list</code></pre><hr id="56b720e4-6f49-830f-87d9-81aa23947ccd" dir="auto"/><h1 id="cee720e4-6f49-82a6-a25f-010f37ddd231" class="" dir="auto">18. 실습 3: SSH 허용 방화벽 규칙 생성</h1><h2 id="e5f720e4-6f49-83c0-a9f5-818a6e638bc9" class="" dir="auto">18.1 실습 목표</h2><ul id="87d720e4-6f49-830a-a822-010fa3acf8df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인바운드 SSH 접속을 허용하는 규칙을 만든다</li></ul><ul id="ea6720e4-6f49-8226-8da9-81e1f74c3597" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그를 이용해 특정 역할의 인스턴스에만 적용하는 방식을 익힌다</li></ul><h2 id="eb6720e4-6f49-8283-a8b5-01b8e24dcb34" class="" dir="auto">18.2 CLI 실습</h2><pre id="b0c720e4-6f49-8347-896d-8179402ee18f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules create allow-ssh-web \
+  --network=initial-vpc \
+  --direction=INGRESS \
+  --priority=1000 \
+  --action=ALLOW \
+  --rules=tcp:22 \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=web</code></pre><h3 id="372720e4-6f49-82f4-a0ad-011815c00609" class="" dir="auto">명령 설명</h3><ul id="912720e4-6f49-82fe-a0d3-81260d001bc5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gcloud compute firewall-rules create</code><p id="a88720e4-6f49-8324-a297-01ef62350b2e" class="" dir="auto">새 방화벽 규칙을 생성한다.</p></li></ul><ul id="892720e4-6f49-8315-ac03-01dc7dec1224" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow-ssh-web</code><p id="b12720e4-6f49-8339-a13f-81b199e6448b" class="" dir="auto">규칙 이름이다.</p></li></ul><ul id="603720e4-6f49-82a0-aff6-816247cb5ca9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--network=initial-vpc</code><p id="fd4720e4-6f49-82e8-bded-01001dd542a1" class="" dir="auto">어느 VPC에 적용할 규칙인지 지정한다.</p></li></ul><ul id="0d7720e4-6f49-8208-a431-0116228d438f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--direction=INGRESS</code><p id="289720e4-6f49-837d-b923-81fc9c019595" class="" dir="auto">외부에서 들어오는 트래픽에 대한 규칙이다.</p></li></ul><ul id="6d0720e4-6f49-825d-9fe0-817a07785c53" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--priority=1000</code><p id="56c720e4-6f49-82fd-9c95-01416bc3a29c" class="" dir="auto">우선순위다. 숫자가 작을수록 우선순위가 높다. (<a href="https://docs.cloud.google.com/firewall/docs/using-firewalls?hl=ko&amp;utm_source=chatgpt.com">Google Cloud Documentation</a>)</p></li></ul><ul id="457720e4-6f49-838e-9e85-01ede06cd2e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--action=ALLOW</code><p id="bc2720e4-6f49-82c7-a18e-01f77a427308" class="" dir="auto">일치하는 트래픽을 허용한다.</p></li></ul><ul id="ce9720e4-6f49-82cb-89f6-810a204306b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--rules=tcp:22</code><p id="b0b720e4-6f49-8387-8fca-01897fea053e" class="" dir="auto">SSH 포트인 TCP 22를 허용한다.</p></li></ul><ul id="6cb720e4-6f49-8308-90b3-01226cd017b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--source-ranges=0.0.0.0/0</code><p id="5fc720e4-6f49-8370-a81e-819046e280d5" class="" dir="auto">모든 IP에서 오는 트래픽을 허용한다.</p></li></ul><ul id="eaf720e4-6f49-835c-8923-01bbfdafad04" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--target-tags=web</code><p id="662720e4-6f49-82e6-9ac7-81076607eaae" class="" dir="auto"><code>web</code> 태그가 붙은 인스턴스에만 적용한다.</p></li></ul><h3 id="dce720e4-6f49-8246-8e56-014528c8aa75" class="" dir="auto">보안 설명</h3><p id="354720e4-6f49-8366-9f71-81cef300eb58" class="" dir="auto">실습에서는 <code>0.0.0.0/0</code> 을 자주 쓰지만, 운영 환경에서는 관리망 IP 대역으로 제한하는 것이 바람직하다.</p><hr id="cc9720e4-6f49-823b-9946-814b99d9ee58" dir="auto"/><h1 id="f28720e4-6f49-83d7-9ee6-8193219c3530" class="" dir="auto">19. 실습 4: HTTP 허용 방화벽 규칙 생성</h1><h2 id="5a7720e4-6f49-8362-86bd-8199c079613b" class="" dir="auto">19.1 실습 목표</h2><ul id="092720e4-6f49-82aa-b7ca-81393cdc9152" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버 포트 80을 허용하는 규칙을 만든다</li></ul><h2 id="f49720e4-6f49-83bf-92f6-8105bb7a263c" class="" dir="auto">19.2 CLI 실습</h2><pre id="c10720e4-6f49-82b9-8a4a-01c1816eaa12" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules create allow-http-web \
+  --network=initial-vpc \
+  --direction=INGRESS \
+  --priority=1000 \
+  --action=ALLOW \
+  --rules=tcp:80 \
+  --source-ranges=0.0.0.0/0 \
+  --target-tags=web</code></pre><h3 id="8b1720e4-6f49-825d-a295-01bd8bb52c77" class="" dir="auto">확인 명령</h3><pre id="05d720e4-6f49-8336-9825-81c93b336f12" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules list</code></pre><p id="6e9720e4-6f49-8276-8334-81b8e48b7d7e" class="" dir="auto">또는 특정 네트워크 기준으로 필터링해서 볼 수 있다.</p><pre id="df6720e4-6f49-821f-84f7-81090fc669d1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules list --filter=&quot;network:initial-vpc&quot;</code></pre><hr id="bc6720e4-6f49-83c6-8a8a-010f76b81e22" dir="auto"/><h1 id="6e0720e4-6f49-82e9-95e6-81c4c5e2f3e2" class="" dir="auto">20. 실습 5: VPC와 방화벽 규칙 확인</h1><h2 id="88a720e4-6f49-835e-94b3-015009e07f08" class="" dir="auto">20.1 VPC 상세 확인</h2><pre id="584720e4-6f49-8292-9a67-81a2138061ad" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks describe initial-vpc</code></pre><h2 id="eb7720e4-6f49-835f-be46-01d2cec61250" class="" dir="auto">20.2 서브넷 상세 확인</h2><pre id="305720e4-6f49-8375-bf83-818bdc9ae817" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute networks subnets describe initial-subnet-web \
+  --region=asia-northeast3</code></pre><h2 id="202720e4-6f49-8386-8b04-81d58ce8907a" class="" dir="auto">20.3 방화벽 규칙 상세 확인</h2><pre id="7c3720e4-6f49-830f-b391-814507be215b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud compute firewall-rules describe allow-http-web</code></pre><hr id="c37720e4-6f49-836c-aa3d-01bc46f561e9" dir="auto"/><h1 id="6f1720e4-6f49-8352-b850-81bd51404e46" class="" dir="auto">21. 실습 6: VM 생성 준비 관점에서 네트워크 정리</h1><h2 id="9b3720e4-6f49-8335-8de1-81e6edbde0ef" class="" dir="auto">현재 준비된 것</h2><ul id="b0f720e4-6f49-833b-98b9-8185f5a7ae30" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>initial-vpc</code></li></ul><ul id="a5d720e4-6f49-83b2-841d-812ad78d4179" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>initial-subnet-web</code></li></ul><ul id="bfa720e4-6f49-82b6-9407-0139801e446a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow-ssh-web</code></li></ul><ul id="34a720e4-6f49-827d-8649-01e2708d4686" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>allow-http-web</code></li></ul><h2 id="a08720e4-6f49-8317-baf4-01a033c328d4" class="" dir="auto">추가할 것</h2><ul id="523720e4-6f49-83b8-985a-01a4a2e012f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 <code>web</code> 을 가진 VM 생성</li></ul><ul id="674720e4-6f49-8259-9395-81c55b569b06" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Startup Script로 nginx 설치</li></ul><ul id="be2720e4-6f49-8321-bbf3-017802ea7319" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 IP로 접속 테스트</li></ul><hr id="900720e4-6f49-82e8-b242-81d2585f9fb5" dir="auto"/><h1 id="108720e4-6f49-8280-a8af-018a27592254" class="" dir="auto">22. 장 요약</h1><ul id="1af720e4-6f49-8352-a313-813e4967c867" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP의 VPC는 <strong>글로벌 리소스</strong>다.</li></ul><ul id="a61720e4-6f49-8399-89f9-01e8dc5ba290" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서브넷은 <strong>리전 리소스</strong>이며, 하나의 VPC 안에 여러 리전 서브넷을 둘 수 있다. </li></ul><ul id="cd9720e4-6f49-82fd-ac5e-0164eb5cdc52" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방화벽 제어는 <strong>VPC Firewall Rule 중심</strong>으로 이루어진다. </li></ul><ul id="4a9720e4-6f49-8356-890b-01a9aeefb80b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 VPC에는 기본적으로 <strong>인바운드 거부 / 아웃바운드 허용</strong>의 암시적 규칙이 있다.</li></ul><ul id="eb8720e4-6f49-82e4-98c1-013171222ba5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방화벽 규칙 대상은 네트워크 태그 또는 서비스 계정으로 지정할 수 있다.</li></ul><ul id="323720e4-6f49-833c-a1f6-011fce4981c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS와 비교하면, GCP는 <strong>네트워크 중심 방화벽 모델</strong>이라는 감각이 더 강하다.</li></ul><hr id="a63720e4-6f49-8368-af40-819524daed7d" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,793 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>10장 AWS 고급 네트워킹 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="f68720e4-6f49-83b3-8905-01687b974eec" class="page sans"><header><h1 class="page-title" dir="auto">10장 AWS 고급 네트워킹 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="537720e4-6f49-83fe-8ce6-816d6cecad6c" class="" dir="auto">VPC Endpoint, VPC Peering, Direct Connect, VPN, Transit Gateway</h2><hr id="b5b720e4-6f49-839e-bc6c-01112514326b" dir="auto"/><h1 id="74f720e4-6f49-8287-8a16-01777fc3683e" class="" dir="auto">10.1 고급 네트워킹의 필요성</h1><p id="4aa720e4-6f49-83c4-96b9-81e91e337afc" class="" dir="auto">실제 운영 환경으로 가면 네트워크 요구사항이 훨씬 복잡해짐.</p><p id="54f720e4-6f49-83f2-9798-01d8479e51ee" class="" dir="auto">예를 들면 다음과 같음.</p><ul id="9e9720e4-6f49-83ef-ac51-81be43d5e546" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Subnet의 EC2가 인터넷을 통하지 않고 S3에 접근해야 함</li></ul><ul id="dba720e4-6f49-839c-83b7-81f0f60bf983" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서로 다른 VPC 간 통신이 필요함</li></ul><ul id="939720e4-6f49-837b-abc1-0195fa61c7e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS와 온프레미스 데이터센터를 연결해야 함</li></ul><ul id="ec8720e4-6f49-831a-ae2d-01e13df14582" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 계정과 여러 VPC를 중앙에서 연결해야 함</li></ul><ul id="d55720e4-6f49-82df-9edc-811ed67125ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대역폭, 지연시간, 보안 요구사항에 따라 연결 방식을 달리해야 함</li></ul><p id="8ee720e4-6f49-823c-b07e-8111c9e6603b" class="" dir="auto">즉, 고급 네트워킹은 단순히 연결의 문제가 아니라</p><ul id="d74720e4-6f49-839e-a07a-8104f5bee632" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안</li></ul><ul id="d51720e4-6f49-82d1-81fd-01bf6508ecea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">성능</li></ul><ul id="fab720e4-6f49-825e-b4bb-81dbb7662956" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확장성</li></ul><ul id="cd9720e4-6f49-83f1-b503-819ef42a3b61" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 단순성</li></ul><ul id="f20720e4-6f49-82c4-83ac-0140e1785a1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용</li></ul><p id="d1b720e4-6f49-833a-af73-81e3def03b25" class="" dir="auto">을 함께 고려하는 아키텍처 문제임.</p><hr id="90c720e4-6f49-839e-bf81-01bcab8263aa" dir="auto"/><h1 id="19c720e4-6f49-830a-8f45-01b587e98a04" class="" dir="auto">10.2 네트워크 연결을 보는 큰 관점</h1><p id="592720e4-6f49-83e0-b333-012a813b7f76" class="" dir="auto">AWS 고급 네트워킹은 크게 다음 3가지 방향으로 나누어 이해하면 좋음.</p><h3 id="cc0720e4-6f49-826e-9cb1-017db9304dd9" class="" dir="auto">1. VPC 내부에서 AWS 서비스로 프라이빗 연결</h3><p id="8dc720e4-6f49-831b-8da5-81d50b5ee499" class="" dir="auto">예</p><ul id="91a720e4-6f49-8226-9f7c-01f72423a8eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="406720e4-6f49-82c8-81f4-01e4aaaba0d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB</li></ul><ul id="563720e4-6f49-82cc-9869-81e2407c90cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Systems Manager</li></ul><ul id="124720e4-6f49-83d6-8d1d-81b6c548e93c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 API</li></ul><p id="133720e4-6f49-82f7-b86d-8139e2cfa093" class="" dir="auto">대표 서비스</p><ul id="21c720e4-6f49-824e-a3ec-019736763b2a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC Endpoint</li></ul><h3 id="024720e4-6f49-82ae-9aad-014e1e6e354c" class="" dir="auto">2. VPC와 VPC 간 연결</h3><p id="0cc720e4-6f49-83ee-9184-01cd5a5718f4" class="" dir="auto">예</p><ul id="0d4720e4-6f49-8250-95de-810568210b65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발 VPC와 운영 VPC 연결</li></ul><ul id="fe4720e4-6f49-835b-9e0e-01a1f98dfbae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shared Services VPC 연결</li></ul><p id="3e3720e4-6f49-8395-8399-812705a0ba07" class="" dir="auto">대표 서비스</p><ul id="8d8720e4-6f49-83f8-80f2-812a726884d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC Peering</li></ul><ul id="4f4720e4-6f49-837c-be29-811bb3a1573c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Transit Gateway</li></ul><h3 id="0dd720e4-6f49-82fd-89a9-018938762cdb" class="" dir="auto">3. AWS와 온프레미스 연결</h3><p id="2f2720e4-6f49-836e-b413-017e8665f71c" class="" dir="auto">예</p><ul id="7ff720e4-6f49-8385-b903-0164be45eba1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사내 데이터센터와 AWS 연결</li></ul><ul id="cde720e4-6f49-82ba-82bb-81832736334b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">지사 네트워크와 AWS 연결</li></ul><p id="2ac720e4-6f49-8397-8f7f-81d881e8ecb9" class="" dir="auto">대표 서비스</p><ul id="bf9720e4-6f49-839a-93c0-812ad04116d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Site-to-Site VPN</li></ul><ul id="d44720e4-6f49-83bb-9af0-0151df7cf909" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Direct Connect</li></ul><p id="e47720e4-6f49-823e-98e2-01aac06142ac" class="" dir="auto">즉, 아래 서비스들은 모두 “연결”과 관련 있지만, 연결 대상과 규모가 서로 다름.</p><hr id="e8a720e4-6f49-8369-8328-8162892d5199" dir="auto"/><h1 id="49a720e4-6f49-83d0-98df-019880ed2565" class="" dir="auto">10.3 VPC Endpoint 개요</h1><p id="5bb720e4-6f49-8309-838c-0117adc0bfef" class="" dir="auto">VPC Endpoint는 VPC 내부 리소스가 인터넷 게이트웨이, NAT Gateway, 퍼블릭 IP 없이 AWS 서비스에 프라이빗하게 접근할 수 있도록 해주는 기능임.</p><p id="bf1720e4-6f49-8297-a46a-014f101926ce" class="" dir="auto">예를 들어 Private Subnet의 EC2가 S3에 접근해야 한다고 가정하면, 기본적으로는 NAT Gateway를 통해 인터넷 방향으로 나가게 구성할 수 있음.</p><p id="53d720e4-6f49-82b5-bccb-015a10f38782" class="" dir="auto">하지만 실제로 S3는 AWS 내부 서비스이므로, 굳이 공용 인터넷 경로를 통과하지 않고 더 직접적이고 안전하게 접근하고 싶을 수 있음.</p><p id="173720e4-6f49-83df-ad4d-01ad6d82755d" class="" dir="auto">이때 사용하는 것이 VPC Endpoint임.</p><p id="c20720e4-6f49-832d-b5f4-818d735cdbb6" class="" dir="auto">즉, VPC Endpoint는</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="e9a720e4-6f49-835b-9206-017ae78a09ff" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC 내부에서 AWS 서비스로 가는 사설 경로</code></pre><p id="935720e4-6f49-822d-85ed-01d2667c4e1e" class="" dir="auto">라고 이해하면 됨.</p><hr id="b9a720e4-6f49-8275-867c-0129efe5a1e6" dir="auto"/><h1 id="f2f720e4-6f49-838c-8d82-018a9b0ac6a6" class="" dir="auto">10.4 VPC Endpoint가 필요한 이유</h1><p id="251720e4-6f49-836d-b645-017840d244ea" class="" dir="auto">VPC Endpoint를 사용하는 이유는 다음과 같음.</p><h3 id="85f720e4-6f49-8382-817a-0196997b3e53" class="" dir="auto">1. 인터넷 경로 제거</h3><p id="aa5720e4-6f49-8305-83e1-018b66448a21" class="" dir="auto">Private Subnet 리소스가 AWS 서비스에 접근할 때 인터넷 게이트웨이나 NAT를 거치지 않아도 됨.</p><h3 id="a51720e4-6f49-8275-bfe8-8175805fda4d" class="" dir="auto">2. 보안 향상</h3><p id="0d9720e4-6f49-8281-9b8f-81672481270c" class="" dir="auto">트래픽이 공용 인터넷으로 나가지 않고 AWS 백본 내부를 통해 이동함.</p><h3 id="683720e4-6f49-831a-a822-0112d40e139a" class="" dir="auto">3. NAT 비용 절감 가능</h3><p id="0a9720e4-6f49-8208-9836-81ea0c82262c" class="" dir="auto">일부 트래픽은 NAT Gateway를 거치지 않아도 되므로 비용 최적화에 도움이 될 수 있음.</p><h3 id="30e720e4-6f49-82ec-8047-81169512184d" class="" dir="auto">4. 프라이빗 아키텍처 구현</h3><p id="540720e4-6f49-83d4-b4c8-013638746a3d" class="" dir="auto">인터넷 차단 환경에서도 AWS 서비스 연동이 가능해짐.</p><p id="3a5720e4-6f49-831d-b6c7-81eb1332c1d0" class="" dir="auto">즉, VPC Endpoint는 보안과 네트워크 단순화 측면에서 매우 중요함.</p><hr id="a8a720e4-6f49-83d5-a771-012012d92e56" dir="auto"/><h1 id="1b4720e4-6f49-82fd-825e-01e039d43b37" class="" dir="auto">10.5 VPC Endpoint 종류</h1><p id="e8f720e4-6f49-83d8-8b98-01f7b99d42cf" class="" dir="auto">VPC Endpoint는 크게 다음 유형으로 구분함.</p><ul id="7a2720e4-6f49-8258-8ef7-8106657983f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway Endpoint</li></ul><ul id="0bf720e4-6f49-8289-966c-81d5bc250fc0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Interface Endpoint</li></ul><hr id="d63720e4-6f49-8274-a310-81e77d4f8868" dir="auto"/><h2 id="16a720e4-6f49-8257-8095-01a975d97a9a" class="" dir="auto">10.5.1 Gateway Endpoint</h2><p id="a03720e4-6f49-82fd-a326-01f44d741466" class="" dir="auto">Gateway Endpoint는 다음 서비스에 사용됨.</p><ul id="bb9720e4-6f49-83d0-9167-81efbb0a2b91" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon S3</li></ul><ul id="15f720e4-6f49-8326-9c80-0133ea3da139" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB</li></ul><p id="f4d720e4-6f49-8290-b827-01c4ff5709d1" class="" dir="auto">특징</p><ul id="7e3720e4-6f49-8210-bd0d-01fade3ebd2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route Table에 대상 경로를 추가하는 방식</li></ul><ul id="1f7720e4-6f49-8266-b144-014f5fcddd56" class="bulleted-list" dir="auto"><li style="list-style-type:disc">별도 ENI 생성이 아님</li></ul><ul id="682720e4-6f49-821e-b4e3-01b2ab1c966f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 AWS 서비스에 대해 단순하고 효율적인 연결 제공</li></ul><p id="bea720e4-6f49-8388-8b1f-01bcd6ab1460" class="" dir="auto">즉, Gateway Endpoint는 S3와 DynamoDB처럼 사용 빈도가 일부 서비스에 대해 특별히 제공되는 방식임.</p><hr id="3a2720e4-6f49-8293-9cfa-81483f426963" dir="auto"/><h2 id="357720e4-6f49-8353-9a7a-81ee2a277fc7" class="" dir="auto">10.5.2 Interface Endpoint</h2><p id="69a720e4-6f49-82ca-970c-819a8db27ad9" class="" dir="auto">Interface Endpoint는 VPC 내부에 <strong>ENI(Elastic Network Interface)</strong> 를 생성해서 AWS 서비스에 연결하는 방식임.</p><p id="843720e4-6f49-8290-88be-81715bf632e1" class="" dir="auto">주요 대상 예</p><ul id="eb5720e4-6f49-824c-b5f2-01398a334fef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Systems Manager</li></ul><ul id="029720e4-6f49-834b-b842-01eeb6a538de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 API</li></ul><ul id="a78720e4-6f49-8320-b5dc-01844cb92d25" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch Logs</li></ul><ul id="086720e4-6f49-833f-9b51-810017f49377" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secrets Manager</li></ul><ul id="d36720e4-6f49-83d4-8035-81ebbd2a9bdf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">KMS</li></ul><ul id="647720e4-6f49-83dc-a304-01aed4c045f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SNS</li></ul><ul id="7f7720e4-6f49-831d-824c-81af47c2feb6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQS</li></ul><ul id="235720e4-6f49-828f-a5ef-8152743056d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PrivateLink 기반 서비스</li></ul><p id="128720e4-6f49-83d0-9bd9-010df94ef61d" class="" dir="auto">특징</p><ul id="dd8720e4-6f49-8332-9213-01ff3d99ff39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Subnet 안에 프라이빗 IP를 가진 엔드포인트가 생성됨</li></ul><ul id="b8d720e4-6f49-8335-98c3-81666b93bd56" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group을 적용할 수 있음</li></ul><ul id="b44720e4-6f49-82f3-b6a4-01c47e801f29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">매우 다양한 서비스에 사용 가능함</li></ul><p id="a42720e4-6f49-83b8-92ce-81a123f5d6c4" class="" dir="auto">즉, Interface Endpoint는 보다 범용적인 프라이빗 연결 방식임.</p><hr id="cf9720e4-6f49-8310-ba7e-01b65c1222ac" dir="auto"/><h1 id="16f720e4-6f49-8391-af38-811a035896c8" class="" dir="auto">10.6 Gateway Endpoint와 Interface Endpoint 차이</h1><table id="187720e4-6f49-83a4-927f-81eb194662a1" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="7b3720e4-6f49-82b3-a5b9-0130bd2c306c" dir="ltr"><th id="fANU" class="simple-table-header-color simple-table-header">항목</th><th id="n~iE" class="simple-table-header-color simple-table-header">Gateway Endpoint</th><th id="Avco" class="simple-table-header-color simple-table-header">Interface Endpoint</th></tr></thead><tbody><tr id="35c720e4-6f49-82bd-b6e0-8107db9d1532" dir="ltr"><td id="fANU" class="">주요 대상</td><td id="n~iE" class="">S3, DynamoDB</td><td id="Avco" class="">대부분의 AWS 서비스</td></tr><tr id="455720e4-6f49-8253-8017-813f998b9197" dir="ltr"><td id="fANU" class="">동작 방식</td><td id="n~iE" class="">Route Table 경로 추가</td><td id="Avco" class="">ENI 생성</td></tr><tr id="efa720e4-6f49-83f2-af1a-018b02266ac2" dir="ltr"><td id="fANU" class="">Security Group 적용</td><td id="n~iE" class="">직접적 개념 약함</td><td id="Avco" class="">가능</td></tr><tr id="c7f720e4-6f49-831e-ad92-814701f541dc" dir="ltr"><td id="fANU" class="">비용 구조</td><td id="n~iE" class="">서비스별 특성 다름</td><td id="Avco" class="">보통 시간/데이터 처리 과금 고려</td></tr><tr id="268720e4-6f49-8272-88d3-016a20f23253" dir="ltr"><td id="fANU" class="">배치 위치</td><td id="n~iE" class="">라우팅 수준</td><td id="Avco" class="">서브넷 내부 엔드포인트</td></tr></tbody></table><p id="2aa720e4-6f49-83a6-a945-0143ad59edba" class="" dir="auto">즉,</p><ul id="17b720e4-6f49-8203-97dd-81c615889df6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>S3/DynamoDB 프라이빗 연결</strong>이면 Gateway Endpoint</li></ul><ul id="91e720e4-6f49-83c9-8a4e-81ed67ecb580" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>그 외 AWS 서비스 프라이빗 연결</strong>이면 Interface Endpoint</li></ul><hr id="e40720e4-6f49-83b9-bd01-0140f05664ca" dir="auto"/><h1 id="375720e4-6f49-82d6-aa6c-8154affb2527" class="" dir="auto">10.7 PrivateLink 개념</h1><p id="0d0720e4-6f49-82a1-96a0-010e25c0f289" class="" dir="auto">PrivateLink는 AWS 서비스나 타사 서비스, 또는 다른 계정의 서비스를 프라이빗하게 노출하고 연결할 수 있게 해주는 기술임.  Interface Endpoint가 이에 해당함.</p><p id="98d720e4-6f49-82fa-b640-8182f548aa84" class="" dir="auto">즉, <strong>서비스 제공자와 소비자 사이를 사설 네트워크 방식으로 연결하는 구조</strong>를 가능하게 함.</p><p id="f2f720e4-6f49-83d7-89a7-819f100de8c8" class="" dir="auto">예를 들어</p><ul id="032720e4-6f49-8204-ae98-8127f0f9f1f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다른 계정의 내부 서비스 소비</li></ul><ul id="384720e4-6f49-822f-b141-013c4b7db468" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SaaS 서비스에 프라이빗 접근</li></ul><ul id="ed7720e4-6f49-824a-8d8c-01ee9b1bba41" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 서비스 VPC를 여러 소비자 VPC가 사용</li></ul><p id="851720e4-6f49-827d-9c3a-8120fb97c3b0" class="" dir="auto">같은 구조에 활용할 수 있음.</p><hr id="891720e4-6f49-8213-b4c2-0190d0f22c10" dir="auto"/><h1 id="408720e4-6f49-824d-93eb-01d8e5849c1b" class="" dir="auto">10.8 VPC Peering 개요</h1><p id="18d720e4-6f49-82b4-9d0d-01b8e5471b44" class="" dir="auto">VPC Peering은 두 개의 VPC를 직접 연결해서 서로 프라이빗 IP로 통신할 수 있게 하는 기능임.</p><p id="056720e4-6f49-8306-befa-81e6a534553b" class="" dir="auto">즉, 서로 다른 VPC가 마치 하나의 네트워크처럼 사설 통신을 하게 만드는 단순한 연결 방식임.</p><p id="87b720e4-6f49-83e2-b59e-015b3abb050f" class="" dir="auto">예</p><pre id="89e720e4-6f49-83a0-9775-81870c937801" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC-A  ←→  VPC-B</code></pre><p id="688720e4-6f49-83db-bdec-81bc145784d7" class="" dir="auto">VPC Peering이 설정되면 두 VPC 안의 리소스는 각자의 사설 IP를 이용해 통신할 수 있음.</p><hr id="ffb720e4-6f49-828b-b579-010ce06d1d35" dir="auto"/><h1 id="d41720e4-6f49-83c2-aaeb-01c4c6c6adc3" class="" dir="auto">10.9 VPC Peering의 특징</h1><h3 id="e84720e4-6f49-82dc-a02b-011bf2c272a3" class="" dir="auto">1. 단순한 1:1 연결</h3><p id="938720e4-6f49-836b-adf2-01d664ac4993" class="" dir="auto">Peering은 기본적으로 두 VPC 사이의 직접 연결임.</p><h3 id="330720e4-6f49-83e4-b929-81c78d976a43" class="" dir="auto">2. 사설 IP 통신</h3><p id="1e9720e4-6f49-82fa-99b1-81f4ce116533" class="" dir="auto">공인 IP나 인터넷 게이트웨이를 거치지 않고 프라이빗 통신이 가능함.</p><h3 id="df5720e4-6f49-82bf-95d4-81921e21883d" class="" dir="auto">3. 낮은 지연과 단순 구조</h3><p id="601720e4-6f49-8291-9cd6-8137ea13eb46" class="" dir="auto">규모가 작을 때는 이해와 운영이 비교적 쉬움.</p><p id="02c720e4-6f49-82e7-b051-01ce58646624" class="" dir="auto">즉, VPC Peering은 소규모 연결에서는 매우 직관적인 선택임.</p><hr id="b25720e4-6f49-8234-bb2f-014dd803de92" dir="auto"/><h1 id="71a720e4-6f49-83e2-a08b-81fc35a78d5a" class="" dir="auto">10.10 VPC Peering의 제약</h1><p id="2ca720e4-6f49-8351-b0f9-01690742feb9" class="" dir="auto">VPC Peering은 단순하지만 확장성이 제한됨.</p><h3 id="de6720e4-6f49-8279-9d8d-813b5cb32acf" class="" dir="auto">1. Transitive Routing 미지원</h3><p id="858720e4-6f49-8290-964b-81f2ca93c940" class="" dir="auto">가장 중요한 특징임.</p><p id="9e5720e4-6f49-82f3-ad29-81164ef9f1ac" class="" dir="auto">예를 들어</p><pre id="60f720e4-6f49-837d-9317-8135a3bdeda8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC-A ←→ VPC-B ←→ VPC-C</code></pre><p id="855720e4-6f49-82d2-883a-0132595adcef" class="" dir="auto">이 구조가 있어도 A와 C가 B를 통해 자동 통신할 수는 없음.</p><p id="b4f720e4-6f49-829d-90ac-01380aac5c82" class="" dir="auto">즉, A-B, B-C가 연결되었다고 해서 A-C가 자동 연결되지 않음.</p><h3 id="40e720e4-6f49-82fe-b8d6-8108e8ecba4b" class="" dir="auto">2. 연결 수 증가 시 복잡도 증가</h3><p id="671720e4-6f49-8234-8cb6-810ee6e2b5c2" class="" dir="auto">VPC가 많아질수록 필요한 피어링 수가 급격히 증가함.</p><h3 id="030720e4-6f49-82ae-af23-81ae0783987f" class="" dir="auto">3. 중앙 허브 구조에 부적합</h3><p id="8a1720e4-6f49-8207-8d56-81991fabdec4" class="" dir="auto">대규모 멀티 VPC 환경에서는 관리가 복잡해짐.</p><p id="d85720e4-6f49-8231-8c40-01f7553a759e" class="" dir="auto">즉, VPC Peering은 적은 수의 VPC를 직접 연결할 때는 좋지만,</p><p id="9b5720e4-6f49-82f1-9594-011d0dfb2d5a" class="" dir="auto">VPC 수가 많아질수록 관리 효율이 떨어짐.</p><hr id="71f720e4-6f49-8326-a7b5-81696f4bc5e4" dir="auto"/><h1 id="879720e4-6f49-8245-ae77-01cd2f4f98c6" class="" dir="auto">10.11 VPC Peering이 적합한 경우</h1><p id="d0d720e4-6f49-8214-a12f-01a5dfbed4e4" class="" dir="auto">다음과 같은 경우에 적합함.</p><ul id="477720e4-6f49-83df-beef-8118119454fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC 수가 적음</li></ul><ul id="c48720e4-6f49-823a-9f00-81be67f18da3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">두 VPC 사이만 직접 연결하면 됨</li></ul><ul id="d77720e4-6f49-8364-98e8-01941a548d14" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 허브 구조가 필요 없음</li></ul><ul id="eae720e4-6f49-837e-94c3-818e3ed32b12" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단순하고 빠른 연결이 필요함</li></ul><p id="b40720e4-6f49-82b7-975c-01e0fff931d2" class="" dir="auto">예</p><ul id="f48720e4-6f49-82f7-90a9-01a5755f9964" class="bulleted-list" dir="auto"><li style="list-style-type:disc">개발 VPC ↔ 공유 서비스 VPC</li></ul><ul id="99c720e4-6f49-8297-8f41-01d460149b72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">앱 VPC ↔ 데이터 VPC</li></ul><p id="a60720e4-6f49-8283-a9c9-0144eab64c24" class="" dir="auto">즉, 작고 단순한 구조에서는 여전히 유효한 선택임.</p><hr id="c3c720e4-6f49-8371-ada0-01b742411f0d" dir="auto"/><h1 id="e84720e4-6f49-82b0-8916-01ae0040cea4" class="" dir="auto">10.12 Site-to-Site VPN 개요</h1><p id="693720e4-6f49-83b6-8f09-817b9a97ba61" class="" dir="auto">Site-to-Site VPN은 AWS와 온프레미스 네트워크를 IPsec 터널로 연결하는 방식임.</p><p id="f43720e4-6f49-82da-bfb6-01f0ad3780bc" class="" dir="auto">즉, 인터넷을 기반으로 하지만 암호화된 터널을 통해 사설 네트워크처럼 연결하는 기술임.</p><p id="867720e4-6f49-83a4-9042-81f88cb767c3" class="" dir="auto">구조 예</p><pre id="bf2720e4-6f49-83ba-9861-810c0b0c9ce8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">온프레미스 라우터
+     │
+인터넷(IPsec VPN)
+     │
+AWS VPN Endpoint
+     │
+VPC</code></pre><p id="b67720e4-6f49-83b2-8c3c-019994dba655" class="" dir="auto">즉, VPN은 전용선이 아니라 <strong>인터넷 기반의 암호화 연결</strong>임.</p><hr id="bc8720e4-6f49-8330-87f5-810d3a5cd3b0" dir="auto"/><h1 id="e02720e4-6f49-82a4-84a9-812fef45bea3" class="" dir="auto">10.13 VPN의 특징</h1><h3 id="0dd720e4-6f49-8375-8084-0134cb12cde6" class="" dir="auto">1. 비교적 빠른 구축</h3><p id="e83720e4-6f49-8398-919b-8190bac662c2" class="" dir="auto">전용 회선보다 준비가 빠름.</p><h3 id="f79720e4-6f49-8294-a3c0-0192895dee18" class="" dir="auto">2. 초기 비용이 상대적으로 낮음</h3><p id="e69720e4-6f49-8274-aabc-81e30a6b7427" class="" dir="auto">Direct Connect보다 진입 장벽이 낮음.</p><h3 id="241720e4-6f49-83f6-a0ea-01f5cf3706a8" class="" dir="auto">3. 암호화 지원</h3><p id="778720e4-6f49-821a-84f1-81d7cb7e0228" class="" dir="auto">IPsec 기반으로 트래픽 보호 가능.</p><h3 id="25d720e4-6f49-83b5-92a6-8112faaeacf2" class="" dir="auto">4. 인터넷 품질의 영향</h3><p id="71c720e4-6f49-83a2-88b1-811e2cea2521" class="" dir="auto">기반이 인터넷이므로 지연시간과 품질이 전용선만큼 안정적이지 않을 수 있음.</p><p id="5a4720e4-6f49-839f-897a-01870c48f299" class="" dir="auto">즉, VPN은 유연하고 빠르지만, 네트워크 품질 면에서는 한계가 있을 수 있음.</p><hr id="7ea720e4-6f49-8377-bf7f-0132f1ff0418" dir="auto"/><h1 id="4a4720e4-6f49-83c3-8d2e-81f238898864" class="" dir="auto">10.14 VPN의 주요 구성 요소</h1><p id="3f8720e4-6f49-828b-9ded-8133b27761fb" class="" dir="auto">Site-to-Site VPN을 이해할 때 자주 나오는 요소</p><ul id="d7d720e4-6f49-832b-b519-816716dd017a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Customer Gateway (CGW)</li></ul><ul id="adb720e4-6f49-829e-9a3a-016e26dcbfef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Virtual Private Gateway (VGW) 또는 Transit Gateway</li></ul><ul id="19c720e4-6f49-8291-a358-81668076210b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN Connection</li></ul><ul id="184720e4-6f49-8390-aa9c-01d9e7eb60fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Tunnel</li></ul><ul id="78a720e4-6f49-8233-bb2a-81da9e4992e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BGP 또는 Static Routing</li></ul><hr id="496720e4-6f49-8260-8358-8142da848f62" dir="auto"/><h2 id="b65720e4-6f49-82d9-9a05-8131c064408c" class="" dir="auto">10.14.1 Customer Gateway</h2><p id="ee9720e4-6f49-8273-8dbf-81aa91aa7aa8" class="" dir="auto">온프레미스 측 VPN 장비 또는 그것의 논리적 표현임.</p><p id="c27720e4-6f49-82f6-8a02-8125c10cd998" class="" dir="auto">즉, AWS 입장에서 “고객 측 라우터”를 의미함.</p><hr id="3a7720e4-6f49-82da-8e47-8171cb844ac7" dir="auto"/><h2 id="536720e4-6f49-83e3-8c5b-81e4437cbcef" class="" dir="auto">10.14.2 Virtual Private Gateway</h2><p id="f7d720e4-6f49-82ad-8c5b-0173d93e593f" class="" dir="auto">VPC 쪽에 연결되는 AWS 측 VPN 종단점 역할을 함.</p><p id="9c5720e4-6f49-82cd-b8d9-8177df929e3a" class="" dir="auto">전통적인 VPC 기반 VPN 구성에서 사용됨.</p><hr id="4ac720e4-6f49-83bc-9605-81647172214e" dir="auto"/><h2 id="992720e4-6f49-8373-a3d0-0140d2f8d156" class="" dir="auto">10.14.3 Tunnel</h2><p id="8a2720e4-6f49-8291-98aa-010b50ac12c6" class="" dir="auto">AWS Managed Site-to-Site VPN은 보통 이중화된 두 개의 터널을 제공함.</p><p id="b3c720e4-6f49-82b8-bc65-81824c8c774d" class="" dir="auto">이는 가용성 확보 목적임.</p><p id="671720e4-6f49-83a5-81e0-81c40d2f763f" class="" dir="auto">즉, VPN은 논리적으로 하나처럼 보이지만 내부적으로는 보통 복수 터널을 사용함.</p><hr id="41f720e4-6f49-8277-bd5a-81363ab2ab6f" dir="auto"/><h2 id="30f720e4-6f49-82fc-a291-81c4d052e1cc" class="" dir="auto">10.14.4 BGP와 Static Routing</h2><p id="340720e4-6f49-8329-b17b-8131ff1c7a67" class="" dir="auto">VPN 연결의 라우팅 방식은 크게 두 가지임.</p><h3 id="9e1720e4-6f49-83a4-8227-01c65b6d781c" class="" dir="auto">Static Routing</h3><p id="08e720e4-6f49-832e-a671-01b7ecba56b4" class="" dir="auto">관리자가 고정 라우트를 직접 정의함.</p><h3 id="d1e720e4-6f49-82db-b87e-81a2cff05ad0" class="" dir="auto">BGP</h3><p id="60c720e4-6f49-8214-8b86-01f8edda310a" class="" dir="auto">동적 라우팅을 통해 경로를 교환함.</p><p id="a6d720e4-6f49-8284-87fc-814ba4ec8672" class="" dir="auto">일반적으로 규모가 커지고 경로 유연성이 중요해질수록 BGP가 유리함.</p><hr id="ca3720e4-6f49-83c4-955e-0168572d9c68" dir="auto"/><h1 id="a76720e4-6f49-830c-a295-811d290a831f" class="" dir="auto">10.15 VPN이 적합한 경우</h1><ul id="de0720e4-6f49-826f-ac7c-81249f6d3684" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빠르게 하이브리드 연결을 구성해야 할 때</li></ul><ul id="37b720e4-6f49-8369-81d1-01b89f257d9e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트/개발/초기 운영 단계</li></ul><ul id="4fc720e4-6f49-83a0-8221-0152b220fd67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용을 비교적 낮게 가져가고 싶을 때</li></ul><ul id="a48720e4-6f49-836a-810e-81c3a88574dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전용선 구축까지의 임시 연결</li></ul><ul id="16a720e4-6f49-8361-9eb0-01d067e5836d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 연결로 사용할 때</li></ul><p id="ecc720e4-6f49-8225-b1e9-81c385720860" class="" dir="auto">즉, VPN은 “빠르고 유연한 연결”에 강점이 있음.</p><hr id="0aa720e4-6f49-8262-982d-81b13cf37201" dir="auto"/><h1 id="78b720e4-6f49-8272-944e-818e03197ada" class="" dir="auto">10.16 AWS Direct Connect 개요</h1><p id="ae2720e4-6f49-83dd-ad7b-814e0040abbe" class="" dir="auto">Direct Connect는 AWS와 온프레미스 또는 코로케이션 환경을 <strong>전용 네트워크 회선</strong>으로 연결하는 서비스임.</p><p id="0c5720e4-6f49-824d-9d53-01decd86ce79" class="" dir="auto">즉, VPN처럼 공용 인터넷을 거치는 것이 아니라,</p><p id="452720e4-6f49-83d5-a1f6-810f3f12696f" class="" dir="auto">AWS와 고객 네트워크 사이를 전용 경로로 연결하는 방식임.</p><p id="bef720e4-6f49-83f6-8de5-01866a022641" class="" dir="auto">구조 관점에서는 다음처럼 이해하면 됨.</p><pre id="28d720e4-6f49-8297-8b3c-81a9bcce7a3d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">온프레미스 네트워크
+      │
+전용 회선
+      │
+AWS Direct Connect Location
+      │
+AWS 네트워크</code></pre><p id="fe9720e4-6f49-82ce-b9fe-816ec7028dc8" class="" dir="auto">즉, DX는 인터넷 기반 연결이 아니라 <strong>전용선 기반 연결</strong>임.</p><hr id="89c720e4-6f49-837a-a647-01a0511deb88" dir="auto"/><h1 id="19c720e4-6f49-8395-a3e6-0135d234f8e6" class="" dir="auto">10.17 Direct Connect의 장점</h1><h3 id="5ff720e4-6f49-83ff-91c5-81361d04f1dc" class="" dir="auto">1. 안정적인 네트워크 품질</h3><p id="c89720e4-6f49-83c1-bdc1-81cc42cd8877" class="" dir="auto">공용 인터넷보다 예측 가능한 지연시간과 품질을 기대할 수 있음.</p><h3 id="5d3720e4-6f49-8227-b5f8-819f38717695" class="" dir="auto">2. 높은 대역폭</h3><p id="1c7720e4-6f49-83c5-b68d-01766153cde7" class="" dir="auto">대용량 데이터 전송에 적합함.</p><h3 id="d72720e4-6f49-8310-b82e-01c1fee8a438" class="" dir="auto">3. 하이브리드 아키텍처 적합</h3><p id="8ea720e4-6f49-8229-992f-01c6420f2eb3" class="" dir="auto">온프레미스와 AWS를 장기적으로 연결하는 환경에 적합함.</p><h3 id="50d720e4-6f49-831d-9a80-81f6b7970642" class="" dir="auto">4. 대규모 데이터 이전에 유리</h3><p id="d8e720e4-6f49-822e-b618-817a959066f7" class="" dir="auto">백업, 복제, 분석 데이터 이동 등에서 장점이 큼.</p><p id="13a720e4-6f49-837c-a2ff-81cbcfa37612" class="" dir="auto">즉, Direct Connect는 품질과 대역폭이 중요한 환경에 적합함.</p><hr id="d10720e4-6f49-8301-8e33-01ce787f59eb" dir="auto"/><h1 id="875720e4-6f49-829d-bd2e-016e17903b7a" class="" dir="auto">10.18 Direct Connect의 한계</h1><h3 id="468720e4-6f49-82cf-8049-811d32865c4c" class="" dir="auto">1. 구축 시간이 상대적으로 걸림</h3><p id="562720e4-6f49-8221-8cb4-8194bc9ad2cf" class="" dir="auto">전용 회선 준비와 통신사/시설 연계가 필요할 수 있음.</p><h3 id="a77720e4-6f49-8392-8b0e-81e751c85d25" class="" dir="auto">2. 초기 진입 장벽</h3><p id="b16720e4-6f49-83e2-b4bf-0173f2d58484" class="" dir="auto">VPN보다 도입 과정이 복잡할 수 있음.</p><h3 id="838720e4-6f49-82c8-86f2-011fa869ba66" class="" dir="auto">3. 비용 구조 고려 필요</h3><p id="60e720e4-6f49-8286-afa8-819c89bec3b4" class="" dir="auto">장기 운영에는 가치가 크지만, 소규모 단기 환경에는 과할 수 있음.</p><p id="85a720e4-6f49-8314-a93b-0199f1905f0d" class="" dir="auto">즉, Direct Connect는 강력하지만 모든 환경에 필요한 것은 아님.</p><hr id="514720e4-6f49-8386-8b15-813dedc8553b" dir="auto"/><h1 id="339720e4-6f49-8307-b16e-813fcf2d7dee" class="" dir="auto">10.19 VPN과 Direct Connect 비교</h1><table id="639720e4-6f49-82b4-847b-01ab354692c3" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="b38720e4-6f49-82b3-8b49-01f4a05b04eb" dir="ltr"><th id="BPXE" class="simple-table-header-color simple-table-header">항목</th><th id="Q&lt;TO" class="simple-table-header-color simple-table-header">Site-to-Site VPN</th><th id="TpHd" class="simple-table-header-color simple-table-header">Direct Connect</th></tr></thead><tbody><tr id="1ae720e4-6f49-83b8-a002-016e937465eb" dir="ltr"><td id="BPXE" class="">기반</td><td id="Q&lt;TO" class="">인터넷 + IPsec</td><td id="TpHd" class="">전용 회선</td></tr><tr id="66a720e4-6f49-834a-86f8-019495c218c4" dir="ltr"><td id="BPXE" class="">구축 속도</td><td id="Q&lt;TO" class="">빠름</td><td id="TpHd" class="">상대적으로 느림</td></tr><tr id="846720e4-6f49-8258-af0c-011a166f4643" dir="ltr"><td id="BPXE" class="">비용</td><td id="Q&lt;TO" class="">비교적 낮음</td><td id="TpHd" class="">상대적으로 큼</td></tr><tr id="06f720e4-6f49-82c1-9b10-8122acc2835b" dir="ltr"><td id="BPXE" class="">품질 예측성</td><td id="Q&lt;TO" class="">인터넷 영향 받음</td><td id="TpHd" class="">높음</td></tr><tr id="41d720e4-6f49-83da-8ead-01db79844129" dir="ltr"><td id="BPXE" class="">대역폭/대용량 전송</td><td id="Q&lt;TO" class="">제한적일 수 있음</td><td id="TpHd" class="">유리</td></tr><tr id="a0d720e4-6f49-83fb-a3a4-01b56b9d7851" dir="ltr"><td id="BPXE" class="">대표 용도</td><td id="Q&lt;TO" class="">빠른 하이브리드 연결, 백업 연결</td><td id="TpHd" class="">장기적 하이브리드 핵심 연결</td></tr></tbody></table><p id="294720e4-6f49-825c-93cf-81e29d7c2a9d" class="" dir="auto">즉,</p><ul id="adb720e4-6f49-8267-8e4b-81f6e0cc988b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>빠른 연결과 저비용</strong>이면 VPN</li></ul><ul id="d4b720e4-6f49-8384-91bc-814374d474a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>안정성과 대역폭</strong>이면 Direct Connect</li></ul><p id="f11720e4-6f49-828f-b330-81ec3322037d" class="" dir="auto">라고 정리할 수 있음.</p><hr id="565720e4-6f49-820b-8168-01b6811cec8a" dir="auto"/><h1 id="c50720e4-6f49-8342-8c16-814de423a167" class="" dir="auto">10.20 Transit Gateway 개요</h1><p id="d58720e4-6f49-83e5-a370-81a84b396280" class="" dir="auto">Transit Gateway는 여러 VPC와 온프레미스 연결을 중앙 허브 방식으로 연결하는 서비스임.</p><p id="835720e4-6f49-8321-9728-81d4ea69c18c" class="" dir="auto">즉, 복잡하게 얽힌 다수의 VPC 연결을 하나의 중앙 라우팅 허브로 단순화하는 역할을 함.</p><p id="231720e4-6f49-82cf-90e0-8110c79cb128" class="" dir="auto">구조 예</p><pre id="c7e720e4-6f49-8230-a4c9-81fee40c9afd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">         VPC-A
+           │
+         TGW
+       /  |  \
+   VPC-B VPC-C On-Prem</code></pre><p id="e33720e4-6f49-837d-b541-81387a61801d" class="" dir="auto">즉, Transit Gateway는 <strong>네트워크 허브</strong>임.</p><hr id="8c3720e4-6f49-8336-9097-81d399dd5803" dir="auto"/><h1 id="2ec720e4-6f49-83dc-9082-01efa3884b2e" class="" dir="auto">10.21 Transit Gateway가 필요한 이유</h1><p id="3bb720e4-6f49-82e9-b99d-816bfcd9e680" class="" dir="auto">VPC 수가 적을 때는 Peering으로도 충분할 수 있음.</p><p id="f1e720e4-6f49-82be-9d20-01732fe278e6" class="" dir="auto">하지만 VPC가 많아지면 Peering은 관리가 매우 복잡해짐.</p><p id="75a720e4-6f49-83c1-a913-812441caecbb" class="" dir="auto">예를 들어 VPC가 10개면 가능한 연결 조합이 크게 늘어남.</p><p id="b88720e4-6f49-82a0-858f-811ca20e49c7" class="" dir="auto">이런 구조에서는</p><ul id="cf2720e4-6f49-83c6-a759-81759264676d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅 관리</li></ul><ul id="8af720e4-6f49-831c-945b-01cc12b52f96" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결 생성/삭제</li></ul><ul id="a7a720e4-6f49-83f0-a7c1-013915cf28d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 추적</li></ul><ul id="98d720e4-6f49-8395-b4b2-81a7417ca0d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정 간 연결 관리</li></ul><p id="799720e4-6f49-8213-8e28-01e155462273" class="" dir="auto">가 매우 복잡해짐.</p><p id="dd7720e4-6f49-837b-a1ab-815c4c796b94" class="" dir="auto">Transit Gateway를 사용하면 각 VPC는 TGW에만 연결하면 되고, 전체 연결 구조를 중앙에서 관리할 수 있음.</p><p id="509720e4-6f49-8298-ba1e-01c71cc5d515" class="" dir="auto">즉, Transit Gateway는 <strong>확장 가능한 멀티 VPC 연결 구조</strong>를 위한 서비스임.</p><hr id="1a7720e4-6f49-834a-b264-811ce151c883" dir="auto"/><h1 id="637720e4-6f49-8361-a635-815f64392cf9" class="" dir="auto">10.22 Transit Gateway의 특징</h1><h3 id="61e720e4-6f49-82bf-89c9-81bef3d6051c" class="" dir="auto">1. 허브 앤 스포크 구조</h3><p id="2b3720e4-6f49-83d9-9495-0185ebe8d605" class="" dir="auto">중앙 허브(TGW)에 여러 VPC와 연결을 붙이는 구조임.</p><h3 id="982720e4-6f49-824c-aa80-81fe0874f538" class="" dir="auto">2. Transitive Routing 가능</h3><p id="006720e4-6f49-8213-a07a-015719e36be0" class="" dir="auto">Peering과 다르게 중앙 라우팅을 통해 간접 연결이 가능함.</p><h3 id="71b720e4-6f49-825a-ade9-8124b0af3d22" class="" dir="auto">3. 온프레미스와도 연결 가능</h3><p id="b0a720e4-6f49-82bc-957d-817caa37e04c" class="" dir="auto">VPN, Direct Connect와 결합해 중앙 연결 허브로 사용할 수 있음.</p><h3 id="71c720e4-6f49-8345-81dc-8197732a9253" class="" dir="auto">4. 대규모 멀티 계정 구조에 적합</h3><p id="145720e4-6f49-8207-b825-81176bb2ccd1" class="" dir="auto">Organizations, RAM 등과 함께 대규모 네트워크 설계에 자주 사용됨.</p><p id="f5d720e4-6f49-822d-8f6d-813d7ab2140a" class="" dir="auto">즉, TGW는 단순 연결 서비스가 아니라 <strong>대규모 네트워크 토폴로지 관리 도구</strong>에 가까움.</p><hr id="fa7720e4-6f49-83d8-a3e5-017864f59341" dir="auto"/><h1 id="9b4720e4-6f49-82e4-a848-01c763f2f3e3" class="" dir="auto">10.23 VPC Peering과 Transit Gateway 차이</h1><table id="6d7720e4-6f49-82f8-bda0-816c5cb337e3" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="9fa720e4-6f49-8320-b8b0-01cf74fcd101" dir="ltr"><th id="zApv" class="simple-table-header-color simple-table-header">항목</th><th id="}xm}" class="simple-table-header-color simple-table-header">VPC Peering</th><th id="jsgf" class="simple-table-header-color simple-table-header">Transit Gateway</th></tr></thead><tbody><tr id="660720e4-6f49-8287-bbed-0103eb674dc6" dir="ltr"><td id="zApv" class="">연결 구조</td><td id="}xm}" class="">1:1 직접 연결</td><td id="jsgf" class="">중앙 허브 연결</td></tr><tr id="59d720e4-6f49-8353-acfd-015594d40a51" dir="ltr"><td id="zApv" class="">Transitive Routing</td><td id="}xm}" class="">불가</td><td id="jsgf" class="">가능</td></tr><tr id="9c8720e4-6f49-8232-b600-012aaf2f8ffe" dir="ltr"><td id="zApv" class="">소규모 환경</td><td id="}xm}" class="">적합</td><td id="jsgf" class="">가능</td></tr><tr id="d47720e4-6f49-83e0-b7b6-815964d08975" dir="ltr"><td id="zApv" class="">대규모 멀티 VPC</td><td id="}xm}" class="">비효율적</td><td id="jsgf" class="">적합</td></tr><tr id="186720e4-6f49-83c0-a2eb-01331db3ce33" dir="ltr"><td id="zApv" class="">운영 복잡도</td><td id="}xm}" class="">VPC 수 증가 시 커짐</td><td id="jsgf" class="">중앙 관리 가능</td></tr></tbody></table><p id="608720e4-6f49-8208-9538-0105f7883072" class="" dir="auto">즉,</p><ul id="e1a720e4-6f49-82c3-ae71-01ef4f354c7e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>소규모 단순 연결</strong>이면 Peering</li></ul><ul id="c69720e4-6f49-83e9-9e20-8128c9417244" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>대규모 허브형 연결</strong>이면 Transit Gateway</li></ul><p id="5a4720e4-6f49-827b-b8c7-811b134ee047" class="" dir="auto">라고 이해하면 됨.</p><hr id="77e720e4-6f49-8308-a10d-015b4e79fcdf" dir="auto"/><h1 id="760720e4-6f49-8293-bf5e-01de5fcfdc72" class="" dir="auto">10.24 고급 네트워킹 선택 기준</h1><p id="fc7720e4-6f49-8312-a878-01b5433d4964" class="" dir="auto">이 장의 서비스들은 비슷해 보이지만 해결하려는 문제가 다름.</p><p id="653720e4-6f49-8217-9861-013fdeb959d6" class="" dir="auto">그래서 “무엇을 연결하려는가”를 먼저 봐야 함.</p><hr id="5ee720e4-6f49-8231-8cfa-815baf6aa27c" dir="auto"/><h2 id="60d720e4-6f49-8321-b947-81866b972a61" class="" dir="auto">10.24.1 AWS 서비스에 프라이빗하게 접근하고 싶은가</h2><ul id="ccd720e4-6f49-8335-ba47-01184e8cca09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC Endpoint 고려</li></ul><p id="a5c720e4-6f49-8261-b0ca-017f7bc751b0" class="" dir="auto">예</p><ul id="342720e4-6f49-83df-9e99-01cd74eb496d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private EC2 → S3</li></ul><ul id="62c720e4-6f49-823e-8638-81978b5486f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private EC2 → Systems Manager</li></ul><ul id="6b5720e4-6f49-83df-8ba8-810d5f5bb5ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private App → Secrets Manager</li></ul><hr id="905720e4-6f49-837c-be99-01f639d9d6ff" dir="auto"/><h2 id="270720e4-6f49-83fd-ad22-81d2a4132818" class="" dir="auto">10.24.2 두 개의 VPC만 단순히 연결하면 되는가</h2><ul id="6fb720e4-6f49-83c5-a46e-01d098df977f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC Peering 고려</li></ul><p id="d86720e4-6f49-823f-a04e-01723bb5161d" class="" dir="auto">예</p><ul id="795720e4-6f49-8299-b29f-014919b1b28a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dev VPC ↔ Shared VPC</li></ul><hr id="ba0720e4-6f49-8234-bb87-012b3b1276e3" dir="auto"/><h2 id="892720e4-6f49-83da-9bcc-8174aa0453c8" class="" dir="auto">10.24.3 여러 VPC와 온프레미스를 중앙에서 연결해야 하는가</h2><ul id="521720e4-6f49-838a-856a-81aa090edadc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Transit Gateway 고려</li></ul><p id="d71720e4-6f49-83ce-86d9-81df9f434a00" class="" dir="auto">예</p><ul id="b44720e4-6f49-83db-bf4c-8181baebbe9f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shared Services Hub</li></ul><ul id="41f720e4-6f49-838a-b9f1-81630c21b435" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Multi-Account Network Hub</li></ul><hr id="df1720e4-6f49-838c-8c88-01790f824c6c" dir="auto"/><h2 id="4df720e4-6f49-8217-903c-01cf1a23405f" class="" dir="auto">10.24.4 온프레미스와 빠르게 연결해야 하는가</h2><ul id="a40720e4-6f49-824c-b20d-81f64956e06c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Site-to-Site VPN 고려</li></ul><hr id="0dc720e4-6f49-83cc-af10-8121eef4ca95" dir="auto"/><h2 id="8e6720e4-6f49-8241-8c10-0197b2958554" class="" dir="auto">10.24.5 온프레미스와 안정적이고 대역폭 큰 연결이 필요한가</h2><ul id="aad720e4-6f49-8253-91b2-81b56430884e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Direct Connect 고려</li></ul><hr id="82d720e4-6f49-8391-a288-010aad44eef3" dir="auto"/><h1 id="ecd720e4-6f49-8335-91e7-01be2b0e043d" class="" dir="auto">10.25 보안 관점에서의 의미</h1><p id="ba2720e4-6f49-8298-91d9-013a62052033" class="" dir="auto">고급 네트워킹은 단순 연결 이상의 보안 의미를 가짐.</p><h3 id="446720e4-6f49-8263-94b5-812b20af607c" class="" dir="auto">1. 인터넷 노출 최소화</h3><p id="f4e720e4-6f49-8398-9774-014d21bc04c6" class="" dir="auto">VPC Endpoint를 사용하면 AWS 서비스 접근을 인터넷 없이 처리 가능함.</p><h3 id="341720e4-6f49-82fe-83b6-81cd9cfe2863" class="" dir="auto">2. 네트워크 경계 통제</h3><p id="8e3720e4-6f49-83f6-8b7b-81fe865ea628" class="" dir="auto">Peering, TGW, VPN, DX는 어떤 네트워크가 어떤 네트워크와 연결되는지 설계하는 문제임.</p><h3 id="f53720e4-6f49-8334-b800-019beb550d33" class="" dir="auto">3. 세분화된 라우팅</h3><p id="003720e4-6f49-8358-be7f-0175748fa42a" class="" dir="auto">경로를 중앙에서 관리할수록 통제가 쉬워질 수 있음.</p><h3 id="cb5720e4-6f49-83cb-aea8-01e10baeb722" class="" dir="auto">4. 계정/네트워크 분리와 연결의 균형</h3><p id="d3c720e4-6f49-83c8-8d7b-81fb6cde13dc" class="" dir="auto">멀티 계정 구조에서는 분리도 중요하고, 필요한 연결을 안전하게 만드는 것도 중요함.</p><p id="d49720e4-6f49-82b7-b857-81a1f73aeb1d" class="" dir="auto">즉, 네트워킹2 장은 보안 아키텍처와도 강하게 연결됨.</p><hr id="b44720e4-6f49-8386-925c-018c412c0a29" dir="auto"/><h1 id="1e1720e4-6f49-8350-ae23-810ae5ac4b4f" class="" dir="auto">10.26 운영 관점의 설계 포인트</h1><h3 id="949720e4-6f49-82b9-a4ca-01a9696058c4" class="" dir="auto">1. 단순성 우선</h3><p id="3af720e4-6f49-8367-b8b6-0154a6cf97c8" class="" dir="auto">작은 구조인데 무조건 TGW나 DX를 쓰는 것은 과할 수 있음.</p><p id="f9d720e4-6f49-8328-aab2-013e11396899" class="" dir="auto">규모에 맞는 설계를 해야 함.</p><h3 id="f83720e4-6f49-825b-853b-8185cc12eeda" class="" dir="auto">2. 라우팅 복잡성 관리</h3><p id="b57720e4-6f49-824c-b598-810d8bb73a3b" class="" dir="auto">연결 자체보다 경로 관리가 더 어려워질 수 있음.</p><h3 id="a27720e4-6f49-8256-b0ee-01f24fe211cc" class="" dir="auto">3. 장애 대비</h3><p id="8fd720e4-6f49-8201-bfd9-815b8a27f915" class="" dir="auto">VPN은 백업 연결, DX는 주 연결 등으로 조합하는 경우도 많음.</p><h3 id="002720e4-6f49-8359-b77f-81af9e2b95c7" class="" dir="auto">4. 비용과 구조 균형</h3><p id="240720e4-6f49-837d-8682-810f754a9246" class="" dir="auto">NAT 비용 절감을 위해 Endpoint를 쓰는 것처럼, 연결 방식은 비용과도 관련됨.</p><h3 id="e3c720e4-6f49-83d4-9fed-013ae14bf304" class="" dir="auto">5. 미래 확장 고려</h3><p id="0be720e4-6f49-838c-bb94-0170999b0111" class="" dir="auto">현재는 VPC 2개라도 나중에 10개가 될 수 있다면 처음부터 확장 구조를 염두에 두는 것이 좋음.</p><hr id="c19720e4-6f49-821c-91cd-01f070ad249b" dir="auto"/><h1 id="ce0720e4-6f49-82a1-9085-01e5e7ccfc5f" class="" dir="auto">10.27 예시 아키텍처 흐름 정리</h1><h2 id="bca720e4-6f49-8298-b8c2-81e4f63ced79" class="" dir="auto">예시 1. Private Subnet에서 S3 접근</h2><ul id="9df720e4-6f49-824d-bf7c-016c2993c952" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인터넷 경로 대신 Gateway Endpoint 사용</li></ul><h2 id="e21720e4-6f49-82bf-a63a-818430efac12" class="" dir="auto">예시 2. 운영 VPC와 공용 서비스 VPC 연결</h2><ul id="ce8720e4-6f49-83b9-b420-019ab7868fdb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단순 구조라면 VPC Peering 사용 가능</li></ul><h2 id="704720e4-6f49-8239-81b3-8133e9e54784" class="" dir="auto">예시 3. 여러 계정의 VPC를 중앙 서비스망에 연결</h2><ul id="1fc720e4-6f49-821f-9adc-01508ed63566" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Transit Gateway 적합</li></ul><h2 id="111720e4-6f49-821f-8c57-01209f626eae" class="" dir="auto">예시 4. 사내 IDC와 AWS를 빠르게 연결</h2><ul id="177720e4-6f49-828e-bd1f-01cd44cfeced" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Site-to-Site VPN 적합</li></ul><h2 id="0f4720e4-6f49-83be-a579-8108a007d9ed" class="" dir="auto">예시 5. 대용량 데이터 백업을 AWS로 전송</h2><ul id="6b7720e4-6f49-82b0-ae8d-81e60003a41a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Direct Connect 적합 가능성 높음</li></ul><hr id="a42720e4-6f49-839e-b992-81f0074e288c" dir="auto"/><h1 id="55c720e4-6f49-82a1-95e7-01b93f716535" class="" dir="auto">10.28 멀티 티어 아키텍처와의 연결</h1><p id="d8b720e4-6f49-8240-8c93-0149e5b8f79d" class="" dir="auto">앞에서 만든 멀티 티어 구조를 확장해서 보면 다음처럼 연결될 수 있음.</p><pre id="5c6720e4-6f49-82f4-9046-810ed194f537" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">On-Prem
+   │
+VPN 또는 DX
+   │
+Transit Gateway
+   ├ App VPC
+   ├ Data VPC
+   └ Shared Services VPC</code></pre><p id="7d4720e4-6f49-827f-9ac0-0191ddd9b6ea" class="" dir="auto">그리고 각 VPC 내부에서는</p><ul id="c67720e4-6f49-83e6-bdc8-01c48eb7b255" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private EC2 → S3 via VPC Endpoint</li></ul><ul id="74e720e4-6f49-82d3-9842-011443a2fd8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shared Services → Interface Endpoint / PrivateLink</li></ul><ul id="5c1720e4-6f49-82b5-b6a4-8183212dbb71" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정 간 서비스 공유</li></ul><p id="c2f720e4-6f49-829f-b5ab-81840d3699b9" class="" dir="auto">같은 구조가 가능해짐.</p><p id="679720e4-6f49-8229-891c-01436b46b432" class="" dir="auto">즉, 이 장은 기존 단일 VPC 구조를 <strong>엔터프라이즈 네트워크 구조로 확장하는 장</strong>이라고 볼 수 있음.</p><hr id="1b7720e4-6f49-8204-ad09-81afc5a207f0" dir="auto"/><h1 id="64d720e4-6f49-8219-bcb8-01f10d899e9f" class="" dir="auto">10.29 서비스 역할 한 번에 정리</h1><h2 id="d95720e4-6f49-832b-920b-81e71c810686" class="" dir="auto">VPC Endpoint</h2><p id="962720e4-6f49-8354-9a6b-010c5b1bc962" class="" dir="auto">VPC 내부 리소스가 AWS 서비스에 프라이빗하게 접근하도록 한다.</p><h2 id="6b3720e4-6f49-8273-afec-01680d67a85f" class="" dir="auto">VPC Peering</h2><p id="ec6720e4-6f49-8340-a641-019fe8097a44" class="" dir="auto">두 VPC를 직접 연결한다.</p><h2 id="966720e4-6f49-8381-9525-014228221ba1" class="" dir="auto">Site-to-Site VPN</h2><p id="3f3720e4-6f49-8392-aa5f-81d653a07ac3" class="" dir="auto">온프레미스와 AWS를 인터넷 기반 암호화 터널로 연결한다.</p><h2 id="3b5720e4-6f49-8212-b803-8196b2f1f683" class="" dir="auto">Direct Connect</h2><p id="7fb720e4-6f49-8279-b3cc-815c17227d01" class="" dir="auto">온프레미스와 AWS를 전용 회선으로 연결한다.</p><h2 id="030720e4-6f49-83e1-88f9-01b96e6f0304" class="" dir="auto">Transit Gateway</h2><p id="268720e4-6f49-8210-9d95-01c7c83c7105" class="" dir="auto">여러 VPC와 온프레미스 연결을 중앙 허브로 통합한다.</p><hr id="d1a720e4-6f49-8330-8f7b-8161cb7a4780" dir="auto"/><h1 id="61a720e4-6f49-83e5-83c7-81be746016d0" class="" dir="auto">10.30 장 요약</h1><p id="564720e4-6f49-82da-a12d-81f70324a045" class="" dir="auto">이번 장에서 학습한 핵심 내용</p><ul id="b8a720e4-6f49-8369-9500-81891134c6d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고급 네트워킹이 필요한 이유</li></ul><ul id="ca2720e4-6f49-83f7-85f0-817e3f2df4b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC Endpoint의 개념과 필요성</li></ul><ul id="bc3720e4-6f49-83d6-94e5-016710bad2c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Gateway Endpoint와 Interface Endpoint 차이</li></ul><ul id="19e720e4-6f49-82fe-9362-81f19acaaf2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PrivateLink 개념</li></ul><ul id="d5c720e4-6f49-8378-91db-818ffee63bf3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC Peering의 구조와 제약</li></ul><ul id="35b720e4-6f49-834d-ae76-0141be3d9566" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Site-to-Site VPN의 개념과 특징</li></ul><ul id="9b6720e4-6f49-8368-b2fe-01022f051499" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Direct Connect의 개념과 특징</li></ul><ul id="685720e4-6f49-83eb-81a3-81cbe8409773" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN과 DX 비교</li></ul><ul id="c34720e4-6f49-82f4-93e7-011a26e8da0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Transit Gateway의 필요성과 역할</li></ul><ul id="31d720e4-6f49-822d-95c6-81169a626bc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Peering과 TGW 비교</li></ul><ul id="e24720e4-6f49-82bb-9294-0112aff7d6b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결 방식 선택 기준</li></ul><ul id="51c720e4-6f49-82d7-9027-019b65b21055" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안과 운영 관점의 설계 포인트</li></ul><hr id="6b7720e4-6f49-83ff-9579-01776f49966c" dir="auto"/><h1 id="992720e4-6f49-82d5-bd1d-011a36790f52" class="" dir="auto">10.31 한 줄 정리</h1><pre id="89a720e4-6f49-82cd-899d-8164c33ae930" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">VPC Endpoint는 AWS 서비스로의 프라이빗 접근을 만든다.
+VPC Peering은 두 VPC를 직접 연결한다.
+VPN과 Direct Connect는 온프레미스와 AWS를 연결한다.
+Transit Gateway는 여러 네트워크 연결을 중앙 허브로 통합한다.</code></pre><hr id="c76720e4-6f49-8269-9f0a-01b31cb44647" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

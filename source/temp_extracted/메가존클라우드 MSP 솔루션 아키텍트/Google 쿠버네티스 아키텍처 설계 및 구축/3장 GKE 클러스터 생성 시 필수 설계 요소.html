@@ -1,0 +1,769 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>3장. GKE 클러스터 생성 시 필수 설계 요소</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="be4720e4-6f49-82a8-9624-01f3e49c70c7" class="page sans"><header><h1 class="page-title" dir="auto">3장. GKE 클러스터 생성 시 필수 설계 요소</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="186720e4-6f49-831d-91f4-01f2899a2c9a" class="" dir="auto">1. 장 개요</h2><p id="dca720e4-6f49-82a5-b6f0-8194d2f95d18" class="" dir="auto">GKE 클러스터를 생성할 때 반드시 고려해야 하는 핵심 설계 요소들이 있다.</p><ul id="0a8720e4-6f49-8239-bae2-81f57faba186" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전형으로 만들 것인가, 존형으로 만들 것인가</li></ul><ul id="f00720e4-6f49-83ac-b8c2-81c7e5eb3e68" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 VPC와 서브넷을 사용할 것인가</li></ul><ul id="ca8720e4-6f49-83ec-b053-8161ac709c67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod IP와 Service IP는 어떻게 할당할 것인가</li></ul><ul id="07b720e4-6f49-8372-bf3a-81a529d4ac50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드풀은 몇 개로 나눌 것인가</li></ul><ul id="622720e4-6f49-8253-8db6-01e5267ab6d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Cluster가 필요한가</li></ul><ul id="c87720e4-6f49-8391-99c9-017416019a35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">kubectl 접근은 어떻게 할 것인가</li></ul><ul id="502720e4-6f49-836f-bc71-01cf6e94b290" class="bulleted-list" dir="auto"><li style="list-style-type:disc">릴리스 채널은 무엇을 쓸 것인가</li></ul><p id="fc3720e4-6f49-8212-82c1-81245d3a4962" class="" dir="auto">GKE 클러스터 생성 시 네트워크 접근성, 업그레이드 방식, 버전 관리, 노드풀, VPC-native 네트워킹 등을 주요 선택지이다. 또 VPC-native 클러스터는 GKE의 권장 네트워크 모델이며, Pod IP가 VPC 내에서 직접 라우팅 가능해 네트워크 설계를 단순화한다. </p><hr id="469720e4-6f49-8326-9c43-0152b5f6fbae" dir="auto"/><h2 id="21f720e4-6f49-8365-a74e-01a1674d63cf" class="" dir="auto">2. 학습 목표</h2><ul id="fb0720e4-6f49-839f-9cc9-011f7faeafd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE 클러스터 생성 시 반드시 결정해야 하는 핵심 항목을 설명할 수 있음</li></ul><ul id="a51720e4-6f49-82b9-8e5d-015de886bff2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">존형 클러스터와 리전형 클러스터의 차이를 설명할 수 있음</li></ul><ul id="f8f720e4-6f49-83ed-84b8-8166151746d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC-native 클러스터의 의미를 설명할 수 있음</li></ul><ul id="4ef720e4-6f49-834b-bdc8-012c6302e847" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod CIDR / Service CIDR 개념을 설명할 수 있음</li></ul><ul id="828720e4-6f49-83b0-b0be-8117405b904d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드풀 설계가 왜 중요한지 설명할 수 있음</li></ul><ul id="964720e4-6f49-82dd-86c8-017cecb3690b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">kubectl 접근과 인증 흐름을 설명할 수 있음</li></ul><ul id="345720e4-6f49-82d8-bef6-81fce62afd07" class="bulleted-list" dir="auto"><li style="list-style-type:disc">샘플 클러스터 생성 절차를 따라갈 수 있음</li></ul><hr id="c39720e4-6f49-82f3-8cb6-81cb403d520e" dir="auto"/><h2 id="9ea720e4-6f49-82b8-aef0-01f5d15f1d23" class="" dir="auto">3. 핵심 키워드</h2><ul id="fa1720e4-6f49-83a6-9629-819b6379f16c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Zonal Cluster</li></ul><ul id="fa8720e4-6f49-82f1-b5f1-018905d2076d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Regional Cluster</li></ul><ul id="9ac720e4-6f49-83aa-b771-01ecbd3a237c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Node Pool</li></ul><ul id="da2720e4-6f49-824d-b17e-81896159cf40" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC-native Cluster</li></ul><ul id="7f0720e4-6f49-834c-9bfb-01db09eb64de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Alias IP</li></ul><ul id="6f9720e4-6f49-8248-ba05-01f9ec4db56d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod CIDR</li></ul><ul id="6d5720e4-6f49-83de-99ef-0162c4459622" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service CIDR</li></ul><ul id="f01720e4-6f49-83c8-b229-01e1b1e7da4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secondary Range</li></ul><ul id="3ab720e4-6f49-837c-8905-811cb282dcde" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Cluster</li></ul><ul id="c5c720e4-6f49-82fe-b4e6-81367db991f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Release Channel</li></ul><ul id="1f2720e4-6f49-8389-981b-016742c751f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">kubeconfig</li></ul><ul id="9a1720e4-6f49-8346-8e49-810ccf54602d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">kubectl credentials</li></ul><hr id="adb720e4-6f49-83f3-b3ac-0155e766e73f" dir="auto"/><h1 id="1a1720e4-6f49-82e7-9748-01cbe0f9cf95" class="" dir="auto">4. 클러스터 생성 전 가장 먼저 결정할 것</h1><p id="2be720e4-6f49-8223-9802-81f1f27ee9be" class="" dir="auto">GKE 클러스터 생성 전에는 아래 4가지를 먼저 정리해야 한다.</p><h2 id="25b720e4-6f49-8273-8830-01b335f65532" class="" dir="auto">4.1 운영 모드</h2><ul id="459720e4-6f49-8285-a557-0117bdeaf5a3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Standard</li></ul><ul id="5a7720e4-6f49-83be-a53f-815f978c903b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autopilot</li></ul><h2 id="d77720e4-6f49-827c-a78d-0137fac4dc6d" class="" dir="auto">4.2 배치 범위</h2><ul id="fbf720e4-6f49-82e8-92e7-010d8157f550" class="bulleted-list" dir="auto"><li style="list-style-type:disc">존형(Zonal)</li></ul><ul id="712720e4-6f49-82c9-bd45-014888fb204f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전형(Regional)</li></ul><h2 id="f72720e4-6f49-8257-8f04-81564762fb60" class="" dir="auto">4.3 네트워크 구조</h2><ul id="05e720e4-6f49-82e8-a926-81e2437d6a81" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어느 VPC를 사용할 것인가</li></ul><ul id="f50720e4-6f49-832c-b98f-8156d37f1d6b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어느 서브넷을 사용할 것인가</li></ul><ul id="c27720e4-6f49-839f-8604-81a5c7d294cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod IP / Service IP를 어떻게 할당할 것인가</li></ul><h2 id="25a720e4-6f49-83b2-8b75-01990ea8088b" class="" dir="auto">4.4 노드 운영 방식</h2><ul id="3c2720e4-6f49-839b-9741-01b5324b55b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드풀을 어떻게 나눌 것인가</li></ul><ul id="43d720e4-6f49-83f4-ac2f-81fa7db6b5eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하나의 공용 노드풀로 갈 것인가</li></ul><ul id="39e720e4-6f49-8254-b69a-01372fb3e115" class="bulleted-list" dir="auto"><li style="list-style-type:disc">역할별로 분리할 것인가</li></ul><hr id="890720e4-6f49-82b3-b605-81cfaf255e33" dir="auto"/><h1 id="df2720e4-6f49-82c8-9f30-81fe760f06e4" class="" dir="auto">5. 존형 클러스터와 리전형 클러스터</h1><p id="56b720e4-6f49-8226-a264-0189ced60aef" class="" dir="auto">클러스터 배치 방식은 매우 중요한 첫 번째 설계 요소다.</p><h2 id="03c720e4-6f49-82ea-be6a-81d36c2b3b2b" class="" dir="auto">5.1 존형 클러스터</h2><p id="c76720e4-6f49-8349-a9aa-817135614b01" class="" dir="auto">존형 클러스터는 특정 <strong>하나의 Zone</strong> 을 중심으로 제어 평면과 노드가 배치되는 형태로 이해하면 된다.</p><h3 id="c4a720e4-6f49-82fe-9643-81ddfe667093" class="" dir="auto">특징</h3><ul id="934720e4-6f49-820c-9675-81f0923d5f34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">구조가 단순함</li></ul><ul id="013720e4-6f49-8369-8e4f-8123cf6e9361" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 및 학습용으로 적합함</li></ul><ul id="ba2720e4-6f49-82a7-93cb-01451c5b7b57" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용과 구성이 단순한 편임</li></ul><ul id="c43720e4-6f49-8323-936d-81626984144e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단일 존 장애 도메인 영향을 더 직접적으로 받음</li></ul><h2 id="498720e4-6f49-82a6-9faa-0172b18c6a8e" class="" dir="auto">5.2 리전형 클러스터</h2><p id="ec2720e4-6f49-8364-8101-01f92f90bf32" class="" dir="auto">리전형 클러스터는 <strong>여러 Zone에 걸쳐 더 높은 가용성</strong>을 제공하는 구조다.</p><h3 id="b79720e4-6f49-83b5-8881-012d6db00f27" class="" dir="auto">특징</h3><ul id="2ea720e4-6f49-82fe-afa8-818e6bf00293" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가용성이 더 높음</li></ul><ul id="ab3720e4-6f49-8341-898f-81137643eb86" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경에 적합함</li></ul><ul id="56c720e4-6f49-83b1-ad51-01d72aa013a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">제어 평면과 노드가 다중 존에 분산되는 감각이 강함</li></ul><ul id="91a720e4-6f49-8369-865d-013ad5ab23f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용과 구성이 더 복잡할 수 있음</li></ul><hr id="e68720e4-6f49-8269-90d9-8151743aa0a9" dir="auto"/><h1 id="4f1720e4-6f49-8310-9e63-0159d45ec298" class="" dir="auto">6. GKE 네트워킹의 기본: VPC-native 클러스터</h1><p id="567720e4-6f49-821b-9333-81d1fe02a50a" class="" dir="auto">GKE는 기본적으로 <strong>VPC-native 클러스터</strong>를 권장한다.</p><h2 id="5db720e4-6f49-8313-ad74-016908d274f8" class="" dir="auto">6.1 왜 중요한가</h2><p id="282720e4-6f49-820e-8f6f-81a6899e5b05" class="" dir="auto">Kubernetes 네트워크를 단순히 “Pod끼리 통신된다”로 보면 안 된다.</p><p id="b1e720e4-6f49-83f8-82b2-012aeb4b1b30" class="" dir="auto">GKE에서는 Pod IP, Node IP, Service IP가 <strong>Google Cloud VPC 구조와 어떻게 연결되는가</strong>를 함께 봐야 한다.</p><h2 id="b1c720e4-6f49-839b-9535-01e7a054983c" class="" dir="auto">6.2 VPC-native의 의미</h2><ul id="d2b720e4-6f49-8276-b7df-81eb13848e8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod IP가 VPC 내부에서 직접 라우팅 가능</li></ul><ul id="810720e4-6f49-8376-a9c8-8175e6dabd4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 설계가 더 일관적임</li></ul><ul id="dda720e4-6f49-8279-bc5c-01e19d84a08c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Compute Engine, Cloud SQL 같은 GCP 리소스와 연결성이 좋아짐</li></ul><ul id="e62720e4-6f49-832b-8984-818910471856" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE의 권장 네트워크 모델임</li></ul><hr id="26f720e4-6f49-8350-aa97-01c4fcbbfe29" dir="auto"/><h1 id="4ea720e4-6f49-837a-93de-816815f0f358" class="" dir="auto">7. Pod CIDR와 Service CIDR</h1><h2 id="f7a720e4-6f49-83e4-85fd-0187c6fd5b36" class="" dir="auto">7.1 Pod CIDR</h2><p id="3ec720e4-6f49-8247-818e-01e1b08a6eff" class="" dir="auto">Pod들이 사용할 IP 대역이다.</p><p id="439720e4-6f49-8346-8be5-01f3d9e17596" class="" dir="auto">VPC-native 클러스터에서는 보통 서브넷의 <strong>secondary range</strong> 를 Pod IP 용도로 사용한다.  </p><h2 id="2a4720e4-6f49-8239-a7e2-0143fdea9d57" class="" dir="auto">7.2 Service CIDR</h2><p id="d65720e4-6f49-8291-8058-817ce692c9b9" class="" dir="auto">ClusterIP 같은 Service 리소스가 사용할 IP 대역이다.</p><p id="a87720e4-6f49-83dd-b2eb-814719894183" class="" dir="auto">이 역시 보통 별도 secondary range로 관리한다. </p><h2 id="2bc720e4-6f49-826c-b48a-81df375c875c" class="" dir="auto">왜 중요한가</h2><p id="92f720e4-6f49-820f-b1a3-81e95b575955" class="" dir="auto">클러스터를 많이 만들거나, 클러스터가 커지거나, 멀티클러스터/하이브리드 구조로 가면 IP 대역 충돌이 매우 큰 문제가 된다.</p><hr id="550720e4-6f49-8211-a0f6-016b3f434451" dir="auto"/><h1 id="eeb720e4-6f49-83ac-b1b1-810465c9a1e0" class="" dir="auto">8. Secondary Range란 무엇인가</h1><p id="fcb720e4-6f49-83cf-8f93-8187cb9c3ee0" class="" dir="auto">GKE VPC-native 클러스터는 보통 서브넷의 secondary range를 사용한다.</p><h2 id="6e6720e4-6f49-82c6-9a43-81efc4645321" class="" dir="auto">구조 예시</h2><ul id="f78720e4-6f49-821e-9a11-811c3675e4d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Primary subnet range: 노드 IP</li></ul><ul id="3d3720e4-6f49-830e-b650-01f4f37c3142" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secondary range 1: Pod IP</li></ul><ul id="0d8720e4-6f49-830f-875d-81af18810782" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secondary range 2: Service IP</li></ul><h2 id="cc2720e4-6f49-8335-b301-81a39cfadb9b" class="" dir="auto">왜 이렇게 나누는가</h2><ul id="d32720e4-6f49-83e0-a692-01c41473c1cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">역할별 주소 공간 분리</li></ul><ul id="3a7720e4-6f49-8376-9c7e-01d593964dfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">충돌 방지</li></ul><ul id="8a2720e4-6f49-829d-abf5-01cd3e38a19c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 가시성 향상</li></ul><ul id="545720e4-6f49-8241-8c42-012b3bc2be77" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티클러스터 및 하이브리드 확장에 유리</li></ul><hr id="cfc720e4-6f49-8356-8c81-81d14a117280" dir="auto"/><h1 id="720720e4-6f49-8380-9bbf-81c91cb03bd7" class="" dir="auto">9. 노드풀(Node Pool)</h1><p id="fa9720e4-6f49-82cc-aa3f-81c9afd5afc3" class="" dir="auto">노드풀은 GKE 클러스터 안에서 동일한 구성의 노드 그룹이다.</p><p id="d84720e4-6f49-834e-b530-010f31255b0a" class="" dir="auto">Standard 모드에서는 노드풀 설계가 매우 중요하다.</p><h2 id="ade720e4-6f49-822e-adde-0179942f6cac" class="" dir="auto">9.1 왜 노드풀을 나누는가</h2><ul id="4d6720e4-6f49-8269-909d-01596026f032" class="bulleted-list" dir="auto"><li style="list-style-type:disc">역할별 워크로드 분리</li></ul><ul id="372720e4-6f49-8292-a327-81a1876501bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">머신 타입 분리</li></ul><ul id="2f5720e4-6f49-8332-a06b-01a8cb267642" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스케일링 정책 분리</li></ul><ul id="e0e720e4-6f49-82ff-89dd-8198985856e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 정책 분리</li></ul><h2 id="c09720e4-6f49-8224-8a67-01d769bead49" class="" dir="auto">예시</h2><ul id="6f0720e4-6f49-8231-b1c5-0103d02b5988" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일반 웹 애플리케이션용 노드풀</li></ul><ul id="5ee720e4-6f49-82cc-b32f-0121c54963f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배치 작업용 노드풀</li></ul><ul id="595720e4-6f49-8262-a616-8130d3a0c2c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고성능 워크로드용 노드풀</li></ul><ul id="e36720e4-6f49-824d-a3a3-81e2cc629698" class="bulleted-list" dir="auto"><li style="list-style-type:disc">시스템 워크로드용 노드풀</li></ul><hr id="994720e4-6f49-8225-9b71-0141c4331497" dir="auto"/><h1 id="2cc720e4-6f49-83de-bf72-81109580ca98" class="" dir="auto">10. 릴리스 채널과 버전 선택</h1><p id="923720e4-6f49-8244-a35a-017daa0b62f3" class="" dir="auto"> 클러스터 생성 시 릴리스 채널을 선택할 수 있고, 클러스터 업그레이드 수신 방식에 영향을 준다. Autopilot은 릴리스 채널 등록이 필수고, Standard는 선택 여지가 있다. </p><ul id="e38720e4-6f49-83cd-b7a3-0122c623516e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버전은 단순히 최신을 고르는 문제가 아님</li></ul><ul id="466720e4-6f49-823a-8f7c-01bb9ea90689" class="bulleted-list" dir="auto"><li style="list-style-type:disc">릴리스 채널은 업그레이드 운영과 연결됨</li></ul><ul id="373720e4-6f49-8298-8e16-81b19177a7be" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Autopilot에서는 더 기본적인 선택지로 들어옴</li></ul><hr id="620720e4-6f49-82e0-ba23-812bd0463578" dir="auto"/><h1 id="a23720e4-6f49-8340-8719-01875bf4d163" class="" dir="auto">11. Private Cluster 여부</h1><p id="7e3720e4-6f49-83ee-ad2b-0199af6aae06" class="" dir="auto">Private Cluster는 <strong>노드가 내부 IP만 사용</strong>하고, 제어 평면 접근 범위를 조정할 수 있는 VPC-native 클러스터 유형이다.</p><hr id="317720e4-6f49-8379-9012-8117b6b55c38" dir="auto"/><h1 id="6e0720e4-6f49-83f3-ad4b-018f57b56f57" class="" dir="auto">12. kubectl 접근과 인증 흐름</h1><p id="aac720e4-6f49-8343-beba-0151a42a3fa6" class="" dir="auto">운영자는 <code>kubectl</code> 로 접근할 수 있어야 한다.</p><h2 id="987720e4-6f49-8318-957e-01d463991d8e" class="" dir="auto">기본 흐름</h2><ol type="1" id="90c720e4-6f49-82d8-b27a-811572acf331" class="numbered-list" start="1" dir="auto"><li>GKE 클러스터 생성</li></ol><ol type="1" id="bb5720e4-6f49-8258-9049-01c1c5b6c55a" class="numbered-list" start="2" dir="auto"><li><code>gcloud</code> 로 클러스터 자격증명 가져오기</li></ol><ol type="1" id="85a720e4-6f49-83bf-a022-0106f47986bf" class="numbered-list" start="3" dir="auto"><li>kubeconfig 업데이트</li></ol><ol type="1" id="68b720e4-6f49-82a5-a29f-01c095fc32a9" class="numbered-list" start="4" dir="auto"><li><code>kubectl</code> 로 API 서버 접근</li></ol><h2 id="f7b720e4-6f49-829d-9203-813126c6b65a" class="" dir="auto">대표 명령</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="dbb720e4-6f49-823a-bac3-0175716a41e7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials CLUSTER_NAME \
+  --region REGION</code></pre><p id="dca720e4-6f49-82c3-a89d-81fcb4fa5c48" class="" dir="auto">또는 존형이면:</p><pre id="cbc720e4-6f49-82f1-83ef-81694a97561b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud container clusters get-credentials CLUSTER_NAME \
+  --zone ZONE</code></pre><p id="d0d720e4-6f49-83eb-b3df-01e9859f7d54" class="" dir="auto"> <code>get-credentials</code> 명령이 kubeconfig 엔트리를 생성하고 향후 <code>kubectl</code> 이 해당 클러스터를 기본 사용하도록 설정한다. 또한 기본적으로 내부 IP를 사용하지 않고, 내부 IP를 사용하려면 <code>--internal-ip</code> 옵션을 쓴다. </p><hr id="c90720e4-6f49-838a-b67f-013f538230b6" dir="auto"/><h1 id="ea1720e4-6f49-829b-9f36-011ec7daf160" class="" dir="auto">13. 클러스터 생성 시 체크리스트</h1><h2 id="bdc720e4-6f49-82b5-a8ef-01c075cbd35b" class="" dir="auto">생성 전 체크리스트</h2><ul id="53b720e4-6f49-8393-a7e1-01edf199831b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 모드가 무엇인가</li></ul><ul id="b4d720e4-6f49-8290-a61d-01fb62abc775" class="bulleted-list" dir="auto"><li style="list-style-type:disc">존형인가, 리전형인가</li></ul><ul id="1b3720e4-6f49-826c-aa8b-816a979bcd13" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 VPC/서브넷을 쓸 것인가</li></ul><ul id="b0b720e4-6f49-82b4-bb7a-012b940b9e85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod/Service IP 대역은 어떻게 할 것인가</li></ul><ul id="7db720e4-6f49-82fa-9853-817f3e67a17a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Cluster가 필요한가</li></ul><ul id="ef7720e4-6f49-8318-9ef2-017a869b55f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">릴리스 채널은 무엇인가</li></ul><ul id="b07720e4-6f49-8393-91d2-81a65fbc32c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드풀은 어떻게 나눌 것인가</li></ul><ul id="424720e4-6f49-8390-9609-016b566f4b92" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성 후 kubectl 접근은 어떻게 할 것인가</li></ul><hr id="538720e4-6f49-8290-a2b5-819d327fa3f5" dir="auto"/><h1 id="ce7720e4-6f49-833f-8a20-81b6772c145d" class="" dir="auto">14. 장 요약</h1><ul id="913720e4-6f49-837b-8dd4-817d5abeb03f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE 클러스터 생성은 단순한 배포 작업이 아니라 <strong>운영 구조 설계</strong>다.</li></ul><ul id="696720e4-6f49-8270-86e8-0134c2db5758" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 생성 전에 운영 모드, 존형/리전형, 네트워크, IP 대역, 노드풀, 접근 방식 등을 먼저 정리해야 한다.</li></ul><ul id="183720e4-6f49-826a-8f9e-813967de2580" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GKE는 <strong>VPC-native 클러스터</strong>를 권장하며, Pod IP가 VPC 내에서 직접 라우팅 가능하다. Autopilot은 VPC-native가 기본이며 변경할 수 없다.</li></ul><ul id="2af720e4-6f49-8324-a622-81df611bcbfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod CIDR와 Service CIDR는 secondary range 설계와 연결되며, 확장성과 충돌 방지 관점에서 중요하다. </li></ul><ul id="335720e4-6f49-8356-ba7f-81b8a8b04ac9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드풀은 단순한 노드 묶음이 아니라 운영 정책 단위다.</li></ul><ul id="419720e4-6f49-8313-9e95-815b4753512e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 생성 후에는 <code>get-credentials</code> 와 <code>kubectl get nodes</code> 로 기본 동작을 먼저 확인해야 한다. </li></ul><hr id="87a720e4-6f49-8254-9d59-81f1455952f0" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,927 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>ELK(Logstash 포함) 로그 수집 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="28a720e4-6f49-820a-9d8f-01f687173bfd" class="page sans"><header><h1 class="page-title" dir="auto"><strong>ELK(Logstash 포함) 로그 수집 실습</strong></h1><p class="page-description" dir="auto"></p></header><div class="page-body"><p id="2a3720e4-6f49-83cd-8963-81ff99b381da" class="" dir="auto">👉 <strong>Docker 컨테이너 로그 → 중앙 로그 시스템 → Kibana 시각화</strong></p><p id="324720e4-6f49-8296-beb4-019690cdff0f" class="" dir="auto">
+</p><hr id="487720e4-6f49-83b6-8842-0124e2a86fda" dir="auto"/><figure id="e54720e4-6f49-83a3-aa0d-01843b16e883" class="image" data-notion-image="https://camo.githubusercontent.com/17b7106ddb644fd66cbc46b698f4ff1926843dc8d76d020c66d5737e8be26365/68747470733a2f2f6c6f677a2e696f2f77702d636f6e74656e742f75706c6f6164732f323031372f30362f72656c6174696f6e736869702d6265747765656e2d66696c65626561742d616e642d6c6f6773746173682e706e67" dir="ltr"><a href="https://camo.githubusercontent.com/17b7106ddb644fd66cbc46b698f4ff1926843dc8d76d020c66d5737e8be26365/68747470733a2f2f6c6f677a2e696f2f77702d636f6e74656e742f75706c6f6164732f323031372f30362f72656c6174696f6e736869702d6265747765656e2d66696c65626561742d616e642d6c6f6773746173682e706e67"><img src="https://camo.githubusercontent.com/17b7106ddb644fd66cbc46b698f4ff1926843dc8d76d020c66d5737e8be26365/68747470733a2f2f6c6f677a2e696f2f77702d636f6e74656e742f75706c6f6164732f323031372f30362f72656c6174696f6e736869702d6265747765656e2d66696c65626561742d616e642d6c6f6773746173682e706e67"/></a></figure><h1 id="10d720e4-6f49-821c-933d-81688a257efd" class="" dir="auto">컨테이너 로그 관리 실습 교안</h1><hr id="c8f720e4-6f49-8361-9781-81041daea897" dir="auto"/><h2 id="403720e4-6f49-8331-90c6-012c9945a1ee" class="" dir="auto">1. 실습 개요</h2><h3 id="772720e4-6f49-820c-a000-01b7cf7d1d6f" class="" dir="auto">실습 목표</h3><p id="7dd720e4-6f49-8381-af3c-01f2d8bf48a2" class="" dir="auto">이 실습을 통해 수강생은 다음을 직접 확인한다.</p><ul id="2ad720e4-6f49-8368-b493-01959940f7ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 로그의 <strong>표준 출력(stdout/stderr) 기반 수집 원리</strong></li></ul><ul id="362720e4-6f49-82c4-b92e-815b56048ed9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 로그 드라이버의 한계</li></ul><ul id="661720e4-6f49-83b9-924d-01082a53c185" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>ELK Stack 기반 중앙 로그 수집 구조</strong></li></ul><ul id="aad720e4-6f49-82b3-9de8-01a5f4d29f34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Filebeat를 이용한 컨테이너 로그 수집</li></ul><ul id="d45720e4-6f49-83f7-a8f0-810ef53ef0ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kibana를 통한 로그 조회 및 검색</li></ul><hr id="126720e4-6f49-83e3-a469-81931401abd5" dir="auto"/><h2 id="ba6720e4-6f49-82ef-a6d3-81fb3ceb6cd6" class="" dir="auto">2. 실습 전체 구조</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="226720e4-6f49-8288-9f77-015e8cdd025f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[Web Container]
+   │  stdout/stderr
+   ▼
+[Docker JSON Log File]
+   │
+   ▼
+[Filebeat]
+   │
+   ▼
+[Logstash]
+   │
+   ▼
+[Elasticsearch]
+   │
+   ▼
+[Kibana]</code></pre><h3 id="f58720e4-6f49-8386-8c90-8105e400488a" class="" dir="auto">핵심 개념 정리</h3><ul id="1ff720e4-6f49-82bd-af5b-8189aaca39b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너는 <strong>로그를 파일에 직접 쓰지 않는다</strong></li></ul><ul id="644720e4-6f49-82b4-91a1-01440529f9a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그는 <strong>stdout/stderr → Docker 로그 드라이버</strong>로 전달</li></ul><ul id="76f720e4-6f49-828d-a12d-8166750ec0f8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ELK는 로그를 <strong>중앙에서 수집·검색·시각화</strong>하는 시스템</li></ul><hr id="a87720e4-6f49-8369-80ab-015e81c1b13c" dir="auto"/><h2 id="327720e4-6f49-8347-ae7d-01ba42fb8bc6" class="" dir="auto">3. 실습 환경</h2><h3 id="041720e4-6f49-8255-95d3-810ba2c95886" class="" dir="auto">사전 조건</h3><ul id="73c720e4-6f49-8299-8dbe-815eaf3ea48b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">OS: Ubuntu</li></ul><ul id="482720e4-6f49-82e3-9a44-0165805168f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker / Docker Compose 설치 완료</li></ul><ul id="921720e4-6f49-82c9-887b-81b58bbafa98" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트 사용:<ul id="f57720e4-6f49-837a-a193-0187f2f90f71" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Elasticsearch: <code>9200</code></li></ul><ul id="c06720e4-6f49-834e-bf72-010b480dbdeb" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Kibana: <code>5601</code></li></ul></li></ul><h3 id="07c720e4-6f49-82ea-ad29-816b3f433dc7" class="" dir="auto">사용 이미지</h3><ul id="436720e4-6f49-8220-9a85-81d73b482be9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>nginx:alpine</code></li></ul><ul id="001720e4-6f49-83ef-8af5-815d1baea85b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>elasticsearch:8.x</code></li></ul><ul id="5f1720e4-6f49-82de-8b7c-0159dfbcf3af" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>logstash:8.x</code></li></ul><ul id="950720e4-6f49-8286-aa94-8195dd98149c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>kibana:8.x</code></li></ul><ul id="ff4720e4-6f49-8304-89d2-010d1f1d0785" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>filebeat:8.x</code></li></ul><hr id="6f7720e4-6f49-8348-b1cc-018d39233791" dir="auto"/><h2 id="015720e4-6f49-8326-ab5d-8116f8bba9cf" class="" dir="auto">4. 실습 1. 컨테이너 로그 특성 확인 (복습)</h2><h3 id="645720e4-6f49-8315-8c85-81d8d8cd918c" class="" dir="auto">4-1. 로그를 출력하는 웹 컨테이너 실행</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="172720e4-6f49-83a8-93ec-01926b74aca7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d \
+  --name web-log \
+  -p 8080:80 \
+  nginx:alpine</code></pre><p id="89a720e4-6f49-8280-863d-0113138552a0" class="" dir="auto">접속:</p><pre id="8c1720e4-6f49-831e-9ec0-81ce72fb9f17" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://127.0.0.1:8080</code></pre><p id="9a3720e4-6f49-83ee-8032-812245c17073" class="" dir="auto">로그 확인:</p><pre id="520720e4-6f49-8256-8987-814b6042c256" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker logs web-log</code></pre><h3 id="c4a720e4-6f49-829c-8d03-018dd5fd40a4" class="" dir="auto">확인 포인트</h3><ul id="fd5720e4-6f49-82fb-ae94-018469f71ed1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그는 파일이 아니라 <strong>docker logs 명령으로 조회</strong></li></ul><ul id="0b6720e4-6f49-837f-9bf8-01218c5ea08b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 삭제 시 로그도 함께 사라짐</li></ul><hr id="301720e4-6f49-8346-8f0e-815d87180be5" dir="auto"/><h2 id="2b8720e4-6f49-834b-94ef-0103a7eac528" class="" dir="auto">5. 실습 2. ELK Stack 실행 (Docker Compose)</h2><h3 id="d2e720e4-6f49-83d5-98d9-8100ebcf4bfc" class="" dir="auto">5-1. 디렉터리 구조</h3><pre id="05f720e4-6f49-8377-bd09-01df998c3a54" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">elk-lab/
+├── docker-compose.yml
+├── logstash/
+│   └── pipeline.conf
+└── filebeat/
+    └── filebeat.yml</code></pre><hr id="416720e4-6f49-827f-bece-81a1fbf79a10" dir="auto"/><h3 id="99d720e4-6f49-82f9-844c-01cc25cf0648" class="" dir="auto">5-2. docker-compose.yml</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="b53720e4-6f49-8251-817e-01b2b4abfccd" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">services:
+  # Elasticsearch: 512MB로 제한하여 VM 생존 확보
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.2
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=false
+      - &quot;ES_JAVA_OPTS=-Xms512m -Xmx512m&quot;
+    ports:
+      - 9200:9200
+
+  # Logstash: 256MB로 최소화
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.10.2
+    container_name: logstash
+    environment:
+      - &quot;LS_JAVA_OPTS=-Xms256m -Xmx256m&quot;
+    volumes:
+      - ./logstash/pipeline:/usr/share/logstash/pipeline:ro
+    depends_on:
+      - elasticsearch
+
+  # Kibana: 보안 체크를 강제로 건너뛰는 설정 추가
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.10.2
+    container_name: kibana
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+      - XPACK_SECURITY_ENABLED=false
+      - XPACK_ENROLLMENT_LOG_ENABLED=false
+      - TELEMETRY_ENABLED=false # 불필요한 통신 차단 (성능)
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+
+  # Filebeat: root 권한으로 실행하여 로그 수집
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:8.12.2
+    container_name: filebeat
+    user: root
+    privileged: true # 권한이 더 필요할 경우 추가
+    environment:
+      - DOCKER_API_VERSION=1.44
+    volumes:
+      - /var/lib/docker/containers:/var/lib/docker/containers:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+    depends_on:
+      - logstash
+
+</code></pre><hr id="df7720e4-6f49-8206-8147-01a6eff8be67" dir="auto"/><h3 id="3fb720e4-6f49-8370-8461-017ed2974167" class="" dir="auto">5-3. Logstash 파이프라인 설정</h3><p id="48c720e4-6f49-83a6-b0d6-01169beeacf4" class="" dir="auto"><code>logstash/pipeline.conf</code></p><pre id="981720e4-6f49-82a6-a1cd-017db879cb99" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">input {
+  beats {
+    port =&gt; 5044
+    host =&gt; &quot;0.0.0.0&quot;
+  }
+}
+
+filter {
+  # 1. 메시지가 JSON 형태인 경우
+  if [message] =~ /^\{/ {
+    json {
+      source =&gt; &quot;message&quot;
+    }
+  }
+  # 2. Nginx 접속 로그 형태인 경우
+  else if [container][name] =~ &quot;web&quot; {
+    grok {
+      match =&gt; { &quot;message&quot; =&gt; &quot;%{COMBINEDAPACHELOG}&quot; }
+    }
+    date {
+      match =&gt; [ &quot;timestamp&quot;, &quot;dd/MMM/yyyy:HH:mm:ss Z&quot; ]
+      target =&gt; &quot;@timestamp&quot;
+    }
+  }
+  # 3. 그 외 로그는 아래 mutate만 거치고 그대로 통과됩니다.
+
+  mutate {
+    remove_tag =&gt; [&quot;_jsonparsefailure&quot;, &quot;_grokparsefailure&quot;]
+  }
+}
+
+output {
+  stdout { codec =&gt; rubydebug }
+  elasticsearch {
+    hosts =&gt; [&quot;http://elasticsearch:9200&quot;]
+    index =&gt; &quot;docker-logs-%{+YYYY.MM.dd}&quot;
+  }
+}
+
+</code></pre><hr id="2bc720e4-6f49-82a7-874e-01180f018ea4" dir="auto"/><h3 id="3bf720e4-6f49-8310-b3b8-81a7b2765f40" class="" dir="auto">5-4. ELK 실행</h3><pre id="9fb720e4-6f49-837c-b5a9-81211e129ae8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker compose up -d</code></pre><p id="9ba720e4-6f49-83f6-811b-01c83a54b963" class="" dir="auto">확인:</p><pre id="394720e4-6f49-83dd-a7ef-013b1ab8a085" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://localhost:9200
+curl http://localhost:5601</code></pre><hr id="e4a720e4-6f49-8399-a997-8157d2815364" dir="auto"/><h2 id="11d720e4-6f49-83bf-adf1-81e80f028787" class="" dir="auto">6. 실습 3. Filebeat로 Docker 로그 수집</h2><h3 id="d32720e4-6f49-82ed-b932-81fa990a7664" class="" dir="auto">6-1. Filebeat 설정 파일</h3><p id="357720e4-6f49-8255-8b1c-017d6f2d6078" class="" dir="auto"><code>filebeat/filebeat.yml</code></p><pre id="049720e4-6f49-83f5-a9ab-8193a73c22d6" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">#filebeat.inputs:
+#- type: container
+#  paths:
+#    - &#x27;/var/lib/docker/containers/*/*.log&#x27; # 도커 로그 위치
+
+
+filebeat.autodiscover:
+  providers:
+    - type: docker
+      api_version: &quot;1.44&quot;
+      hints.enabled: true
+      templates:
+        - condition:
+            and:
+              - not.contains:
+                  docker.container.name: &quot;logstash&quot;
+              - not.contains:
+                  docker.container.name: &quot;elasticsearch&quot;
+              - not.contains:
+                  docker.container.name: &quot;kibana&quot;
+          config:
+            - type: container
+              paths:
+                - &quot;/var/lib/docker/containers/${data.docker.container.id}/*.log&quot;
+
+# 도커 엔진에서 컨테이너 이름, 이미지 정보 등을 자동으로 가져오는 설정
+processors:
+- add_docker_metadata:
+    host: &quot;unix:///var/run/docker.sock&quot;
+    match_fields: [&quot;system.process.cgroup.id&quot;]
+    wait_for_seconds: 5
+
+# 수집한 로그를 Logstash의 5044 포트로 전송
+output.logstash:
+  hosts: [&quot;logstash:5044&quot;]
+</code></pre><hr id="834720e4-6f49-8351-8d5c-013db016c3ca" dir="auto"/><h3 id="20b720e4-6f49-839d-bb20-81c0ef9d73f3" class="" dir="auto">6-2. Filebeat 컨테이너 실행</h3><pre id="949720e4-6f49-823d-9681-0132690da647" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d \
+  --name filebeat \
+  --user=root \
+  -v /var/lib/docker/containers:/var/lib/docker/containers:ro \
+  -v ./filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml \
+  --network elk-lab_default \
+  docker.elastic.co/beats/filebeat:8.11.0</code></pre><hr id="8d3720e4-6f49-82f1-9c35-01b20162365e" dir="auto"/><h2 id="93f720e4-6f49-837e-b489-015e7a604bfe" class="" dir="auto">7. 실습 4. 로그 흐름 확인</h2><h3 id="d6c720e4-6f49-831e-997e-017fe26b1d56" class="" dir="auto">7-1. 웹 요청 발생</h3><pre id="e88720e4-6f49-8372-9c42-014e47a87e3e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://127.0.0.1:8080
+curl http://127.0.0.1:8080/notfound</code></pre><hr id="afd720e4-6f49-8253-a6fb-8167660cd9d4" dir="auto"/><h3 id="8aa720e4-6f49-828c-83f9-81fb788ba987" class="" dir="auto">7-2. Logstash 로그 확인</h3><pre id="c4e720e4-6f49-83f8-8ec6-814ffb68675f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker logs logstash</code></pre><p id="3d7720e4-6f49-83ee-8ef9-810e633bde9c" class="" dir="auto">→ 로그 이벤트가 들어오는 것 확인</p><hr id="7a8720e4-6f49-8349-90a9-01f5dd1b4f83" dir="auto"/><h3 id="0bf720e4-6f49-8320-8563-01c4d6218f36" class="" dir="auto">7-3. Elasticsearch 인덱스 확인</h3><pre id="df8720e4-6f49-82fc-9035-81e36fb2f46a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://localhost:9200/_cat/indices?v</code></pre><p id="de2720e4-6f49-8320-91d6-81d546719de1" class="" dir="auto">예상 출력:</p><pre id="677720e4-6f49-82ae-87df-818e4fef961e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">container-logs-2026.02.10</code></pre><hr id="74c720e4-6f49-82d1-897b-01c5c808de4a" dir="auto"/><h2 id="e0c720e4-6f49-821f-8d59-01b920928799" class="" dir="auto">8. 실습 5. Kibana에서 로그 조회</h2><h3 id="92a720e4-6f49-82e9-8272-8141c35ef8ab" class="" dir="auto">8-1. Kibana 접속</h3><p id="c2b720e4-6f49-82e2-a269-01080ea93522" class="" dir="auto">브라우저:</p><pre id="dee720e4-6f49-8372-a2f8-81a1bcc691c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://localhost:5601</code></pre><hr id="f38720e4-6f49-830c-868c-0195c83c8ed4" dir="auto"/><h3 id="648720e4-6f49-83e0-835a-81ab210fe099" class="" dir="auto">8-2. Data View 생성</h3><ol type="1" id="dc4720e4-6f49-8211-afc4-010bcaca25d2" class="numbered-list" start="1" dir="auto"><li><strong>Stack Management → Data Views</strong></li></ol><ol type="1" id="710720e4-6f49-835f-885c-81349b8b4358" class="numbered-list" start="2" dir="auto"><li>Name: <code>container-logs-*</code></li></ol><ol type="1" id="c4f720e4-6f49-83f6-99cc-81ad9ad84e4f" class="numbered-list" start="3" dir="auto"><li>Time field: <code>@timestamp</code></li></ol><ol type="1" id="688720e4-6f49-8269-b234-81e986ec76f4" class="numbered-list" start="4" dir="auto"><li>Create</li></ol><hr id="692720e4-6f49-83f1-bfdd-01c108293e75" dir="auto"/><h3 id="9d7720e4-6f49-82c5-83de-81cb539c3380" class="" dir="auto">8-3. Discover 메뉴에서 로그 확인</h3><p id="242720e4-6f49-8267-9a88-8181ee708d3f" class="" dir="auto">검색 예시:</p><ul id="dc9720e4-6f49-82e7-9e1a-016d9b95b0ea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 컨테이너 로그<pre id="761720e4-6f49-82ba-be9b-01f6272c2e7a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">container.name : &quot;web-log&quot;</code></pre></li></ul><ul id="cb3720e4-6f49-8291-8aea-0180d82bc03f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP 상태 코드<pre id="8ac720e4-6f49-820f-927d-0166f0f07cba" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">status : 404</code></pre></li></ul><hr id="0bc720e4-6f49-825e-a413-81e02e1c5c24" dir="auto"/><h2 id="9ad720e4-6f49-8264-8933-81ae5d513a7e" class="" dir="auto">9. 실습 핵심 정리</h2><h3 id="cdb720e4-6f49-8200-9336-01f10d0cccd7" class="" dir="auto">반드시 이해해야 할 포인트</h3><ul id="641720e4-6f49-8208-ad1c-81c25a85f911" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 로그는 <strong>파일이 아닌 stdout/stderr</strong></li></ul><ul id="894720e4-6f49-83a0-8b36-814de2c155e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker는 로그를 <strong>호스트 파일(JSON)</strong> 로 저장</li></ul><ul id="468720e4-6f49-831f-b1d2-0167125bc92a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Filebeat는 로그 파일을 읽는 <strong>수집기</strong></li></ul><ul id="842720e4-6f49-8288-9b0e-8159f1b67826" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Logstash는 <strong>가공/필터링</strong></li></ul><ul id="79a720e4-6f49-82ad-bb16-0106c593728c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Elasticsearch는 <strong>저장/검색</strong></li></ul><ul id="c74720e4-6f49-82fb-8ecf-0117a982aea9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kibana는 <strong>시각화/UI</strong></li></ul><hr id="ec8720e4-6f49-8217-94af-817175a5ed1c" dir="auto"/><h2 id="e72720e4-6f49-8276-b824-0196c6a16af0" class="" dir="auto">10. 실습 종료 및 정리</h2><pre id="d4e720e4-6f49-83a5-8ded-015a059dd4f6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker rm -f web-log filebeat
+docker compose down</code></pre><hr id="a06720e4-6f49-82de-8bd5-01117bdede31" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

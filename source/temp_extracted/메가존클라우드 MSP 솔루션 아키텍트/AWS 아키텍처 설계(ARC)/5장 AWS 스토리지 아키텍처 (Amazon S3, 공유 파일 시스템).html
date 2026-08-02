@@ -1,0 +1,802 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>5장 AWS 스토리지 아키텍처 (Amazon S3, 공유 파일 시스템)</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="425720e4-6f49-831c-872c-01782fe2ba0e" class="page sans"><header><h1 class="page-title" dir="auto">5장 AWS 스토리지 아키텍처 (Amazon S3, 공유 파일 시스템)</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="ec1720e4-6f49-83ab-8204-81d2544cc33d" dir="auto"/><h1 id="778720e4-6f49-8287-b5fa-81de930c2e48" class="" dir="auto">5.1 스토리지 서비스 개요</h1><p id="da2720e4-6f49-83b4-9c9d-8188d3c4c2a2" class="" dir="auto">AWS에서 스토리지는 단순히 데이터를 저장하는 공간이 아니라, 아키텍처 전체의 성능, 확장성, 비용, 내구성에 직접 영향을 주는 핵심 구성요소임.</p><p id="70b720e4-6f49-8218-bd96-0195f28b1c0d" class="" dir="auto">어떤 스토리지를 선택하느냐에 따라 애플리케이션 구조 자체가 달라질 수 있음.</p><p id="c97720e4-6f49-83f4-8958-816a02e2a792" class="" dir="auto">예를 들어</p><ul id="516720e4-6f49-83c3-b4c4-8160993d1e26" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영체제 디스크 저장 → EBS</li></ul><ul id="f87720e4-6f49-826f-883d-817aa0fae6b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 파일 저장 → S3</li></ul><ul id="5cd720e4-6f49-8337-b4ea-81eaee55191a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 서버가 동시에 같은 파일 공유 → EFS</li></ul><ul id="d36720e4-6f49-8337-89f3-813cc395f5c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Windows 파일 서버 → FSx for Windows File Server</li></ul><ul id="1b9720e4-6f49-826f-92b8-81caa6e989d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고성능 Lustre 기반 분석 → FSx for Lustre</li></ul><p id="602720e4-6f49-8342-9e29-8119241f5c74" class="" dir="auto">즉, 스토리지는 “파일을 어디에 둘까?” 수준의 문제가 아니라 <strong>애플리케이션 요구사항에 맞는 저장 방식 선택 문제</strong>라고 봐야 함.</p><hr id="0d2720e4-6f49-828b-a8c0-81c4048a554b" dir="auto"/><h1 id="ca3720e4-6f49-823d-90a2-81969840c5ea" class="" dir="auto">5.2 AWS 스토리지 분류</h1><p id="a1b720e4-6f49-8369-92ad-81010058874e" class="" dir="auto">AWS 스토리지는 크게 다음과 같이 나눌 수 있음.</p><table id="9d2720e4-6f49-839c-a9be-81bd937def26" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="a9d720e4-6f49-8240-9680-81b9a568e00c" dir="ltr"><th id="UHSW" class="simple-table-header-color simple-table-header">분류</th><th id="A_ah" class="simple-table-header-color simple-table-header">대표 서비스</th><th id="{g[G" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="295720e4-6f49-8385-b27b-013328f95594" dir="ltr"><td id="UHSW" class="">객체 스토리지</td><td id="A_ah" class="">S3</td><td id="{g[G" class="">파일을 객체 단위로 저장</td></tr><tr id="2ff720e4-6f49-82a7-b57f-81f01fa2e71c" dir="ltr"><td id="UHSW" class="">블록 스토리지</td><td id="A_ah" class="">EBS</td><td id="{g[G" class="">EC2에 연결하는 디스크</td></tr><tr id="057720e4-6f49-83ef-8e96-01fe403b2a25" dir="ltr"><td id="UHSW" class="">파일 스토리지</td><td id="A_ah" class="">EFS, FSx</td><td id="{g[G" class="">여러 서버가 공유하는 파일 시스템</td></tr><tr id="cad720e4-6f49-8210-8cbb-015c85c3291c" dir="ltr"><td id="UHSW" class="">아카이브 스토리지</td><td id="A_ah" class="">S3 Glacier</td><td id="{g[G" class="">장기 보관용 저비용 저장소</td></tr></tbody></table><p id="5dd720e4-6f49-8292-9263-014310b8e71c" class="" dir="auto">이 장에서는 커리큘럼에 맞게 <strong>S3와 공유 파일 시스템(EFS 중심)</strong>을 중점적으로 다룸.</p><hr id="4b6720e4-6f49-8275-b6c4-018885f0ebe8" dir="auto"/><h1 id="04f720e4-6f49-823b-a091-8108cbc792fd" class="" dir="auto">5.3 Amazon S3 개요</h1><p id="7b3720e4-6f49-8392-8f5f-81d07f38d912" class="" dir="auto">Amazon S3는 <strong>Simple Storage Service</strong>의 약자이며, AWS의 대표적인 객체 스토리지 서비스임.</p><p id="f2c720e4-6f49-8300-b774-01802e4275bc" class="" dir="auto">객체 스토리지라는 말은 데이터를 “디스크 블록”이나 “파일 시스템 트리”가 아니라</p><p id="26f720e4-6f49-826f-84d8-8110adb568ef" class="" dir="auto"><strong>객체(Object)</strong> 단위로 저장한다는 뜻임.</p><p id="1e8720e4-6f49-828d-aabb-015af1d29ad7" class="" dir="auto">S3의 구조</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="436720e4-6f49-83bd-a665-819bbd19d2d9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Bucket
+ ├ Object 1
+ ├ Object 2
+ └ Object 3</code></pre><p id="ee7720e4-6f49-82e0-88b8-0169a1638a48" class="" dir="auto">여기서</p><ul id="a06720e4-6f49-8207-85a8-817d6e988187" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Bucket</strong> : 객체를 저장하는 논리적 컨테이너</li></ul><ul id="8fd720e4-6f49-83b5-bc98-818a6fe441ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Object</strong> : 실제 저장되는 파일</li></ul><ul id="f86720e4-6f49-8334-827b-819da38aa066" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Key</strong> : 객체의 경로/이름 역할</li></ul><ul id="739720e4-6f49-834b-8ba5-81d39be0a2b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Metadata</strong> : 객체에 대한 부가 정보</li></ul><p id="82d720e4-6f49-8314-b088-81f9549a2710" class="" dir="auto">예</p><pre id="a46720e4-6f49-8225-a877-8164b6703e28" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">s3://my-bucket/images/logo.png</code></pre><p id="4cc720e4-6f49-8220-943a-8187f31bcf78" class="" dir="auto">의미</p><ul id="0b1720e4-6f49-83e6-8934-01769c939a94" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>my-bucket</code> : 버킷 이름</li></ul><ul id="9e5720e4-6f49-832b-afe5-81f868f1bde2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>images/logo.png</code> : 객체 키</li></ul><hr id="9d2720e4-6f49-8253-a4e9-8155568b5b8e" dir="auto"/><h1 id="608720e4-6f49-837b-8738-8166c0550fd5" class="" dir="auto">5.4 S3의 특징</h1><p id="abd720e4-6f49-82de-8a2b-81401e871cbc" class="" dir="auto">S3는 AWS에서 매우 자주 사용되는 서비스이며 다음과 같은 특징이 있음.</p><h3 id="4c3720e4-6f49-82bc-b457-010adf0b335b" class="" dir="auto">1. 매우 높은 내구성</h3><p id="ed7720e4-6f49-8312-8b8d-81e005d3b94a" class="" dir="auto">S3는 객체를 여러 장비와 여러 시설에 분산 저장하여 매우 높은 내구성을 제공함.</p><h3 id="878720e4-6f49-8296-9665-016f09805cd4" class="" dir="auto">2. 사실상 무제한 확장</h3><p id="6b4720e4-6f49-8373-a2de-812e5842d9c8" class="" dir="auto">데이터 양이 많아져도 별도 디스크 증설 작업 없이 저장 가능함.</p><h3 id="439720e4-6f49-820e-9380-01b2015ef260" class="" dir="auto">3. HTTP 기반 접근</h3><p id="724720e4-6f49-8258-a114-8145c31e1117" class="" dir="auto">브라우저, SDK, CLI, 애플리케이션 등 다양한 방식으로 접근 가능함.</p><h3 id="ea6720e4-6f49-8358-b27b-814c6171cfe3" class="" dir="auto">4. 정적 콘텐츠 저장에 적합</h3><p id="26c720e4-6f49-83b9-9a58-81e1f3f549bf" class="" dir="auto">이미지, 동영상, HTML, CSS, JS 같은 정적 파일 저장에 매우 적합함.</p><h3 id="56a720e4-6f49-832b-b5c5-01c0e485eaf6" class="" dir="auto">5. 백업 및 로그 저장에 적합</h3><p id="d7a720e4-6f49-82d4-8218-8181f0a394f6" class="" dir="auto">애플리케이션 백업, 로그 보관, 아카이빙, 데이터 레이크 저장소로 자주 사용됨.</p><hr id="4f3720e4-6f49-8206-b689-81259e96c744" dir="auto"/><h1 id="6be720e4-6f49-820e-89c8-81acb9c99a64" class="" dir="auto">5.5 S3 기본 개념</h1><p id="879720e4-6f49-82ff-baf3-01dc08c7bdb6" class="" dir="auto">S3를 이해할 때 반드시 알아야 할 개념이 있음.</p><hr id="fe8720e4-6f49-8351-b519-0181a24a727f" dir="auto"/><h2 id="4db720e4-6f49-826c-ac68-016f8ebda546" class="" dir="auto">5.5.1 Bucket</h2><p id="fe6720e4-6f49-8242-8cee-8191422fa9e5" class="" dir="auto">Bucket은 S3 객체를 저장하는 최상위 컨테이너임.</p><p id="acc720e4-6f49-836f-a455-81ebe3fe5f45" class="" dir="auto">버킷 이름은 전 세계적으로 유일해야 함.</p><p id="9d6720e4-6f49-8353-be81-01b2df7418c1" class="" dir="auto">예</p><pre id="dd4720e4-6f49-8364-a62d-81749ff94a4e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kyt-arc-bucket-2026</code></pre><p id="21a720e4-6f49-835d-80f1-81fe6f805070" class="" dir="auto">버킷 이름 규칙</p><ul id="87a720e4-6f49-83d3-9cea-019dc12f7e73" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중복 불가</li></ul><ul id="c87720e4-6f49-826b-be77-01c46c8edd21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소문자 사용 권장</li></ul><ul id="8a9720e4-6f49-83c5-bd96-814a86005b49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공백 불가</li></ul><ul id="b14720e4-6f49-83ff-8f31-817011ece0d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DNS 호환 형식 권장</li></ul><p id="eba720e4-6f49-8221-af71-01f9969ea1e2" class="" dir="auto">버킷은 Region 단위로 생성되며, 버킷을 어느 리전에 만들지에 따라 데이터 저장 위치가 결정됨.</p><hr id="c1c720e4-6f49-82c1-9035-819228d98526" dir="auto"/><h2 id="ec2720e4-6f49-838f-989d-01474db9c0bb" class="" dir="auto">5.5.2 Object</h2><p id="39a720e4-6f49-8210-a030-01910e62ea88" class="" dir="auto">S3에 저장되는 실제 데이터 단위임.</p><p id="64a720e4-6f49-83c2-9ad9-01b5e7e06a85" class="" dir="auto">예</p><ul id="bc9720e4-6f49-8267-a942-81acc75c969f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사진 파일</li></ul><ul id="f38720e4-6f49-82db-a6f0-01646b60789f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 파일</li></ul><ul id="c74720e4-6f49-8352-9a8d-01f7da9a7f1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 파일</li></ul><ul id="ff7720e4-6f49-8203-941c-01cf3a0f6647" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTML 파일</li></ul><ul id="536720e4-6f49-8244-8a3a-81c17ce8b814" class="bulleted-list" dir="auto"><li style="list-style-type:disc">영상 파일</li></ul><p id="444720e4-6f49-826a-99be-8173c132647f" class="" dir="auto">객체는 다음으로 구성됨.</p><ul id="7e8720e4-6f49-8365-836a-015736af60fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 본문</li></ul><ul id="9f4720e4-6f49-8235-a0ff-01fd42bc1341" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Key</li></ul><ul id="55f720e4-6f49-8300-8c7f-81dcd897168e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Metadata</li></ul><ul id="c89720e4-6f49-8249-b5ee-8126df3a4c6f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Version ID (버전관리 사용 시)</li></ul><hr id="d31720e4-6f49-82a5-a1d1-81d49a8a4257" dir="auto"/><h2 id="ecd720e4-6f49-832d-954d-014537805e69" class="" dir="auto">5.5.3 Key</h2><p id="0b1720e4-6f49-8244-9f89-01fec037aaaa" class="" dir="auto">Key는 버킷 내부에서 객체를 식별하는 이름임.</p><p id="3b7720e4-6f49-8235-b6bc-81357d1c8f17" class="" dir="auto">폴더처럼 보이는 구조가 있어도 실제로는 디렉터리 개념이 아니라 문자열 경로임.</p><p id="a86720e4-6f49-8359-9fd3-81847f8fb008" class="" dir="auto">예</p><pre id="85f720e4-6f49-82c9-a3b6-8130acd40dde" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">images/logo.png
+logs/2026/03/16/app.log
+backup/db/dump.sql</code></pre><p id="ab0720e4-6f49-83d2-825b-01f68a86f6a8" class="" dir="auto">S3 콘솔에서는 이를 폴더처럼 보여주지만 실제로는 Key 값일 뿐임.</p><hr id="1cb720e4-6f49-8367-a9bc-01295642e18b" dir="auto"/><h1 id="cf4720e4-6f49-83c5-b1c4-811a69690ef5" class="" dir="auto">5.6 객체 스토리지와 파일 스토리지 차이</h1><p id="e34720e4-6f49-82ce-9901-01f36528b267" class="" dir="auto">학생들이 가장 많이 헷갈리는 부분 중 하나가</p><p id="256720e4-6f49-83c2-a535-8114b546b67a" class="" dir="auto"><strong>S3와 EFS를 둘 다 “파일 저장소”로 생각하는 것</strong>임.</p><p id="b58720e4-6f49-825b-9ac8-01275abb6bd4" class="" dir="auto">둘은 구조와 사용 방식이 다름.</p><table id="de1720e4-6f49-82d3-ae4a-8123838f74b2" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="96f720e4-6f49-827a-b9ca-01747caeaf2b" dir="ltr"><th id="{SgA" class="simple-table-header-color simple-table-header">항목</th><th id="hoMP" class="simple-table-header-color simple-table-header">S3</th><th id="zKVA" class="simple-table-header-color simple-table-header">EFS</th></tr></thead><tbody><tr id="7fd720e4-6f49-8380-a528-0160cdab8c4a" dir="ltr"><td id="{SgA" class="">저장 방식</td><td id="hoMP" class="">객체 스토리지</td><td id="zKVA" class="">파일 스토리지</td></tr><tr id="a05720e4-6f49-8361-b5b8-814ff73e23c0" dir="ltr"><td id="{SgA" class="">접근 방식</td><td id="hoMP" class="">HTTP/HTTPS, API</td><td id="zKVA" class="">NFS 마운트</td></tr><tr id="f5d720e4-6f49-820c-980b-816dd47d5abd" dir="ltr"><td id="{SgA" class="">여러 서버 공유</td><td id="hoMP" class="">가능하나 파일 시스템처럼 쓰지 않음</td><td id="zKVA" class="">가능</td></tr><tr id="23d720e4-6f49-831f-8752-01e5f58229d6" dir="ltr"><td id="{SgA" class="">운영체제 마운트</td><td id="hoMP" class="">일반 파일 시스템처럼 직접 사용 어려움</td><td id="zKVA" class="">가능</td></tr><tr id="0d0720e4-6f49-83f3-b1cf-813431c5d971" dir="ltr"><td id="{SgA" class="">대표 용도</td><td id="hoMP" class="">정적 파일, 백업, 로그</td><td id="zKVA" class="">공유 웹 콘텐츠, 공용 파일 저장</td></tr></tbody></table><p id="cb0720e4-6f49-83f6-af3e-0133914fea5c" class="" dir="auto">즉</p><ul id="52d720e4-6f49-8350-a973-01c2e3e12369" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>S3는 API 기반 저장소</strong></li></ul><ul id="03e720e4-6f49-83da-82e3-813d3f2e1d36" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>EFS는 리눅스 공유 파일 시스템</strong></li></ul><p id="e0a720e4-6f49-82a6-a5e3-81b19646876a" class="" dir="auto">이라고 이해하면 됨.</p><hr id="35a720e4-6f49-83fc-8f33-012e560f2a58" dir="auto"/><h1 id="94f720e4-6f49-82a7-997f-016499eba190" class="" dir="auto">5.7 S3 Storage Class</h1><p id="f9e720e4-6f49-82b0-a0e9-01d1545a969e" class="" dir="auto">S3는 데이터 접근 빈도와 보관 목적에 따라 여러 저장 클래스를 제공함.</p><table id="a08720e4-6f49-83c2-a696-816832ce0683" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="ea3720e4-6f49-8304-8361-014e7c6bc8c9" dir="ltr"><th id="T@Qd" class="simple-table-header-color simple-table-header">Storage Class</th><th id="\el`" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="6b6720e4-6f49-829c-b192-8113700b33c0" dir="ltr"><td id="T@Qd" class="">Standard</td><td id="\el`" class="">자주 사용하는 데이터</td></tr><tr id="e23720e4-6f49-8392-8770-017b69a7657b" dir="ltr"><td id="T@Qd" class="">Intelligent-Tiering</td><td id="\el`" class="">접근 패턴이 일정하지 않은 데이터</td></tr><tr id="99b720e4-6f49-83b8-9a58-01ed1d0c79e4" dir="ltr"><td id="T@Qd" class="">Standard-IA</td><td id="\el`" class="">드물게 접근하는 데이터</td></tr><tr id="069720e4-6f49-8228-9a9c-012580d4dd5a" dir="ltr"><td id="T@Qd" class="">One Zone-IA</td><td id="\el`" class="">단일 AZ에 저장하는 저비용 클래스</td></tr><tr id="327720e4-6f49-83a3-b9b1-816c979bad1d" dir="ltr"><td id="T@Qd" class="">Glacier Instant Retrieval</td><td id="\el`" class="">아카이브지만 즉시 조회 가능</td></tr><tr id="8a7720e4-6f49-8344-9178-812fa34b3f2e" dir="ltr"><td id="T@Qd" class="">Glacier Flexible Retrieval</td><td id="\el`" class="">장기 보관용</td></tr><tr id="c2e720e4-6f49-83ee-960b-81fa20a7e3ef" dir="ltr"><td id="T@Qd" class="">Glacier Deep Archive</td><td id="\el`" class="">가장 저렴한 장기 보관용</td></tr></tbody></table><hr id="452720e4-6f49-83d5-bb0e-81d6072a0827" dir="auto"/><h2 id="abf720e4-6f49-82c9-910f-01918423f0dc" class="" dir="auto">5.7.1 Storage Class 선택 기준</h2><h3 id="a22720e4-6f49-8333-b21a-0187171f1109" class="" dir="auto">S3 Standard</h3><p id="17e720e4-6f49-8233-b757-814884e12b3c" class="" dir="auto">자주 읽고 쓰는 데이터에 적합함.</p><p id="683720e4-6f49-834a-81d6-01bed7a814fd" class="" dir="auto">예</p><ul id="74f720e4-6f49-83c4-ab9a-01e49e1cfb5a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹사이트 정적 파일</li></ul><ul id="f65720e4-6f49-837c-ac70-0196f0de196e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 업로드 파일</li></ul><ul id="aea720e4-6f49-836a-9916-811e7d1adff8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 로그의 최근 데이터</li></ul><h3 id="c35720e4-6f49-8365-ad0c-017b26b772ca" class="" dir="auto">S3 Standard-IA(Infrequent Access)</h3><p id="0b4720e4-6f49-82d5-b0ce-810123b30880" class="" dir="auto">평소 자주 접근하지 않지만 필요 시 즉시 꺼내야 하는 데이터에 적합함.</p><p id="5e2720e4-6f49-83b3-85ca-01b2fa76f825" class="" dir="auto">예</p><ul id="b3c720e4-6f49-82df-bc89-01b0e7756375" class="bulleted-list" dir="auto"><li style="list-style-type:disc">월별 백업 파일</li></ul><ul id="449720e4-6f49-8215-8580-01d1ffba3606" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오래된 문서</li></ul><h3 id="b79720e4-6f49-83b8-8c27-01ff4bd7f301" class="" dir="auto">Glacier 계열</h3><p id="dae720e4-6f49-8290-9aec-81ca80680f8f" class="" dir="auto">장기 보관이 목적이고 조회가 드문 데이터에 적합함.</p><p id="165720e4-6f49-82d2-a11c-819bf0aeae82" class="" dir="auto">예</p><ul id="243720e4-6f49-8313-a75f-01d4ea038c0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">법적 보관 자료</li></ul><ul id="c49720e4-6f49-82db-8a3a-81296658d8fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기 백업</li></ul><ul id="5c5720e4-6f49-8372-82e6-01ae2f31834d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오래된 감사 로그</li></ul><hr id="09d720e4-6f49-831d-bfee-81d55c4fb28e" dir="auto"/><h1 id="962720e4-6f49-82ba-b340-018002656257" class="" dir="auto">5.8 S3 보안</h1><p id="8c1720e4-6f49-82b0-beed-01132620be46" class="" dir="auto">S3는 저장소 자체가 매우 단순해 보이지만 실제 운영에서는 보안 설정이 매우 중요함.</p><p id="1a2720e4-6f49-838c-adc9-017161170a17" class="" dir="auto">특히 잘못 설정하면 민감한 파일이 인터넷에 공개될 수 있음.</p><p id="8f4720e4-6f49-82bf-a504-017bf899f617" class="" dir="auto">S3 보안 구성 요소</p><ul id="652720e4-6f49-820e-b986-817995dd39f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bucket Policy</li></ul><ul id="45d720e4-6f49-834a-ad84-8164b199558e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Policy</li></ul><ul id="2c7720e4-6f49-83c2-adeb-01f0b143bcf3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ACL</li></ul><ul id="115720e4-6f49-821f-b588-81decaf438c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Block Public Access</li></ul><ul id="df7720e4-6f49-8301-b948-015c8d8005e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Encryption</li></ul><ul id="d65720e4-6f49-83ec-9fd0-81904da657b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Versioning</li></ul><ul id="44d720e4-6f49-836a-9d11-813498718352" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Access Logging</li></ul><hr id="340720e4-6f49-821a-8aa2-0144cfb6bee2" dir="auto"/><h2 id="7bc720e4-6f49-8224-b24b-0131318dc09c" class="" dir="auto">5.8.1 Block Public Access</h2><p id="5b4720e4-6f49-83ba-b510-011a0f97338a" class="" dir="auto">S3 보안에서 가장 먼저 봐야 하는 기능임.</p><p id="802720e4-6f49-8309-97e4-0146106eaf36" class="" dir="auto">버킷이나 객체가 실수로 공개되지 않도록 차단하는 기능임.</p><p id="59e720e4-6f49-834a-9220-8124e8d95674" class="" dir="auto">일반적으로는 <strong>기본적으로 모두 활성화</strong>해 두는 것이 좋음.</p><p id="502720e4-6f49-826b-a626-01cc44fe6c26" class="" dir="auto">예외</p><ul id="3cd720e4-6f49-82cc-8e2d-01842873a9cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 웹사이트 호스팅</li></ul><ul id="641720e4-6f49-8289-af75-81adf2b9804b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront OAC/OAI 연동 시 일부 정책 설정 필요</li></ul><hr id="64b720e4-6f49-83a8-b3a6-01ef70571b77" dir="auto"/><h2 id="0c6720e4-6f49-83cf-9a46-014f6f5b498b" class="" dir="auto">5.8.2 Bucket Policy</h2><p id="9f0720e4-6f49-830f-9ed0-010528c0edd6" class="" dir="auto">버킷 수준에서 접근 권한을 정의하는 정책임.</p><p id="e59720e4-6f49-827c-be35-01c140ea0fa5" class="" dir="auto">JSON 형식으로 작성함.</p><p id="cbf720e4-6f49-8218-87f7-01a7c6df26f7" class="" dir="auto">예시 구조</p><pre id="3e9720e4-6f49-8203-9e35-015be0d13d57" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;:&quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Effect&quot;:&quot;Allow&quot;,
+      &quot;Principal&quot;:&quot;*&quot;,
+      &quot;Action&quot;:&quot;s3:GetObject&quot;,
+      &quot;Resource&quot;:&quot;arn:aws:s3:::example-bucket/*&quot;
+    }
+  ]
+}</code></pre><p id="a4b720e4-6f49-82f2-a5fa-81dadc658be8" class="" dir="auto">이 예시는 모든 사용자가 버킷 내 객체를 읽을 수 있도록 허용하는 정책임.</p><p id="53f720e4-6f49-83aa-8636-014a8bb756a1" class="" dir="auto">운영 환경에서는 이렇게 전면 공개하는 방식은 매우 신중하게 사용해야 함.</p><hr id="d33720e4-6f49-822d-8ddf-8147f52ca9a9" dir="auto"/><h2 id="342720e4-6f49-82d8-95e4-01817aba52dc" class="" dir="auto">5.8.3 IAM Policy와 S3</h2><p id="ddd720e4-6f49-83ce-b39a-01b79bf7e848" class="" dir="auto">IAM Policy는 “누가 무엇을 할 수 있는가”를 정의함.</p><p id="1a8720e4-6f49-83ae-a152-01da0590e88b" class="" dir="auto">Bucket Policy는 “이 버킷이 누구를 허용할 것인가”를 정의함.</p><p id="848720e4-6f49-8268-b36c-81641795b947" class="" dir="auto">둘의 차이</p><ul id="908720e4-6f49-8263-a303-012e5eb3bcdf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Policy : 사용자/역할 중심</li></ul><ul id="53f720e4-6f49-827e-9da7-017c945b00d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bucket Policy : 버킷 중심</li></ul><p id="9ef720e4-6f49-837e-9036-01a41654c148" class="" dir="auto">실무에서는 두 정책이 함께 작동함.</p><hr id="937720e4-6f49-821d-94e5-8101a348942b" dir="auto"/><h2 id="531720e4-6f49-82cd-bf91-81873005c64e" class="" dir="auto">5.8.4 S3 암호화</h2><p id="055720e4-6f49-8316-9818-81e6029b4da1" class="" dir="auto">S3는 저장 데이터 암호화를 지원함.</p><p id="b9b720e4-6f49-83f9-aa3a-817e50c3fd31" class="" dir="auto">대표 방식</p><ul id="517720e4-6f49-823f-8af6-819b349e200a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSE-S3</li></ul><ul id="e0e720e4-6f49-8329-876d-018627b22f72" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSE-KMS</li></ul><ul id="d91720e4-6f49-83b5-a7e8-8165fa225299" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SSE-C</li></ul><h3 id="8e9720e4-6f49-838f-abf8-815e2860ecba" class="" dir="auto">SSE-S3</h3><p id="134720e4-6f49-825c-80d8-012503c6319e" class="" dir="auto">AWS가 관리하는 키로 암호화함.</p><h3 id="a5e720e4-6f49-825f-aea6-01f8c9dbc5fd" class="" dir="auto">SSE-KMS</h3><p id="f93720e4-6f49-826f-a835-81f99cf5c7bc" class="" dir="auto">AWS KMS 키를 사용해 더 정교하게 제어함.</p><hr id="a18720e4-6f49-8244-a0d0-014d60c1d0bb" dir="auto"/><h1 id="0ec720e4-6f49-831b-b88e-81eaccca36dc" class="" dir="auto">5.9 S3 Versioning</h1><p id="04f720e4-6f49-82a7-8cca-81c10700c3f5" class="" dir="auto">Versioning은 객체의 이전 버전을 보관하는 기능임.</p><p id="ae1720e4-6f49-833e-9768-8140f4813c20" class="" dir="auto">예를 들어 같은 이름의 파일을 다시 업로드해도 이전 버전이 보존됨.</p><p id="7a7720e4-6f49-82e2-86d6-0144f8042e5e" class="" dir="auto">장점</p><ul id="64a720e4-6f49-82bd-a3f6-8187192ea958" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실수로 덮어쓴 파일 복구 가능</li></ul><ul id="8ce720e4-6f49-823a-8dee-01038e3cd254" class="bulleted-list" dir="auto"><li style="list-style-type:disc">삭제된 객체 복구 가능</li></ul><ul id="cf1720e4-6f49-8348-8f8f-819033d58a4d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 안정성 향상</li></ul><p id="397720e4-6f49-8243-be44-8189b0b24821" class="" dir="auto">주의</p><ul id="084720e4-6f49-820d-a35c-016a3339c3ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버전 수가 많아지면 비용이 증가할 수 있음</li></ul><hr id="c08720e4-6f49-837c-a679-01e177df282f" dir="auto"/><h1 id="a28720e4-6f49-822c-9644-0105de1cce88" class="" dir="auto">5.10 S3 Lifecycle</h1><p id="c16720e4-6f49-82ba-85ba-011b0a1e4663" class="" dir="auto">Lifecycle은 객체를 시간 경과에 따라 자동으로 다른 Storage Class로 이동하거나 삭제하는 정책임.</p><p id="b12720e4-6f49-82a9-b11d-019088059e4e" class="" dir="auto">예</p><ul id="2d7720e4-6f49-83e0-80f4-01b885981826" class="bulleted-list" dir="auto"><li style="list-style-type:disc">30일 후 Standard-IA로 전환</li></ul><ul id="69b720e4-6f49-82b0-8567-01ffb01f0a19" class="bulleted-list" dir="auto"><li style="list-style-type:disc">90일 후 Glacier로 전환</li></ul><ul id="c62720e4-6f49-828f-80bb-81de0e97d2e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">365일 후 삭제</li></ul><p id="d7a720e4-6f49-83de-9385-819c9663f9b5" class="" dir="auto">Lifecycle을 사용하는 이유</p><ul id="f4f720e4-6f49-8255-ac5a-816acbe56ad9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기 보관 비용 절감</li></ul><ul id="7a7720e4-6f49-829d-8ca9-8164ac931e49" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그/백업 자동 정리</li></ul><ul id="6ba720e4-6f49-83be-bc50-819b876228f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 자동화</li></ul><hr id="ca1720e4-6f49-8375-be70-011a3b186115" dir="auto"/><h1 id="f20720e4-6f49-825f-895c-81be1571a215" class="" dir="auto">5.11 S3 주요 사용 사례</h1><h3 id="c76720e4-6f49-8374-9351-81611b28fa98" class="" dir="auto">1. 정적 웹사이트 저장소</h3><p id="d73720e4-6f49-82b2-862c-8163bf523ac9" class="" dir="auto">HTML, CSS, JS, 이미지 파일 등을 저장함.</p><h3 id="19c720e4-6f49-8299-affc-01f412e0be69" class="" dir="auto">2. 애플리케이션 업로드 파일 저장</h3><p id="df6720e4-6f49-82d3-b67f-01f40db65e19" class="" dir="auto">사용자가 업로드한 이미지, 문서, 첨부파일 저장.</p><h3 id="1a2720e4-6f49-82bb-8b2a-811a712c02e3" class="" dir="auto">3. 로그 저장소</h3><p id="02d720e4-6f49-83f1-9762-81c0ecd40429" class="" dir="auto">ALB 로그, CloudTrail 로그, 애플리케이션 로그 저장.</p><h3 id="8f0720e4-6f49-8202-9d07-0178d554580c" class="" dir="auto">4. 백업 저장소</h3><p id="df9720e4-6f49-8387-ac59-01ce4c2b0465" class="" dir="auto">DB 덤프, 스냅샷 export 파일, 설정 백업 등 저장.</p><h3 id="1ae720e4-6f49-8388-b2f3-815f44fe3f13" class="" dir="auto">5. 데이터 레이크 저장소</h3><p id="251720e4-6f49-8274-8de7-016f8d0fec1b" class="" dir="auto">분석용 원본 데이터를 저장.</p><hr id="4db720e4-6f49-826c-abcb-010da0f336cc" dir="auto"/><h1 id="070720e4-6f49-82cb-ae89-819a5f690a9e" class="" dir="auto">5.12 S3 정적 웹사이트 호스팅</h1><p id="cbc720e4-6f49-832b-8d72-01f2b0a14f5e" class="" dir="auto">S3는 정적 파일을 웹사이트처럼 제공할 수 있음.</p><p id="8c6720e4-6f49-82a5-9331-010bfb976712" class="" dir="auto">즉, 서버 없이 HTML/CSS/JS 파일만으로 구성된 웹사이트를 만들 수 있음.</p><p id="4e6720e4-6f49-832f-aeaa-813c6142000d" class="" dir="auto">적합한 경우</p><ul id="159720e4-6f49-831a-8ad8-016e27a244fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">회사 소개 페이지</li></ul><ul id="faf720e4-6f49-82a8-aaa8-81da01329208" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실습용 정적 페이지</li></ul><ul id="425720e4-6f49-83df-9e7c-01455720837b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프론트엔드 정적 배포</li></ul><ul id="604720e4-6f49-821d-a4ad-81660e81e68d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront 원본 저장소</li></ul><p id="1b3720e4-6f49-8261-89ab-016d45706bcb" class="" dir="auto">제한사항</p><ul id="913720e4-6f49-8235-bf1b-01d9a3b89dc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 사이드 코드 실행 불가</li></ul><ul id="089720e4-6f49-822e-8cbc-0199e8997622" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PHP, Java, Node.js 백엔드는 직접 실행 못함</li></ul><p id="859720e4-6f49-835c-a5db-815114324a78" class="" dir="auto">즉, S3 웹사이트 호스팅은 “파일 배포”이지 “애플리케이션 서버 운영”은 아님.</p><hr id="0c2720e4-6f49-8309-9417-017c710b5fe2" dir="auto"/><h1 id="00b720e4-6f49-83bd-b24c-81142283aa99" class="" dir="auto">5.13 공유 파일 시스템 개요</h1><p id="0a7720e4-6f49-838a-b5fa-81015bb82f74" class="" dir="auto">S3가 객체 스토리지라면, EFS와 FSx는 <strong>공유 파일 시스템</strong>임.</p><p id="141720e4-6f49-8322-8012-81176dd4b298" class="" dir="auto">여러 서버가 같은 파일 시스템을 동시에 사용해야 할 때 필요함.</p><p id="d89720e4-6f49-83cb-bb3b-81777275f89b" class="" dir="auto">예</p><ul id="750720e4-6f49-83ed-88d4-01b03beecdb1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 웹 서버가 같은 업로드 디렉터리 사용</li></ul><ul id="acb720e4-6f49-8390-99aa-011d46a0adc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 애플리케이션 서버가 공통 설정 파일 공유</li></ul><ul id="fcf720e4-6f49-8284-96ef-81085907ebfc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리눅스 서버 간 공용 파일 저장</li></ul><ul id="e6b720e4-6f49-82e8-8762-017d2c968da8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">윈도우 SMB 공유 드라이브 운영</li></ul><hr id="870720e4-6f49-82a1-918a-811663bf3ac0" dir="auto"/><h1 id="bf1720e4-6f49-8253-80e3-01b4d0a0268e" class="" dir="auto">5.14 Amazon EFS 개요</h1><p id="685720e4-6f49-82d2-babc-01d4d365704e" class="" dir="auto">Amazon EFS는 <strong>Elastic File System</strong>의 약자임.</p><p id="002720e4-6f49-83e4-9a9a-81eb4dde0730" class="" dir="auto">리눅스 인스턴스에서 NFS(Network File System) 방식으로 마운트해서 사용하는 관리형 파일 스토리지임.</p><p id="625720e4-6f49-82e8-8559-01f9b87411b5" class="" dir="auto">특징</p><ul id="ebe720e4-6f49-829e-b3f5-01ee8eef5535" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 EC2가 동시에 마운트 가능</li></ul><ul id="c14720e4-6f49-82b5-aca2-010bc28c600f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 확장</li></ul><ul id="f19720e4-6f49-828a-ad3d-01e45d7f6376" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리형 서비스</li></ul><ul id="c0e720e4-6f49-83ac-81b8-81ab0cbab702" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Multi-AZ 내구성</li></ul><ul id="9ff720e4-6f49-8282-b1e2-818c9b9aa7fe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리눅스 기반 워크로드에 적합</li></ul><p id="854720e4-6f49-8388-b4f0-016f4c82fe1b" class="" dir="auto">EFS는 운영체제 입장에서 일반 디렉터리처럼 보임.</p><p id="8e7720e4-6f49-82f3-a5be-8123024b48dc" class="" dir="auto">즉, 애플리케이션이 로컬 파일 시스템을 쓰듯 접근할 수 있음.</p><hr id="830720e4-6f49-8317-90c5-814a1cffa9f6" dir="auto"/><h1 id="720720e4-6f49-82e1-be0d-01972ac008c1" class="" dir="auto">5.15 EFS의 사용 사례</h1><h3 id="b49720e4-6f49-83f6-8320-0126303350be" class="" dir="auto">1. 웹 서버 공용 업로드 디렉터리</h3><p id="195720e4-6f49-83df-b6d1-816e6471d67b" class="" dir="auto">ALB 뒤에 여러 대의 EC2가 있을 때, 사용자 업로드 파일을 공용 저장소에 저장해야 함.</p><h3 id="b16720e4-6f49-83a6-b0b0-015a5c3f4be3" class="" dir="auto">2. 콘텐츠 공유</h3><p id="cee720e4-6f49-827a-be93-01e6ed9b1c79" class="" dir="auto">여러 서버가 같은 정적 콘텐츠를 공유해야 할 때 사용함.</p><h3 id="2b7720e4-6f49-8279-9c09-81104793348d" class="" dir="auto">3. 애플리케이션 설정 공유</h3><p id="d14720e4-6f49-8314-99b8-8154fc546f80" class="" dir="auto">공용 설정 파일, 공용 템플릿 파일 저장.</p><h3 id="7d3720e4-6f49-826a-9484-81974af17e22" class="" dir="auto">4. 컨테이너 공유 스토리지</h3><p id="baf720e4-6f49-82a2-98ce-0162e5d7caaa" class="" dir="auto">ECS/EKS 환경에서 공유 파일 저장소로 활용 가능함.</p><hr id="df7720e4-6f49-831e-b138-01b0537464ad" dir="auto"/><h1 id="67a720e4-6f49-8307-8b19-01cd34290c38" class="" dir="auto">5.16 EFS와 EBS 비교</h1><table id="a08720e4-6f49-83b2-9e10-81b052a5b3af" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="372720e4-6f49-83db-8bd3-0138b8c84892" dir="ltr"><th id="pH[E" class="simple-table-header-color simple-table-header">항목</th><th id="N&gt;eu" class="simple-table-header-color simple-table-header">EBS</th><th id="BxuW" class="simple-table-header-color simple-table-header">EFS</th></tr></thead><tbody><tr id="678720e4-6f49-824b-af63-0162a7d13046" dir="ltr"><td id="pH[E" class="">연결 방식</td><td id="N&gt;eu" class="">보통 한 인스턴스에 연결</td><td id="BxuW" class="">여러 인스턴스 동시 연결 가능</td></tr><tr id="401720e4-6f49-8280-9063-01b8e26ae22c" dir="ltr"><td id="pH[E" class="">저장 방식</td><td id="N&gt;eu" class="">블록 스토리지</td><td id="BxuW" class="">파일 스토리지</td></tr><tr id="97c720e4-6f49-8238-b060-8196e9db7240" dir="ltr"><td id="pH[E" class="">접근 방식</td><td id="N&gt;eu" class="">디스크</td><td id="BxuW" class="">NFS 파일 시스템</td></tr><tr id="6be720e4-6f49-82bd-8faa-814385ffac5a" dir="ltr"><td id="pH[E" class="">대표 용도</td><td id="N&gt;eu" class="">OS 디스크, 단일 서버 데이터</td><td id="BxuW" class="">공유 파일 저장</td></tr></tbody></table><p id="cf0720e4-6f49-838a-a506-015fb7fecc07" class="" dir="auto">즉</p><ul id="20d720e4-6f49-826d-889a-815c57bfc785" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>EBS는 한 서버용 디스크</strong></li></ul><ul id="22d720e4-6f49-82e8-8852-013856af76f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>EFS는 여러 서버가 공유하는 파일 시스템</strong></li></ul><p id="da7720e4-6f49-832f-b937-0198d7a987f2" class="" dir="auto">으로 보면 됨.</p><hr id="c6c720e4-6f49-8222-8bd6-0115005a0a26" dir="auto"/><h1 id="87a720e4-6f49-82ee-ac69-81bf5edb2ab4" class="" dir="auto">5.17 Amazon FSx 개요</h1><p id="ff7720e4-6f49-8387-a2e5-014110cd4634" class="" dir="auto">FSx는 특정 파일 시스템을 AWS 관리형으로 제공하는 서비스군임.</p><p id="ad0720e4-6f49-8309-8ca3-0136f0645e8a" class="" dir="auto">대표 서비스</p><ul id="1b5720e4-6f49-82eb-ae9b-814a41179e8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">FSx for Windows File Server</li></ul><ul id="061720e4-6f49-823e-9d7e-81e2546cf246" class="bulleted-list" dir="auto"><li style="list-style-type:disc">FSx for Lustre</li></ul><ul id="b3a720e4-6f49-828a-b89a-012fddf4a9b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">FSx for NetApp ONTAP</li></ul><ul id="3e4720e4-6f49-8237-81e0-819b9e0bd5bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">FSx for OpenZFS</li></ul><h3 id="850720e4-6f49-82dd-aadf-81132421791b" class="" dir="auto">FSx for Windows File Server</h3><p id="4dd720e4-6f49-825a-a2ce-81ffa0cd9b3a" class="" dir="auto">SMB 기반 윈도우 파일 공유가 필요할 때 사용함.</p><h3 id="ac9720e4-6f49-822a-b760-019baab9f804" class="" dir="auto">FSx for Lustre</h3><p id="1cc720e4-6f49-8288-ab96-0106e38259c5" class="" dir="auto">고성능 분석, HPC, 머신러닝 학습 데이터 처리에 적합함.</p><hr id="4b4720e4-6f49-83f1-b5a3-81b630065d69" dir="auto"/><h1 id="45f720e4-6f49-83de-88a5-0127fc6c32b4" class="" dir="auto">5.18 스토리지 선택 기준 정리</h1><table id="6a7720e4-6f49-83af-8a3b-01f6eb566c98" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="6fe720e4-6f49-83c4-8fb5-81beaa2b23b7" dir="ltr"><th id="Z=sn" class="simple-table-header-color simple-table-header">요구사항</th><th id="|K&gt;c" class="simple-table-header-color simple-table-header">적합한 서비스</th></tr></thead><tbody><tr id="765720e4-6f49-820f-8e44-81d6fd505a76" dir="ltr"><td id="Z=sn" class="">정적 파일 저장</td><td id="|K&gt;c" class="">S3</td></tr><tr id="2e3720e4-6f49-82e6-9378-8191b486a961" dir="ltr"><td id="Z=sn" class="">백업 및 로그 저장</td><td id="|K&gt;c" class="">S3</td></tr><tr id="796720e4-6f49-8261-9cc4-01187d71f547" dir="ltr"><td id="Z=sn" class="">EC2 루트 디스크</td><td id="|K&gt;c" class="">EBS</td></tr><tr id="27d720e4-6f49-8360-bc1e-8193b528f64d" dir="ltr"><td id="Z=sn" class="">여러 EC2 간 공유 디렉터리</td><td id="|K&gt;c" class="">EFS</td></tr><tr id="bd4720e4-6f49-8274-8055-817fac99daf9" dir="ltr"><td id="Z=sn" class="">Windows 공유 폴더</td><td id="|K&gt;c" class="">FSx for Windows File Server</td></tr><tr id="cae720e4-6f49-82ea-af9e-812b6d8f5969" dir="ltr"><td id="Z=sn" class="">초고성능 분석 파일 시스템</td><td id="|K&gt;c" class="">FSx for Lustre</td></tr></tbody></table><p id="e7c720e4-6f49-83e6-a4ef-81f5cee15f16" class="" dir="auto">
+</p><hr id="367720e4-6f49-82fe-bd1f-014a8948b89d" dir="auto"/><h1 id="485720e4-6f49-83c1-8f74-011d19c6f354" class="" dir="auto">5.19 실습 1 : S3 버킷 생성 및 객체 업로드</h1><p id="d7d720e4-6f49-82c2-bfee-0144ea4ed69e" class="" dir="auto">실습 목표</p><ul id="8ec720e4-6f49-82f0-838e-01ceeb765672" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 버킷을 생성함</li></ul><ul id="093720e4-6f49-8234-904c-016799954fef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일을 업로드함</li></ul><ul id="fd6720e4-6f49-83a9-9b8e-81e345878992" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 URL 구조를 이해함</li></ul><ul id="3da720e4-6f49-82b2-9520-8140672f9afc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CLI로 객체를 조회함</li></ul><hr id="ba8720e4-6f49-82ec-9d9c-81d3f101fcce" dir="auto"/><h2 id="708720e4-6f49-83aa-96e9-81a8247a9d89" class="" dir="auto">5.19.1 버킷 생성</h2><p id="4e6720e4-6f49-83ef-8fd4-8190c20ec244" class="" dir="auto">S3 콘솔 → Create bucket</p><p id="dcc720e4-6f49-839c-b4a3-01b869c0487e" class="" dir="auto">설정 예</p><table id="e77720e4-6f49-8230-9002-8120b668c407" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="13f720e4-6f49-83e4-b4b9-81eb17207c18" dir="ltr"><th id="p&lt;?k" class="simple-table-header-color simple-table-header">항목</th><th id="g~@u" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="807720e4-6f49-83ec-ad4b-01c13a8aa4ab" dir="ltr"><td id="p&lt;?k" class="">Bucket name</td><td id="g~@u" class="">이니셜-arc-s3-bucket-고유값</td></tr><tr id="fe8720e4-6f49-828c-bd9b-018c659af4b0" dir="ltr"><td id="p&lt;?k" class="">Region</td><td id="g~@u" class="">ap-northeast-2</td></tr><tr id="705720e4-6f49-82e7-a767-817d0e8210d7" dir="ltr"><td id="p&lt;?k" class="">Block Public Access</td><td id="g~@u" class="">기본값 유지</td></tr><tr id="f60720e4-6f49-82bb-bf9a-81d8e854cdcc" dir="ltr"><td id="p&lt;?k" class="">Versioning</td><td id="g~@u" class="">비활성 또는 필요 시 활성</td></tr></tbody></table><p id="2e8720e4-6f49-8332-9ff3-01f0c8706d80" class="" dir="auto">주의</p><ul id="648720e4-6f49-8222-8888-019c83aefafc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷 이름은 전 세계적으로 유일해야 함</li></ul><ul id="5f0720e4-6f49-8250-9730-01266d8397b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미 누군가 사용 중인 이름이면 생성 불가</li></ul><p id="9b2720e4-6f49-837e-8ef8-01404a25fff5" class="" dir="auto">예시 이름</p><pre id="a19720e4-6f49-829a-b4af-01a2fb23e874" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">kyt-arc-s3-bucket-20260316</code></pre><hr id="d32720e4-6f49-8319-8669-013fb7affa59" dir="auto"/><h2 id="e53720e4-6f49-8287-87dd-8186081d004c" class="" dir="auto">5.19.2 파일 업로드</h2><p id="907720e4-6f49-82b9-a53b-81ba0174f1fe" class="" dir="auto">버킷 생성 후 <code>Upload</code>를 눌러 임의의 파일 1~2개 업로드함.</p><p id="466720e4-6f49-8246-bffb-81691ca42def" class="" dir="auto">예</p><ul id="6f7720e4-6f49-821e-9f12-010b315c3405" class="bulleted-list" dir="auto"><li style="list-style-type:disc">sample.txt</li></ul><ul id="f4a720e4-6f49-826c-ab3f-81ea6f01af74" class="bulleted-list" dir="auto"><li style="list-style-type:disc">image.png</li></ul><p id="2fb720e4-6f49-8308-9d94-01cd5d3e9844" class="" dir="auto">업로드가 끝나면 객체 목록에서 파일 이름과 크기, 수정 시간을 확인할 수 있음.</p><hr id="951720e4-6f49-824c-a445-016f256cd888" dir="auto"/><h2 id="77f720e4-6f49-82b4-bc38-018425684916" class="" dir="auto">5.19.3 CLI로 버킷 목록 확인</h2><pre id="89d720e4-6f49-83e6-afd0-0140998d7c2d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3ls</code></pre><h3 id="893720e4-6f49-826b-ab69-01c8b2330ca4" class="" dir="auto">명령어 설명</h3><h3 id="1fd720e4-6f49-829a-abc3-8197911c628f" class="" dir="auto"><code>aws s3</code></h3><p id="924720e4-6f49-830b-86ac-818f8c25b176" class="" dir="auto">S3 고수준 명령 그룹임.</p><p id="042720e4-6f49-83cb-92a0-01e0a53db1de" class="" dir="auto">버킷 목록 조회, 파일 업로드, 다운로드 등 자주 쓰는 기능을 간단하게 제공함.</p><h3 id="475720e4-6f49-8385-9391-8157ee00f52d" class="" dir="auto"><code>ls</code></h3><p id="fe1720e4-6f49-8289-ad9e-016a2dcd91a2" class="" dir="auto">리스트를 조회하는 명령임.</p><p id="f5d720e4-6f49-8333-bab3-017f9209b16d" class="" dir="auto">리눅스의 <code>ls</code>처럼 목록을 보여주는 역할을 함.</p><p id="12f720e4-6f49-8382-92b7-01b3029d14d4" class="" dir="auto">이 명령을 실행하면 현재 계정에서 접근 가능한 버킷 목록이 출력됨.</p><hr id="325720e4-6f49-8352-9964-8127b95f43b6" dir="auto"/><h2 id="0f8720e4-6f49-8386-89ff-01074cb2634a" class="" dir="auto">5.19.4 특정 버킷의 객체 목록 확인</h2><pre id="f90720e4-6f49-8364-a773-0195f096834e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3ls s3://이니셜-arc-s3-bucket-고유값</code></pre><p id="a54720e4-6f49-830f-8e50-01ccdfe755ad" class="" dir="auto">예</p><pre id="8b7720e4-6f49-8339-9caa-016c27249447" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3ls s3://kyt-arc-s3-bucket-20260316</code></pre><p id="ad2720e4-6f49-8293-adf9-016a9b62ac7d" class="" dir="auto">이 명령은 해당 버킷 안에 저장된 객체 목록을 조회함.</p><p id="31f720e4-6f49-83c9-87a8-8160a74dadeb" class="" dir="auto">출력 예</p><pre id="5ec720e4-6f49-83ae-874b-01449d948cec" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">2026-03-16 10:20:31       1240 sample.txt
+2026-03-16 10:21:02      50231 image.png</code></pre><hr id="13e720e4-6f49-8268-a22a-01b7aef7c9a8" dir="auto"/><h1 id="583720e4-6f49-83e5-b1c7-81b36ccc4904" class="" dir="auto">5.20 실습 2 : CLI로 파일 업로드 및 다운로드</h1><p id="09f720e4-6f49-8235-ae25-81e7ee406a3b" class="" dir="auto">실습 목표</p><ul id="91e720e4-6f49-8239-acc2-010a22a5f568" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS CLI를 사용해 객체를 업로드함</li></ul><ul id="e55720e4-6f49-83fe-b752-814f4fe435ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체를 다운로드함</li></ul><ul id="5ee720e4-6f49-83dd-98e6-81b90488971d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>cp</code> 명령 구조를 익힘</li></ul><hr id="c64720e4-6f49-8393-87ff-81cf60bc27b9" dir="auto"/><h2 id="269720e4-6f49-82eb-b1fa-8128e2909433" class="" dir="auto">5.20.1 파일 업로드</h2><p id="298720e4-6f49-8232-8cac-81eb6c1f4553" class="" dir="auto">로컬 또는 CloudShell에 테스트 파일 생성</p><pre id="0e6720e4-6f49-8232-9caf-018a1d3e36c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">echo&quot;hello s3&quot; &gt; sample.txt</code></pre><p id="8e8720e4-6f49-8390-8a98-814c5b28e787" class="" dir="auto">이 명령은 현재 디렉터리에 <code>sample.txt</code> 파일을 만들고</p><p id="9f0720e4-6f49-8264-90fd-01a8e9d2064d" class="" dir="auto">그 안에 <code>hello s3</code> 문자열을 저장함.</p><p id="861720e4-6f49-827a-b0a5-014bc2bf0fdc" class="" dir="auto">업로드 명령</p><pre id="24d720e4-6f49-8344-bd18-816510e244e1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3cp sample.txt s3://이니셜-arc-s3-bucket-고유값/</code></pre><p id="977720e4-6f49-8316-b542-01683040fe0c" class="" dir="auto">예</p><pre id="e8a720e4-6f49-835b-b703-019ffe89d824" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3cp sample.txt s3://kyt-arc-s3-bucket-20260316/</code></pre><h3 id="62b720e4-6f49-8238-96ea-01790907ff40" class="" dir="auto">명령어 설명</h3><h3 id="675720e4-6f49-831f-92a3-81936c72a249" class="" dir="auto"><code>cp</code></h3><p id="ab6720e4-6f49-8361-a084-8164624585b9" class="" dir="auto">copy의 약자임.</p><p id="c5e720e4-6f49-82ba-87c4-811588152b17" class="" dir="auto">로컬 ↔ S3, S3 ↔ 로컬, S3 ↔ S3 간 파일 복사에 사용함.</p><h3 id="014720e4-6f49-8367-bc67-8168e89f28ab" class="" dir="auto"><code>sample.txt</code></h3><p id="26c720e4-6f49-83dc-aaae-01954dbff2bc" class="" dir="auto">업로드할 원본 파일임.</p><h3 id="2df720e4-6f49-824a-a9c8-011c122feee3" class="" dir="auto"><code>s3://.../</code></h3><p id="206720e4-6f49-8244-ade8-8140ba86bca2" class="" dir="auto">대상 버킷 경로임.</p><p id="72e720e4-6f49-838f-bacb-01e548191661" class="" dir="auto">즉, 이 명령은 로컬의 <code>sample.txt</code>를 S3 버킷 루트 경로에 업로드함.</p><hr id="5f2720e4-6f49-83d4-bf65-017d4e7dc3ef" dir="auto"/><h2 id="5c2720e4-6f49-824a-982d-8181e4b22811" class="" dir="auto">5.20.2 파일 다운로드</h2><pre id="259720e4-6f49-83c7-85c8-01f79110f845" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3 cp s3://이니셜-arc-s3-bucket-고유값/sample.txt ./downloaded.txt</code></pre><p id="a81720e4-6f49-8299-8549-818abbc8a0fc" class="" dir="auto">예</p><pre id="543720e4-6f49-82d2-9292-8169926bef51" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3 cp s3://kyt-arc-s3-bucket-20260316/sample.txt ./downloaded.txt</code></pre><p id="a2c720e4-6f49-82ba-af67-018113523ec6" class="" dir="auto">이 명령은 S3 객체를 현재 디렉터리에 <code>downloaded.txt</code>라는 이름으로 저장함.</p><p id="c34720e4-6f49-83c8-8426-013bb7e9d156" class="" dir="auto">확인</p><pre id="7d9720e4-6f49-8353-8739-0184150dc504" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cat downloaded.txt</code></pre><p id="f36720e4-6f49-822a-9f53-01439e9ed302" class="" dir="auto">정상 동작 시</p><pre id="a1e720e4-6f49-83e7-a33d-0134f28ad098" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hello s3</code></pre><p id="0a2720e4-6f49-82d2-9076-81d29ea4498c" class="" dir="auto">가 출력됨.</p><hr id="01e720e4-6f49-83f4-819a-81d3fea988c3" dir="auto"/><h1 id="4b8720e4-6f49-8368-a1e2-017ac08676be" class="" dir="auto">5.21 실습 3 : S3 정적 웹사이트 호스팅</h1><p id="b06720e4-6f49-825d-9fa0-810a37b7a588" class="" dir="auto">실습 목표</p><ul id="921720e4-6f49-8390-bfed-0153b176ca26" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTML 파일을 업로드함</li></ul><ul id="33f720e4-6f49-8216-af5d-8136cc6dd3e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 정적 웹사이트 기능을 활성화함</li></ul><ul id="1df720e4-6f49-833d-8843-81854684f8d7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브라우저에서 페이지를 확인함</li></ul><hr id="282720e4-6f49-8260-9b6e-01f32db42fad" dir="auto"/><h2 id="d10720e4-6f49-8266-b968-818af752490b" class="" dir="auto">5.21.1 index.html 파일 생성</h2><pre id="c10720e4-6f49-82b0-85c8-81cb667db7c5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cat &gt; index.html&lt;&lt;&#x27;EOF&#x27;
+&lt;h1&gt;Welcome to S3 Static Website&lt;/h1&gt;
+EOF</code></pre><p id="ae9720e4-6f49-82cf-9537-8143659f826a" class="" dir="auto">이 명령은 <code>index.html</code> 파일을 생성하고 HTML 내용을 저장함.</p><hr id="385720e4-6f49-820b-b365-0163630e1460" dir="auto"/><h2 id="148720e4-6f49-827b-b7c4-0139203eb037" class="" dir="auto">5.21.2 파일 업로드</h2><pre id="017720e4-6f49-8208-96a8-8146714aae41" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws s3cp index.html s3://이니셜-arc-s3-bucket-고유값/</code></pre><hr id="4b4720e4-6f49-8378-91cc-815761c847ba" dir="auto"/><h2 id="6f6720e4-6f49-82ba-9c31-0154e57c4f2c" class="" dir="auto">5.21.3 정적 웹사이트 활성화</h2><p id="8b1720e4-6f49-8223-af3a-81b1ec556903" class="" dir="auto">S3 콘솔 → 버킷 선택 → Properties → Static website hosting</p><p id="44c720e4-6f49-833c-a0d5-017ed62d6f79" class="" dir="auto">설정</p><table id="a7c720e4-6f49-8328-b73c-0196d04207a4" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="4e0720e4-6f49-82c2-b7ad-0124662c0537" dir="ltr"><th id="mFPl" class="simple-table-header-color simple-table-header">항목</th><th id="rrgo" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="390720e4-6f49-8236-b514-0133c6d8d158" dir="ltr"><td id="mFPl" class="">Static website hosting</td><td id="rrgo" class="">Enable</td></tr><tr id="541720e4-6f49-822d-996a-01cb9011363e" dir="ltr"><td id="mFPl" class="">Hosting type</td><td id="rrgo" class="">Host a static website</td></tr><tr id="5c3720e4-6f49-834f-8bea-01387d829a09" dir="ltr"><td id="mFPl" class="">Index document</td><td id="rrgo" class="">index.html</td></tr></tbody></table><hr id="e6b720e4-6f49-8339-b9b9-01572af3d423" dir="auto"/><h2 id="72d720e4-6f49-823d-b992-013f070d5e9d" class="" dir="auto">5.21.4 공개 접근 정책 설정</h2><p id="56b720e4-6f49-8359-a4ac-81bb99b67d7a" class="" dir="auto">정적 웹사이트는 외부 사용자가 HTML 파일을 읽어야 하므로 공개 정책이 필요함.</p><p id="ea3720e4-6f49-83e1-80d0-01b129c33ea3" class="" dir="auto">이때 Block Public Access 설정과 Bucket Policy가 함께 관련됨.</p><p id="650720e4-6f49-82d0-8790-81c6bcd36bd6" class="" dir="auto">실습용 예시 Bucket Policy</p><pre id="484720e4-6f49-829c-bcbe-819bbd1e2e68" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;:&quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;:&quot;PublicReadGetObject&quot;,
+      &quot;Effect&quot;:&quot;Allow&quot;,
+      &quot;Principal&quot;:&quot;*&quot;,
+      &quot;Action&quot;:&quot;s3:GetObject&quot;,
+      &quot;Resource&quot;:&quot;arn:aws:s3:::이니셜-arc-s3-bucket-고유값/*&quot;
+    }
+  ]
+}</code></pre><p id="6f2720e4-6f49-8309-b393-01662cb81c01" class="" dir="auto">주의</p><ul id="cb2720e4-6f49-8310-9f88-01fb94862da3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 정책은 실습용 공개 읽기 예시임</li></ul><ul id="df1720e4-6f49-824f-84eb-01e403543056" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경에서는 CloudFront를 앞단에 두고 더 안전하게 구성하는 것이 일반적임</li></ul><hr id="085720e4-6f49-82a5-a552-81079e7ec694" dir="auto"/><h2 id="40c720e4-6f49-83f4-b8c4-8126260cb5cd" class="" dir="auto">5.21.5 웹사이트 접속 확인</h2><p id="721720e4-6f49-82e9-900a-81a9f0a1f329" class="" dir="auto">Properties 탭의 Website endpoint 주소를 복사해 브라우저에서 접속함.</p><p id="f0b720e4-6f49-8367-a045-01c85e17d85d" class="" dir="auto">예시 형태</p><pre id="b81720e4-6f49-8283-9e26-81fffc4cf5c9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://bucket-name.s3-website.ap-northeast-2.amazonaws.com</code></pre><p id="f01720e4-6f49-8297-b19e-0169b0e4a4ad" class="" dir="auto">정상 동작 시</p><pre id="7fc720e4-6f49-8257-adac-01384e29e1ae" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Welcome to S3 Static Website</code></pre><p id="7be720e4-6f49-8201-bdc3-814c022fd833" class="" dir="auto">가 표시됨.</p><hr id="652720e4-6f49-8381-8f11-01b26a9ee413" dir="auto"/><h1 id="5cd720e4-6f49-828b-be6a-811f1e65c1c5" class="" dir="auto">5.22 실습 4 : EFS 생성 및 EC2 마운트</h1><p id="7d6720e4-6f49-8243-8932-818f7eab984a" class="" dir="auto">실습 목표</p><ul id="84d720e4-6f49-831f-819f-01c962f973b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS 파일 시스템을 생성함</li></ul><ul id="a43720e4-6f49-828d-9615-014d0aff348b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2에 NFS 방식으로 마운트함</li></ul><ul id="d55720e4-6f49-8292-a68f-81ad5d8d603d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공유 파일 시스템 개념을 확인함</li></ul><hr id="2ea720e4-6f49-8390-970b-8187d135fd44" dir="auto"/><h2 id="a22720e4-6f49-8258-812d-011adddf6610" class="" dir="auto">5.22.1 사전 준비</h2><p id="456720e4-6f49-83d2-a08e-016779701a0b" class="" dir="auto">필요 자원</p><ul id="be0720e4-6f49-82cb-9730-8122c349031b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC</li></ul><ul id="59e720e4-6f49-837d-bc74-810c1b0ad4ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private 또는 Public Subnet의 EC2</li></ul><ul id="779720e4-6f49-8292-bbed-816e0ac477b6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2가 EFS에 접근 가능한 보안 그룹</li></ul><hr id="20c720e4-6f49-8375-9f44-81b19c6a6a69" dir="auto"/><h2 id="120720e4-6f49-83d9-8847-016df6943d53" class="" dir="auto">5.22.2 EFS 생성</h2><p id="3a5720e4-6f49-82df-a615-015a4878fa00" class="" dir="auto">EFS 콘솔 → Create file system</p><p id="cb7720e4-6f49-823f-86f1-813ae496333f" class="" dir="auto">설정 예</p><table id="369720e4-6f49-83fa-9014-8134a172c370" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="6f2720e4-6f49-82f0-b7f8-81b34c7817ba" dir="ltr"><th id="qauY" class="simple-table-header-color simple-table-header">항목</th><th id="rsVD" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="9c0720e4-6f49-83f2-bc72-01a3b49402e8" dir="ltr"><td id="qauY" class="">Name</td><td id="rsVD" class="">이니셜-efs-share</td></tr><tr id="ca2720e4-6f49-8294-b1dc-014210743d9c" dir="ltr"><td id="qauY" class="">VPC</td><td id="rsVD" class="">이니셜-vpc-main</td></tr><tr id="367720e4-6f49-8296-9ce7-0127df485543" dir="ltr"><td id="qauY" class="">Availability and durability</td><td id="rsVD" class="">Regional</td></tr><tr id="e28720e4-6f49-8260-8e7d-01072868e02a" dir="ltr"><td id="qauY" class="">Performance mode</td><td id="rsVD" class="">General Purpose</td></tr></tbody></table><p id="367720e4-6f49-8361-882e-81dcf18a7482" class="" dir="auto">생성 과정에서 각 AZ에 대한 Mount Target이 생성됨.</p><hr id="981720e4-6f49-830b-b606-013fcc1d89e7" dir="auto"/><h2 id="92b720e4-6f49-83bf-b1fa-81ddaefc6526" class="" dir="auto">5.22.3 EFS 보안 그룹</h2><p id="92d720e4-6f49-823c-800f-81e21c5be968" class="" dir="auto">EFS는 NFS 프로토콜을 사용하므로 <strong>2049/TCP</strong> 포트를 허용해야 함.</p><p id="c2c720e4-6f49-83f4-938e-811b11435984" class="" dir="auto">예시 규칙</p><table id="a9d720e4-6f49-8335-981f-0172595d1e91" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="890720e4-6f49-8282-977d-81fa50d2e682" dir="ltr"><th id="^cNI" class="simple-table-header-color simple-table-header">방향</th><th id="HhMG" class="simple-table-header-color simple-table-header">프로토콜</th><th id="DKI{" class="simple-table-header-color simple-table-header">포트</th><th id="dg{=" class="simple-table-header-color simple-table-header">소스</th></tr></thead><tbody><tr id="3c0720e4-6f49-82b5-8778-81d4e5db9cd4" dir="ltr"><td id="^cNI" class="">Inbound</td><td id="HhMG" class="">TCP</td><td id="DKI{" class="">2049</td><td id="dg{=" class="">EC2 보안 그룹</td></tr></tbody></table><p id="4b1720e4-6f49-8257-8ab3-81908b1337ce" class="" dir="auto">중요</p><ul id="11f720e4-6f49-8239-b584-81a32eaed456" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안상 <code>0.0.0.0/0</code>로 열지 않는 것이 좋음</li></ul><ul id="8bc720e4-6f49-830e-a010-816c7f425870" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가능하면 EC2의 보안 그룹을 소스로 지정하는 방식이 바람직함</li></ul><hr id="6ce720e4-6f49-83be-b9f1-81f82eba69a1" dir="auto"/><h2 id="783720e4-6f49-83bc-b432-8135f25e4555" class="" dir="auto">5.22.4 EC2에 패키지 설치</h2><p id="90c720e4-6f49-822f-9307-01c412a937b8" class="" dir="auto">Amazon Linux 계열에서 실행</p><pre id="213720e4-6f49-82f8-89ae-81681f324530" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo dnf install -y amazon-efs-utils</code></pre><h3 id="b9d720e4-6f49-83d8-9c3c-017217e10f66" class="" dir="auto">명령어 설명</h3><h3 id="851720e4-6f49-82d1-b423-017ee1dad355" class="" dir="auto"><code>amazon-efs-utils</code></h3><p id="dd9720e4-6f49-82ec-b44f-8160586a81cc" class="" dir="auto">AWS EFS를 보다 쉽게 마운트할 수 있도록 도와주는 유틸리티 패키지임.</p><p id="637720e4-6f49-828e-85cb-01fac6633839" class="" dir="auto">이 패키지를 설치하면 단순 NFS 마운트보다 편리하게 EFS 전용 방식으로 연결할 수 있음.</p><hr id="9fc720e4-6f49-82f1-81f9-81ec62434b12" dir="auto"/><h2 id="2bf720e4-6f49-8291-99b3-815af405df9a" class="" dir="auto">5.22.5 마운트 디렉터리 생성</h2><pre id="7e5720e4-6f49-82b8-839d-0100b9528bf4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo mkdir /efs</code></pre><p id="e64720e4-6f49-8275-9ae3-818046c99ad5" class="" dir="auto">이 디렉터리는 EFS를 연결할 마운트 지점임.</p><hr id="c32720e4-6f49-838a-8834-019c46bfce75" dir="auto"/><h2 id="cc7720e4-6f49-8386-bb1d-01b8277d3914" class="" dir="auto">5.22.6 EFS 마운트</h2><pre id="a5f720e4-6f49-8356-ae26-81945bb05d97" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo mount -t efs &lt;EFS-파일시스템ID&gt;:/ /efs</code></pre><p id="d2e720e4-6f49-82c8-8bcc-81df69983a2c" class="" dir="auto">예</p><pre id="a8c720e4-6f49-820a-94d1-81ee7dfebb63" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo mount -t efs fs-0abc123def4567890:/ /efs</code></pre><h3 id="60b720e4-6f49-82f4-9ab1-811605dfdad6" class="" dir="auto">명령어 설명</h3><h3 id="833720e4-6f49-83a1-8364-81edae34a49f" class="" dir="auto"><code>mount</code></h3><p id="e8c720e4-6f49-83e1-b688-014f61e32a02" class="" dir="auto">파일 시스템을 특정 디렉터리에 연결하는 명령임.</p><h3 id="448720e4-6f49-826b-b8a6-0156208e2515" class="" dir="auto"><code>-t efs</code></h3><p id="262720e4-6f49-827c-91c1-015178f258da" class="" dir="auto">파일 시스템 유형을 EFS로 지정함.</p><h3 id="96c720e4-6f49-8291-9a7b-01e439f38dfb" class="" dir="auto"><code>fs-...:/</code></h3><p id="a34720e4-6f49-83e0-a8c0-01285573aaae" class="" dir="auto">EFS 파일 시스템 ID와 루트 경로를 의미함.</p><h3 id="c04720e4-6f49-83f3-b295-81e6e0996ae6" class="" dir="auto"><code>/efs</code></h3><p id="bf9720e4-6f49-8352-8e60-0128eef0045e" class="" dir="auto">마운트 대상 디렉터리임.</p><p id="375720e4-6f49-83bb-8909-011df9af3f1b" class="" dir="auto">정상적으로 마운트되면 <code>/efs</code> 디렉터리가 EFS 저장소와 연결됨.</p><hr id="988720e4-6f49-82cf-94c1-813ced6f3a33" dir="auto"/><h2 id="44d720e4-6f49-82dd-bffd-81e5df317f56" class="" dir="auto">5.22.7 동작 확인</h2><pre id="531720e4-6f49-821d-bf25-810717012ddb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">df -h</code></pre><p id="c1d720e4-6f49-83b2-ab43-01a064043389" class="" dir="auto">이 명령은 현재 마운트된 파일 시스템 목록을 보여줌.</p><p id="611720e4-6f49-8279-bcdb-01189bb0ae79" class="" dir="auto">여기서 EFS가 <code>/efs</code>에 연결되어 있는지 확인함.</p><p id="b2e720e4-6f49-8309-9580-01089ac54129" class="" dir="auto">테스트 파일 생성</p><pre id="a74720e4-6f49-8393-9778-019c639dd8c5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">echo &quot;hello efs&quot; | sudo tee /efs/test.txt</code></pre><p id="7d1720e4-6f49-82bc-aec9-0139046de03a" class="" dir="auto">확인</p><pre id="c18720e4-6f49-8285-b22a-81a240215f61" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cat /efs/test.txt</code></pre><p id="605720e4-6f49-823f-9af0-81546171f8b7" class="" dir="auto">정상 동작 시</p><pre id="b36720e4-6f49-82e7-9b02-01a58c69a74a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">hello efs</code></pre><p id="9be720e4-6f49-82f9-be79-01ab4c12ed24" class="" dir="auto">가 출력됨.</p><hr id="ff8720e4-6f49-83c8-9981-01306f61f4a8" dir="auto"/><h1 id="7cc720e4-6f49-8344-b23b-0181df7a9d61" class="" dir="auto">5.23 EFS 활용 시나리오 설명</h1><p id="25f720e4-6f49-83eb-b1ea-013f848a927e" class="" dir="auto">예를 들어 웹 서버가 2대 있다고 가정해보면</p><pre id="101720e4-6f49-820f-9938-81939a03bd70" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ALB
+ ├ EC2-Web-1
+ └ EC2-Web-2</code></pre><p id="2a5720e4-6f49-822d-aa0e-817007537e25" class="" dir="auto">이때 두 서버가 같은 업로드 디렉터리를 사용해야 하면 각 서버의 로컬 디스크를 쓰면 안 됨.</p><p id="28d720e4-6f49-82ff-905e-0154d41cd66f" class="" dir="auto">한 서버에 올린 파일이 다른 서버에는 없기 때문임.</p><p id="7de720e4-6f49-8389-8faf-8126a1c0f018" class="" dir="auto">이 문제를 해결하는 방식 중 하나가 EFS임.</p><pre id="dac720e4-6f49-831a-90a6-815a49bd54cd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ALB
+ ├ EC2-Web-1 ─┐
+ └ EC2-Web-2 ─┼─ EFS
+              </code></pre><p id="23e720e4-6f49-83e2-aebe-01ae461d5342" class="" dir="auto">즉, 두 서버가 같은 파일 시스템을 바라보게 만들어 업로드 파일을 공유할 수 있음.</p><hr id="023720e4-6f49-8216-9e92-0128e770561b" dir="auto"/><h1 id="1d9720e4-6f49-8332-8824-81486426890a" class="" dir="auto">5.24 스토리지 아키텍처 설계 포인트</h1><h3 id="aed720e4-6f49-8282-9c3f-01b5430575f8" class="" dir="auto">1. 저장 방식부터 구분해야 함</h3><ul id="8ef720e4-6f49-8298-982e-818a843a4ef9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 저장인가</li></ul><ul id="e60720e4-6f49-831a-95a4-81311b427f86" class="bulleted-list" dir="auto"><li style="list-style-type:disc">블록 저장인가</li></ul><ul id="db6720e4-6f49-82cd-b09a-816f0e535126" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 공유인가</li></ul><h3 id="46c720e4-6f49-8334-b642-81a71e641716" class="" dir="auto">2. 접근 패턴을 봐야 함</h3><ul id="395720e4-6f49-8274-966d-81c1d960a9ec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자주 읽는가</li></ul><ul id="1a8720e4-6f49-8230-a54a-0158dee571d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">거의 안 읽는가</li></ul><ul id="0ce720e4-6f49-83c3-bb5a-813ad0c39255" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 서버가 동시에 접근하는가</li></ul><h3 id="42e720e4-6f49-836a-9d1e-81103e4eca66" class="" dir="auto">3. 비용과 보관 기간을 고려해야 함</h3><ul id="817720e4-6f49-831f-9df5-81648a5ab811" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최근 데이터는 Standard</li></ul><ul id="d8a720e4-6f49-8295-a98e-015e90d1ebc1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오래된 데이터는 IA/Glacier</li></ul><ul id="7cb720e4-6f49-82b2-bade-815c9200c1bb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lifecycle 자동화 고려</li></ul><h3 id="7ba720e4-6f49-8390-bdc5-81abf1f727e2" class="" dir="auto">4. 보안 설정이 매우 중요함</h3><ul id="420720e4-6f49-83a0-9bf1-01ac575b99db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 Public Access 차단</li></ul><ul id="a4a720e4-6f49-82aa-8932-014a9dcf64b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 최소 권한</li></ul><ul id="a2c720e4-6f49-836a-93c9-0153de3ffccf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS 보안 그룹 제한</li></ul><ul id="9e8720e4-6f49-83c8-b2c0-0149bd755dc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">암호화 활성화</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

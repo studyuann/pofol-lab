@@ -1,0 +1,784 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>5장 고급 보안 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="1d8720e4-6f49-83fe-90ce-81fa35d3753c" class="page sans"><header><h1 class="page-title" dir="auto">5장 고급 보안 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="3a5720e4-6f49-8247-a683-01cb41a491c0" dir="auto"/><h1 id="699720e4-6f49-83a7-9de4-81b3ecb11862" class="" dir="auto">5.1 고급 보안 아키텍처의 의미</h1><p id="56d720e4-6f49-83b5-96b0-81ec7ac558d9" class="" dir="auto">AWS에서 보안을 설계할 때 가장 자주 발생하는 오해 중 하나는 보안을 특정 서비스 하나로 해결할 수 있다고 보는 것임.</p><p id="78b720e4-6f49-833b-9e42-8144417dfa29" class="" dir="auto">예를 들어 IAM만 잘 설정하면 된다거나, 보안 그룹만 잘 닫아두면 충분하다고 생각하기 쉬움.</p><p id="591720e4-6f49-8386-a6ab-81d1a6be6531" class="" dir="auto">하지만 실제 보안은 특정 서비스 하나가 아니라 <strong>계정, 네트워크, 애플리케이션, 데이터, 엣지, 운영 절차</strong>가 함께 맞물려야 성립함.</p><p id="3da720e4-6f49-827d-a16c-01a0cfc75c0c" class="" dir="auto">즉, 고급 보안 아키텍처는 다음과 같은 질문에 답해야 함.</p><ul id="992720e4-6f49-83cc-b7ec-012d0b2a980c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 계층을 외부에 노출할 것인가</li></ul><ul id="17c720e4-6f49-831b-ba18-816afcdb2647" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 요청을 엣지에서 차단할 것인가</li></ul><ul id="104720e4-6f49-83e5-8cc7-813af8d3ec33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 데이터는 반드시 암호화해야 하는가</li></ul><ul id="ac3720e4-6f49-835e-b7d4-015c9f4e07d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 비밀정보를 어디에 저장할 것인가</li></ul><ul id="7b8720e4-6f49-8278-bd01-81af9cb72dd3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 상황과 공격 상황을 어떻게 분리해서 대응할 것인가</li></ul><ul id="951720e4-6f49-8348-ad7f-01c974012678" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 통제를 운영 가능한 구조로 만들었는가</li></ul><p id="ede720e4-6f49-83cc-a283-0197527e12a2" class="" dir="auto">즉, 고급 보안은 단순히 “막는다”가 아니라</p><p id="a62720e4-6f49-833f-a163-014740625777" class="" dir="auto"><strong>구조적으로 위험을 줄이고, 통제를 표준화하고, 운영 가능하게 만드는 설계</strong>임.</p><hr id="334720e4-6f49-83db-af96-81d7177ad2e3" dir="auto"/><h1 id="dfd720e4-6f49-8330-90ea-81751f20b3d1" class="" dir="auto">5.2 보안을 계층으로 나누어 봐야 하는 이유</h1><p id="624720e4-6f49-82f7-9b31-019a0a0eb5b8" class="" dir="auto">보안은 하나의 지점에서 완성되지 않음.</p><p id="5fb720e4-6f49-83f3-b4fd-013ad1d480d3" class="" dir="auto">같은 시스템이라도 보호해야 하는 대상은 계층마다 다름.</p><p id="7a8720e4-6f49-8358-9199-018171dcc276" class="" dir="auto">예를 들면 다음과 같음.</p><ul id="3a9720e4-6f49-8305-bf5b-0177c23c3fdb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정 계층에서는 누가 로그인하고 어떤 권한을 가지는지가 중요함</li></ul><ul id="c1d720e4-6f49-8311-b376-0165ff61404c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 계층에서는 누가 어디와 통신할 수 있는지가 중요함</li></ul><ul id="7dd720e4-6f49-8342-9bca-814003f374b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 계층에서는 어떤 HTTP 요청을 허용할지가 중요함</li></ul><ul id="c99720e4-6f49-8395-a430-81742108d1a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 계층에서는 어떤 데이터가 암호화되고 누가 복호화할 수 있는지가 중요함</li></ul><ul id="168720e4-6f49-82fa-9076-81b196b79f58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 계층에서는 로그, 감사, 키 관리, 비밀값 관리가 중요함</li></ul><p id="29a720e4-6f49-832e-91a2-8148c3d300b1" class="" dir="auto">즉, 좋은 보안 설계는 다음처럼 봐야 함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="294720e4-6f49-833a-a96d-012b8e896457" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">계정 보안
+→ 네트워크 보안
+→ 엣지 보안
+→ 데이터 보안
+→ 비밀정보 관리
+→ 운영 통제</code></pre><p id="818720e4-6f49-83c8-8ef7-017ebbd13d14" class="" dir="auto">이 장에서는 특히 다음에 집중함.</p><ul id="e8f720e4-6f49-83b3-befb-81115397f1a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DDoS와 웹 계층 보호</li></ul><ul id="856720e4-6f49-82fd-a22f-8186be6e460d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF와 Shield의 역할</li></ul><ul id="f3b720e4-6f49-828f-93ff-01a2fc4cd7c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 암호화 구조</li></ul><ul id="590720e4-6f49-831e-ad98-01230dbc814e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">KMS의 의미</li></ul><ul id="d36720e4-6f49-8388-af75-814d4c023bb4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secrets Manager를 통한 비밀정보 관리</li></ul><ul id="b26720e4-6f49-8258-ae09-81fbf4d72c85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계층화된 보안 설계 원칙</li></ul><hr id="8b9720e4-6f49-823c-91da-012a7396a6ca" dir="auto"/><h1 id="8e9720e4-6f49-833b-9c15-814172a0a673" class="" dir="auto">5.3 보안과 고가용성은 함께 봐야 함</h1><p id="2a8720e4-6f49-824c-8174-8172106aa20f" class="" dir="auto">보안 장에서 자주 놓치기 쉬운 부분은 <strong>보안과 가용성이 따로 움직이지 않는다는 점</strong>임.</p><p id="f6a720e4-6f49-82d1-b97a-818eeb2fed73" class="" dir="auto">예를 들어 대규모 공격으로 서비스가 느려지거나 중단된다면, 그것은 보안 문제이면서 동시에 가용성 문제이기도 함.</p><p id="892720e4-6f49-8340-bb9c-8110b8f621da" class="" dir="auto">즉, 다음 상황은 모두 보안과 가용성이 만나는 지점임.</p><ul id="25a720e4-6f49-8354-99c9-81205c0aeab0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대량 HTTP 요청으로 인한 서비스 지연</li></ul><ul id="d9c720e4-6f49-838f-a525-810ffc334b9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비정상 트래픽 유입으로 인한 자원 고갈</li></ul><ul id="6ec720e4-6f49-8396-9546-81c2646f8974" class="bulleted-list" dir="auto"><li style="list-style-type:disc">악성 요청으로 인한 애플리케이션 오류</li></ul><ul id="b0f720e4-6f49-82b3-a536-0128ac4a67a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증서나 키 관리 실패로 인한 서비스 중단</li></ul><ul id="1c3720e4-6f49-83ab-8f1e-01538e67766c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 비밀값 노출로 인한 내부 시스템 침해</li></ul><p id="218720e4-6f49-8307-96a5-813fefc5a7af" class="" dir="auto">즉, 고급 보안 아키텍처는 <strong>공격을 막는 것</strong>만이 아니라</p><p id="217720e4-6f49-8244-a0ba-810b49280beb" class="" dir="auto"><strong>서비스를 지속 가능하게 만드는 구조</strong>까지 포함함.</p><hr id="64a720e4-6f49-835f-be9d-010294409498" dir="auto"/><h1 id="812720e4-6f49-824e-b734-81fdf2bfe8cb" class="" dir="auto">5.4 엣지 보안의 중요성</h1><p id="3b7720e4-6f49-83d6-b35d-81a949f9d60e" class="" dir="auto">보안 통제를 애플리케이션 내부에서만 처리하려고 하면 이미 너무 늦을 수 있음.</p><p id="45d720e4-6f49-8351-b839-01c8562d3ac3" class="" dir="auto">이유는 악성 요청이 원본 서버까지 도달한 뒤에야 차단이 되기 때문임.</p><p id="1c8720e4-6f49-829d-a8d0-81672612ee21" class="" dir="auto">그래서 엣지 보안이 중요함.</p><p id="790720e4-6f49-83f1-87e3-01ec1a9a4603" class="" dir="auto">엣지 보안의 의미는 다음과 같음.</p><ul id="e43720e4-6f49-821d-a2ce-81fe21e23720" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자와 가장 가까운 접점에서 요청을 검사함</li></ul><ul id="9cb720e4-6f49-83f4-b2d5-012a0607ae73" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비정상 트래픽을 가능한 앞단에서 차단함</li></ul><ul id="322720e4-6f49-832a-82e3-0179dd1b293f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원본 서버로 도달하는 요청 자체를 줄임</li></ul><ul id="f37720e4-6f49-8343-95f1-019acfa77832" class="bulleted-list" dir="auto"><li style="list-style-type:disc">성능과 보안을 동시에 고려할 수 있음</li></ul><p id="92c720e4-6f49-82ae-8ee0-8167c515c599" class="" dir="auto">즉, 엣지 계층은 단순 CDN 계층이 아니라</p><p id="22d720e4-6f49-8244-914b-014f9d8139ef" class="" dir="auto"><strong>보안의 1차 방어선</strong>이 될 수 있음.</p><hr id="3ad720e4-6f49-8370-abc4-81333b281848" dir="auto"/><h1 id="cca720e4-6f49-82c4-9415-01d27ef6a282" class="" dir="auto">5.5 DDoS 개요</h1><p id="5d4720e4-6f49-8376-937d-0170bca0d1ac" class="" dir="auto">DDoS는 <strong>Distributed Denial of Service</strong>의 약자이며, 대량의 트래픽 또는 요청을 집중시켜 서비스 이용을 방해하는 공격 방식임.</p><p id="2dd720e4-6f49-822b-9d3a-814291598156" class="" dir="auto">대표적으로 다음과 같은 형태가 존재함.</p><ul id="ebd720e4-6f49-8381-a6c0-01f45e4591d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크 대역폭을 소진시키는 공격</li></ul><ul id="8c7720e4-6f49-83e8-8031-01bf1d6a7551" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결 자원을 소모시키는 공격</li></ul><ul id="a99720e4-6f49-8228-9b10-81115970d115" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HTTP 요청을 폭주시켜 애플리케이션을 느리게 만드는 공격</li></ul><ul id="407720e4-6f49-8361-aef7-01cae041b9b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 URL이나 기능에 과도한 요청을 몰아넣는 공격</li></ul><p id="9cc720e4-6f49-82d7-9341-813c1122c708" class="" dir="auto">즉, DDoS는 데이터를 훔치는 공격이라기보다</p><p id="997720e4-6f49-82eb-ace2-8198dc2d40e0" class="" dir="auto"><strong>서비스를 못 쓰게 만드는 공격</strong>에 가깝지만, 실제 비즈니스 영향은 매우 클 수 있음.</p><hr id="755720e4-6f49-8255-98b3-01adb126e724" dir="auto"/><h1 id="419720e4-6f49-8330-8ece-8125f825ecb4" class="" dir="auto">5.6 왜 DDoS 대응이 중요한가</h1><p id="2ed720e4-6f49-83a9-816c-018623996db9" class="" dir="auto">DDoS 공격은 단순히 트래픽이 많아지는 문제가 아님.</p><p id="2b4720e4-6f49-836a-a590-81102f539910" class="" dir="auto">특히 인터넷에 노출된 서비스에서는 다음과 같은 영향을 줄 수 있음.</p><h3 id="ff0720e4-6f49-83d3-9b52-013460d899d8" class="" dir="auto">1. 서비스 응답 저하</h3><p id="bf9720e4-6f49-8299-932c-01ce85d27f3d" class="" dir="auto">정상 사용자도 느린 응답을 경험하게 됨.</p><h3 id="34c720e4-6f49-82ba-86f3-81f471683fef" class="" dir="auto">2. 자원 고갈</h3><p id="b1d720e4-6f49-836d-908b-012d87a77d05" class="" dir="auto">로드 밸런서, 웹 서버, 애플리케이션 서버, 네트워크 자원이 고갈될 수 있음.</p><h3 id="83c720e4-6f49-8273-ad82-01a9ad41740a" class="" dir="auto">3. 원본 인프라 장애</h3><p id="d5f720e4-6f49-8350-ad45-8188a69d4219" class="" dir="auto">백엔드까지 부하가 전파되면 시스템 전체 장애로 이어질 수 있음.</p><h3 id="5c3720e4-6f49-8344-8596-81a956ccf24e" class="" dir="auto">4. 비용 증가</h3><p id="64b720e4-6f49-83c0-9be2-0100635ae1d5" class="" dir="auto">비정상 요청이 많아질수록 사용량 기반 비용이 증가할 가능성도 있음.</p><p id="56c720e4-6f49-82b1-ae2e-81522e02d964" class="" dir="auto">즉, DDoS 대응은 보안만의 문제가 아니라</p><p id="47b720e4-6f49-82e6-8dab-01be76e0288f" class="" dir="auto"><strong>가용성, 비용, 운영 리스크</strong>까지 포함한 문제임.</p><hr id="e09720e4-6f49-8384-9bc9-017e3dbcb3f3" dir="auto"/><h1 id="cbf720e4-6f49-83d1-bd13-81039646ddd8" class="" dir="auto">5.7 AWS Shield 개요</h1><p id="c83720e4-6f49-8367-9801-01cdc07d6827" class="" dir="auto">AWS Shield는 AWS에서 제공하는 관리형 DDoS 보호 서비스임.</p><p id="85e720e4-6f49-82f9-b795-0181aa6c7689" class="" dir="auto">대규모 네트워크 계층 공격이나 전송 계층 공격에 대해 AWS 인프라 차원에서 보호를 제공함.</p><p id="28b720e4-6f49-83aa-9d66-81f1c25ad7c8" class="" dir="auto">Shield는 크게 두 수준으로 이해할 수 있음.</p><ul id="503720e4-6f49-8299-87db-01fecba97c89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shield Standard</li></ul><ul id="046720e4-6f49-8359-bb27-01b8e01ec1ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shield Advanced</li></ul><p id="15a720e4-6f49-83a2-a3fc-8103f0c9ec60" class="" dir="auto">이 장에서는 구조적 의미를 이해하는 것이 중요함.</p><p id="8f9720e4-6f49-8217-a822-81e738d7183c" class="" dir="auto">즉, Shield의 핵심은 다음과 같음.</p><pre id="f0d720e4-6f49-8326-aad6-81bf528b61d8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">대규모 비정상 트래픽이 서비스까지 도달하기 전에
+AWS 네트워크 계층에서 완충하고 방어한다.</code></pre><hr id="213720e4-6f49-835d-b2c0-81bc30f2a5ce" dir="auto"/><h1 id="07a720e4-6f49-8254-b6f0-81ec5c8f5518" class="" dir="auto">5.8 Shield Standard의 의미</h1><p id="b43720e4-6f49-8372-9128-01d29c0daf1c" class="" dir="auto">Shield Standard는 기본적으로 제공되는 수준의 DDoS 보호라고 이해하면 됨.</p><p id="7f3720e4-6f49-820b-80aa-01ce37a97063" class="" dir="auto">특히 CloudFront, Route 53, ALB 같은 인터넷 접점 서비스와 결합될 때 의미가 큼.</p><p id="401720e4-6f49-833b-bf84-01ddf06e286a" class="" dir="auto">여기서 중요한 것은 “설정 여부”보다 <strong>AWS 엣지 서비스와 함께 설계할 때 보호 효과가 커진다</strong>는 점임.</p><p id="ede720e4-6f49-821b-a164-812a8cfcbd94" class="" dir="auto">즉, 서비스가 인터넷에 직접 노출되는 구조보다</p><p id="26f720e4-6f49-82e1-ab2e-81790d533804" class="" dir="auto">CloudFront, Route 53, ALB 같은 관리형 진입 계층을 거치는 구조가 보안적으로 유리함.</p><hr id="f75720e4-6f49-83c1-8d28-81434c88e429" dir="auto"/><h1 id="99d720e4-6f49-821d-a6cd-819c9d2a72a3" class="" dir="auto">5.9 Shield를 어떻게 바라봐야 하는가</h1><p id="11d720e4-6f49-8331-9151-81b01922be06" class="" dir="auto">Shield는 세밀한 웹 요청 제어 도구가 아님.</p><p id="39f720e4-6f49-838a-b113-0130d929b981" class="" dir="auto">예를 들어 특정 URI를 막거나, 특정 패턴의 요청 본문을 차단하는 기능은 WAF의 영역에 더 가까움.</p><p id="16d720e4-6f49-821d-8e57-81785badb6ff" class="" dir="auto">Shield는 주로 다음 관점에서 봐야 함.</p><ul id="1b5720e4-6f49-83a3-9f0f-8155c3e83f29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">대량 트래픽 완충</li></ul><ul id="a99720e4-6f49-8200-a287-01bca35ec0ab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인프라 계층 보호</li></ul><ul id="298720e4-6f49-82d7-af6c-0183200a9363" class="bulleted-list" dir="auto"><li style="list-style-type:disc">엣지 계층 방어</li></ul><ul id="8a4720e4-6f49-8207-88d4-01fcf38eabb4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가용성 유지</li></ul><p id="ce8720e4-6f49-82ac-ab74-01b6e27b0321" class="" dir="auto">즉, Shield는 <strong>규모가 큰 공격을 막는 바깥쪽 보호막</strong>이라고 이해하면 됨.</p><hr id="3ea720e4-6f49-828a-91e9-817fce6893ef" dir="auto"/><h1 id="865720e4-6f49-831c-b65d-01d2c42c4c38" class="" dir="auto">5.10 AWS WAF 개요</h1><p id="494720e4-6f49-830d-b0eb-017dacf2eb52" class="" dir="auto">AWS WAF는 <strong>Web Application Firewall</strong>임.</p><p id="1b8720e4-6f49-835e-8457-01a354b5a0cf" class="" dir="auto">이 서비스는 HTTP/HTTPS 요청을 검사하고, 정의된 규칙에 따라 허용 또는 차단하는 역할을 함.</p><p id="4a4720e4-6f49-821a-a031-017a03698dfc" class="" dir="auto">즉, WAF의 핵심은 다음과 같음.</p><pre id="694720e4-6f49-82c0-99c8-81beda8174c0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">웹 요청 내용을 보고
+애플리케이션에 도달하기 전에 필터링한다.</code></pre><p id="958720e4-6f49-821e-98c7-01240cfa5b64" class="" dir="auto">이 점에서 WAF는 Shield와 역할이 다름.</p><p id="337720e4-6f49-83a0-96c3-8161c2f5cca3" class="" dir="auto">Shield가 대규모 트래픽 방어 중심이라면, WAF는 <strong>요청 내용과 패턴을 기준으로 제어하는 서비스</strong>임.</p><hr id="d8c720e4-6f49-8202-b0bb-81fbdf8057fb" dir="auto"/><h1 id="ca0720e4-6f49-83f6-a5a9-8107bd84a9bd" class="" dir="auto">5.11 WAF가 필요한 이유</h1><p id="da9720e4-6f49-82c4-bb48-817dbd12ed39" class="" dir="auto">애플리케이션은 단순히 트래픽 양만으로 공격당하는 것이 아님.</p><p id="29b720e4-6f49-82c3-8086-01a5c1b5e4da" class="" dir="auto">정상적인 HTTP 요청처럼 보이지만 실제로는 악의적인 패턴을 가진 요청이 많이 존재함.</p><p id="4d6720e4-6f49-8398-84b4-01715f890ed5" class="" dir="auto">예를 들어 다음과 같은 요청은 문제가 될 수 있음.</p><ul id="ced720e4-6f49-82fa-aa0c-81bbcc31c073" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비정상적으로 긴 쿼리 문자열</li></ul><ul id="105720e4-6f49-824c-a495-01133750d53b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반복적인 로그인 시도</li></ul><ul id="7d8720e4-6f49-8366-90dd-0155f13fddb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQL Injection 시도</li></ul><ul id="b57720e4-6f49-8349-8dce-0162c0b41620" class="bulleted-list" dir="auto"><li style="list-style-type:disc">XSS 시도</li></ul><ul id="996720e4-6f49-82ac-b734-01fd467bc324" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 국가나 IP 대역에서의 비정상 요청</li></ul><ul id="6bd720e4-6f49-82c4-aeeb-8127ad21da34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">봇 기반 반복 호출</li></ul><p id="c9b720e4-6f49-83f0-92a0-817b675b7119" class="" dir="auto">이런 문제는 네트워크 계층 보호만으로는 어렵고,</p><p id="6cd720e4-6f49-8390-8c6d-81128a084cb1" class="" dir="auto"><strong>웹 요청 자체를 해석해서 차단</strong>할 필요가 있음.</p><p id="4d3720e4-6f49-82fc-bef4-81382f72dd8a" class="" dir="auto">그 역할을 WAF가 담당함.</p><hr id="aa6720e4-6f49-8318-8a06-011715431e80" dir="auto"/><h1 id="622720e4-6f49-834b-98ee-81c901af9a54" class="" dir="auto">5.12 WAF의 보호 대상</h1><p id="0c9720e4-6f49-822c-8fef-014e74c8cd3d" class="" dir="auto">WAF는 보통 다음과 같은 AWS 서비스와 앞단에서 결합되어 사용됨.</p><ul id="ad4720e4-6f49-8397-9a72-01315d5af38f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront</li></ul><ul id="684720e4-6f49-82f8-9335-014fe5d88c5a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB</li></ul><ul id="cad720e4-6f49-836f-a99a-81b92b67b3c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API Gateway</li></ul><p id="df1720e4-6f49-83ef-8306-81088e144d07" class="" dir="auto">즉, WAF는 원본 애플리케이션 서버에 직접 붙는 개념이 아니라</p><p id="684720e4-6f49-8388-b0ce-81af4a4baa8b" class="" dir="auto"><strong>사용자 요청이 들어오는 진입 계층 앞단</strong>에서 동작하는 경우가 많음.</p><p id="b4f720e4-6f49-8222-b3ec-814d57bf0c90" class="" dir="auto">이 구조가 중요한 이유는, 악성 요청이 원본 애플리케이션에 도달하기 전에 차단할 수 있기 때문임.</p><hr id="635720e4-6f49-82b4-bc10-019463dc2e76" dir="auto"/><h1 id="095720e4-6f49-82ea-80a8-81d164949d24" class="" dir="auto">5.13 WAF가 처리하는 대표 보안 시나리오</h1><p id="35d720e4-6f49-8234-8215-81861f912719" class="" dir="auto">WAF는 다양한 보안 시나리오에 활용될 수 있음.</p><h3 id="49c720e4-6f49-8266-84d9-816929732b00" class="" dir="auto">1. SQL Injection 대응</h3><p id="e07720e4-6f49-83e3-a4a4-81dc2298f917" class="" dir="auto">입력값 안에 SQL 구문 삽입을 시도하는 요청을 차단함.</p><h3 id="3ea720e4-6f49-83da-9067-81a5b2528da8" class="" dir="auto">2. XSS 대응</h3><p id="365720e4-6f49-8301-a2d8-01e0d5322d78" class="" dir="auto">스크립트 삽입을 시도하는 요청을 차단함.</p><h3 id="ca5720e4-6f49-8320-bc79-010cd681a4f0" class="" dir="auto">3. Rate-based 제어</h3><p id="d35720e4-6f49-83b1-b7f2-81409aa58cee" class="" dir="auto">짧은 시간에 너무 많은 요청을 보내는 소스를 제한함.</p><h3 id="0dd720e4-6f49-8340-9031-81ff3452a325" class="" dir="auto">4. 특정 패턴 차단</h3><p id="6aa720e4-6f49-8215-80ee-01b2a6ed306f" class="" dir="auto">특정 헤더, URI, Query String 패턴을 가진 요청 차단 가능</p><h3 id="a7d720e4-6f49-835b-b4e0-018e6a70d091" class="" dir="auto">5. 국가/IP 기반 제한</h3><p id="809720e4-6f49-8257-9337-0152a8106b8e" class="" dir="auto">운영 정책상 필요 없는 지역 또는 대역 차단 가능</p><p id="d86720e4-6f49-82f4-8a88-81d8689e3c52" class="" dir="auto">즉, WAF는 웹 계층에서 매우 세밀한 통제를 가능하게 하는 도구임.</p><hr id="1e0720e4-6f49-83f2-a314-811fc573dacf" dir="auto"/><h1 id="e43720e4-6f49-823e-ab66-014fe5dbeda5" class="" dir="auto">5.14 WAF와 Shield의 차이</h1><p id="137720e4-6f49-8356-a6ab-011891c58954" class="" dir="auto">이 둘은 자주 함께 쓰이지만 역할이 다름.</p><table id="7a5720e4-6f49-82ce-b90e-8140544113fd" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="932720e4-6f49-8227-80f8-816feba3f787" dir="ltr"><th id="vT=g" class="simple-table-header-color simple-table-header">항목</th><th id="E}sC" class="simple-table-header-color simple-table-header">AWS Shield</th><th id="qeP}" class="simple-table-header-color simple-table-header">AWS WAF</th></tr></thead><tbody><tr id="cc1720e4-6f49-82a4-a7b1-816cb8ead9f3" dir="ltr"><td id="vT=g" class="">핵심 목적</td><td id="E}sC" class="">대규모 DDoS 방어</td><td id="qeP}" class="">웹 요청 필터링</td></tr><tr id="774720e4-6f49-82d9-91d1-01b6357c9fd6" dir="ltr"><td id="vT=g" class="">주 관점</td><td id="E}sC" class="">네트워크/전송 계층 중심</td><td id="qeP}" class="">애플리케이션 계층 중심</td></tr><tr id="c10720e4-6f49-8252-83e0-8126f4e2e0de" dir="ltr"><td id="vT=g" class="">대표 대응</td><td id="E}sC" class="">트래픽 폭주</td><td id="qeP}" class="">SQLi, XSS, 비정상 요청</td></tr><tr id="b8d720e4-6f49-835d-a796-8180b3794fad" dir="ltr"><td id="vT=g" class="">보호 방식</td><td id="E}sC" class="">대규모 공격 완충</td><td id="qeP}" class="">요청 규칙 기반 제어</td></tr></tbody></table><p id="a42720e4-6f49-838a-b6ef-81ee23dd05b0" class="" dir="auto">즉,</p><ul id="336720e4-6f49-8362-8d45-012485b2cd44" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>대량 트래픽 공격 대응</strong>은 Shield</li></ul><ul id="c50720e4-6f49-82d9-b9d2-01cd102bbbaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>웹 요청 품질 통제</strong>는 WAF</li></ul><p id="634720e4-6f49-82db-8ff7-816d1e48dc5d" class="" dir="auto">라고 이해하면 됨.</p><hr id="fa7720e4-6f49-8335-a9b1-01fc33a64a1f" dir="auto"/><h1 id="9b4720e4-6f49-821f-bc97-8176307baa44" class="" dir="auto">5.15 CloudFront, Shield, WAF를 함께 보는 이유</h1><p id="1d6720e4-6f49-83fa-adff-818f7aad2130" class="" dir="auto">보안 아키텍처에서는 이 세 가지를 함께 봐야 함.</p><pre id="082720e4-6f49-8209-9667-81cc4839ce81" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자
+   │
+CloudFront
+ ├ Shield
+ └ WAF
+   │
+ALB / API / Origin</code></pre><p id="10d720e4-6f49-82b2-8297-01807004243f" class="" dir="auto">이 구조의 의미는 다음과 같음.</p><ul id="6e5720e4-6f49-8324-b699-01ae472ee0d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudFront : 글로벌 진입점</li></ul><ul id="bdc720e4-6f49-824f-b523-016eee0a97b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Shield : 대규모 공격 보호</li></ul><ul id="6e0720e4-6f49-82df-bfe6-8113b86d3d01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF : 웹 요청 필터링</li></ul><ul id="ac2720e4-6f49-8283-8be5-81e66297dd9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Origin : 실제 애플리케이션</li></ul><p id="13f720e4-6f49-837e-9124-81b63c1f08ec" class="" dir="auto">즉, 원본 서버에 모든 보안 처리를 몰아넣지 않고</p><p id="704720e4-6f49-83d6-a096-814ed365335f" class="" dir="auto"><strong>앞단에서 성능과 보안을 함께 처리하는 구조</strong>를 만드는 것이 중요함.</p><hr id="88f720e4-6f49-83d9-a9ee-01211bb97e34" dir="auto"/><h1 id="55b720e4-6f49-835a-b55c-818146ae437e" class="" dir="auto">5.16 데이터 보안의 중요성</h1><p id="53d720e4-6f49-8366-9933-011ccad29b3d" class="" dir="auto">네트워크와 엣지 계층을 보호하더라도, 데이터 자체가 안전하지 않다면 전체 시스템은 여전히 위험함.</p><p id="f45720e4-6f49-823c-a107-017b92aef5c8" class="" dir="auto">특히 다음과 같은 데이터는 반드시 보호해야 함.</p><ul id="7f6720e4-6f49-83a7-a8cd-0121502197c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고객 개인정보</li></ul><ul id="af3720e4-6f49-82ff-b567-012e2581672e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증 관련 정보</li></ul><ul id="eca720e4-6f49-821f-b39b-017e7452f64b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결제 관련 정보</li></ul><ul id="ed4720e4-6f49-835e-97c2-81322001e721" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비즈니스 핵심 데이터</li></ul><ul id="5af720e4-6f49-831f-a1a7-8178d048178d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부 설정과 비밀값</li></ul><ul id="e8b720e4-6f49-83b4-9793-016299271fe5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 안의 민감 정보</li></ul><p id="e3f720e4-6f49-8266-aa1c-01587d955122" class="" dir="auto">즉, 데이터 보안은 단순 저장 문제가 아니라</p><p id="507720e4-6f49-8227-9dc3-01224cc1f0fa" class="" dir="auto"><strong>기밀성, 무결성, 접근 통제</strong>와 연결된 핵심 설계 영역임.</p><hr id="639720e4-6f49-8370-b1a0-813ac897ec93" dir="auto"/><h1 id="7e2720e4-6f49-824d-8457-81805af73462" class="" dir="auto">5.17 데이터 보안에서 가장 중요한 질문</h1><p id="e9c720e4-6f49-82a3-8211-011a2db7d7f7" class="" dir="auto">데이터 보안을 설계할 때는 다음 질문이 중요함.</p><h3 id="305720e4-6f49-8345-a984-01d3e3cc5dfa" class="" dir="auto">1. 어떤 데이터가 민감한가</h3><p id="1c7720e4-6f49-83fd-9193-816c0d44af9a" class="" dir="auto">모든 데이터가 같은 수준의 보호를 필요로 하지는 않음.</p><h3 id="cbb720e4-6f49-833b-bcf4-81837a704d00" class="" dir="auto">2. 저장 시 암호화가 필요한가</h3><p id="3b8720e4-6f49-8298-9c2d-813119bb9480" class="" dir="auto">대부분의 민감 데이터는 저장 시 암호화를 검토해야 함.</p><h3 id="878720e4-6f49-8239-8aea-0119c2aaa242" class="" dir="auto">3. 전송 중 암호화가 필요한가</h3><p id="773720e4-6f49-8304-ac0e-81f2e9f80a58" class="" dir="auto">내부 통신이라도 민감 데이터는 TLS를 검토해야 함.</p><h3 id="433720e4-6f49-823a-a33b-016a943e5c86" class="" dir="auto">4. 누가 복호화할 수 있는가</h3><p id="722720e4-6f49-8222-9ce3-01e3a6312dac" class="" dir="auto">암호화보다 더 중요한 것이 키 접근 통제일 수 있음.</p><h3 id="c77720e4-6f49-8300-bbdd-01bdeca721fe" class="" dir="auto">5. 비밀값은 어디에 저장할 것인가</h3><p id="50e720e4-6f49-8319-9847-013b3a43706e" class="" dir="auto">애플리케이션 설정 파일이나 코드에 넣는 것은 위험함.</p><p id="d80720e4-6f49-83f7-b4e8-810861f1d2f9" class="" dir="auto">즉, 데이터 보안은 저장소만의 문제가 아니라</p><p id="b16720e4-6f49-83ed-8a2d-81241663c0bc" class="" dir="auto"><strong>키, 접근권한, 운영 방식 전체의 문제</strong>임.</p><hr id="e38720e4-6f49-838c-a990-816f1e297641" dir="auto"/><h1 id="861720e4-6f49-827f-b3f3-8108a8be43e0" class="" dir="auto">5.18 KMS 개요</h1><p id="ef3720e4-6f49-8344-bb3f-018786f04380" class="" dir="auto">AWS KMS는 <strong>Key Management Service</strong>의 약자이며, 암호화 키를 안전하게 생성, 저장, 관리할 수 있도록 도와주는 관리형 서비스임.</p><p id="a32720e4-6f49-8251-8834-81d913594e22" class="" dir="auto">여기서 중요한 것은 KMS가 단순 암호화 기능이 아니라</p><p id="4fc720e4-6f49-826a-b173-016ac5a0d86e" class="" dir="auto"><strong>키 관리 체계</strong>를 제공한다는 점임.</p><p id="74f720e4-6f49-83e4-92fa-81c88a703106" class="" dir="auto">즉, KMS의 핵심은 다음과 같음.</p><pre id="b34720e4-6f49-8324-892a-015b810d4a0c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">데이터를 보호하려면 암호화만이 아니라
+그 암호화에 사용되는 키를 안전하게 관리해야 한다.</code></pre><hr id="756720e4-6f49-83f3-98d8-01dd98bdd785" dir="auto"/><h1 id="8e9720e4-6f49-8267-90bc-0176f9f12570" class="" dir="auto">5.19 왜 키 관리가 중요한가</h1><p id="aef720e4-6f49-82a4-9290-8149d4b87d3b" class="" dir="auto">암호화는 키가 안전하게 관리될 때만 의미가 있음.</p><p id="d90720e4-6f49-83b7-8019-01fb252ca336" class="" dir="auto">예를 들어 데이터를 암호화해 두더라도 키가 무분별하게 노출되면 보호 효과가 크게 줄어듦.</p><p id="084720e4-6f49-8207-95f1-8131473d04b8" class="" dir="auto">키 관리에서 중요한 요소</p><ul id="03a720e4-6f49-82f9-a1b2-81cd7b1b9091" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누가 키를 사용할 수 있는가</li></ul><ul id="c88720e4-6f49-8367-92a4-01b7aee825b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누가 키를 생성/삭제할 수 있는가</li></ul><ul id="bb4720e4-6f49-83bc-9d64-01301e7adc5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">키 사용 기록을 남길 수 있는가</li></ul><ul id="797720e4-6f49-8357-8203-813df9131acb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">키를 서비스와 안전하게 연동할 수 있는가</li></ul><ul id="f11720e4-6f49-8314-bfd9-01ff443d9803" class="bulleted-list" dir="auto"><li style="list-style-type:disc">키를 주기적으로 교체하거나 통제할 수 있는가</li></ul><p id="e00720e4-6f49-831f-93d2-81d9f9efd202" class="" dir="auto">즉, KMS는 “암호화 알고리즘”보다</p><p id="d51720e4-6f49-8241-98a0-818434866408" class="" dir="auto"><strong>운영 가능한 키 통제 체계</strong>의 의미가 더 큼.</p><hr id="34b720e4-6f49-83e2-a76e-8163283ec968" dir="auto"/><h1 id="985720e4-6f49-8307-99a3-012ae0ee0ef5" class="" dir="auto">5.20 KMS가 연결되는 대표 서비스</h1><p id="24d720e4-6f49-820e-a8fc-0129ad6229ee" class="" dir="auto">AWS에서는 많은 관리형 서비스가 KMS와 자연스럽게 연계됨.</p><p id="a0b720e4-6f49-8306-a409-019b953a15d3" class="" dir="auto">예</p><ul id="25e720e4-6f49-82c7-8c5b-81e2f6e2cee1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="6b0720e4-6f49-839c-a20b-0171cdccc93c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EBS</li></ul><ul id="95c720e4-6f49-82e0-a0b4-81ccd73065f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS</li></ul><ul id="879720e4-6f49-8211-a1f7-81b63512ff4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS</li></ul><ul id="9d3720e4-6f49-8389-b8aa-01823355c907" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 환경변수</li></ul><ul id="2d4720e4-6f49-83af-8c3e-8178559f85d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secrets Manager</li></ul><p id="8b3720e4-6f49-831d-bf12-8132c40f07ed" class="" dir="auto">이 구조의 의미는 매우 중요함.</p><p id="d2c720e4-6f49-8203-a220-819dc1f0b2cb" class="" dir="auto">운영자가 직접 암호화 라이브러리를 구현하지 않아도,</p><p id="cbf720e4-6f49-835e-ba89-01e709cb41b7" class="" dir="auto"><strong>관리형 서비스 수준에서 암호화와 키 관리가 통합</strong>될 수 있기 때문임.</p><hr id="b78720e4-6f49-8274-b436-811c6858fb61" dir="auto"/><h1 id="6fe720e4-6f49-8225-88ae-019b717b0025" class="" dir="auto">5.21 KMS를 어떻게 바라봐야 하는가</h1><p id="cd2720e4-6f49-824d-975b-01841cc51e7b" class="" dir="auto">KMS는 다음 세 관점에서 이해하는 것이 좋음.</p><h3 id="f32720e4-6f49-8377-ab4b-0144c16b206e" class="" dir="auto">1. 데이터 암호화 기반</h3><p id="d79720e4-6f49-82a0-833d-01bb596a61e0" class="" dir="auto">저장 데이터 보호</p><h3 id="62c720e4-6f49-83db-8227-8137ae212d15" class="" dir="auto">2. 키 접근 통제 기반</h3><p id="49f720e4-6f49-8271-bc42-01bd7035ceb3" class="" dir="auto">누가 어떤 키를 사용할 수 있는지 제어</p><h3 id="8b0720e4-6f49-8337-ba90-01bc08962ea5" class="" dir="auto">3. 감사 가능성 기반</h3><p id="9a3720e4-6f49-83c6-89b0-0182282819cb" class="" dir="auto">키 사용 이력과 변경 이력 추적 가능</p><p id="b5f720e4-6f49-82a0-a676-01f0a9eada79" class="" dir="auto">즉, KMS는 단순 기능 서비스가 아니라</p><p id="b8a720e4-6f49-822b-bffa-81c7a0c52f57" class="" dir="auto"><strong>데이터 보안의 운영 중심축</strong>이라고 볼 수 있음.</p><hr id="a52720e4-6f49-8361-bb75-01e202aea708" dir="auto"/><h1 id="307720e4-6f49-835d-a5fe-01013a4ab334" class="" dir="auto">5.22 비밀정보 관리가 필요한 이유</h1><p id="6b7720e4-6f49-8279-a611-017b272f7b14" class="" dir="auto">애플리케이션은 실행 과정에서 다양한 민감 정보를 사용함.</p><p id="d08720e4-6f49-83ce-9b9a-81251b80e376" class="" dir="auto">예</p><ul id="636720e4-6f49-82a4-a7f6-817225091f46" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DB 비밀번호</li></ul><ul id="d40720e4-6f49-8304-8312-013b9725732e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">API 키</li></ul><ul id="e04720e4-6f49-836e-b6f7-81baad89c5d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">토큰</li></ul><ul id="2bb720e4-6f49-835f-a120-8140483b9800" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증서 관련 값</li></ul><ul id="04d720e4-6f49-829a-bc9e-811ebe5fa6a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 서비스 인증 정보</li></ul><p id="7f6720e4-6f49-830e-976f-810c90aa29fb" class="" dir="auto">이런 값을 다음 위치에 직접 저장하는 것은 보안상 매우 위험함.</p><ul id="94b720e4-6f49-820f-a299-01a5cc3df6de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소스코드</li></ul><ul id="9d3720e4-6f49-82ff-b539-819d8c5213d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git 저장소</li></ul><ul id="77e720e4-6f49-8224-ba05-017778697240" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경파일 평문</li></ul><ul id="d76720e4-6f49-8285-b80c-01b4d852520a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 데이터 스크립트</li></ul><ul id="0ff720e4-6f49-839b-971b-8121a2041cfa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 이미지 내부</li></ul><p id="949720e4-6f49-829c-8171-01777e1c468a" class="" dir="auto">즉, 비밀정보는 데이터와는 별도로</p><p id="b16720e4-6f49-8326-9994-01b0ad5918f8" class="" dir="auto"><strong>전용 관리 구조</strong>를 가져가야 함.</p><hr id="4c7720e4-6f49-83b2-afd4-013758817a31" dir="auto"/><h1 id="eb1720e4-6f49-836f-8d7c-01f4a9789901" class="" dir="auto">5.23 Secrets Manager 개요</h1><p id="aea720e4-6f49-8368-aedc-81a945ba9a59" class="" dir="auto">AWS Secrets Manager는 애플리케이션 비밀정보를 안전하게 저장하고 사용할 수 있게 도와주는 관리형 서비스임.</p><p id="f6b720e4-6f49-83f5-8c6e-814daeb18f74" class="" dir="auto">이 서비스의 핵심은 다음과 같음.</p><pre id="500720e4-6f49-8205-920f-01c77a955c6c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">비밀정보를 코드나 파일에 직접 넣지 않고,
+중앙에서 저장하고 통제된 방식으로 사용한다.</code></pre><p id="1cd720e4-6f49-82a7-b450-01b27315eb94" class="" dir="auto">즉, Secrets Manager는 단순 저장소가 아니라</p><p id="054720e4-6f49-8313-ac14-8100bf5c8a46" class="" dir="auto"><strong>비밀값 운영 체계</strong>를 제공하는 서비스임.</p><hr id="a19720e4-6f49-83bd-aa17-013e85308b31" dir="auto"/><h1 id="f0c720e4-6f49-821e-b0bc-812dcfde6d21" class="" dir="auto">5.24 Secrets Manager가 필요한 이유</h1><p id="a8b720e4-6f49-836d-a51a-81a4b5666bf7" class="" dir="auto">비밀정보를 잘못 관리하면 다음 문제가 발생함.</p><h3 id="f54720e4-6f49-82f5-90c4-01fc854c6026" class="" dir="auto">1. 코드 노출 시 함께 유출될 수 있음</h3><p id="820720e4-6f49-8398-8a6f-017bcf77f792" class="" dir="auto">소스 저장소나 배포 아티팩트에 비밀이 섞이면 매우 위험함.</p><h3 id="323720e4-6f49-82c6-8691-015324ef13af" class="" dir="auto">2. 회전(Rotation)이 어려움</h3><p id="442720e4-6f49-8280-8523-01eda0075627" class="" dir="auto">비밀번호를 바꾸려면 코드와 환경파일까지 바꿔야 할 수 있음.</p><h3 id="7ae720e4-6f49-83ef-ba2a-010e6b4996c9" class="" dir="auto">3. 권한 통제가 어려움</h3><p id="1a9720e4-6f49-8258-a7f1-0101e574eabb" class="" dir="auto">누가 어떤 비밀값을 읽을 수 있는지 명확히 제어하기 어려움.</p><h3 id="e92720e4-6f49-8249-8a0f-81d37671ee25" class="" dir="auto">4. 감사가 어려움</h3><p id="d0f720e4-6f49-82fa-80da-81233e6155bc" class="" dir="auto">누가 언제 어떤 비밀에 접근했는지 추적이 어려울 수 있음.</p><p id="b46720e4-6f49-8251-83cd-01834f749c05" class="" dir="auto">즉, Secrets Manager는 비밀값 자체보다</p><p id="e45720e4-6f49-8367-aac4-014d4f10ce78" class="" dir="auto"><strong>비밀값의 생명주기와 접근통제</strong>를 관리하는 데 의미가 있음.</p><hr id="8c5720e4-6f49-83b0-bcc6-8131d8061796" dir="auto"/><h1 id="c37720e4-6f49-8208-9d43-0106513396e3" class="" dir="auto">5.25 Secrets Manager와 일반 설정값의 차이</h1><p id="309720e4-6f49-828c-88b2-016d960c8146" class="" dir="auto">모든 설정값이 Secrets Manager 대상은 아님.</p><p id="7fa720e4-6f49-8218-81c9-8158f58b4000" class="" dir="auto">민감하지 않은 일반 설정값과 구분해서 봐야 함.</p><p id="e1c720e4-6f49-83e2-b2e7-01c77e6aae7a" class="" dir="auto">예</p><ul id="901720e4-6f49-8230-a424-013d03889100" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일반 설정값: 리전 이름, 기능 토글, URL 경로</li></ul><ul id="1e4720e4-6f49-829d-aacf-81da43c788c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비밀정보: 비밀번호, 토큰, 인증키, 자격증명</li></ul><p id="34d720e4-6f49-8341-9be5-0176275ad17c" class="" dir="auto">즉, Secrets Manager는 모든 환경설정을 저장하는 곳이 아니라</p><p id="4f8720e4-6f49-82b1-8800-81dc97ca4ea5" class="" dir="auto"><strong>민감한 자격정보를 위한 저장소</strong>로 이해하는 것이 적절함.</p><hr id="f18720e4-6f49-82ee-b960-81dfd3180c36" dir="auto"/><h1 id="17a720e4-6f49-837a-8c3b-81a1ba618daf" class="" dir="auto">5.26 KMS와 Secrets Manager의 관계</h1><p id="8c0720e4-6f49-82c4-87e0-81b886cff873" class="" dir="auto">KMS와 Secrets Manager는 자주 함께 언급되지만 같은 역할은 아님.</p><table id="6cf720e4-6f49-8246-b6e9-81bdd5c8ce44" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="ab6720e4-6f49-8330-90b5-81b2311c464d" dir="ltr"><th id="JiSM" class="simple-table-header-color simple-table-header">항목</th><th id="jCHk" class="simple-table-header-color simple-table-header">KMS</th><th id="z~;d" class="simple-table-header-color simple-table-header">Secrets Manager</th></tr></thead><tbody><tr id="1e0720e4-6f49-8298-a793-8120347b956b" dir="ltr"><td id="JiSM" class="">중심 역할</td><td id="jCHk" class="">암호화 키 관리</td><td id="z~;d" class="">비밀정보 저장 및 관리</td></tr><tr id="bdf720e4-6f49-83c0-9675-01bbfeb05488" dir="ltr"><td id="JiSM" class="">보호 대상</td><td id="jCHk" class="">키와 암호화 연산</td><td id="z~;d" class="">비밀번호, 토큰, 자격정보</td></tr><tr id="d03720e4-6f49-8357-9609-81740bfec3ac" dir="ltr"><td id="JiSM" class="">의미</td><td id="jCHk" class="">암호화 기반 제공</td><td id="z~;d" class="">비밀값 운영 체계 제공</td></tr></tbody></table><p id="c45720e4-6f49-83f3-b502-81b727a69d1d" class="" dir="auto">즉,</p><ul id="92a720e4-6f49-82df-901b-81cb26dec465" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>KMS는 키를 다룸</strong></li></ul><ul id="fe9720e4-6f49-8393-bbdc-816a7b5e2ef6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Secrets Manager는 비밀값을 다룸</strong></li></ul><p id="5bd720e4-6f49-8356-a6ba-81e40dacfe64" class="" dir="auto">이라고 이해하면 됨.</p><p id="29f720e4-6f49-8213-815f-0127dbe57e96" class="" dir="auto">그리고 Secrets Manager도 내부적으로 KMS와 결합해 사용할 수 있음.</p><hr id="1be720e4-6f49-8246-8e04-811b6c54e9da" dir="auto"/><h1 id="cc4720e4-6f49-8333-90d2-01771c2e68db" class="" dir="auto">5.27 보안 계층화의 의미</h1><p id="224720e4-6f49-8209-98db-01f1b9dad7a8" class="" dir="auto">고급 보안 아키텍처에서는 한 계층만 강하게 해서는 부족함.</p><p id="36d720e4-6f49-8302-a2a8-018c2cab0e14" class="" dir="auto">다음처럼 여러 계층이 함께 보호되어야 함.</p><h3 id="030720e4-6f49-833e-bdb9-81eee6fa3e5e" class="" dir="auto">엣지 계층</h3><p id="306720e4-6f49-8245-a104-013394d436a4" class="" dir="auto">CloudFront, Shield, WAF</p><h3 id="2f1720e4-6f49-8219-9c52-01a54424e88e" class="" dir="auto">네트워크 계층</h3><p id="142720e4-6f49-83b1-bbce-81c690aab9fc" class="" dir="auto">VPC, Security Group, Subnet 분리</p><h3 id="1f6720e4-6f49-82ad-908a-013e64405a83" class="" dir="auto">애플리케이션 계층</h3><p id="78b720e4-6f49-8398-9ec8-016ddf67c721" class="" dir="auto">인증, 입력 검증, 권한 로직</p><h3 id="89d720e4-6f49-829c-a52a-81befcc70038" class="" dir="auto">데이터 계층</h3><p id="03b720e4-6f49-82c0-b1f9-012572cc6a17" class="" dir="auto">KMS 기반 암호화, 저장소 정책</p><h3 id="810720e4-6f49-820e-99b4-81722999f77c" class="" dir="auto">운영 계층</h3><p id="3e3720e4-6f49-8300-8244-016b168bcc08" class="" dir="auto">Secrets Manager, 로그, 감사 추적</p><p id="d14720e4-6f49-8343-9aa2-01a1726a4f01" class="" dir="auto">즉, 보안은 하나의 거대한 기능이 아니라</p><p id="698720e4-6f49-83e6-aa11-81cbc9cd813a" class="" dir="auto"><strong>여러 층을 겹겹이 쌓는 구조</strong>로 봐야 함.</p><hr id="035720e4-6f49-821e-bcf2-81483f5b2d64" dir="auto"/><h1 id="29b720e4-6f49-8210-8aa1-818447cd668f" class="" dir="auto">5.28 보안 그룹과 WAF를 혼동하지 않아야 하는 이유</h1><p id="5c4720e4-6f49-828b-8907-01c2cb92a987" class="" dir="auto">보안 그룹은 네트워크 레벨에서 포트와 소스/대상을 제어하는 도구임.</p><p id="b32720e4-6f49-8243-b480-01765402ac7f" class="" dir="auto">반면 WAF는 HTTP/HTTPS 요청 내용까지 보는 도구임.</p><p id="959720e4-6f49-83d2-a28f-8184eb36545e" class="" dir="auto">즉, 다음처럼 역할이 다름.</p><ul id="835720e4-6f49-83f2-adea-8132c7966115" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹: TCP 443을 열지 말지</li></ul><ul id="21b720e4-6f49-8203-b5a4-817a54a4a5b4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF: 443으로 들어온 요청 중 악성 패턴을 막을지</li></ul><p id="6bc720e4-6f49-82e0-8dc4-01515ac6e1bf" class="" dir="auto">이 둘은 대체 관계가 아니라 <strong>서로 다른 계층의 보안 도구</strong>임.</p><hr id="afc720e4-6f49-83e9-957a-011393aa2058" dir="auto"/><h1 id="5cb720e4-6f49-8320-b0c2-01ed97d5204d" class="" dir="auto">5.29 좋은 보안 설계의 특징</h1><p id="d55720e4-6f49-83a2-bdc2-810c3ddb7b20" class="" dir="auto">고급 보안 아키텍처는 다음 특징을 가짐.</p><h3 id="cb7720e4-6f49-824d-b65e-0187f1fb3d4b" class="" dir="auto">1. 외부 노출 최소화</h3><p id="23b720e4-6f49-8292-9ece-816b6e74653f" class="" dir="auto">꼭 필요한 진입점만 인터넷에 노출함.</p><h3 id="5eb720e4-6f49-82d6-a074-01e6a5bfef5f" class="" dir="auto">2. 앞단에서 차단</h3><p id="3d9720e4-6f49-83ed-8d57-8192f9dc3ce4" class="" dir="auto">비정상 요청은 최대한 엣지에서 차단함.</p><h3 id="50b720e4-6f49-8395-ba46-01aec4a0219e" class="" dir="auto">3. 데이터는 기본적으로 보호</h3><p id="a29720e4-6f49-831c-a2db-01f179865ab9" class="" dir="auto">암호화와 키 통제를 설계에 포함함.</p><h3 id="2e5720e4-6f49-823d-86de-81171bfb06a4" class="" dir="auto">4. 비밀값은 코드 밖으로 분리</h3><p id="36b720e4-6f49-8355-94f4-01c16ae4f842" class="" dir="auto">애플리케이션과 비밀값의 생명주기를 분리함.</p><h3 id="389720e4-6f49-82a2-b6fd-816fcc963d1e" class="" dir="auto">5. 운영 가능한 보안</h3><p id="6fa720e4-6f49-83d2-b6f2-816e22ac8bb6" class="" dir="auto">보안 정책이 지나치게 수작업 의존적이면 유지가 어려움.</p><p id="178720e4-6f49-831e-87be-0124efa02789" class="" dir="auto">즉, 좋은 보안은 강한 통제만이 아니라</p><p id="15c720e4-6f49-8258-886e-81d8c6e9c7d0" class="" dir="auto"><strong>실제로 운영 가능한 구조</strong>여야 함.</p><hr id="f93720e4-6f49-820e-b342-01369baaf47d" dir="auto"/><h1 id="30e720e4-6f49-8386-946c-81191800ce9e" class="" dir="auto">5.30 설계 시 핵심 질문</h1><p id="441720e4-6f49-83c2-998e-01426295b13e" class="" dir="auto">고급 보안 설계에서는 다음 질문이 중요함.</p><h3 id="43d720e4-6f49-822f-826c-81b98203d249" class="" dir="auto">1. 공격이 가장 먼저 들어오는 지점은 어디인가</h3><p id="005720e4-6f49-82f1-850e-014d3884ea6f" class="" dir="auto">보통 사용자 접점, 즉 엣지와 API 진입점이 됨.</p><h3 id="875720e4-6f49-839d-80f8-8144aef02260" class="" dir="auto">2. 어떤 요청은 앞단에서 차단해야 하는가</h3><p id="f87720e4-6f49-8283-b966-81173164125b" class="" dir="auto">애플리케이션까지 보내지 말아야 할 요청을 구분해야 함.</p><h3 id="cb8720e4-6f49-8215-8045-81dae8055a06" class="" dir="auto">3. 어떤 데이터가 반드시 암호화되어야 하는가</h3><p id="0d9720e4-6f49-834a-bfa3-817e1f9d0e35" class="" dir="auto">민감한 데이터와 일반 데이터를 구분해야 함.</p><h3 id="2c4720e4-6f49-8381-8803-8142b2a8c773" class="" dir="auto">4. 비밀값을 어떻게 애플리케이션에 전달할 것인가</h3><p id="2e5720e4-6f49-82fd-8c71-81d47be5a6e6" class="" dir="auto">코드, 이미지, 설정파일에 직접 넣지 않는 구조가 중요함.</p><h3 id="728720e4-6f49-82f9-99a7-0186517a4f30" class="" dir="auto">5. 권한과 감사는 어떻게 추적할 것인가</h3><p id="fe0720e4-6f49-824c-a69e-8171afd94e9e" class="" dir="auto">키 사용, 비밀 사용, 요청 차단 로그를 볼 수 있어야 함.</p><p id="364720e4-6f49-83ec-a9c8-0154f2bc7b4c" class="" dir="auto">즉, 보안 설계는 설정값 암기가 아니라</p><p id="e7d720e4-6f49-8259-807b-819c03070266" class="" dir="auto"><strong>위험 지점을 찾고 각 계층에 적절한 통제를 배치하는 일</strong>임.</p><hr id="55b720e4-6f49-8352-b389-816db193740d" dir="auto"/><h1 id="fcf720e4-6f49-83f0-af49-81d6ebe08470" class="" dir="auto">5.31 다른 장과의 연결</h1><p id="f4f720e4-6f49-82d9-8549-8165155e5f20" class="" dir="auto">이 장은 다른 장들과 매우 강하게 연결됨.</p><h3 id="81e720e4-6f49-82c6-9ee9-01a95b3698aa" class="" dir="auto">2장 멀티 계정 관리와 거버넌스 기초</h3><p id="3ae720e4-6f49-8301-8065-81bbfd0c4418" class="" dir="auto">보안 계정, 로그 아카이브, 중앙 통제 구조와 연결됨.</p><h3 id="a5a720e4-6f49-8217-8c44-01f00f0b1d8c" class="" dir="auto">3장 고급 네트워크 연결 아키텍처</h3><p id="5ec720e4-6f49-83d0-86f2-813b9dde74ec" class="" dir="auto">S3 엔드포인트 보안, 네트워크 경계, 중앙 허브 구조와 연결됨.</p><h3 id="b31720e4-6f49-8307-b0eb-01171c39398c" class="" dir="auto">4장 컨테이너 및 현대적 애플리케이션 플랫폼</h3><p id="275720e4-6f49-825c-a562-81e5a537fede" class="" dir="auto">컨테이너 워크로드의 비밀값 관리, 권한 구조, 엣지 보호와 연결됨.</p><h3 id="445720e4-6f49-824b-b64c-0101ea89392d" class="" dir="auto">6장 비용 최적화와 엣지 아키텍처</h3><p id="d2e720e4-6f49-8280-ae87-0126e066d62d" class="" dir="auto">CloudFront와 엣지 구조는 보안과 성능을 함께 설계해야 하기 때문임.</p><p id="65d720e4-6f49-8224-8862-014ed03a39b4" class="" dir="auto">즉, 고급 보안 아키텍처는 독립 장이 아니라</p><p id="5a8720e4-6f49-8354-8bb9-018aba16d514" class="" dir="auto">전체 아키텍처의 모든 계층과 연결되는 주제임.</p><hr id="7f7720e4-6f49-8350-a641-0122f5185b3c" dir="auto"/><h1 id="2f2720e4-6f49-82e2-bc66-01cc77bb895f" class="" dir="auto">5.32 장 요약</h1><p id="39c720e4-6f49-8397-8aa7-01558a699058" class="" dir="auto">이번 장에서 학습한 핵심 내용</p><ul id="f2a720e4-6f49-8360-a1fd-01d1d9da4279" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고급 보안 아키텍처의 의미</li></ul><ul id="c50720e4-6f49-82e1-b9a8-01d6042ec075" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안을 계층으로 나누어 봐야 하는 이유</li></ul><ul id="652720e4-6f49-82c1-873b-810259010b0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안과 가용성의 관계</li></ul><ul id="385720e4-6f49-825a-bf02-811d7b3da0c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DDoS 개요와 대응 필요성</li></ul><ul id="bf1720e4-6f49-832d-9bc3-01837e57ed1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Shield의 역할</li></ul><ul id="bd0720e4-6f49-829f-86ba-813cd40403dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS WAF의 역할</li></ul><ul id="3a4720e4-6f49-82b3-aab9-817799761977" class="bulleted-list" dir="auto"><li style="list-style-type:disc">WAF와 Shield의 차이</li></ul><ul id="ca3720e4-6f49-82d2-90b1-815bb3df5d43" class="bulleted-list" dir="auto"><li style="list-style-type:disc">엣지 보안 구조의 의미</li></ul><ul id="679720e4-6f49-82de-944b-01672c11c593" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 보안의 중요성</li></ul><ul id="878720e4-6f49-827d-81c3-815296fef13e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">KMS의 역할과 키 관리의 의미</li></ul><ul id="263720e4-6f49-82b3-9fe9-01fbafc4b197" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Secrets Manager의 역할과 비밀정보 관리 방식</li></ul><ul id="1bf720e4-6f49-8281-bbf0-81a947ee8040" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 계층화 원칙</li></ul><ul id="822720e4-6f49-8244-a7d0-81bea4d3e852" class="bulleted-list" dir="auto"><li style="list-style-type:disc">좋은 보안 설계의 특징과 핵심 질문</li></ul><hr id="c55720e4-6f49-83df-b921-01d9a0b81961" dir="auto"/><h1 id="9cd720e4-6f49-82e8-aa0d-017393552795" class="" dir="auto">5.33 한 줄 정리</h1><pre id="99d720e4-6f49-8245-a6ab-81fc1df7d5df" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">고급 보안 아키텍처는 하나의 서비스로 완성되는 것이 아니라,
+엣지, 네트워크, 애플리케이션, 데이터, 운영 계층에 맞는 통제를 배치하여
+위험을 줄이고 가용성을 지키는 구조를 설계하는 것이다.</code></pre><hr id="ebf720e4-6f49-8310-8e34-01023bc60bd5" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

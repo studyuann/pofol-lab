@@ -1,0 +1,851 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>AWS Lambda 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="41a720e4-6f49-83b8-bc73-8120b6a62eb6" class="page sans"><header><h1 class="page-title" dir="auto">AWS Lambda 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="d58720e4-6f49-83be-8791-015fe59cbc25" dir="auto"/><h1 id="9eb720e4-6f49-82e4-9c30-01292c88c7db" class="" dir="auto">1. 기본실습</h1><h1 id="534720e4-6f49-8284-85a0-81296d09b106" class="" dir="auto">실습 1. Lambda 함수 생성 및 테스트</h1><h2 id="48c720e4-6f49-828a-ba63-8110dbc4b08b" class="" dir="auto">실습 목표</h2><ul id="77b720e4-6f49-8231-9289-816508fada76" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 함수 생성</li></ul><ul id="3f7720e4-6f49-83f7-a94a-01c339d64292" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Python 코드 작성</li></ul><ul id="933720e4-6f49-83ed-a44f-81370485877e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 이벤트 실행</li></ul><ul id="74d720e4-6f49-8311-b722-01bb80b16573" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 결과 확인</li></ul><ul id="70b720e4-6f49-83d5-8b8a-813e83745136" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch Logs 확인</li></ul><hr id="437720e4-6f49-82d7-afef-01bc26fb6357" dir="auto"/><h2 id="5fc720e4-6f49-8219-94cc-81a5e50cd3d6" class="" dir="auto">실습 구성</h2><ul id="f36720e4-6f49-833a-a86e-01d121dafa02" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Runtime: Python 3.x</li></ul><ul id="03c720e4-6f49-82c8-a879-81af89bd08c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수 이름: <code>hello-lambda</code></li></ul><ul id="d78720e4-6f49-8324-a84f-01538f3356b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 방식: 수동 테스트 이벤트</li></ul><ul id="ffe720e4-6f49-826a-a747-01e2e367326a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">확인 항목: 반환값, 실행 로그</li></ul><hr id="138720e4-6f49-8362-b9b3-0177e4e465e4" dir="auto"/><h2 id="9f1720e4-6f49-8248-829a-811fb944cf1b" class="" dir="auto">1.1 Lambda 함수 생성</h2><p id="816720e4-6f49-8226-a5ad-8177fcb52d66" class="" dir="auto">AWS 콘솔에서 다음 메뉴로 이동한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="dc6720e4-6f49-83b1-aca2-019d13fde9ce" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS Console → Lambda → Functions → Create function</code></pre><p id="81d720e4-6f49-829c-932f-812fa6607fee" class="" dir="auto">생성 방식은 다음과 같이 선택한다.</p><pre id="fd3720e4-6f49-8375-88de-819bb68ce4b4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Author from scratch</code></pre><p id="384720e4-6f49-8252-8fc1-81abc58ef762" class="" dir="auto">설정값 예시는 다음과 같다.</p><pre id="2df720e4-6f49-831b-b420-01366cd54ab7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Function name: hello-lambda
+Runtime: Python 3.12
+Architecture: x86_64
+Execution role: Create a new role with basic Lambda permissions</code></pre><p id="53d720e4-6f49-837b-bc19-01df69ae18ab" class="" dir="auto">생성 버튼을 눌러 함수를 생성한다.</p><hr id="8af720e4-6f49-822d-8b78-81e2bda39b9b" dir="auto"/><h2 id="2db720e4-6f49-82b8-9fec-8185b3bf89a3" class="" dir="auto">1.2 생성 직후 확인할 항목</h2><p id="9cf720e4-6f49-826e-b039-01cd14a66d13" class="" dir="auto">함수를 생성하면 Lambda 화면에서 다음 항목을 먼저 확인한다.</p><ul id="e19720e4-6f49-83e6-b83e-0127fe53f0d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Function name</li></ul><ul id="366720e4-6f49-83f1-9e45-81fabb79e779" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Runtime</li></ul><ul id="82d720e4-6f49-8313-bc8d-015802acdb90" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Handler</li></ul><ul id="81f720e4-6f49-8208-857a-81479d7ec712" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Memory</li></ul><ul id="9f8720e4-6f49-8271-9461-810cf7a8f731" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Timeout</li></ul><ul id="23a720e4-6f49-83b9-a6d4-0188ad63e4c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Execution role</li></ul><p id="498720e4-6f49-8392-a2b9-0150b9c6f798" class="" dir="auto">기본적으로 Handler는 보통 다음과 같이 설정된다.</p><pre id="bf3720e4-6f49-8395-9e51-81c43e9e25ae" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">lambda_function.lambda_handler</code></pre><p id="21a720e4-6f49-83ef-bc5a-816d61dd425e" class="" dir="auto">이 의미는 다음과 같다.</p><pre id="4ac720e4-6f49-82cd-a61a-01d97d195e6d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">파일명: lambda_function.py
+실행 함수명: lambda_handler</code></pre><p id="39c720e4-6f49-8205-91bd-01610911f3d0" class="" dir="auto">즉, Lambda는 업로드된 코드 중에서</p><p id="6f7720e4-6f49-8302-b89c-01533d4c7794" class="" dir="auto"><code>lambda_function.py</code> 파일 안에 있는</p><p id="873720e4-6f49-83bf-8503-01ebfb9d1120" class="" dir="auto"><code>lambda_handler()</code> 함수를 시작점으로 실행한다.</p><hr id="3cf720e4-6f49-8267-aad6-81d5453084eb" dir="auto"/><h2 id="076720e4-6f49-824c-a490-014e0ca73508" class="" dir="auto">1.3 기본 코드 작성</h2><p id="031720e4-6f49-83c7-b07d-01bb36950043" class="" dir="auto">Code 탭에서 기본 코드를 다음과 같이 수정한다.</p><pre id="ced720e4-6f49-83bf-8415-81ca4c529bd2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">deflambda_handler(event,context):
+return {
+&#x27;statusCode&#x27;:200,
+&#x27;body&#x27;:&#x27;Hello Lambda&#x27;
+    }</code></pre><hr id="0b7720e4-6f49-83ca-bb90-01c422fc0dbc" dir="auto"/><h2 id="17b720e4-6f49-839b-8307-81037eb73632" class="" dir="auto">1.4 코드 설명</h2><h3 id="fb1720e4-6f49-83a3-97b3-0135c5fe00a4" class="" dir="auto"><code>def lambda_handler(event, context):</code></h3><p id="dab720e4-6f49-82c0-afd1-813461d41f52" class="" dir="auto">Lambda가 호출될 때 가장 먼저 실행하는 함수다.</p><ul id="6aa720e4-6f49-8363-84bf-8168414aa81d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>event</code><ul id="8fc720e4-6f49-83ba-ab2d-01bf3a3b25c7" class="bulleted-list" dir="auto"><li style="list-style-type:circle">호출 시 전달되는 입력 데이터</li></ul><ul id="d8c720e4-6f49-8358-acf0-0100191f7bc3" class="bulleted-list" dir="auto"><li style="list-style-type:circle">테스트 이벤트, API 요청값, S3 이벤트 정보 등이 들어옴</li></ul></li></ul><ul id="479720e4-6f49-82c8-a5c5-8116c99090fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>context</code><ul id="a62720e4-6f49-821e-afca-81ed494724b9" class="bulleted-list" dir="auto"><li style="list-style-type:circle">함수 실행 환경 정보</li></ul><ul id="018720e4-6f49-83ac-a4d0-01d623a2fd94" class="bulleted-list" dir="auto"><li style="list-style-type:circle">함수 이름, 요청 ID, 남은 실행 시간 등의 메타데이터를 포함함</li></ul></li></ul><p id="a01720e4-6f49-83d5-91e8-81cf8f45661d" class="" dir="auto">처음 실습에서는 <code>event</code>, <code>context</code>를 직접 사용하지 않아도 됨.</p><p id="c2a720e4-6f49-8328-a253-01fbf3fd0c67" class="" dir="auto">하지만 Lambda 함수는 기본적으로 이 두 값을 입력으로 받는 구조라고 이해하면 된다.</p><hr id="509720e4-6f49-8343-a53d-811a2b2d4838" dir="auto"/><h3 id="75c720e4-6f49-839f-8a68-81d578537804" class="" dir="auto"><code>return { &#x27;statusCode&#x27;: 200, &#x27;body&#x27;: &#x27;Hello Lambda&#x27; }</code></h3><p id="4de720e4-6f49-832d-836d-816ce1b60b15" class="" dir="auto">Lambda 함수의 실행 결과를 반환한다.</p><p id="c0c720e4-6f49-8316-a7a2-81c4a3fcd678" class="" dir="auto">여기서 <code>statusCode</code>와 <code>body</code> 구조는 특히 <strong>API Gateway 연동 시 자주 사용하는 형태</strong>다.</p><ul id="7e1720e4-6f49-8262-a593-812c76ada8fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>statusCode</code><ul id="4ca720e4-6f49-830a-8df2-013cd0ec576f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">HTTP 상태 코드처럼 사용</li></ul><ul id="979720e4-6f49-83d5-8e59-81dc7183f972" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>200</code>이면 정상 처리 의미</li></ul></li></ul><ul id="163720e4-6f49-839d-901a-01b58ea0fa03" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>body</code><ul id="b38720e4-6f49-8268-b71c-01b6eb63d216" class="bulleted-list" dir="auto"><li style="list-style-type:circle">실제 응답 본문</li></ul><ul id="9ab720e4-6f49-82e6-9237-812e928264d6" class="bulleted-list" dir="auto"><li style="list-style-type:circle">문자열 형태로 내려가는 경우가 많음</li></ul></li></ul><p id="86c720e4-6f49-83b0-baf2-81c3f956a4bf" class="" dir="auto">지금은 단순 테스트지만, 이후 API Gateway와 연결하면 이 구조가 그대로 중요해진다.</p><hr id="cf1720e4-6f49-82c7-9ae3-816c69eff312" dir="auto"/><h2 id="efe720e4-6f49-8311-9268-8188f2711bf5" class="" dir="auto">1.5 Deploy 수행</h2><p id="d1b720e4-6f49-8254-bf03-81f0e8df0003" class="" dir="auto">코드를 수정한 뒤 반드시 배포해야 한다.</p><pre id="359720e4-6f49-82ac-b1a7-813d7661d705" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Deploy</code></pre><p id="b77720e4-6f49-822d-815b-816552ef3a4e" class="" dir="auto">Lambda 콘솔에서는 코드를 수정했다고 바로 실행 환경에 반영되지 않음.</p><p id="2a0720e4-6f49-831e-ad89-012e29bcab4f" class="" dir="auto"><strong>Deploy 버튼을 눌러야 현재 코드가 실제 실행 대상 버전으로 반영됨</strong>.</p><p id="22a720e4-6f49-8209-b361-81713c32afe9" class="" dir="auto">수업 중 학생들이 가장 자주 하는 실수 중 하나가</p><p id="b7c720e4-6f49-82b2-947e-012465e69e55" class="" dir="auto">코드만 바꾸고 Deploy를 누르지 않는 것임.</p><hr id="fe7720e4-6f49-82c8-b8a6-01a559067bab" dir="auto"/><h2 id="86f720e4-6f49-82e8-b23c-0142ac5d956d" class="" dir="auto">1.6 테스트 이벤트 생성</h2><p id="d3e720e4-6f49-8279-9426-0179a4558b35" class="" dir="auto">이제 함수를 직접 실행해 본다.</p><pre id="248720e4-6f49-821f-996a-01144181b4d8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Test → Configure test event</code></pre><p id="263720e4-6f49-83bf-a0f7-01293359bcd5" class="" dir="auto">이벤트 이름 예시</p><pre id="8ef720e4-6f49-83cc-9c58-81111730584c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">test1</code></pre><p id="016720e4-6f49-8271-8b50-814696e11cc7" class="" dir="auto">이벤트 JSON은 다음과 같이 작성한다.</p><pre id="78b720e4-6f49-825c-a562-019b41ebefb1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{}</code></pre><p id="c91720e4-6f49-83f0-9e54-01037e30bf34" class="" dir="auto">처음 실습에서는 입력값이 필요 없으므로 빈 JSON 객체를 사용한다.</p><p id="4db720e4-6f49-83c8-9e71-81bf063c0c71" class="" dir="auto">여기서 <code>{}</code> 는</p><p id="776720e4-6f49-839c-8ec6-8135ab356c50" class="" dir="auto"><strong>아무런 입력 데이터도 전달하지 않는 기본 테스트 요청</strong>이라고 이해하면 된다.</p><p id="366720e4-6f49-833d-9926-8178cad3a44e" class="" dir="auto">생성 후 <code>Test</code> 버튼을 눌러 실행한다.</p><hr id="f5a720e4-6f49-82d7-bfe2-01379cbe8123" dir="auto"/><h2 id="ab7720e4-6f49-830d-bff6-010f66282f71" class="" dir="auto">1.7 실행 결과 확인</h2><p id="da8720e4-6f49-8200-9bc6-014b2595ad96" class="" dir="auto">실행이 성공하면 다음과 같은 형태의 결과를 확인할 수 있다.</p><pre id="9bf720e4-6f49-8398-b1b2-01dad50a04b1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;statusCode&quot;:200,
+  &quot;body&quot;:&quot;Hello Lambda&quot;
+}</code></pre><p id="661720e4-6f49-82f6-9f29-812372c452ba" class="" dir="auto">추가로 다음 항목도 확인한다.</p><ul id="a6e720e4-6f49-83ee-bc11-01e3d318626d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Execution result: Succeeded</li></ul><ul id="342720e4-6f49-8370-b577-81a24081c2bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Duration</li></ul><ul id="d5d720e4-6f49-8335-a5ec-01ff245fd523" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Billed duration</li></ul><ul id="125720e4-6f49-8217-bb92-0118e19004b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Memory Size</li></ul><ul id="896720e4-6f49-8218-bfec-013fef30e2ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Max memory used</li></ul><hr id="aed720e4-6f49-8216-9699-81c79274d547" dir="auto"/><h2 id="0af720e4-6f49-83bf-9a21-01111f1ff5b5" class="" dir="auto">1.8 실행 결과 항목 설명</h2><h3 id="091720e4-6f49-8307-a53c-0117f57cf5ff" class="" dir="auto">Duration</h3><p id="b6b720e4-6f49-836f-8b7a-0185de57cdab" class="" dir="auto">실제 함수가 실행된 시간이다.</p><p id="606720e4-6f49-82bb-b60a-8142127a04bf" class="" dir="auto">예를 들어 15ms가 표시되면</p><p id="438720e4-6f49-8369-a5a9-81057ace80fe" class="" dir="auto">코드 실행이 0.015초 정도 걸렸다는 의미다.</p><hr id="202720e4-6f49-83cf-918c-81e572a779e1" dir="auto"/><h3 id="c36720e4-6f49-8318-9532-011e62b34d52" class="" dir="auto">Billed duration</h3><p id="005720e4-6f49-82ed-9a43-813b5494bd9e" class="" dir="auto">과금 기준이 되는 실행 시간이다.</p><p id="25f720e4-6f49-8210-aff3-011c4ff6c563" class="" dir="auto">Lambda는 아주 짧게 실행되어도</p><p id="eca720e4-6f49-82b4-a029-817932249ae3" class="" dir="auto">과금 계산 단위에 따라 청구 시간이 정해진다.</p><p id="d2e720e4-6f49-8313-b61f-0122fcefd0e0" class="" dir="auto">실습에서는 큰 비용이 발생하지 않지만,</p><p id="6ba720e4-6f49-823d-adc1-019a6b915019" class="" dir="auto">운영 환경에서는 호출 횟수와 실행 시간이 누적되므로 중요하다.</p><hr id="2ad720e4-6f49-83fc-9b95-81fe9630eee2" dir="auto"/><h3 id="2fe720e4-6f49-83cf-aa4f-81c7924615d2" class="" dir="auto">Memory Size</h3><p id="781720e4-6f49-82fd-bb1e-01466bfb92ef" class="" dir="auto">이 함수에 할당된 메모리 크기다.</p><p id="4d2720e4-6f49-83b1-b3e3-01abf71d41aa" class="" dir="auto">예</p><pre id="a6c720e4-6f49-83e4-9898-8134d17edc1c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">128 MB</code></pre><p id="678720e4-6f49-82f8-94f9-01b6fe39c60d" class="" dir="auto">Lambda는 메모리를 늘리면 CPU 자원도 함께 증가하는 구조다.</p><p id="1cc720e4-6f49-8377-8615-01a21c7f6145" class="" dir="auto">즉, 메모리 설정은 단순히 RAM만 의미하는 것이 아니라</p><p id="554720e4-6f49-8251-bde5-8144cc7d2a40" class="" dir="auto">실행 성능에도 영향을 준다.</p><hr id="77e720e4-6f49-8367-8047-014359feec89" dir="auto"/><h3 id="4e9720e4-6f49-82c2-8bb6-013dbe9a325a" class="" dir="auto">Max memory used</h3><p id="3cb720e4-6f49-822f-9851-013226789417" class="" dir="auto">실행 중 실제로 최대 얼마만큼의 메모리를 사용했는지 보여준다.</p><p id="a1a720e4-6f49-831c-bc55-81a30085fe8a" class="" dir="auto">이 값이 Memory Size보다 매우 낮다면</p><p id="849720e4-6f49-82cf-864c-01d207b723d0" class="" dir="auto">메모리가 과하게 설정되었을 가능성이 있다.</p><p id="b0c720e4-6f49-821a-b8ed-012b794b568c" class="" dir="auto">반대로 너무 근접하면</p><p id="740720e4-6f49-822f-bd74-81dca45a74f9" class="" dir="auto">메모리 부족 가능성을 점검해야 한다.</p><hr id="49c720e4-6f49-831f-826f-01312c98b749" dir="auto"/><h1 id="11d720e4-6f49-82d9-9858-0136c52ffebc" class="" dir="auto">실습 2. 입력값(event) 처리</h1><h2 id="d0f720e4-6f49-8250-a311-01bc14e2c824" class="" dir="auto">실습 목표</h2><ul id="51a720e4-6f49-82b4-9a71-81baaae4a267" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 이벤트 값을 Lambda에서 읽기</li></ul><ul id="f61720e4-6f49-83f4-8a6b-01d54ed56c32" class="bulleted-list" dir="auto"><li style="list-style-type:disc">입력값에 따라 다른 결과 반환</li></ul><ul id="bd5720e4-6f49-82aa-9dcf-815b19d1ebd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">event 객체 구조 이해</li></ul><hr id="3b9720e4-6f49-83f2-b29e-81a9b03a2a3a" dir="auto"/><h2 id="182720e4-6f49-831f-97ed-01f3707efe00" class="" dir="auto">2.1 코드 수정</h2><p id="0be720e4-6f49-822c-b056-017ef9bf7098" class="" dir="auto">다음 코드로 변경한다.</p><pre id="c7a720e4-6f49-83ec-962f-8123f87a6d69" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">deflambda_handler(event,context):
+name=event.get(&#x27;name&#x27;,&#x27;Guest&#x27;)
+
+return {
+&#x27;statusCode&#x27;:200,
+&#x27;body&#x27;:f&#x27;Hello{name}&#x27;
+    }</code></pre><p id="9ed720e4-6f49-83e0-b23c-819d9f6364f1" class="" dir="auto">Deploy를 다시 수행한다.</p><hr id="08e720e4-6f49-82a4-aab4-01514c55e78a" dir="auto"/><h2 id="7ff720e4-6f49-829d-8271-01e6bdd2d3ab" class="" dir="auto">2.2 코드 설명</h2><h3 id="a96720e4-6f49-8231-a47c-0142e4c2e4e5" class="" dir="auto"><code>event.get(&#x27;name&#x27;, &#x27;Guest&#x27;)</code></h3><p id="531720e4-6f49-8372-baf7-81f68885cb21" class="" dir="auto"><code>event</code>는 딕셔너리 형태의 입력 데이터라고 보면 된다.</p><p id="c34720e4-6f49-8306-a7be-813a092f8450" class="" dir="auto">즉, 다음과 같은 JSON을 전달하면</p><pre id="046720e4-6f49-8277-803c-812311c52b41" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;name&quot;:&quot;Alice&quot;
+}</code></pre><p id="dad720e4-6f49-8320-8105-01144cebfe29" class="" dir="auto">Python 코드에서는 다음처럼 읽을 수 있다.</p><pre id="9fc720e4-6f49-8265-9c18-01362ddaa51a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">event[&#x27;name&#x27;]</code></pre><p id="321720e4-6f49-82e0-976f-0131ec7758e7" class="" dir="auto">하지만 이렇게 직접 접근하면</p><p id="517720e4-6f49-83fa-8b9c-81ed123a484a" class="" dir="auto">해당 키가 없을 때 에러가 발생할 수 있다.</p><p id="a9f720e4-6f49-837a-9f9b-81079b156fb9" class="" dir="auto">그래서 실습에서는 다음 방식을 사용한다.</p><pre id="d70720e4-6f49-8298-898c-015e48a6401b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">event.get(&#x27;name&#x27;,&#x27;Guest&#x27;)</code></pre><p id="e8d720e4-6f49-829c-9168-8121d8728389" class="" dir="auto">이 방식의 의미는 다음과 같다.</p><ul id="f56720e4-6f49-8201-a40f-01e51519e7dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>name</code> 키가 있으면 그 값을 사용</li></ul><ul id="942720e4-6f49-82d8-a451-81a940893d6c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">없으면 기본값으로 <code>Guest</code> 사용</li></ul><p id="f51720e4-6f49-8293-beee-81280bb9ba60" class="" dir="auto">즉, 보다 안전한 방식이다.</p><hr id="642720e4-6f49-820b-b9b0-013f57dc26fd" dir="auto"/><h2 id="f31720e4-6f49-837a-97a6-01ba74678506" class="" dir="auto">2.3 테스트 이벤트 생성</h2><p id="2d6720e4-6f49-832d-8e25-018ce584b005" class="" dir="auto">다음 JSON으로 테스트 이벤트를 만든다.</p><pre id="02c720e4-6f49-837d-abf1-81c4159ba3ed" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;name&quot;:&quot;Cloud&quot;
+}</code></pre><p id="32f720e4-6f49-834a-be9b-01933d5f866e" class="" dir="auto">실행 결과 예시</p><pre id="f81720e4-6f49-8220-8c01-01c7bb39d364" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;statusCode&quot;:200,
+  &quot;body&quot;:&quot;Hello Cloud&quot;
+}</code></pre><hr id="5d0720e4-6f49-83cd-80d9-0102d72c43d3" dir="auto"/><h2 id="a7d720e4-6f49-82e2-a337-81dde7e7b369" class="" dir="auto">2.4 입력값 없이 다시 테스트</h2><p id="a61720e4-6f49-82b9-b87e-01cfb68d4340" class="" dir="auto">이번에는 다음처럼 빈 이벤트로 실행한다.</p><pre id="852720e4-6f49-828a-968a-010e3f34cadc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{}</code></pre><p id="675720e4-6f49-8203-9323-81ba61d0e468" class="" dir="auto">결과는 다음과 같이 나온다.</p><pre id="baa720e4-6f49-82b4-b1f2-81007551a149" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;statusCode&quot;:200,
+  &quot;body&quot;:&quot;Hello Guest&quot;
+}</code></pre><p id="141720e4-6f49-8313-b790-01ee7c544ae4" class="" dir="auto">이 실습을 통해</p><p id="e04720e4-6f49-8249-a041-81f9713b7ffe" class="" dir="auto"><strong>입력값이 있을 때와 없을 때의 처리 방식</strong>을 함께 확인할 수 있다.</p><hr id="dd5720e4-6f49-835c-82f0-012192d76e7d" dir="auto"/><h1 id="98c720e4-6f49-8282-a139-8173810ba5db" class="" dir="auto">실습 3. 로그 출력 및 CloudWatch Logs 확인</h1><h2 id="bfc720e4-6f49-820c-9666-81c88282dd56" class="" dir="auto">실습 목표</h2><ul id="c7b720e4-6f49-83f1-9d3b-81b5880e1493" class="bulleted-list" dir="auto"><li style="list-style-type:disc">print()를 이용한 로그 출력</li></ul><ul id="1fb720e4-6f49-8363-91db-81863055f1b3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch Logs에서 실행 로그 확인</li></ul><ul id="32f720e4-6f49-82ae-9233-012779b714aa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">문제 발생 시 로그 확인 습관 익히기</li></ul><hr id="d3c720e4-6f49-82ca-b01d-0187d46a371a" dir="auto"/><h2 id="995720e4-6f49-8246-8199-017b856ab551" class="" dir="auto">3.1 코드 수정</h2><p id="7e6720e4-6f49-8248-9e4d-01ff18539a7b" class="" dir="auto">다음과 같이 수정한다.</p><pre id="3eb720e4-6f49-839d-8396-0168412d2210" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">deflambda_handler(event,context):
+name=event.get(&#x27;name&#x27;,&#x27;Guest&#x27;)
+
+print(&#x27;=== Lambda function started ===&#x27;)
+print(f&#x27;event:{event}&#x27;)
+print(f&#x27;name:{name}&#x27;)
+
+return {
+&#x27;statusCode&#x27;:200,
+&#x27;body&#x27;:f&#x27;Hello{name}&#x27;
+    }</code></pre><p id="b3e720e4-6f49-833c-a04a-017af4449e80" class="" dir="auto">Deploy를 수행한다.</p><hr id="f61720e4-6f49-820c-800b-81eeda4550ff" dir="auto"/><h2 id="3c1720e4-6f49-820c-81e3-81d21404c351" class="" dir="auto">3.2 코드 설명</h2><h3 id="915720e4-6f49-82d3-9b3e-8181883555bb" class="" dir="auto"><code>print(&#x27;=== Lambda function started ===&#x27;)</code></h3><p id="a57720e4-6f49-829c-8228-01ef828411fb" class="" dir="auto">Lambda에서는 <code>print()</code>로 출력한 내용이</p><p id="cc3720e4-6f49-83a8-ad10-81a93aa72279" class="" dir="auto">터미널에 보이는 것이 아니라 <strong>CloudWatch Logs</strong>로 전송된다.</p><p id="31d720e4-6f49-83b8-82c3-8152f5131c99" class="" dir="auto">즉, <code>print()</code>는 단순한 화면 출력이 아니라</p><p id="7ff720e4-6f49-827f-a227-81dfbddd8466" class="" dir="auto">운영 관점에서는 <strong>로그 기록 도구</strong> 역할을 한다.</p><hr id="ed5720e4-6f49-8203-8af6-015fac082357" dir="auto"/><h3 id="e8b720e4-6f49-82e2-91b5-8165a68472bf" class="" dir="auto"><code>print(f&#x27;event: {event}&#x27;)</code></h3><p id="d8b720e4-6f49-8329-9ca8-01d5ca854032" class="" dir="auto">실제로 Lambda가 어떤 입력값을 받았는지 확인하기 위한 로그다.</p><p id="bec720e4-6f49-8256-87b8-81a2568cba1e" class="" dir="auto">실무에서도 이벤트 구조를 처음 확인할 때</p><p id="388720e4-6f49-83b5-bb90-01c8145474d7" class="" dir="auto">이 방식으로 전체 event를 출력해보는 경우가 많다.</p><p id="219720e4-6f49-8393-b851-015c4e47f15a" class="" dir="auto">단, 운영 환경에서는 민감정보가 포함될 수 있으므로</p><p id="f2a720e4-6f49-8329-a17b-81fca3826249" class="" dir="auto">무분별한 전체 출력은 주의해야 한다.</p><hr id="0de720e4-6f49-82a1-80ae-81988b684e7f" dir="auto"/><h2 id="09e720e4-6f49-824d-bfc7-01c194129198" class="" dir="auto">3.3 테스트 실행</h2><p id="e09720e4-6f49-83b9-9997-01ac48d7301f" class="" dir="auto">이벤트 예시</p><pre id="6b4720e4-6f49-83b4-938b-011babe971af" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;name&quot;:&quot;Lambda&quot;
+}</code></pre><p id="241720e4-6f49-83a2-bb9f-8147da556a64" class="" dir="auto">실행 후 결과를 확인한다.</p><hr id="17a720e4-6f49-828e-9cb4-01d8111df0b0" dir="auto"/><h2 id="6ef720e4-6f49-8217-b0a1-8159e4375ae3" class="" dir="auto">3.4 CloudWatch Logs 확인</h2><p id="320720e4-6f49-836a-bd4e-01e57aba8a04" class="" dir="auto">Lambda 함수 화면에서 다음 메뉴를 선택한다.</p><pre id="b61720e4-6f49-822f-9c62-0106cf9f0968" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Monitor → View CloudWatch logs</code></pre><p id="ed4720e4-6f49-83cf-b6d8-8173eec6ac35" class="" dir="auto">또는 CloudWatch 콘솔에서 직접 다음으로 이동해도 된다.</p><pre id="c7d720e4-6f49-83ac-8d00-01b1e5f41862" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">CloudWatch → Logs → Log groups → /aws/lambda/hello-lambda</code></pre><p id="2ed720e4-6f49-82f9-94ca-8107b114e19a" class="" dir="auto">로그 스트림을 열어보면 다음과 유사한 내용이 보인다.</p><pre id="fdb720e4-6f49-82d5-8fad-81cd974b8fb8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">START RequestId: ...
+=== Lambda function started ===
+event: {&#x27;name&#x27;: &#x27;Lambda&#x27;}
+name: Lambda
+END RequestId: ...
+REPORT RequestId: ...</code></pre><hr id="fe7720e4-6f49-829d-ad4b-01de154e90a9" dir="auto"/><h2 id="3c9720e4-6f49-83d1-9914-01460692dfdc" class="" dir="auto">3.5 로그 항목 설명</h2><h3 id="acb720e4-6f49-8280-8bbe-810ca2ec2bed" class="" dir="auto">START</h3><p id="9f0720e4-6f49-8227-b764-013fdf065a64" class="" dir="auto">Lambda 실행 시작 지점이다.</p><p id="20c720e4-6f49-82a3-bef1-01d5eaa5b20b" class="" dir="auto">각 요청마다 고유한 RequestId가 부여된다.</p><hr id="a92720e4-6f49-821f-9b81-01b2d0962674" dir="auto"/><h3 id="92e720e4-6f49-83b7-97c5-017025e1480a" class="" dir="auto">END</h3><p id="c8f720e4-6f49-821e-acb4-815b5686aa99" class="" dir="auto">Lambda 실행 종료 지점이다.</p><p id="ff5720e4-6f49-82a7-b7cf-010f6d3dcab4" class="" dir="auto">정상 종료 여부를 확인할 수 있다.</p><hr id="018720e4-6f49-821b-815b-814d0ee71daa" dir="auto"/><h3 id="320720e4-6f49-82a7-9c84-01242421c141" class="" dir="auto">REPORT</h3><p id="daa720e4-6f49-8321-96cd-01f8bf295d95" class="" dir="auto">실행 시간, 메모리 사용량 등 요약 정보를 보여준다.</p><p id="4ae720e4-6f49-83e2-a8a7-01498de51aab" class="" dir="auto">예를 들어 다음 값을 확인할 수 있다.</p><ul id="914720e4-6f49-8363-90fa-81991f016244" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Duration</li></ul><ul id="ce8720e4-6f49-82ea-ac8c-8139a92047f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Billed Duration</li></ul><ul id="648720e4-6f49-8223-98a2-01537d45cf6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Memory Size</li></ul><ul id="c42720e4-6f49-82e6-8632-01982d787f65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Max Memory Used</li></ul><ul id="ac4720e4-6f49-82a6-8019-8173768e9d44" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Init Duration</li></ul><hr id="d8b720e4-6f49-82ac-b7ff-014c3b0a1971" dir="auto"/><h3 id="8c9720e4-6f49-83b8-a9a1-01e251158b40" class="" dir="auto">Init Duration</h3><p id="9b9720e4-6f49-8386-a5f7-01ceefecfced" class="" dir="auto">콜드 스타트와 관련된 초기화 시간이 표시될 수 있다.</p><p id="15c720e4-6f49-823f-9cee-817e13a862cb" class="" dir="auto">즉, Lambda 실행 환경이 처음 준비되면서 걸린 시간이다.</p><p id="806720e4-6f49-831c-a945-01a310bcb3e7" class="" dir="auto">이 값이 보인다면</p><p id="a9e720e4-6f49-82d6-bb77-01af8eaa9e13" class="" dir="auto">새로운 실행 환경이 준비되었다는 의미로 이해하면 된다.</p><hr id="988720e4-6f49-8374-a6b7-0109c0e010ec" dir="auto"/><h1 id="6b7720e4-6f49-8285-8b21-81f5f57248f0" class="" dir="auto">실습 4. 오류 발생 및 로그 확인</h1><h2 id="642720e4-6f49-8328-93fd-811fa0884ff0" class="" dir="auto">실습 목표</h2><ul id="617720e4-6f49-8357-888c-01819a069438" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 오류 상황 확인</li></ul><ul id="d1f720e4-6f49-83ac-ab46-01b0866513ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예외 발생 시 어떻게 표시되는지 확인</li></ul><ul id="5ae720e4-6f49-8204-972f-812bf1339e59" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch Logs에서 에러 추적</li></ul><hr id="4b2720e4-6f49-8291-928d-8122971d8deb" dir="auto"/><h2 id="21c720e4-6f49-8311-97b4-0151028a0f76" class="" dir="auto">4.1 코드 수정</h2><p id="64f720e4-6f49-82c3-a7e6-818b5e210c4b" class="" dir="auto">다음 코드로 바꾼다.</p><pre id="ec8720e4-6f49-8272-8f39-0122c925bd41" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">deflambda_handler(event,context):
+print(&#x27;function started&#x27;)
+
+number=10/0
+
+return {
+&#x27;statusCode&#x27;:200,
+&#x27;body&#x27;:str(number)
+    }</code></pre><p id="16b720e4-6f49-834c-8555-01c4930904a3" class="" dir="auto">Deploy 후 테스트를 수행한다.</p><hr id="cd1720e4-6f49-83fe-97dd-81de9eee493e" dir="auto"/><h2 id="897720e4-6f49-83d1-b774-011997ed48cd" class="" dir="auto">4.2 예상 결과</h2><p id="81b720e4-6f49-822c-a5f1-81ef0a6458b8" class="" dir="auto">실행은 실패한다.</p><p id="e61720e4-6f49-82c6-a78f-813dd16cd5ab" class="" dir="auto">에러 메시지 예시는 다음과 비슷하다.</p><pre id="e06720e4-6f49-8363-acc4-018af0337c9a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;errorMessage&quot;: &quot;division by zero&quot;,
+  &quot;errorType&quot;: &quot;ZeroDivisionError&quot;,
+  ...
+}</code></pre><hr id="966720e4-6f49-83d1-884e-0139fd64ae59" dir="auto"/><h2 id="d82720e4-6f49-8340-9e45-81db45cffed9" class="" dir="auto">4.3 왜 실패하는가</h2><p id="772720e4-6f49-8283-bfa1-81b424a51a7c" class="" dir="auto">다음 코드 때문이다.</p><pre id="e94720e4-6f49-827e-96d0-01ad291fd33b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">number=10/0</code></pre><p id="86a720e4-6f49-8287-ae67-81b05e2a1b57" class="" dir="auto">0으로 나누기는 Python에서 허용되지 않음.</p><p id="d29720e4-6f49-8270-aaa8-014d2a59bf77" class="" dir="auto">따라서 <code>ZeroDivisionError</code>가 발생한다.</p><p id="797720e4-6f49-8346-9607-81a2e14ef515" class="" dir="auto">이 실습은 일부러 에러를 만들어</p><p id="7e4720e4-6f49-835d-9843-01116ed87869" class="" dir="auto"><strong>Lambda에서 실패가 어떻게 보이는지</strong> 확인하기 위한 것이다.</p><hr id="449720e4-6f49-8222-bab9-0183c99453dc" dir="auto"/><h2 id="340720e4-6f49-82e0-9dda-815a26a3c5df" class="" dir="auto">4.4 CloudWatch Logs에서 에러 보기</h2><p id="235720e4-6f49-838e-acee-81935da6cc82" class="" dir="auto">로그를 열어보면 traceback 정보가 기록된다.</p><p id="8d4720e4-6f49-8353-9c53-81ff63ebe45c" class="" dir="auto">예시</p><pre id="28a720e4-6f49-83a1-8fc3-81259d1d9066" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[ERROR] ZeroDivisionError: division by zero
+Traceback (most recent call last):
+  File &quot;/var/task/lambda_function.py&quot;, line 4, in lambda_handler
+    number = 10 / 0</code></pre><p id="705720e4-6f49-8253-ad43-017b429f5fd4" class="" dir="auto">이 정보는 어느 파일, 몇 번째 줄에서 문제가 발생했는지 알려준다.</p><p id="5cd720e4-6f49-827d-8b59-819bde5583b6" class="" dir="auto">실무에서 Lambda 문제 해결의 핵심은</p><p id="ade720e4-6f49-83d6-9040-81bb404761a1" class="" dir="auto">대부분 CloudWatch Logs 확인이다.</p><hr id="3ca720e4-6f49-8303-abf8-8139f9a9c522" dir="auto"/><h2 id="988720e4-6f49-82df-9d29-012ff2ac8da2" class="" dir="auto">4.5 정상 코드로 복구</h2><p id="522720e4-6f49-82dd-ab5c-81fc12367820" class="" dir="auto">다음처럼 수정하여 정상 상태로 되돌린다.</p><pre id="4ab720e4-6f49-831a-a4d8-814b05029d04" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">deflambda_handler(event,context):
+print(&#x27;function started&#x27;)
+
+return {
+&#x27;statusCode&#x27;:200,
+&#x27;body&#x27;:&#x27;Lambda recovered&#x27;
+    }</code></pre><p id="eae720e4-6f49-8298-9b2c-81dbaf622a6e" class="" dir="auto">Deploy 후 다시 테스트한다.</p><h1 id="9b6720e4-6f49-830e-ad2a-81b188fb7cdb" class="" dir="auto">실습 5. S3 이벤트 트리거 연동</h1><h2 id="986720e4-6f49-8310-9d06-01d679ce71f8" class="" dir="auto">실습 목표</h2><ul id="99a720e4-6f49-83be-989a-81867ce263fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 파일 업로드 시 Lambda 자동 실행</li></ul><ul id="1b3720e4-6f49-8329-a939-81031d751588" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 기반 서버리스 구조 이해</li></ul><ul id="4f8720e4-6f49-826c-83f0-816dd022cbbe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">event 내부의 S3 정보 확인</li></ul><hr id="45a720e4-6f49-8231-8df4-016714d6db0b" dir="auto"/><h2 id="e87720e4-6f49-8266-9f42-01899da84264" class="" dir="auto">실습 구성</h2><ul id="a4f720e4-6f49-833b-a080-81580f05a60c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 Bucket 생성</li></ul><ul id="ffd720e4-6f49-8274-9660-81e9a13ef8a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda 함수 생성 또는 기존 함수 사용</li></ul><ul id="e38720e4-6f49-8294-ba7d-815ddb65c02b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 PUT 이벤트를 Lambda에 연결</li></ul><ul id="d83720e4-6f49-837f-a308-01d78b47b748" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 업로드 후 로그 확인</li></ul><hr id="c67720e4-6f49-8394-a0e3-015143023ff1" dir="auto"/><h2 id="cef720e4-6f49-83e4-a7e0-01e8063c266a" class="" dir="auto">5.1 Lambda 코드 작성</h2><p id="877720e4-6f49-8283-8926-01933b1b4ff3" class="" dir="auto">다음 코드로 수정한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="97a720e4-6f49-82fa-8f48-81f4b7d63528" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">importjson
+
+deflambda_handler(event,context):
+print(&#x27;S3 Event Received&#x27;)
+print(json.dumps(event,indent=2))
+
+record=event[&#x27;Records&#x27;][0]
+bucket_name=record[&#x27;s3&#x27;][&#x27;bucket&#x27;][&#x27;name&#x27;]
+object_key=record[&#x27;s3&#x27;][&#x27;object&#x27;][&#x27;key&#x27;]
+
+return {
+&#x27;statusCode&#x27;:200,
+&#x27;body&#x27;:json.dumps({
+&#x27;bucket&#x27;:bucket_name,
+&#x27;key&#x27;:object_key
+        })
+    }</code></pre><p id="afe720e4-6f49-82cf-9dc5-81ed5f81665e" class="" dir="auto">Deploy를 수행한다.</p><hr id="d37720e4-6f49-824d-87c6-812ea0a49fc8" dir="auto"/><h2 id="893720e4-6f49-8377-a8a6-0190c52a6ce9" class="" dir="auto">5.2 코드 설명</h2><p id="080720e4-6f49-827c-a483-8127c44da34b" class="" dir="auto">S3 이벤트는 일반 테스트 이벤트와 달리 구조가 조금 복잡하다.</p><p id="847720e4-6f49-82e3-ab3e-81f8b33416d6" class="" dir="auto">중요한 경로는 다음이다.</p><pre id="afb720e4-6f49-8379-b2c4-01e1a4f724c0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">event[&#x27;Records&#x27;][0][&#x27;s3&#x27;][&#x27;bucket&#x27;][&#x27;name&#x27;]
+event[&#x27;Records&#x27;][0][&#x27;s3&#x27;][&#x27;object&#x27;][&#x27;key&#x27;]</code></pre><p id="b15720e4-6f49-8309-bab3-01e957e826ed" class="" dir="auto">이 의미는 다음과 같다.</p><ul id="a25720e4-6f49-8265-a3ae-8188cc0558dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Records</code><ul id="db0720e4-6f49-8264-ad03-0142ccadcfe3" class="bulleted-list" dir="auto"><li style="list-style-type:circle">이벤트 목록</li></ul></li></ul><ul id="160720e4-6f49-8201-afbd-81e1dea4f3e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>[0]</code><ul id="198720e4-6f49-8275-aeb5-01b5919233e9" class="bulleted-list" dir="auto"><li style="list-style-type:circle">첫 번째 이벤트</li></ul></li></ul><ul id="f13720e4-6f49-83f3-a40c-012e5348c882" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>s3.bucket.name</code><ul id="f20720e4-6f49-837f-a164-01cd4c5b9be0" class="bulleted-list" dir="auto"><li style="list-style-type:circle">버킷 이름</li></ul></li></ul><ul id="917720e4-6f49-82e6-b226-81dffe8f4236" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>s3.object.key</code><ul id="3bd720e4-6f49-823a-ab22-813a9056b003" class="bulleted-list" dir="auto"><li style="list-style-type:circle">업로드된 객체 이름</li></ul></li></ul><p id="1f1720e4-6f49-83bc-9b57-8157c71f5e96" class="" dir="auto">S3 이벤트는 여러 건이 한 번에 올 수도 있으므로 <code>Records</code> 배열 형태를 사용한다.</p><hr id="b4f720e4-6f49-83c1-bc1c-018cf2fcebc3" dir="auto"/><h2 id="615720e4-6f49-8354-9f62-01513fe7e509" class="" dir="auto">5.3 S3 트리거 추가</h2><p id="096720e4-6f49-83f0-a32d-81f19b5757ea" class="" dir="auto">Lambda 함수의 Trigger 추가 메뉴에서 S3를 선택한다.</p><p id="5b9720e4-6f49-8207-aac9-01718ad05ecb" class="" dir="auto">설정 예시</p><pre id="d4e720e4-6f49-830f-a4d2-01aab4a227ec" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Bucket: lambda-trigger-bucket-xxxxx
+Event type: PUT
+Prefix/Suffix: 비워도 됨</code></pre><p id="463720e4-6f49-82fe-a4cb-81f634a8d7fa" class="" dir="auto">주의사항</p><ul id="4b8720e4-6f49-8319-a842-017c323e377d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda와 S3 간 권한/알림 구성이 자동 연결됨</li></ul><ul id="598720e4-6f49-8338-aef1-818dfea32f7f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 버킷에 Lambda가 다시 파일을 쓰는 구조라면 무한 호출 위험이 있음</li></ul><hr id="e46720e4-6f49-8376-b9ca-01ccd1088ae9" dir="auto"/><h2 id="c70720e4-6f49-83b3-aa52-812232a7c69b" class="" dir="auto">5.4 파일 업로드 테스트</h2><p id="91e720e4-6f49-8325-981d-8159d9af1dd8" class="" dir="auto">S3 버킷에 임의의 파일을 업로드한다.</p><p id="788720e4-6f49-820e-9f18-819a1e3b38d6" class="" dir="auto">예시 파일명</p><pre id="1ab720e4-6f49-82f9-a998-8132706eaad8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">test.txt</code></pre><p id="5aa720e4-6f49-8332-b981-0186124fb53d" class="" dir="auto">업로드 후 Lambda 콘솔의 Monitor 또는 CloudWatch Logs에서 실행 로그를 확인한다.</p><p id="7c8720e4-6f49-82c8-ac9c-01484ffff652" class="" dir="auto">로그에서 bucket name, object key가 출력되면 정상이다.</p><hr id="0bb720e4-6f49-820e-8eba-81992fc42e23" dir="auto"/><h1 id="f62720e4-6f49-83ce-ae87-01c32237b9eb" class="" dir="auto">6. 정리</h1><ul id="3e7720e4-6f49-8237-94f9-81a3b4be3792" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Lambda는 코드를 이벤트 기반으로 실행하는 구조임</li></ul><ul id="789720e4-6f49-8396-a4cd-0129cdf00358" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>event</code>, <code>context</code>를 입력으로 받음</li></ul><ul id="595720e4-6f49-8245-ae3e-81523ff41493" class="bulleted-list" dir="auto"><li style="list-style-type:disc">콘솔 테스트 이벤트로 손쉽게 검증 가능함</li></ul><ul id="66b720e4-6f49-837f-be32-01fe428e425e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>print()</code> 로그는 CloudWatch Logs에서 확인함</li></ul><ul id="b34720e4-6f49-82e6-9405-018b2d659a4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3와 연결하면 파일 업로드 기반 자동화가 가능함</li></ul><hr id="dcd720e4-6f49-82fa-b0f5-015e03f9dee9" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

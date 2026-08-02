@@ -1,0 +1,843 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>3장. Terraform 블록과 Provider</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="23b720e4-6f49-8350-8b1d-81001bef9fa4" class="page sans"><header><h1 class="page-title" dir="auto">3장. Terraform 블록과 Provider</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="ed8720e4-6f49-8276-8669-81ad4cf3a986" class="" dir="auto">장 목표</h2><p id="8e5720e4-6f49-83e2-8474-01caeca21457" class="" dir="auto">Terraform 코드를 구성하는 가장 기본적인 틀인 <strong>블록(block)</strong> 과 <strong>Provider</strong>를 이해한다.</p><ul id="0ee720e4-6f49-8303-b966-019cd2814b06" class="bulleted-list" dir="auto"><li style="list-style-type:disc">HCL의 기본 문법을 설명할 수 있음</li></ul><ul id="a3e720e4-6f49-8355-88ae-812206fef7b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">블록과 인자의 차이를 구분할 수 있음</li></ul><ul id="538720e4-6f49-82ec-9006-81ec4858e84c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform</code> 블록의 역할을 설명할 수 있음</li></ul><ul id="046720e4-6f49-8209-94c2-8145067a2f65" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>required_version</code>과 <code>required_providers</code>를 설정할 수 있음</li></ul><ul id="1b7720e4-6f49-83d2-9a8b-0187325a9e60" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provider</code> 블록의 역할을 설명할 수 있음</li></ul><ul id="2cb720e4-6f49-8352-bf4c-017e09017d93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Provider를 기본 형태로 구성할 수 있음</li></ul><ul id="f38720e4-6f49-83cc-b025-811eee69d24d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform init</code>이 왜 필요한지 이해할 수 있음</li></ul><ul id="953720e4-6f49-82d3-b089-81c695bd7a88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform 코드와 Provider 다운로드의 관계를 설명할 수 있음</li></ul><hr id="208720e4-6f49-8247-9726-81f23151b551" dir="auto"/><h1 id="b44720e4-6f49-8349-9e41-01eef7fd155c" class="" dir="auto">1. Terraform 코드를 이루는 기본 단위</h1><p id="381720e4-6f49-835e-bf0e-81e48c4b2861" class="" dir="auto">Terraform 코드는 사람이 읽기 쉬운 선언형 언어인 <strong>HCL(HashiCorp Configuration Language)</strong> 로 작성한다.</p><p id="47f720e4-6f49-8262-a194-8100670df59b" class="" dir="auto">HCL은 JSON처럼 기계적으로만 보이는 형식이 아니라, 사람이 인프라 구성을 읽고 수정하기 쉽게 설계된 문법이다.</p><p id="c4a720e4-6f49-83bc-949e-81561d4fd9bb" class="" dir="auto">Terraform 파일을 열어보면 다음과 같은 형태를 자주 보게 된다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="a68720e4-6f49-8301-b7b4-81517346d257" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0&quot;
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}</code></pre><p id="4f3720e4-6f49-823f-b079-014d15089152" class="" dir="auto">겉보기에는 단순해 보이지만, 여기에는 Terraform 코드의 핵심 구조가 들어 있다.</p><ul id="f4d720e4-6f49-83a6-93dd-0126dd18f60a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform { ... }</code> → Terraform 자체에 대한 설정</li></ul><ul id="76b720e4-6f49-83d2-9db0-812fe30e7623" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provider &quot;aws&quot; { ... }</code> → AWS와 연결하기 위한 설정</li></ul><p id="0db720e4-6f49-834d-ab9a-0102c9aefa22" class="" dir="auto">즉, Terraform 코드는 단순히 “무엇을 만들겠다”만 적는 것이 아니라,</p><p id="f60720e4-6f49-820a-aab1-0132a824c20a" class="" dir="auto"><strong>어떤 도구 버전으로</strong>, <strong>어떤 플러그인을 이용해서</strong>, <strong>어느 대상 시스템에 작업할지</strong>까지 함께 선언한다.</p><hr id="bc4720e4-6f49-82f9-8e43-81560f20a773" dir="auto"/><h1 id="df7720e4-6f49-8283-baa6-01b79fc77703" class="" dir="auto">2. HCL 기본 구조</h1><h2 id="792720e4-6f49-826e-a1af-016a0cd44258" class="" dir="auto">2.1 HCL은 어떻게 생겼는가</h2><p id="2b8720e4-6f49-8229-bbc9-811c2b0dab62" class="" dir="auto">Terraform의 HCL은 기본적으로 다음 구조를 가진다.</p><pre id="ffb720e4-6f49-82e1-b255-81545c2865b6" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">블록종류 &quot;라벨1&quot; &quot;라벨2&quot; {
+  인자이름 = 값
+  인자이름 = 값
+}</code></pre><p id="b7a720e4-6f49-8247-a54f-8198d70f3087" class="" dir="auto">예를 들어 다음 코드를 보자.</p><pre id="868720e4-6f49-83eb-a2c7-8163f19bb65c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}</code></pre><p id="b7d720e4-6f49-831c-b384-81ac9bb71c82" class="" dir="auto">여기서 구성 요소를 나누면 다음과 같다.</p><ul id="393720e4-6f49-8292-9b8d-818094ead9e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provider</code> → 블록 종류</li></ul><ul id="c40720e4-6f49-8317-a06a-012eb2609d62" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;aws&quot;</code> → 블록 라벨</li></ul><ul id="3b2720e4-6f49-823a-a6f7-01bcd8b09920" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>{ ... }</code> → 블록 본문</li></ul><ul id="8af720e4-6f49-826c-8670-01db9b4fede6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>region = &quot;ap-northeast-2&quot;</code> → 인자(argument)</li></ul><p id="d93720e4-6f49-82b6-83d9-816f49825947" class="" dir="auto">즉, HCL은 <strong>블록</strong>을 중심으로 구성되고, 블록 안에 <strong>인자</strong>가 들어가는 방식이다.</p><hr id="c18720e4-6f49-83bf-a659-014bdd689ec5" dir="auto"/><h2 id="66a720e4-6f49-8394-b4ea-814beb833557" class="" dir="auto">2.2 블록과 인자</h2><h3 id="7e3720e4-6f49-832b-b9c9-812a24ca9c96" class="" dir="auto">블록(block)</h3><p id="b5a720e4-6f49-83ba-a691-01fe48b41fc0" class="" dir="auto">블록은 특정한 설정의 범위를 나타낸다.</p><p id="8f2720e4-6f49-82d0-b8cc-81016c202244" class="" dir="auto">쉽게 말하면 “어떤 종류의 설정 묶음”이라고 보면 된다.</p><p id="600720e4-6f49-827f-b19f-012aa79f9359" class="" dir="auto">예를 들면 다음과 같은 것들이 모두 블록이다.</p><ul id="9dd720e4-6f49-8298-a527-010c283c7217" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform</code></li></ul><ul id="5fb720e4-6f49-83cf-bbb9-81b8d810e752" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provider</code></li></ul><ul id="1d5720e4-6f49-8333-a5ec-8184cf542de5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>resource</code></li></ul><ul id="83d720e4-6f49-820f-a0fb-0108cf7fd0c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>data</code></li></ul><ul id="b90720e4-6f49-8343-9738-013ce085b5e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>variable</code></li></ul><ul id="513720e4-6f49-82f0-bb60-017fd4d53790" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>output</code></li></ul><ul id="ffa720e4-6f49-82a3-bcb0-816c13b36568" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>locals</code></li></ul><p id="6c2720e4-6f49-8285-ac94-01836c055cda" class="" dir="auto">블록은 보통 다음처럼 중괄호로 감싼다.</p><pre id="862720e4-6f49-838a-8964-81c5dd329640" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  ...
+}</code></pre><hr id="07b720e4-6f49-8323-8de9-01d0b0170028" dir="auto"/><h3 id="09c720e4-6f49-82c9-bfd3-812cadd82014" class="" dir="auto">인자(argument)</h3><p id="413720e4-6f49-831b-b6fb-01323a90d8f0" class="" dir="auto">인자는 블록 내부에서 실제 값을 지정하는 항목이다.</p><p id="75c720e4-6f49-83f1-b7ee-01ca4554ea6c" class="" dir="auto">쉽게 말하면 “설정값”이다.</p><pre id="075720e4-6f49-827f-ae79-010f9559d7aa" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">region = &quot;ap-northeast-2&quot;</code></pre><p id="ebb720e4-6f49-8269-9f3f-810e96ac4469" class="" dir="auto">여기서</p><ul id="9e0720e4-6f49-8261-a03c-01de28bfd91f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>region</code> → 인자 이름</li></ul><ul id="003720e4-6f49-8341-bf77-817acbd535e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>&quot;ap-northeast-2&quot;</code> → 인자 값</li></ul><p id="03f720e4-6f49-83ea-8408-81ed5a96c5a8" class="" dir="auto">이다.</p><hr id="2f8720e4-6f49-82a4-aa23-0133c3921bde" dir="auto"/><h2 id="0bf720e4-6f49-823a-948d-015a5dbeb026" class="" dir="auto">2.3 블록과 인자 구분</h2><ul id="807720e4-6f49-83e1-9b48-01871a2c6199" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>블록</strong>은 설정의 큰 틀</li></ul><ul id="078720e4-6f49-82a9-848e-011629d6c628" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>인자</strong>는 그 틀 안에 들어가는 구체적인 값</li></ul><p id="2ee720e4-6f49-82eb-8fc4-0120d9a830ab" class="" dir="auto">예를 들어 다음 코드를 보자.</p><pre id="aa8720e4-6f49-83e2-8ba4-018330919c04" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">provider &quot;aws&quot; {
+  region  = &quot;ap-northeast-2&quot;
+  profile = &quot;default&quot;
+}</code></pre><p id="57e720e4-6f49-838f-a913-81bd270a517e" class="" dir="auto">여기서</p><ul id="606720e4-6f49-8283-8fe3-81f685e992a0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provider &quot;aws&quot;</code> 는 블록</li></ul><ul id="457720e4-6f49-83bc-a6fa-01fcbe98c175" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>region</code>, <code>profile</code> 은 인자</li></ul><p id="a69720e4-6f49-82b5-8e8c-0191af7234d0" class="" dir="auto">이다.</p><hr id="172720e4-6f49-83d0-97b2-012f6466179f" dir="auto"/><h1 id="57c720e4-6f49-833b-b935-81e9a104a514" class="" dir="auto">3. terraform 블록</h1><h2 id="433720e4-6f49-82ff-9e5d-8173366dc69d" class="" dir="auto">3.1 terraform 블록이란</h2><p id="705720e4-6f49-83a5-ab28-816609fc2a1d" class="" dir="auto"><code>terraform</code> 블록은 <strong>Terraform 자체의 동작 조건을 정의하는 블록</strong>이다.</p><p id="db6720e4-6f49-8292-bd0d-816494752a1b" class="" dir="auto">즉, 어떤 인프라를 만들지 설명하는 블록이 아니라, <strong>이 코드를 어떤 규칙으로 실행할 것인지</strong>를 지정하는 블록이다.</p><p id="453720e4-6f49-8249-a358-81de1629b99c" class="" dir="auto">대표적으로 다음을 설정한다.</p><ul id="f5c720e4-6f49-8384-bc98-81467f5916ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform 버전 조건</li></ul><ul id="aa1720e4-6f49-8321-a171-01a19727b440" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요한 Provider 정보</li></ul><ul id="164720e4-6f49-83ac-aba4-81d49b858633" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backend 설정</li></ul><ul id="9f6720e4-6f49-82aa-962a-812995e05fb4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실험적 기능 또는 기타 동작 옵션</li></ul><p id="e64720e4-6f49-8224-9e1c-016995b4b3fa" class="" dir="auto">가장 기본적인 예시는 다음과 같다.</p><pre id="c90720e4-6f49-8293-8627-011a269d3379" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0&quot;
+}</code></pre><p id="66e720e4-6f49-8289-ab50-0191433e73f8" class="" dir="auto">이 코드는 “이 Terraform 구성은 1.5.0 이상 버전에서 실행해야 한다”는 의미다.</p><hr id="7f8720e4-6f49-8219-9493-0141bc5f8ec9" dir="auto"/><h2 id="2a4720e4-6f49-8356-8e69-81f81489185e" class="" dir="auto">3.2 왜 terraform 블록이 필요한가</h2><p id="473720e4-6f49-82e2-bd79-8148f76c63d5" class="" dir="auto">Terraform은 버전에 따라 문법이나 동작이 조금씩 달라질 수 있다.</p><p id="791720e4-6f49-82e3-964a-01b95fb4d014" class="" dir="auto">실무에서는 한 사람이 아니라 여러 사람이 같은 코드를 다루기 때문에, 누군가는 1.3 버전, 다른 사람은 1.8 버전을 사용하면 예상하지 못한 문제가 생길 수 있다.</p><p id="565720e4-6f49-82e3-8a48-0126ae39031d" class="" dir="auto">예를 들어</p><ul id="9d2720e4-6f49-82b7-a8ff-01a9cb581038" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 문법은 최신 버전에서만 동작할 수 있음</li></ul><ul id="f93720e4-6f49-82a7-98f8-010274466619" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Provider 버전은 특정 Terraform 버전과 호환되지 않을 수 있음</li></ul><ul id="e55720e4-6f49-8294-8afb-81cbfb01246f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">협업 환경에서 실행 결과가 달라질 수 있음</li></ul><p id="549720e4-6f49-8378-a6b8-81a692b7345d" class="" dir="auto">이런 문제를 줄이기 위해 <code>terraform</code> 블록에서 최소한의 실행 조건을 명시한다.</p><hr id="9f1720e4-6f49-8295-9ac6-013e9dc73e76" dir="auto"/><h1 id="7e9720e4-6f49-83e4-ab42-81011c985889" class="" dir="auto">4. required_version</h1><h2 id="798720e4-6f49-82f6-85d8-81afe73ca0b6" class="" dir="auto">4.1 required_version의 의미</h2><p id="d33720e4-6f49-8278-b68f-0146ee0c67d1" class="" dir="auto"><code>required_version</code>은 현재 Terraform 코드가 <strong>어떤 Terraform CLI 버전에서 실행 가능한지</strong>를 제한하는 설정이다.</p><p id="ec0720e4-6f49-8336-8105-01ae2ef02cfd" class="" dir="auto">예시:</p><pre id="d5b720e4-6f49-83ca-9554-01f7985d2176" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0&quot;
+}</code></pre><p id="d3b720e4-6f49-8234-963a-016265819113" class="" dir="auto">의미:</p><ul id="214720e4-6f49-83cc-8314-013996c8f60d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform CLI 버전이 1.5.0 이상이어야 실행 가능함</li></ul><hr id="dbf720e4-6f49-8230-9a70-01507e0db3ad" dir="auto"/><h2 id="e79720e4-6f49-828e-9d93-014a372d3484" class="" dir="auto">4.2 버전 조건 표현 방식</h2><p id="477720e4-6f49-83bd-b98c-8151edfedecd" class="" dir="auto">Terraform에서는 비교 연산자를 사용해서 버전 범위를 지정할 수 있다.</p><h3 id="75f720e4-6f49-8295-b4ff-012279f9b352" class="" dir="auto">예시 1. 특정 버전 이상</h3><pre id="7f9720e4-6f49-83bc-8a90-81a9aacc0f5a" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">required_version = &quot;&gt;= 1.5.0&quot;</code></pre><p id="98d720e4-6f49-8296-95d4-01112ed4b5f9" class="" dir="auto">1.5.0 이상이면 가능하다.</p><hr id="b35720e4-6f49-8364-9c5f-01d34aee0ef9" dir="auto"/><h3 id="81d720e4-6f49-828f-b8ea-0139c3503e6a" class="" dir="auto">예시 2. 특정 버전만 허용</h3><pre id="927720e4-6f49-835f-b3b6-017b8d0e80ff" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">required_version = &quot;= 1.5.7&quot;</code></pre><p id="a75720e4-6f49-823c-83ef-81b46a51aeb5" class="" dir="auto">정확히 1.5.7일 때만 허용한다.</p><p id="5f6720e4-6f49-8288-95c4-81700fb0c1d1" class="" dir="auto">실무에서는 너무 딱 고정하면 관리가 불편할 수 있어서 자주 쓰지는 않지만, 재현성이 아주 중요할 때는 의미가 있다.</p><hr id="bb6720e4-6f49-839a-8d69-013e47dfb4b6" dir="auto"/><h3 id="547720e4-6f49-838b-828d-81cb6b814013" class="" dir="auto">예시 3. 범위 지정</h3><pre id="d37720e4-6f49-8234-ac9c-011b7852d806" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;</code></pre><p id="281720e4-6f49-83b2-9943-0171dc531200" class="" dir="auto">1.5.0 이상이면서 2.0.0 미만 버전만 허용한다.</p><p id="147720e4-6f49-83c0-b6f6-81d21a43be6a" class="" dir="auto">이 방식이 실무에서 비교적 많이 쓰인다.</p><p id="052720e4-6f49-826a-b3c8-01a3dbca8609" class="" dir="auto">너무 낮은 버전은 막고, 너무 큰 메이저 버전 변경도 막을 수 있기 때문이다.</p><hr id="562720e4-6f49-82bb-823e-019b80a1cb04" dir="auto"/><h2 id="b80720e4-6f49-83dc-a9d0-81e76d915f16" class="" dir="auto">4.3 왜 버전 상한도 고려하는가</h2><p id="813720e4-6f49-828a-b3de-01fabae92ec8" class="" dir="auto">인프라 자동화 도구는 <strong>안정성</strong>이 중요하다.</p><p id="b54720e4-6f49-827c-bd5a-8197963f3631" class="" dir="auto">예를 들어 2.0.0에서 큰 변화가 생겼다면 기존 코드가 예상과 다르게 동작할 수도 있다.</p><p id="5eb720e4-6f49-821b-97a2-81cc7535d83c" class="" dir="auto">그래서 아래처럼 범위를 두는 방식이 안전하다.</p><pre id="753720e4-6f49-83af-bde2-0114c87ef958" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;</code></pre><p id="39c720e4-6f49-8328-bb3e-818008238de3" class="" dir="auto">이렇게 하면 검증한 큰 버전 범위 안에서만 실행되도록 통제할 수 있다.</p><hr id="c96720e4-6f49-837f-b0db-015bb256ceae" dir="auto"/><h1 id="466720e4-6f49-8320-94f4-814e1c7562d0" class="" dir="auto">5. required_providers</h1><h2 id="eb5720e4-6f49-82fb-9b28-8150dfe79295" class="" dir="auto">5.1 Provider란 무엇인가</h2><p id="494720e4-6f49-820b-95c7-810927254925" class="" dir="auto">Terraform은 혼자서 AWS, GCP, Azure, GitHub, Kubernetes 같은 외부 시스템을 직접 제어하지 않는다.</p><p id="063720e4-6f49-8222-909b-0169d1ac0158" class="" dir="auto">실제로는 각 대상 시스템과 통신할 수 있는 <strong>Provider 플러그인</strong>을 통해 작업한다.</p><p id="274720e4-6f49-826c-b5fe-01a04d87e20b" class="" dir="auto">즉, Provider는 Terraform과 외부 API 사이를 연결하는 <strong>중간 계층</strong>이다.</p><p id="bfb720e4-6f49-8236-801e-01b38afeb568" class="" dir="auto">예를 들어</p><ul id="6a4720e4-6f49-83ba-b50f-81aa3d45b998" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 리소스를 만들려면 AWS Provider 필요</li></ul><ul id="1e1720e4-6f49-82e2-b08f-01d662a1ad24" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP 리소스를 만들려면 Google Provider 필요</li></ul><ul id="f99720e4-6f49-8328-8aba-81843f9fa49a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes 오브젝트를 다루려면 Kubernetes Provider 필요</li></ul><hr id="3cf720e4-6f49-829a-9593-8186bc4c521b" dir="auto"/><h2 id="7c9720e4-6f49-83de-886c-01c66ae993b7" class="" dir="auto">5.2 required_providers의 역할</h2><p id="bfe720e4-6f49-83af-9fc9-81c4f5e57577" class="" dir="auto"><code>required_providers</code>는 이 Terraform 코드가 <strong>어떤 Provider를 필요로 하는지</strong>, 그리고 <strong>어느 소스에서 어떤 버전 범위를 사용할지</strong>를 선언하는 설정이다.</p><p id="ba5720e4-6f49-826d-94d2-8175bb8c600f" class="" dir="auto">예시:</p><pre id="2a3720e4-6f49-821e-b062-0196b14b9bec" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;~&gt; 5.0&quot;
+    }
+  }
+}</code></pre><p id="b1f720e4-6f49-8361-8d67-01e392514b72" class="" dir="auto">의미는 다음과 같다.</p><ul id="1a4720e4-6f49-826f-b419-0115c7d5c785" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws</code>라는 이름의 Provider를 사용함</li></ul><ul id="a1e720e4-6f49-8305-b0a6-812823b809ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Provider 소스는 <code>hashicorp/aws</code></li></ul><ul id="dc9720e4-6f49-8266-928d-81814f0bdd2f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버전은 5.x 계열에서 호환 범위 내 사용</li></ul><hr id="465720e4-6f49-82d2-9638-81c3c8240e7f" dir="auto"/><h2 id="66f720e4-6f49-82e2-be1d-8140d749bb9c" class="" dir="auto">5.3 source의 의미</h2><pre id="de7720e4-6f49-831c-842d-812846bddd15" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">source = &quot;hashicorp/aws&quot;</code></pre><p id="d24720e4-6f49-832d-b5cc-011a8854373a" class="" dir="auto">이 값은 Provider를 어디서 가져올지 지정한다.</p><ul id="3c3720e4-6f49-83f5-9258-01286a96ea13" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>hashicorp</code> → 제공자 네임스페이스</li></ul><ul id="396720e4-6f49-837a-b579-01579f03aeb4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws</code> → Provider 이름</li></ul><p id="ff0720e4-6f49-833e-b825-010c4deec397" class="" dir="auto">즉, <code>hashicorp/aws</code>는 HashiCorp가 제공하는 AWS Provider라는 뜻이다.</p><p id="cd1720e4-6f49-820a-9704-01e7e01bf592" class="" dir="auto">Terraform은 <code>init</code> 시점에 이 정보를 보고 적절한 Provider 플러그인을 다운로드한다.</p><hr id="8d5720e4-6f49-8233-b2db-810080d92692" dir="auto"/><h2 id="409720e4-6f49-8394-9590-81ce708a1d6a" class="" dir="auto">5.4 version의 의미</h2><pre id="d50720e4-6f49-82bf-bf74-01794bd68151" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">version = &quot;~&gt; 5.0&quot;</code></pre><p id="752720e4-6f49-831b-a741-81cdec589468" class="" dir="auto">이 설정은 Provider 버전 제약 조건이다.</p><p id="071720e4-6f49-8394-be1d-81f6b97f1768" class="" dir="auto"><code>~&gt; 5.0</code>은 보통 다음처럼 이해하면 된다.</p><ul id="9cb720e4-6f49-82ad-84d0-817c85e677f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">5.x 대의 호환 가능한 최신 버전을 허용</li></ul><ul id="16e720e4-6f49-8221-a1e3-01a26d502adc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">6.0 이상은 허용하지 않음</li></ul><p id="319720e4-6f49-8241-8587-01522e69aed8" class="" dir="auto">버전을 아예 지정하지 않을 수도 있지만, 실무에서는 권장되지 않음.</p><p id="122720e4-6f49-83cb-897d-0191381d9583" class="" dir="auto">이유는 다음과 같다.</p><ul id="52d720e4-6f49-8293-9fae-014d500055af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새로운 Provider 버전에서 동작이 바뀔 수 있음</li></ul><ul id="bda720e4-6f49-8206-b1ca-01b7ee8baf9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">팀원마다 설치 시점이 달라 다른 버전을 받을 수 있음</li></ul><ul id="e05720e4-6f49-82b7-aef0-81bc816fbd3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예제 코드의 재현성이 떨어짐</li></ul><p id="2fd720e4-6f49-836e-8a31-81ded2957b39" class="" dir="auto">그래서 최소한 대략적인 버전 범위는 고정하는 편이 좋다.</p><hr id="58e720e4-6f49-8281-ba83-812bf87f26ab" dir="auto"/><h2 id="a46720e4-6f49-8304-a8b5-815cce7e23d1" class="" dir="auto">5.5 예제: terraform 블록 완성 형태</h2><pre id="951720e4-6f49-82ac-8ee7-817947609523" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;
+
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;~&gt; 5.0&quot;
+    }
+  }
+}</code></pre><p id="322720e4-6f49-8258-8e38-012ec285fdd8" class="" dir="auto">이 코드는 다음을 의미한다.</p><ol type="1" id="932720e4-6f49-8291-b0d1-8112fc6e0c64" class="numbered-list" start="1" dir="auto"><li>Terraform CLI는 1.5.0 이상 2.0.0 미만이어야 함</li></ol><ol type="1" id="c12720e4-6f49-8222-aa52-814f3765a06a" class="numbered-list" start="2" dir="auto"><li>AWS Provider가 필요함</li></ol><ol type="1" id="3d2720e4-6f49-823b-a3d4-0199b0543c33" class="numbered-list" start="3" dir="auto"><li>AWS Provider는 HashiCorp 공식 소스에서 가져옴</li></ol><ol type="1" id="ee0720e4-6f49-8304-8bed-810ff68c2c35" class="numbered-list" start="4" dir="auto"><li>버전은 5.x 계열을 사용함</li></ol><p id="712720e4-6f49-83d7-96af-81741fe9e8f8" class="" dir="auto">이 블록은 이후의 <code>provider &quot;aws&quot;</code> 블록과 연결된다.</p><hr id="ea0720e4-6f49-838e-acfa-0114d48f19bb" dir="auto"/><h1 id="05d720e4-6f49-83ff-8194-8153856be2d3" class="" dir="auto">6. provider 블록</h1><h2 id="066720e4-6f49-82d4-a69d-812061769b4e" class="" dir="auto">6.1 provider 블록의 역할</h2><p id="bd1720e4-6f49-827c-bb44-81f4aea0f2cb" class="" dir="auto"><code>required_providers</code>가 “무슨 Provider가 필요한가”를 선언하는 영역이라면,</p><p id="a90720e4-6f49-82ce-a70c-01064203bc8b" class="" dir="auto"><code>provider</code> 블록은 “그 Provider를 어떤 방식으로 사용할 것인가”를 설정하는 영역이다.</p><p id="da9720e4-6f49-825b-b5b6-0120f2d8f25e" class="" dir="auto">즉,</p><ul id="1be720e4-6f49-83f3-8d93-811ccc2b3d6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>required_providers</code> → 설치 대상 선언</li></ul><ul id="17b720e4-6f49-8207-b383-01643bc5e139" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provider</code> → 실제 사용 설정</li></ul><p id="7c7720e4-6f49-8233-bf98-01399a7fe1d5" class="" dir="auto">이라고 이해하면 된다.</p><hr id="e0d720e4-6f49-833a-9c10-0125b7cab570" dir="auto"/><h2 id="a45720e4-6f49-8253-822a-01daa7f7cf53" class="" dir="auto">6.2 가장 기본적인 AWS Provider 설정</h2><pre id="96f720e4-6f49-82e6-9687-01875e4fffd0" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}</code></pre><p id="ecc720e4-6f49-82dd-b2b0-01bbbcf846d2" class="" dir="auto">이 코드는 AWS Provider를 사용하며, 기본 리전은 서울(<code>ap-northeast-2</code>)로 하겠다는 의미다.</p><p id="c5f720e4-6f49-83bc-af45-019d63c0ef86" class="" dir="auto">이제부터 이 Terraform 코드에서 AWS 리소스를 생성하면 특별히 다른 설정이 없는 한 이 리전을 기준으로 동작한다.</p><hr id="cc0720e4-6f49-838c-afed-8168ef723a79" dir="auto"/><h2 id="603720e4-6f49-8302-a4b9-81609b541d3d" class="" dir="auto">6.3 provider 블록에서 자주 보는 항목</h2><p id="7ff720e4-6f49-8283-9a56-017cc6f53459" class="" dir="auto">AWS Provider에서는 다음 항목을 자주 사용한다.</p><ul id="b3f720e4-6f49-8391-8a78-0191782db565" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>region</code></li></ul><ul id="df1720e4-6f49-83c0-a3e0-81a3d0b10bcf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>profile</code></li></ul><ul id="6b2720e4-6f49-8267-a7a1-8100ab7a3a76" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>access_key</code></li></ul><ul id="bd2720e4-6f49-82d9-940f-819e4c35cb95" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>secret_key</code></li></ul><p id="68e720e4-6f49-82b6-bc72-01b40808a1e5" class="" dir="auto">하지만 가능한 한 <strong>액세스 키를 코드에 직접 적지 않는 방식</strong>으로 진행하는 것이 좋다.</p><p id="351720e4-6f49-8233-a71b-817646ba07af" class="" dir="auto">실습 환경에서는 보통 다음 중 하나를 사용한다.</p><ol type="1" id="1cc720e4-6f49-8320-95c9-81cc304f4d5a" class="numbered-list" start="1" dir="auto"><li>AWS CLI로 미리 인증 설정</li></ol><ol type="1" id="11d720e4-6f49-83a8-afc9-01a715e226de" class="numbered-list" start="2" dir="auto"><li>환경 변수 사용</li></ol><ol type="1" id="060720e4-6f49-827c-bf5a-8145c3b33618" class="numbered-list" start="3" dir="auto"><li>EC2 IAM Role 사용</li></ol><p id="274720e4-6f49-82fe-a63e-81ed4826aa89" class="" dir="auto">초반 예제에서는 가장 단순하게 리전만 적고, 인증은 AWS CLI 기본 프로필을 사용하는 방식이 무난하다.</p><p id="b62720e4-6f49-828c-9454-0173ac1d41fa" class="" dir="auto">예시:</p><pre id="b60720e4-6f49-832e-b2fa-812b7292f54b" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+  profile = &quot;default&quot;
+}</code></pre><hr id="101720e4-6f49-83a4-bf1e-015afd9b0be1" dir="auto"/><h2 id="d1f720e4-6f49-8214-a2bf-01a91e62ded3" class="" dir="auto">6.4 왜 Provider 설정이 필요한가</h2><p id="bc6720e4-6f49-8357-8492-01e9049e7c25" class="" dir="auto">Terraform은 AWS에 리소스를 만들어야 해도, 기본적으로는 다음 정보를 알아야 한다.</p><ul id="57e720e4-6f49-8261-b7a3-01f6eb0d2b42" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어느 클라우드에 연결할지</li></ul><ul id="052720e4-6f49-8270-a601-810be7a1d65f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어느 리전에 만들지</li></ul><ul id="763720e4-6f49-82b2-a537-0156dcaf3e9b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 자격 증명으로 API를 호출할지</li></ul><p id="da7720e4-6f49-8346-87b8-810ad2f12470" class="" dir="auto">이 정보가 없으면 Terraform은 리소스를 선언해도 실제 작업 대상을 알 수 없다.</p><p id="6a2720e4-6f49-8220-b8a2-01aad2a36273" class="" dir="auto">즉, <code>resource</code>는 “무엇을 만들지”를 쓰는 곳이고,</p><p id="3a6720e4-6f49-83f9-bf04-81174d2cafbd" class="" dir="auto"><code>provider</code>는 “어디에 만들지”를 쓰는 곳이다.</p><hr id="0af720e4-6f49-8220-8f6a-014e09a604f4" dir="auto"/><h1 id="a60720e4-6f49-828a-a9e5-81efbe47bb00" class="" dir="auto">7. AWS Provider 기본 설정</h1><h2 id="d7c720e4-6f49-8206-b9bb-818140855121" class="" dir="auto">7.1 실습용 최소 코드</h2><p id="e39720e4-6f49-82d7-b8a5-819072374ce0" class="" dir="auto">다음은 AWS Provider를 사용하는 최소한의 예시 코드다.</p><p id="1ec720e4-6f49-837f-ab2e-81dc1b2f82d2" class="" dir="auto">파일명: <code>main.tf</code></p><pre id="44f720e4-6f49-83cc-80ab-8170fdbab87c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;
+
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;~&gt; 5.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}</code></pre><p id="662720e4-6f49-83fd-a03c-81645a072edb" class="" dir="auto">이 상태에서는 아직 아무 리소스도 만들지 않는다.</p><p id="b52720e4-6f49-8345-bdf0-8105f862bfa5" class="" dir="auto">하지만 Terraform은 이미 다음을 이해한 상태가 된다.</p><ul id="1de720e4-6f49-826e-804d-0161d5765825" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 버전으로 동작해야 하는지</li></ul><ul id="de0720e4-6f49-8271-bea1-014c27eaf6e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 Provider가 필요한지</li></ul><ul id="d15720e4-6f49-8237-bfb8-01108acc6991" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Provider를 어떤 리전으로 사용할지</li></ul><p id="b8d720e4-6f49-83fb-aebb-01ac3c73041e" class="" dir="auto">즉, <strong>인프라를 만들 준비 단계</strong>까지는 완료된 셈이다.</p><hr id="ed3720e4-6f49-837e-a1fe-01fe68c2a2d7" dir="auto"/><h2 id="1bb720e4-6f49-8317-bafb-0185c1ef4bfb" class="" dir="auto">7.2 인증은 어떻게 처리되는가</h2><p id="cd7720e4-6f49-8203-958e-01670fa768fe" class="" dir="auto">이 코드에는 액세스 키가 없다.</p><p id="3a1720e4-6f49-82fc-b82d-014fb275db75" class="" dir="auto">그렇다면 Terraform은 어떻게 AWS에 인증할까?</p><p id="5f4720e4-6f49-8282-b4d3-01240924f0ac" class="" dir="auto">AWS Provider는 일반적으로 AWS SDK의 인증 체인을 따른다.</p><p id="2d6720e4-6f49-8201-a618-013a8e435b82" class="" dir="auto">실습에서는 보통 아래 순서 중 하나로 인증된다.</p><ul id="f05720e4-6f49-8209-8396-81466836e8fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경 변수</li></ul><ul id="1ad720e4-6f49-8221-8ba9-014532fa43d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>~/.aws/credentials</code></li></ul><ul id="5be720e4-6f49-83c8-9587-8150ca79100e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>~/.aws/config</code></li></ul><ul id="d81720e4-6f49-8271-ae32-013383abcb53" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Role</li></ul><p id="5c4720e4-6f49-8398-a1b5-01fd19740a73" class="" dir="auto">예를 들어 AWS CLI에서 다음 명령으로 인증을 설정했다고 가정하자.</p><pre id="dc3720e4-6f49-8293-9e37-01d0ca2616a2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">aws configure</code></pre><p id="e31720e4-6f49-83cc-b739-81205d60b71d" class="" dir="auto">그러면 입력한 자격 증명이 로컬 파일에 저장되고, Terraform의 AWS Provider가 이를 참조해 인증할 수 있다.</p><p id="6eb720e4-6f49-83cd-b1ec-01da85053f91" class="" dir="auto">즉, Terraform이 AWS에 접속할 때 꼭 코드 안에 키를 적어야 하는 것은 아님.</p><hr id="47a720e4-6f49-83c7-9ce3-817f22bb3037" dir="auto"/><h1 id="0c8720e4-6f49-8308-81d0-01fe426f1ddd" class="" dir="auto">8. init과 Provider 다운로드 연결</h1><h2 id="69c720e4-6f49-82f3-a0eb-01390dddac5e" class="" dir="auto">8.1 terraform init은 무엇을 하는가</h2><p id="c5d720e4-6f49-8297-a79f-812840214e45" class="" dir="auto">Provider를 사용하려면 먼저 <strong>필요한 플러그인을 다운로드하고 작업 디렉터리를 초기화</strong>해야 한다.</p><p id="af6720e4-6f49-8249-b186-01e228a3d340" class="" dir="auto">이 작업을 수행하는 명령이 <code>terraform init</code>이다.</p><hr id="3f8720e4-6f49-8275-8b80-01b80604e0e9" dir="auto"/><h2 id="dcf720e4-6f49-834f-95bc-019e21589bf0" class="" dir="auto">8.2 init이 수행하는 핵심 작업</h2><p id="157720e4-6f49-83cd-a4e4-01c2e696035e" class="" dir="auto"><code>terraform init</code>은 보통 다음 작업을 수행한다.</p><h3 id="427720e4-6f49-8352-ae91-8194c8511a89" class="" dir="auto">1) 작업 디렉터리 초기화</h3><p id="796720e4-6f49-8258-a483-01e572c36963" class="" dir="auto">현재 디렉터리를 Terraform 작업 디렉터리로 준비한다.</p><h3 id="7c6720e4-6f49-8205-93ab-01c95f60877e" class="" dir="auto">2) Provider 다운로드</h3><p id="79b720e4-6f49-8202-9990-8116fbc21328" class="" dir="auto"><code>terraform</code> 블록 안의 <code>required_providers</code>를 보고 필요한 Provider를 다운로드한다.</p><h3 id="244720e4-6f49-8249-844e-812366f4fbfd" class="" dir="auto">3) 내부 메타데이터 생성</h3><p id="962720e4-6f49-8371-905b-813f3ba23807" class="" dir="auto"><code>.terraform</code> 디렉터리와 잠금 파일 등을 생성해 이후 명령이 동작할 수 있게 준비한다.</p><hr id="b9c720e4-6f49-8208-b1a5-01ca190e6994" dir="auto"/><h2 id="5ff720e4-6f49-83c8-9cf1-816a0dbf0249" class="" dir="auto">8.3 실제 실행 예시</h2><p id="e3d720e4-6f49-83b9-a073-01f6759719f4" class="" dir="auto">작업 디렉터리에서 다음 명령을 실행한다.</p><pre id="329720e4-6f49-83f5-9302-81d58180778b" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform init</code></pre><p id="117720e4-6f49-8204-9c3f-81c517a0074b" class="" dir="auto">실행 후에는 보통 다음과 같은 변화가 생긴다.</p><ul id="491720e4-6f49-8260-a256-81495270f240" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>.terraform/</code> 디렉터리 생성</li></ul><ul id="7aa720e4-6f49-8303-a534-812e1a0e781f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>.terraform.lock.hcl</code> 파일 생성</li></ul><hr id="50f720e4-6f49-820e-838d-8129b4b4f4cc" dir="auto"/><h2 id="c1b720e4-6f49-834b-885e-015b189ea4d1" class="" dir="auto">8.4 .terraform 디렉터리</h2><p id="ca8720e4-6f49-8270-8655-0103bfc0a80e" class="" dir="auto">이 디렉터리에는 다운로드된 Provider 플러그인과 내부 메타데이터가 저장된다.</p><p id="e10720e4-6f49-827e-9b84-816cdf0eae39" class="" dir="auto">즉, Terraform이 AWS Provider를 실제로 사용할 수 있게 만드는 준비물이 들어 있는 디렉터리다.</p><p id="061720e4-6f49-83f3-9879-0145b713f1d8" class="" dir="auto">보통 사용자가 직접 수정하지 않음.</p><hr id="cca720e4-6f49-835d-9b05-811a19d7962f" dir="auto"/><h2 id="1a8720e4-6f49-82e7-a213-8144643fa044" class="" dir="auto">8.5 .terraform.lock.hcl 파일</h2><p id="4c6720e4-6f49-82cb-95a6-019c66a62762" class="" dir="auto">이 파일은 Provider 잠금 파일이다.</p><p id="4b7720e4-6f49-837e-a83c-81b990ebd219" class="" dir="auto">실제로 어떤 Provider 버전이 선택되었는지를 기록한다.</p><p id="da1720e4-6f49-8233-9001-0137d205cb5a" class="" dir="auto">예를 들어 코드에 이렇게 적었다고 해보자.</p><pre id="1d2720e4-6f49-831d-a1d1-0185e203df17" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">version = &quot;~&gt; 5.0&quot;</code></pre><p id="69f720e4-6f49-8301-9b10-01f592959fa0" class="" dir="auto">이 조건은 5.x 범위 내에서 여러 버전이 가능하다.</p><p id="17c720e4-6f49-82fa-a782-01a03babd2bb" class="" dir="auto">그중 실제로 설치된 버전이 무엇인지 기록해 두는 것이 <code>.terraform.lock.hcl</code> 파일이다.</p><p id="973720e4-6f49-83ad-885c-8184ae8a4724" class="" dir="auto">이 파일이 중요한 이유는 협업 시 재현성을 높여주기 때문이다.</p><ul id="105720e4-6f49-82f0-9c18-811c37c3153e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내 PC에서 설치된 Provider 버전</li></ul><ul id="4f2720e4-6f49-839e-abaf-0131d7721397" class="bulleted-list" dir="auto"><li style="list-style-type:disc">팀원의 PC에서 설치되는 Provider 버전</li></ul><p id="cbc720e4-6f49-83dd-98aa-815ad2de8c4c" class="" dir="auto">이 달라지지 않도록 도와준다.</p><hr id="a76720e4-6f49-83bb-ade3-815bd670a65e" dir="auto"/><h1 id="600720e4-6f49-82c6-aa69-01a4c9a2dbf6" class="" dir="auto">9. 실습: terraform 블록과 AWS Provider 구성</h1><hr id="01d720e4-6f49-8341-ab17-018c408dfa0f" dir="auto"/><h2 id="2f2720e4-6f49-83fc-ad8c-014cba6ada8c" class="" dir="auto">9.1 실습 목표</h2><ul id="25e720e4-6f49-82f6-be2e-81b8040c63a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform</code> 블록 작성</li></ul><ul id="ec3720e4-6f49-8317-a187-016a1cc889fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>required_version</code> 설정</li></ul><ul id="864720e4-6f49-8386-a838-819553dc68be" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>required_providers</code> 설정</li></ul><ul id="555720e4-6f49-83ab-a080-01b9c85efab2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provider &quot;aws&quot;</code> 블록 작성</li></ul><ul id="c75720e4-6f49-8230-b8ff-0141b3fd8db1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform init</code>으로 Provider 다운로드 확인</li></ul><hr id="986720e4-6f49-8312-b3df-811e85923568" dir="auto"/><h2 id="f4c720e4-6f49-838e-9875-016b85eead8b" class="" dir="auto">9.2 실습 디렉터리 생성</h2><pre id="303720e4-6f49-82bc-b52d-81968e94b306" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">mkdir tf-provider-lab
+cd tf-provider-lab</code></pre><hr id="2b1720e4-6f49-836c-85c5-811f7f9bde92" dir="auto"/><h2 id="252720e4-6f49-8227-9b31-01ccaddb02b2" class="" dir="auto">9.3 main.tf 작성</h2><pre id="d26720e4-6f49-82fe-a011-8177823b277c" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">terraform {
+  required_version = &quot;&gt;= 1.5.0, &lt; 2.0.0&quot;
+
+  required_providers {
+    aws = {
+      source  = &quot;hashicorp/aws&quot;
+      version = &quot;~&gt; 5.0&quot;
+    }
+  }
+}
+
+provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}</code></pre><hr id="938720e4-6f49-8316-9899-81e4f5c92702" dir="auto"/><h2 id="b4e720e4-6f49-82cf-a1c8-81081bba9e65" class="" dir="auto">9.4 코드 형식 정리</h2><pre id="f99720e4-6f49-8369-abd2-01e65c57d633" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform fmt</code></pre><h3 id="c4a720e4-6f49-83cf-8b11-81e2796e943b" class="" dir="auto">설명</h3><p id="ae1720e4-6f49-8201-9100-81b8deb8f41d" class="" dir="auto"><code>terraform fmt</code>는 Terraform 코드의 들여쓰기와 정렬을 자동으로 맞춰준다.</p><p id="d9a720e4-6f49-82ea-b9ce-01378c9e45e1" class="" dir="auto">실행하지 않아도 코드는 동작할 수 있지만, 협업과 가독성을 위해 습관적으로 실행하는 것이 좋다.</p><hr id="64a720e4-6f49-83e7-a232-010321330675" dir="auto"/><h2 id="55d720e4-6f49-8219-91f4-811327ce9bd5" class="" dir="auto">9.5 초기화 실행</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="933720e4-6f49-8279-af5a-01c6cccb851d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">terraform init</code></pre><h3 id="f6c720e4-6f49-825a-b8a8-81642c1eec97" class="" dir="auto">기대 결과</h3><p id="8c3720e4-6f49-82e4-9b5d-01924fe16243" class="" dir="auto">출력 메시지에 다음과 같은 흐름이 보이면 정상이다.</p><ul id="af3720e4-6f49-8245-960b-81e1c18dbef4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform has been successfully initialized</li></ul><ul id="27e720e4-6f49-8265-9d4a-8169c057eb0d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Installing hashicorp/aws ...</li></ul><ul id="535720e4-6f49-8319-9867-0117dfa3709b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform has created a lock file ...</li></ul><p id="0b1720e4-6f49-826d-bd23-018d5265b6c0" class="" dir="auto">즉,</p><ul id="8c3720e4-6f49-835f-af8a-81b808d46fa8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Provider가 다운로드되었고</li></ul><ul id="ddd720e4-6f49-837f-ac7f-010c7df3d6db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현재 디렉터리가 Terraform 실행 준비 상태가 되었음</li></ul><p id="a5c720e4-6f49-826f-bcb7-81161e8ac442" class="" dir="auto">을 의미한다.</p><hr id="546720e4-6f49-82c0-9621-01e8a5382044" dir="auto"/><h2 id="ca9720e4-6f49-83e6-bff1-0113c9b32256" class="" dir="auto">9.6 생성 파일 확인</h2><ul id="946720e4-6f49-8381-97d3-01823ea64f5e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>main.tf</code></li></ul><ul id="c3b720e4-6f49-83e0-a4db-015381ad3a47" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>.terraform/</code></li></ul><ul id="2e9720e4-6f49-830d-90a3-81bfed1b8723" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>.terraform.lock.hcl</code></li></ul><h1 id="ab6720e4-6f49-8254-b8d1-012bf82b1633" class="" dir="auto">10. init과 Provider의 관계 이해하기</h1><h2 id="e6d720e4-6f49-8395-8e16-01987c3cccfd" class="" dir="auto">10.1 </h2><pre id="e12720e4-6f49-83da-8843-01aec77926a8" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">provider &quot;aws&quot; {
+  region = &quot;ap-northeast-2&quot;
+}</code></pre><p id="d6f720e4-6f49-82e3-b14a-012ea4dc5c25" class="" dir="auto">실제로 해당 Provider 플러그인을 가져와야 하며, 그 작업을 <code>terraform init</code>이 수행한다.</p><p id="20e720e4-6f49-83d3-9a58-81cbfc52e87c" class="" dir="auto">즉,</p><ul id="03c720e4-6f49-8377-be9b-813db7f23c8c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 작성 → 설정 선언</li></ul><ul id="128720e4-6f49-82e7-8ebc-0118a5ff5505" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform init</code> → 필요한 Provider 실제 다운로드</li></ul><hr id="5fd720e4-6f49-83b2-9d6f-813f50c5c1c3" dir="auto"/><h2 id="861720e4-6f49-836b-b97e-013226da9c3d" class="" dir="auto">10.2 왜 init을 먼저 해야 하는가</h2><p id="f61720e4-6f49-831c-99f2-018906d44c7b" class="" dir="auto">Terraform이 <code>plan</code>, <code>apply</code>, <code>validate</code> 같은 작업을 하려면</p><p id="a70720e4-6f49-82d8-b5bc-01a15f47473d" class="" dir="auto">해당 Provider가 제공하는 스키마와 동작 방식을 알아야 한다.</p><p id="dea720e4-6f49-83d7-b35d-81a9a4dd8abc" class="" dir="auto">예를 들어 AWS의 EC2 리소스를 쓰려면 Terraform은 AWS Provider를 통해 다음을 알아야 한다.</p><ul id="e90720e4-6f49-83b8-93e5-819bc5b3e5cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이 리소스 이름이 유효한지</li></ul><ul id="9d2720e4-6f49-82f5-96f7-81dc0ba880cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 인자들이 필요한지</li></ul><ul id="a93720e4-6f49-82fe-b89c-81b483dd5ba8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 API를 호출해야 하는지</li></ul><p id="c98720e4-6f49-839e-9b62-01b82bad1ef7" class="" dir="auto">따라서 Provider가 준비되지 않으면 정상적인 해석이 어렵다.</p><hr id="15a720e4-6f49-828f-b020-816a17444639" dir="auto"/><h1 id="4e6720e4-6f49-83e7-82a8-01d55170d0da" class="" dir="auto">11. 자주 발생하는 오류와 원인</h1><h2 id="c48720e4-6f49-825d-b655-817681c520df" class="" dir="auto">11.1 <code>terraform init</code> 전에 다른 명령 실행</h2><p id="c36720e4-6f49-823a-996a-8117cbcd711a" class="" dir="auto">예를 들어 <code>terraform plan</code>을 먼저 실행하면 초기화가 필요하다는 메시지가 나올 수 있다.</p><p id="5f6720e4-6f49-830e-8111-81d4c9a7c0e2" class="" dir="auto">원인:</p><ul id="89b720e4-6f49-83e3-b52b-819625831693" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Provider가 아직 다운로드되지 않았음</li></ul><ul id="f0e720e4-6f49-821f-84e2-8139441d653c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">작업 디렉터리가 아직 초기화되지 않았음</li></ul><p id="309720e4-6f49-83ae-825d-014728c6d685" class="" dir="auto">해결:</p><pre id="bda720e4-6f49-83a9-9170-01bf1e9bd1c2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">terraform init</code></pre><hr id="219720e4-6f49-83e0-92ed-81bccb4d5746" dir="auto"/><h2 id="dbf720e4-6f49-83dc-ac22-018a8167ace2" class="" dir="auto">11.2 잘못된 Provider 소스 지정</h2><p id="1ed720e4-6f49-8334-95e9-0164f24a157f" class="" dir="auto">예를 들어 다음처럼 오타가 있으면 다운로드에 실패할 수 있다.</p><pre id="1d8720e4-6f49-82e8-9f4b-01a5f75dbac1" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">source = &quot;hashcorp/aws&quot;</code></pre><p id="2d2720e4-6f49-8287-8aa8-014bb2703137" class="" dir="auto"><code>hashicorp</code>를 <code>hashcorp</code>로 잘못 적은 경우다.</p><p id="d02720e4-6f49-839e-bcc0-81155734b82a" class="" dir="auto">해결:</p><ul id="3b4720e4-6f49-8387-8e39-0177b868c1d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Provider source 경로 확인</li></ul><ul id="add720e4-6f49-8345-8105-81465c934850" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공식 문서 기준으로 수정</li></ul><hr id="9a3720e4-6f49-82b6-bbfb-0131866d6fd7" dir="auto"/><h2 id="40c720e4-6f49-827f-b2cc-013cdcfffbbd" class="" dir="auto">11.3 지원되지 않는 Terraform 버전</h2><pre id="e87720e4-6f49-83f7-a4fd-817e0a84ddab" class="code code-wrap" data-notion-code-syntax="hcl"><code class="language-hcl" style="white-space:pre-wrap;word-break:break-all">required_version = &quot;&gt;= 1.8.0&quot;</code></pre><p id="640720e4-6f49-82a7-a7de-0145ce15648f" class="" dir="auto">이렇게 적었는데 실제 설치 버전이 1.6.0이면 실행되지 않는다.</p><p id="6dc720e4-6f49-82f3-900b-8113d0ff13d5" class="" dir="auto">해결:</p><ul id="2f5720e4-6f49-827a-b869-01b28b062d17" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Terraform CLI 버전 업그레이드</li></ul><ul id="e47720e4-6f49-8307-85ce-81883ef3a0e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">또는 코드의 버전 조건 재검토</li></ul><hr id="a78720e4-6f49-8227-8e20-819ed270057e" dir="auto"/><h2 id="865720e4-6f49-82eb-acfa-01d47dee12fd" class="" dir="auto">11.4 AWS 인증 관련 오류</h2><p id="1dc720e4-6f49-833d-97f9-81e8330ec1ef" class="" dir="auto">Provider 설정은 맞아도 인증 정보가 없으면 AWS API 호출 시 실패한다.</p><p id="e45720e4-6f49-8350-a564-81915953fdd1" class="" dir="auto">예시 원인:</p><ul id="fb8720e4-6f49-83c9-bce9-0107027ac716" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>aws configure</code> 미실행</li></ul><ul id="6c6720e4-6f49-8269-89d3-81f9f7ef58db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">잘못된 프로필 사용</li></ul><ul id="55e720e4-6f49-8249-8bc3-0113feb99280" class="bulleted-list" dir="auto"><li style="list-style-type:disc">액세스 키 오류</li></ul><ul id="46f720e4-6f49-8306-8fbd-0197f8a09c0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">권한 부족</li></ul><p id="68a720e4-6f49-8242-a478-817e7d67b1fd" class="" dir="auto">해결 흐름:</p><pre id="073720e4-6f49-82ed-99ea-812479b1a25d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">aws sts get-caller-identity</code></pre><p id="0db720e4-6f49-8269-be49-01b0c0b50ca7" class="" dir="auto">이 명령이 정상 응답하는지 먼저 확인하면 좋다.</p><p id="dc1720e4-6f49-83d5-9f60-017a20f6f2ea" class="" dir="auto">이 명령이 실패하면 Terraform도 AWS 인증 단계에서 실패할 가능성이 높다.</p><hr id="581720e4-6f49-82a5-bf22-016cb63d82d1" dir="auto"/><h1 id="0cf720e4-6f49-8366-895e-815aa7585c4d" class="" dir="auto">12. 실습 확장: profile 지정해보기</h1><p id="121720e4-6f49-8244-b668-01d3cb5276ef" class="" dir="auto">AWS CLI에 여러 프로필이 있는 경우 <code>provider</code> 블록에서 특정 프로필을 명시할 수 있다.</p><pre id="80d720e4-6f49-8263-8c13-01c544a1172a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">provider &quot;aws&quot; {
+  region  = &quot;ap-northeast-2&quot;
+  profile = &quot;default&quot;
+}</code></pre><p id="38e720e4-6f49-82c7-a6d5-01625aa6fbd6" class="" dir="auto">또는 예를 들어 학습용 프로필이 <code>terraform-lab</code>이라면 다음처럼 설정할 수 있다.</p><pre id="e33720e4-6f49-83e6-815b-012307307250" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">provider &quot;aws&quot; {
+  region  = &quot;ap-northeast-2&quot;
+  profile = &quot;terraform-lab&quot;
+}</code></pre><p id="525720e4-6f49-8344-a530-01f1d0c30305" class="" dir="auto">이 경우 Terraform은 해당 프로필의 인증 정보를 사용해 AWS API를 호출한다.</p><hr id="e9f720e4-6f49-8395-ac2b-0119d6d82391" dir="auto"/><h1 id="be2720e4-6f49-829e-962d-814fa40fe529" class="" dir="auto">13. 장 마무리</h1><p id="3f5720e4-6f49-8325-aa1e-81d1e5adc7c4" class="" dir="auto">이 장에서는 Terraform 코드의 기반이 되는 두 축을 다뤘다.</p><ul id="851720e4-6f49-8237-9752-819bc4a4f64f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>terraform</code> 블록은 Terraform 실행 규칙을 정의하는 영역</li></ul><ul id="4c1720e4-6f49-8285-b07c-0137bef18679" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provider</code> 블록은 외부 플랫폼과 연결하는 설정 영역</li></ul><p id="c9c720e4-6f49-8375-bbac-01840824b086" class="" dir="auto">특히 다음 구분이 중요하다.</p><ul id="4df720e4-6f49-821e-894c-812ed7a34ba3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>required_providers</code>는 <strong>무슨 Provider가 필요한지 선언</strong></li></ul><ul id="062720e4-6f49-8247-a2a8-81985343eabd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>provider</code> 블록은 <strong>그 Provider를 어떻게 사용할지 설정</strong></li></ul><p id="98b720e4-6f49-82ce-9764-81fd95f7feb2" class="" dir="auto">또한 <code>terraform init</code>은 단순한 시작 명령이 아니라,</p><p id="85c720e4-6f49-8354-9e2e-811d781aad87" class="" dir="auto"><strong>Provider 다운로드와 작업 디렉터리 초기화</strong>를 수행하는 필수 단계이다.</p></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

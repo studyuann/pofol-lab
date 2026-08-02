@@ -1,0 +1,840 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>9장. Service (ClusterIP / NodePort / LoadBalancer)</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="4de720e4-6f49-8283-8b0d-01597320efca" class="page sans"><header><h1 class="page-title" dir="auto">9장. Service (ClusterIP / NodePort / LoadBalancer)</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><figure id="046720e4-6f49-82e5-ae75-81946ee54881" class="image" data-notion-image="9%EC%9E%A5%20Service%20(ClusterIP%20NodePort%20LoadBalancer)/image.png" dir="ltr"><a href="9%EC%9E%A5%20Service%20(ClusterIP%20NodePort%20LoadBalancer)/image.png"><img style="width:612.9910888671875px" src="9%EC%9E%A5%20Service%20(ClusterIP%20NodePort%20LoadBalancer)/image.png"/></a></figure><h1 id="32e720e4-6f49-8208-8a3a-814b3d0deb93" class="" dir="auto">1. Service란 무엇인가?</h1><hr id="86f720e4-6f49-82cb-a915-011b883922c7" dir="auto"/><h2 id="bd1720e4-6f49-8200-976d-01b03e5183b6" class="" dir="auto">1.1 왜 Service가 필요한가?</h2><p id="ed3720e4-6f49-8287-8917-0119a4b587c5" class="" dir="auto">Pod의 특징:</p><ul id="41c720e4-6f49-83f0-9b43-0142d421a167" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod IP는 동적으로 생성됨</li></ul><ul id="b55720e4-6f49-831a-b6ec-01a966d39049" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 재생성 시 IP 변경</li></ul><ul id="c21720e4-6f49-8250-9195-8126ef217063" class="bulleted-list" dir="auto"><li style="list-style-type:disc">직접 IP 접근은 불안정</li></ul><p id="944720e4-6f49-832b-a37e-01f6e2099e3b" class="" dir="auto">예:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="41c720e4-6f49-8396-bd7f-81f43a227ca4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Pod A → 10.244.1.5
+Pod 재시작 → 10.244.2.7</code></pre><p id="2f0720e4-6f49-837d-83d2-810a16a59848" class="" dir="auto">이 문제를 해결하기 위해 Service를 사용한다.</p><p id="3f8720e4-6f49-831c-be3a-819944b47263" class="" dir="auto">Service는:</p><blockquote id="7dc720e4-6f49-8331-8dd3-812d6bdb60a0" class="" dir="auto">Pod 집합에 대한 고정된 네트워크 진입점</blockquote><hr id="ac8720e4-6f49-821b-bfe7-0154abe21be3" dir="auto"/><h2 id="418720e4-6f49-822a-a42a-017725c6e642" class="" dir="auto">1.2 Service의 핵심 기능</h2><p id="9fc720e4-6f49-826b-ace3-8140eab90c8b" class="" dir="auto">Service는 다음 3가지를 제공한다.</p><ol type="1" id="e94720e4-6f49-8313-97f5-01e93331c9f2" class="numbered-list" start="1" dir="auto"><li>고정 가상 IP (ClusterIP)</li></ol><ol type="1" id="6d1720e4-6f49-8209-913a-018390c81bcc" class="numbered-list" start="2" dir="auto"><li>라벨 기반 Pod 선택</li></ol><ol type="1" id="2ca720e4-6f49-82a2-800c-0144db9e8e78" class="numbered-list" start="3" dir="auto"><li>자동 로드밸런싱</li></ol><hr id="3ac720e4-6f49-834c-818a-0185c3ed1e2e" dir="auto"/><h2 id="6de720e4-6f49-836d-b064-818f227960c9" class="" dir="auto">1.3 Service 내부 구조</h2><pre id="4cc720e4-6f49-8358-829d-01e3fadb98a0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Client
+   ↓
+Service (Virtual IP)
+   ↓
+kube-proxy (iptables/IPVS)
+   ↓
+Pod 여러 개로 분산</code></pre><p id="6bd720e4-6f49-822a-94f3-81c72b502b7a" class="" dir="auto">kube-proxy가 실제 트래픽 전달을 담당한다.</p><hr id="87e720e4-6f49-83b5-86e5-01d28221f14f" dir="auto"/><h1 id="857720e4-6f49-8270-8f41-81608d08af96" class="" dir="auto">2. Service 타입 3가지 (이론)</h1><hr id="62c720e4-6f49-835b-bbe2-81729f0a3f98" dir="auto"/><table id="14a720e4-6f49-8237-8076-815304cfc773" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="3c6720e4-6f49-8374-ae87-01de040f8ff9" dir="ltr"><th id="~a|Q" class="simple-table-header-color simple-table-header">타입</th><th id="Dp;h" class="simple-table-header-color simple-table-header">외부 접근</th><th id="u\`^" class="simple-table-header-color simple-table-header">사용 목적</th></tr></thead><tbody><tr id="42e720e4-6f49-8246-b1d7-01fd65472f5c" dir="ltr"><td id="~a|Q" class="">ClusterIP</td><td id="Dp;h" class="">❌</td><td id="u\`^" class="">내부 통신</td></tr><tr id="0a7720e4-6f49-826a-a41a-81ddc2ef9cd7" dir="ltr"><td id="~a|Q" class="">NodePort</td><td id="Dp;h" class="">O</td><td id="u\`^" class="">테스트</td></tr><tr id="b65720e4-6f49-822f-a37d-81a706d86be8" dir="ltr"><td id="~a|Q" class="">LoadBalancer</td><td id="Dp;h" class="">O</td><td id="u\`^" class="">운영</td></tr></tbody></table><hr id="be7720e4-6f49-820a-a08a-017f13e3c770" dir="auto"/><h1 id="069720e4-6f49-82f4-838b-81cee313504d" class="" dir="auto">3. ClusterIP</h1><hr id="cdf720e4-6f49-8286-b88d-0142ded3a8a2" dir="auto"/><h2 id="9fd720e4-6f49-8257-8b32-8154438ec96f" class="" dir="auto">3.1 개념</h2><ul id="6dd720e4-6f49-8360-8d7b-819cfd2f38de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 Service 타입</li></ul><ul id="c92720e4-6f49-8220-b4fe-01b3a01ca654" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클러스터 내부에서만 접근 가능</li></ul><hr id="6c5720e4-6f49-83e2-9840-81be5fe5ef31" dir="auto"/><h2 id="599720e4-6f49-8299-8603-81e9c4f7a673" class="" dir="auto">3.2 구조</h2><pre id="da9720e4-6f49-82ee-b1bc-01c2d38d5e7e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Pod A
+Pod B
+Pod C
+   ↑
+Service (ClusterIP)
+   ↑
+다른 Pod</code></pre><hr id="9d2720e4-6f49-83f6-8fa2-0101dde470ce" dir="auto"/><h2 id="b99720e4-6f49-83de-92bc-819e5f84200d" class="" dir="auto">3.3 YAML 예제</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="26b720e4-6f49-82a2-a9e7-0173b9d2f1a2" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Service
+metadata:
+  name: web-clusterip
+spec:
+  type: ClusterIP
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80</code></pre><hr id="356720e4-6f49-8228-b0b8-81eeea4c93e2" dir="auto"/><h1 id="e62720e4-6f49-835e-8380-8195349cefab" class="" dir="auto">4. NodePort</h1><hr id="378720e4-6f49-838f-9ef4-01208a9ad155" dir="auto"/><h2 id="9a4720e4-6f49-831a-8e88-81f821fb03b5" class="" dir="auto">4.1 개념</h2><ul id="d3b720e4-6f49-8346-b6ea-81a4af990ede" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드 IP + 포트로 외부 접근 가능</li></ul><ul id="81b720e4-6f49-83ed-bb08-81bb3de051a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 노드에서 동일 포트 오픈</li></ul><hr id="ef5720e4-6f49-82c2-8fb3-81c99b1704cb" dir="auto"/><h2 id="d9e720e4-6f49-82d3-a17b-01679f412819" class="" dir="auto">4.2 구조</h2><pre id="1c8720e4-6f49-8347-a1ab-817fb9c02fb8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+   ↓
+NodeIP:30007
+   ↓
+Service
+   ↓
+Pod</code></pre><hr id="903720e4-6f49-8298-836e-0198edf667b5" dir="auto"/><h2 id="718720e4-6f49-8206-9435-018cffc90f4e" class="" dir="auto">4.3 특징</h2><ul id="f6e720e4-6f49-83dc-ad75-013829cdfa2a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트 범위: 30000~32767</li></ul><ul id="7de720e4-6f49-83bb-bd9b-818d84dec198" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내부적으로 ClusterIP 포함</li></ul><ul id="1e5720e4-6f49-83ec-b089-0162ca29f019" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영보다는 테스트 환경에 적합</li></ul><hr id="d77720e4-6f49-82b8-9baa-810d5e826bf4" dir="auto"/><h1 id="87f720e4-6f49-83a8-97fe-8168c8cf987b" class="" dir="auto">5. LoadBalancer</h1><hr id="518720e4-6f49-823a-8f51-815388719b2e" dir="auto"/><h2 id="799720e4-6f49-8209-87cb-81ecb780f929" class="" dir="auto">5.1 개념</h2><ul id="b2e720e4-6f49-8374-a32f-810ec0c9837e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 Load Balancer 생성 요청</li></ul><ul id="c96720e4-6f49-834c-985d-81e7b7017e14" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클라우드 환경에서 자동 생성</li></ul><ul id="5dc720e4-6f49-8284-8e38-8177e364ceac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경에서 사용</li></ul><hr id="286720e4-6f49-8273-ab2a-81055d979dcd" dir="auto"/><h2 id="5c1720e4-6f49-82b9-a925-81739822dbed" class="" dir="auto">5.2 내부 구조</h2><p id="1a2720e4-6f49-83a6-9232-81f0ab80f7b8" class="" dir="auto">LoadBalancer는 실제로 다음 구조다.</p><pre id="b18720e4-6f49-83b3-aa0f-01589d64eaea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Internet
+   ↓
+External LoadBalancer
+   ↓
+NodePort
+   ↓
+ClusterIP
+   ↓
+Pod</code></pre><p id="404720e4-6f49-8225-b792-01f805386749" class="" dir="auto">즉,</p><pre id="0cf720e4-6f49-82f6-aca8-81876af8bce8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">LoadBalancer ⊃ NodePort ⊃ ClusterIP</code></pre><hr id="18c720e4-6f49-82fc-905b-81029e8a4c5d" dir="auto"/><h1 id="22a720e4-6f49-8382-8be7-017f7acc4fd1" class="" dir="auto">6. 클라우드 vs 온프레미스 차이</h1><hr id="df3720e4-6f49-821d-a34d-81f077b070c5" dir="auto"/><h2 id="1f6720e4-6f49-8263-80b6-010cd7c5f155" class="" dir="auto">6.1 클라우드 환경</h2><p id="6c5720e4-6f49-8222-ae6c-0150afb6d027" class="" dir="auto">지원 환경:</p><ul id="ff3720e4-6f49-8230-871e-016a457693b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS</li></ul><ul id="09a720e4-6f49-838f-a5b0-011ebc5b927c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP</li></ul><ul id="7df720e4-6f49-8251-a279-01b445d96c89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Azure</li></ul><ul id="afc720e4-6f49-8295-bb90-81b623da9e0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">KakaoCloud</li></ul><h3 id="d8d720e4-6f49-8235-aaf5-016b87fa11c5" class="" dir="auto">동작 과정</h3><pre id="d85720e4-6f49-820b-8972-8167cfe783c1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Service 생성
+   ↓
+Cloud Controller Manager 감지
+   ↓
+클라우드 API 호출
+   ↓
+외부 LB 생성
+   ↓
+Public IP 자동 할당</code></pre><p id="e13720e4-6f49-83d1-b76b-81465bce4c59" class="" dir="auto">확인:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="dcb720e4-6f49-82e9-be91-01a77cacc5fb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc</code></pre><pre id="392720e4-6f49-83fa-9788-8181c459bad1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EXTERNAL-IP  34.123.45.67</code></pre><hr id="acc720e4-6f49-826a-ad68-01eb126557c8" dir="auto"/><h2 id="02e720e4-6f49-8383-bc1b-01dd34bd5b33" class="" dir="auto">6.2 온프레미스 환경</h2><p id="b43720e4-6f49-8282-a697-019da5675a56" class="" dir="auto">온프레미스에서는:</p><pre id="b2f720e4-6f49-82cf-bebc-016bd5325959" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EXTERNAL-IP  &lt;pending&gt;</code></pre><p id="d3e720e4-6f49-8387-adc3-811da713a92f" class="" dir="auto">이유:</p><ul id="83c720e4-6f49-82ce-a326-81d9f3b4bd8e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클라우드 API 없음</li></ul><ul id="1ea720e4-6f49-83ac-8b60-81a7623ea077" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 LB 자동 생성 불가</li></ul><hr id="a66720e4-6f49-836a-9d53-81d3d5f177f9" dir="auto"/><h2 id="843720e4-6f49-835e-93dd-81272049fa91" class="" dir="auto">6.3 해결 방법 – MetalLB</h2><p id="559720e4-6f49-8326-9364-01b0c5ba2a8b" class="" dir="auto">MetalLB는:</p><ul id="e44720e4-6f49-833b-8a37-810dce3569a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">온프레미스에서 LoadBalancer 구현</li></ul><ul id="6a3720e4-6f49-829d-b23f-8108c52ae2ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP Pool에서 IP 자동 할당</li></ul><p id="110720e4-6f49-82fc-9b36-01b643de986a" class="" dir="auto">구조:</p><pre id="407720e4-6f49-8338-9c8e-8153fe6f172d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Service (LoadBalancer)
+   ↓
+MetalLB
+   ↓
+외부 IP 할당</code></pre><hr id="a02720e4-6f49-82e5-b718-01569b92cee1" dir="auto"/><h1 id="e76720e4-6f49-831d-acc7-015b11df40b6" class="" dir="auto">7. 단계별 실습</h1><hr id="36c720e4-6f49-8283-b239-019155c88874" dir="auto"/><h1 id="e97720e4-6f49-8387-8e45-81c2382b0d77" class="" dir="auto">7.1 Step 1 – Deployment 생성</h1><pre id="bfc720e4-6f49-823d-8be2-017efb9df882" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create deployment web --image=nginx
+kubectl scale deployment web --replicas=3</code></pre><p id="9c7720e4-6f49-82f9-b1e5-818f0ddf850f" class="" dir="auto">확인:</p><pre id="c75720e4-6f49-8351-b76b-01e6fb9b7173" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -o wide</code></pre><hr id="6cd720e4-6f49-833f-b12d-01803f16e781" dir="auto"/><h1 id="f9d720e4-6f49-8216-916f-8138602c6532" class="" dir="auto">7.2 Step 2 – ClusterIP 실습</h1><pre id="57f720e4-6f49-8236-ac0f-01dd4580931d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl expose deployment web --port=80 --target-port=80 --type=ClusterIP</code></pre><p id="578720e4-6f49-837f-b37f-812e4217dfdf" class="" dir="auto">확인:</p><pre id="dad720e4-6f49-8206-baf9-812bed6d39f9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc
+kubectl get endpoints</code></pre><p id="09b720e4-6f49-831a-af73-01c4934e74b0" class="" dir="auto">내부 테스트:</p><pre id="be1720e4-6f49-8297-97b5-810537b8d679" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl run test --image=busybox -it --rm -- sh
+wget -qO- http://web</code></pre><hr id="281720e4-6f49-8317-b80b-0164f5486c9d" dir="auto"/><h1 id="56e720e4-6f49-83bf-bef8-010b415e0024" class="" dir="auto">7.3 Step 3 – NodePort 변경</h1><pre id="97c720e4-6f49-831e-b93c-81da22e354a7" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl patch svc web -p &#x27;{&quot;spec&quot;:{&quot;type&quot;:&quot;NodePort&quot;}}&#x27;</code></pre><pre id="d0d720e4-6f49-82f7-b39e-81963eab33a5" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Service
+metadata:
+  name: web-nodeport
+spec:
+  type: NodePort
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80
+    nodePort: 30080</code></pre><p id="273720e4-6f49-83d2-a79d-81c1e7ad336a" class="" dir="auto">확인:</p><pre id="e42720e4-6f49-8392-b48c-81832ad21e79" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc</code></pre><p id="44c720e4-6f49-8243-9707-015626d8ba9f" class="" dir="auto">접속:</p><pre id="314720e4-6f49-8347-9f03-81d0bab4c58d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://NodeIP:&lt;nodePort&gt;</code></pre><hr id="dd5720e4-6f49-83a7-86bb-81411737aae6" dir="auto"/><h1 id="50e720e4-6f49-8236-9d4a-01f362b89263" class="" dir="auto">7.4 Step 4 – LoadBalancer 변경 (클라우드)</h1><pre id="b9c720e4-6f49-8214-a7ae-01c282666f36" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Service
+metadata:
+  name: web-lb
+spec:
+  type: LoadBalancer
+  selector:
+    app: web
+  ports:
+  - port: 80
+    targetPort: 80</code></pre><pre id="d4a720e4-6f49-83f1-801e-0152d94e9163" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl patch svc web -p &#x27;{&quot;spec&quot;:{&quot;type&quot;:&quot;LoadBalancer&quot;}}&#x27;</code></pre><p id="a40720e4-6f49-824f-8ae3-81cb4bdef14c" class="" dir="auto">확인:</p><pre id="006720e4-6f49-8322-b110-81ebaf78e1fd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc</code></pre><p id="e64720e4-6f49-820f-88a4-016f6a3bdcee" class="" dir="auto">EXTERNAL-IP 확인.</p><hr id="7f5720e4-6f49-820c-858d-81bb2b9832a3" dir="auto"/><h1 id="335720e4-6f49-83e1-b16f-01a4b8357846" class="" dir="auto">7.5 온프레미스에서 확인</h1><pre id="71d720e4-6f49-82d1-b6b6-8152ba8f4e91" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc</code></pre><pre id="d96720e4-6f49-825c-bcef-8191816e72a7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EXTERNAL-IP &lt;pending&gt;</code></pre><p id="e86720e4-6f49-8283-a30a-8183d50e1167" class="" dir="auto">이 상태가 정상이다.</p><hr id="011720e4-6f49-837c-baee-81e87a9d2d18" dir="auto"/><h1 id="3f8720e4-6f49-8216-bbc0-81147d1ff247" class="" dir="auto">8. Endpoint 이해 실습</h1><p id="831720e4-6f49-8315-8973-01fb4563bd0a" class="" dir="auto">라벨 변경:</p><pre id="014720e4-6f49-82ed-b0a5-8161feada03b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl label pod &lt;pod이름&gt; app=other --overwrite</code></pre><p id="ba9720e4-6f49-8359-804b-81acab3be213" class="" dir="auto">확인:</p><pre id="e6a720e4-6f49-826b-a975-81b98d7db797" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get endpoints</code></pre><p id="e4d720e4-6f49-82dc-a492-0181d0fb5947" class="" dir="auto">Endpoint 비어 있음.</p><p id="544720e4-6f49-83b8-9339-014d20f51edc" class="" dir="auto">→ Service는 라벨 기반 동작.</p><hr id="e93720e4-6f49-8315-91a4-814ac0059722" dir="auto"/><h1 id="e32720e4-6f49-83b3-aa19-811a24c0590d" class="" dir="auto">9. 트러블슈팅</h1><hr id="de3720e4-6f49-82b1-8969-81b024d7a5d9" dir="auto"/><h2 id="218720e4-6f49-822b-892c-811811e207c4" class="" dir="auto">외부 접속 안 됨</h2><ul id="222720e4-6f49-822e-a084-81ccb14ff451" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 그룹 확인</li></ul><ul id="bb6720e4-6f49-83b4-b8a2-81656123f6a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방화벽 확인</li></ul><ul id="9ba720e4-6f49-82ec-92eb-019ef51f5195" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NodePort 범위 확인</li></ul><hr id="b25720e4-6f49-829b-a6ae-016bcd21fc05" dir="auto"/><h2 id="dd2720e4-6f49-8395-8a95-815d2e99d444" class="" dir="auto">EXTERNAL-IP 계속 pending</h2><ul id="53d720e4-6f49-82ac-b146-01eea4184911" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클라우드 환경인지 확인</li></ul><ul id="f7f720e4-6f49-827f-80ba-8182071a796a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MetalLB 설치 여부 확인</li></ul><hr id="7c6720e4-6f49-8211-88b2-8134426471b8" dir="auto"/><h1 id="c54720e4-6f49-83da-b01c-81f40a177eec" class="" dir="auto">10. 핵심 정리</h1><p id="71a720e4-6f49-8266-bcde-0180936de876" class="" dir="auto">Service는:</p><ul id="775720e4-6f49-836b-ad67-810b80372203" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 집합에 대한 고정 진입점</li></ul><ul id="791720e4-6f49-8229-8e7c-01e3a6440e39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라벨 기반 연결</li></ul><ul id="924720e4-6f49-8331-a17e-81d8d5d044e4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 로드밸런싱</li></ul><p id="c67720e4-6f49-8236-93be-01652ee3965f" class="" dir="auto">타입 요약:</p><ol type="1" id="e38720e4-6f49-83e2-8d91-014b4209e77f" class="numbered-list" start="1" dir="auto"><li>ClusterIP → 내부 전용</li></ol><ol type="1" id="689720e4-6f49-8312-8abd-016338dc9fe9" class="numbered-list" start="2" dir="auto"><li>NodePort → 노드 포트 외부 접근</li></ol><ol type="1" id="f5a720e4-6f49-8378-ae14-01af7a68fe23" class="numbered-list" start="3" dir="auto"><li>LoadBalancer → 클라우드 외부 서비스</li></ol><p id="a85720e4-6f49-821e-aa5c-01e0272a1781" class="" dir="auto">환경 차이:</p><ul id="a93720e4-6f49-82f9-9b94-814622898562" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클라우드 → 자동 IP</li></ul><ul id="c1a720e4-6f49-832f-80e8-81989680c7c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">온프레미스 → 추가 구성 필요 (MetalLB)</li></ul><hr id="41b720e4-6f49-8208-9cb7-817f7e862afb" dir="auto"/><figure id="6ed720e4-6f49-8295-b96d-01849a79a168" class="link-to-page"><a href="9%EC%9E%A5%20Service%20(ClusterIP%20NodePort%20LoadBalancer)/MetalLB(%EB%A1%9C%EB%93%9C%EB%B0%B8%EB%9F%B0%EC%84%9C%20%EA%B5%AC%ED%98%84%EC%B2%B4)%206ed720e46f498295b96d01849a79a168.html" data-notion-page-id="6ed720e4-6f49-8295-b96d-01849a79a168" data-notion-space-id="56e9dfa9-059a-473f-a2ad-357c52ceb825">MetalLB(로드밸런서 구현체)</a></figure></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,1049 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>S3 자동화 스크립트 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="73e720e4-6f49-8221-80c7-816c5d1d4c5d" class="page sans"><header><h1 class="page-title" dir="auto">S3 자동화 스크립트 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="c0b720e4-6f49-833d-aa40-01ebd8b527d5" class="" dir="auto">개요</h2><p id="6e4720e4-6f49-82e5-8b7d-0142f6ac9d6c" class="" dir="auto">이 장에서는 <code>boto3</code>를 사용해 S3 버킷과 객체를 조회하고, 로컬 파일을 S3로 업로드하거나 S3 객체를 로컬로 다운로드하는 자동화 코드를 작성한다.</p><p id="8f4720e4-6f49-83c5-8b07-81f5a0447ef1" class="" dir="auto">또한 <code>prefix</code>를 활용한 객체 필터링, 예외 처리, 함수 분리를 통한 코드 구조 개선까지 함께 다룬다.</p><p id="0fa720e4-6f49-8359-9399-0175086c3dce" class="" dir="auto">이 장의 목표는 S3를 콘솔에서 사용하는 수준을 넘어서, <strong>파일 처리 작업을 Python 코드로 자동화하는 흐름</strong>을 익히는 것이다.</p><hr id="b1a720e4-6f49-83f4-b554-819cf282d33b" dir="auto"/><h2 id="8c3720e4-6f49-8349-afdd-0166d55fdfa2" class="" dir="auto">학습 목표</h2><p id="e7f720e4-6f49-828a-a418-81320143ace5" class="" dir="auto">이 장을 마치면 다음을 할 수 있어야 한다.</p><ul id="511720e4-6f49-8252-be0e-01040eea6889" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>boto3</code>로 S3 버킷 목록을 조회할 수 있다.</li></ul><ul id="d51720e4-6f49-8309-9c4a-816b60bd4900" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 객체 목록을 조회하고 Key를 출력할 수 있다.</li></ul><ul id="082720e4-6f49-826b-8d3b-814a5ce72739" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>prefix</code>를 사용해 특정 경로처럼 보이는 객체 그룹만 조회할 수 있다.</li></ul><ul id="fb9720e4-6f49-83ad-80f7-817011d57a6b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>upload_file()</code>을 사용해 로컬 파일을 S3에 업로드할 수 있다.</li></ul><ul id="4c2720e4-6f49-8293-8555-0133cc11078f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>download_file()</code>을 사용해 S3 객체를 로컬 파일로 다운로드할 수 있다.</li></ul><ul id="991720e4-6f49-82a1-870a-8188913cd488" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수 분리와 예외 처리를 통해 S3 자동화 코드를 정리할 수 있다.</li></ul><hr id="d83720e4-6f49-8271-a72f-01d23b1f3f7b" dir="auto"/><h2 id="717720e4-6f49-823e-a35d-014448ff3888" class="" dir="auto">주요 키워드</h2><ul id="5b3720e4-6f49-8224-b23a-814c5f55303d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><ul id="e7d720e4-6f49-826e-9630-81c2c4398769" class="bulleted-list" dir="auto"><li style="list-style-type:disc">bucket</li></ul><ul id="3d6720e4-6f49-82a3-ac66-81e5d2c4bfb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">object</li></ul><ul id="e86720e4-6f49-836d-8ee6-01db90d7d0fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">key</li></ul><ul id="27e720e4-6f49-82c6-803d-0153ec1a09ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">prefix</li></ul><ul id="c82720e4-6f49-83dc-a873-01faec95cba1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">list_buckets</li></ul><ul id="b0b720e4-6f49-8342-8011-816b8c7af171" class="bulleted-list" dir="auto"><li style="list-style-type:disc">list_objects_v2</li></ul><ul id="8c6720e4-6f49-8207-9797-019078d3c704" class="bulleted-list" dir="auto"><li style="list-style-type:disc">upload_file</li></ul><ul id="078720e4-6f49-8250-bc59-81f2373b26a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">download_file</li></ul><ul id="577720e4-6f49-8359-b8d7-8157fca25fb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">boto3</li></ul><hr id="84b720e4-6f49-831d-9014-81b3f4c3db3b" dir="auto"/><h1 id="158720e4-6f49-83ba-a5a7-017453f9af6b" class="" dir="auto">6.1 S3 자동화 개요</h1><h2 id="290720e4-6f49-821a-8e6b-81f53c879361" class="" dir="auto">1. S3란 무엇인가</h2><p id="bec720e4-6f49-822b-a563-81d589ac2a0a" class="" dir="auto">S3는 AWS의 객체 스토리지 서비스이다.</p><p id="a1a720e4-6f49-8218-bdee-81dbcbd93214" class="" dir="auto">파일을 S3에 저장할 때는 보통 다음 개념을 함께 보게 된다.</p><ul id="507720e4-6f49-82d9-a257-8125fb0c1d3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Bucket</strong>: 객체를 저장하는 상위 저장소</li></ul><ul id="b6c720e4-6f49-826f-97cf-81fc72179974" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Object</strong>: 실제 저장되는 데이터</li></ul><ul id="63f720e4-6f49-8201-9131-81c0547a7b5a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Key</strong>: 객체의 이름 또는 경로처럼 보이는 식별자</li></ul><p id="6b8720e4-6f49-82a7-b48f-019cd6ca7b40" class="" dir="auto">예를 들어 <code>reports/2026/report.txt</code> 같은 문자열은 S3에서 디렉터리 자체라기보다 <strong>객체 Key</strong>로 취급된다.</p><hr id="bd4720e4-6f49-839b-b946-812ca2b36c7f" dir="auto"/><h2 id="2c5720e4-6f49-83be-91a1-01682b3019c6" class="" dir="auto">2. 왜 S3 자동화가 중요한가</h2><p id="d7d720e4-6f49-820d-84db-81b754402480" class="" dir="auto">S3는 다음과 같은 작업에서 자주 사용된다.</p><ul id="4a7720e4-6f49-826b-8a43-81e7bd787eac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 파일 업로드</li></ul><ul id="e57720e4-6f49-83b2-83cb-8178a8b9bee6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과 보고서 저장</li></ul><ul id="599720e4-6f49-83d9-b18b-815f42e11459" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 파일 보관</li></ul><ul id="9fb720e4-6f49-8356-8c6f-01995c3c91f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">분석 대상 파일 다운로드</li></ul><ul id="944720e4-6f49-8326-a025-810af6b8e754" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동화 결과 공유</li></ul><p id="612720e4-6f49-828d-a715-01e6345a1d75" class="" dir="auto">이런 작업을 콘솔에서 수동으로 할 수도 있지만, Python 코드로 자동화하면 반복 작업을 훨씬 효율적으로 처리할 수 있다.</p><hr id="118720e4-6f49-82a8-a161-0152abb4a5a0" dir="auto"/><h1 id="87c720e4-6f49-8214-99c7-01c7de8ae8d2" class="" dir="auto">6.2 S3 버킷 목록 조회</h1><h2 id="ce0720e4-6f49-8369-9644-814a7808bf22" class="" dir="auto">1. 기본 조회 API</h2><p id="b02720e4-6f49-83f8-a1d7-812b8b83eecf" class="" dir="auto">S3 버킷 목록을 조회할 때는 <code>list_buckets()</code>를 사용한다.</p><p id="988720e4-6f49-8237-abdf-8187787c9736" class="" dir="auto">이 API는 <strong>현재 인증된 요청자가 소유한 버킷 목록</strong>을 반환한다. 또한 이 작업에는 <code>s3:ListAllMyBuckets</code> 권한이 필요하다. </p><p id="836720e4-6f49-8361-bf1e-01bf2c632e74" class="" dir="auto">기본 구조는 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="7e6720e4-6f49-82e2-b7fb-0160a14ae6c9" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = s3.list_buckets()
+print(response)</code></pre><hr id="16a720e4-6f49-8365-ad3a-01b72952536f" dir="auto"/><h2 id="3fa720e4-6f49-823c-97c3-81947e224aa7" class="" dir="auto">2. 응답 구조 이해</h2><p id="8ab720e4-6f49-83b1-8bcf-81f0039582b3" class="" dir="auto"><code>list_buckets()</code> 응답에는 보통 <code>Buckets</code> 리스트가 포함된다.</p><p id="978720e4-6f49-82f5-b63c-818b65e85f13" class="" dir="auto">각 버킷 항목에는 버킷 이름과 생성일 같은 정보가 들어 있다.</p><p id="0e4720e4-6f49-8364-8c5e-814cd1e782cd" class="" dir="auto">즉, 구조는 대략 다음과 같다.</p><pre id="c0b720e4-6f49-83c6-9a9a-0146b0857c18" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;Buckets&quot;: [
+        {&quot;Name&quot;: &quot;bucket-1&quot;, &quot;CreationDate&quot;: &quot;...&quot;},
+        {&quot;Name&quot;: &quot;bucket-2&quot;, &quot;CreationDate&quot;: &quot;...&quot;}
+    ],
+    &quot;Owner&quot;: {...}
+}</code></pre><p id="bd4720e4-6f49-8215-94c3-017922a9d99b" class="" dir="auto">따라서 버킷 이름만 출력하려면 <code>response[&quot;Buckets&quot;]</code>를 반복하면 된다.</p><hr id="889720e4-6f49-8267-a69f-011942a95034" dir="auto"/><h2 id="e75720e4-6f49-8243-891e-816df5a8b3ed" class="" dir="auto">3. 버킷 이름 출력</h2><pre id="6ab720e4-6f49-8212-ac2d-81c12f56c4a6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = s3.list_buckets()
+
+for bucket in response[&quot;Buckets&quot;]:
+    print(bucket[&quot;Name&quot;])</code></pre><hr id="938720e4-6f49-83e3-9f80-81c135f69ee6" dir="auto"/><h2 id="69f720e4-6f49-820e-b6cc-0180a5b795f8" class="" dir="auto">실습 1. S3 버킷 목록 조회</h2><p id="38b720e4-6f49-8308-a62a-01a54168a976" class="" dir="auto">파일명: <code>s3_list_buckets.py</code></p><pre id="62a720e4-6f49-83fe-80b7-81466d1b3bce" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = s3.list_buckets()
+
+print(&quot;버킷 목록&quot;)
+for bucket in response[&quot;Buckets&quot;]:
+    print(bucket[&quot;Name&quot;])</code></pre><ul id="f62720e4-6f49-82a2-8050-017b1adb1e5e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>list_buckets()</code> 결과가 딕셔너리 구조라는 점을 확인한다.</li></ul><ul id="e83720e4-6f49-824c-b00e-0103427a2023" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Buckets</code>가 리스트라는 점을 확인한다.</li></ul><ul id="421720e4-6f49-83bd-8960-81d18e75c400" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리스트 안 각 항목이 딕셔너리라는 점을 확인한다.</li></ul><hr id="6dc720e4-6f49-829a-a1c4-817041cbf3a0" dir="auto"/><h1 id="0a3720e4-6f49-83e3-a21b-818313e01611" class="" dir="auto">6.3 S3 객체 목록 조회</h1><h2 id="288720e4-6f49-8274-a52a-01049695800a" class="" dir="auto">1. 객체 조회 API</h2><p id="d7c720e4-6f49-834b-9f79-01ca5d0897f1" class="" dir="auto">버킷 안의 객체를 조회할 때는 <code>list_objects_v2()</code>를 많이 사용한다.</p><p id="c26720e4-6f49-82f4-b86c-81ac53d55857" class="" dir="auto">이 API는 지정한 버킷 안의 객체 목록을 반환한다.</p><p id="788720e4-6f49-820c-9fcb-01108b9e61f3" class="" dir="auto">기본 구조는 다음과 같다.</p><pre id="85d720e4-6f49-8347-b663-81aa152767eb" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = s3.list_objects_v2(Bucket=&quot;my-log-bucket&quot;)
+print(response)</code></pre><hr id="0bb720e4-6f49-83a8-8683-812016342af3" dir="auto"/><h2 id="3b6720e4-6f49-83a6-8e85-018a8c15061f" class="" dir="auto">2. 응답 구조 이해</h2><p id="d0f720e4-6f49-830b-8218-015dd45ac7bc" class="" dir="auto">객체 목록은 보통 <code>Contents</code> 리스트 안에 들어 있다.</p><p id="cf4720e4-6f49-8397-a79d-8143da79596c" class="" dir="auto">각 객체 항목에는 <code>Key</code>, <code>Size</code>, <code>LastModified</code> 같은 정보가 들어간다.</p><p id="8dc720e4-6f49-82c2-930e-814cc6fb3ebb" class="" dir="auto">즉, 구조는 대략 다음과 같다.</p><pre id="77c720e4-6f49-82d8-a8a7-017a912ccdca" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;Contents&quot;: [
+        {&quot;Key&quot;: &quot;report.txt&quot;, &quot;Size&quot;: 123},
+        {&quot;Key&quot;: &quot;logs/app.log&quot;, &quot;Size&quot;: 456}
+    ]
+}</code></pre><p id="a61720e4-6f49-8397-b844-8134b14f9e4b" class="" dir="auto">따라서 객체 이름을 출력하려면 <code>response[&quot;Contents&quot;]</code>를 반복하며 <code>Key</code>를 꺼내면 된다.</p><p id="519720e4-6f49-8333-b0ad-812e4754369e" class="" dir="auto">단, 버킷이 비어 있으면 <code>Contents</code> 키가 없을 수도 있으므로 <code>get()</code>을 사용하는 것이 더 안전하다.</p><hr id="5f6720e4-6f49-823e-aab5-81964f54760c" dir="auto"/><h2 id="9d8720e4-6f49-83e2-b43c-810d52282121" class="" dir="auto">3. 객체 Key 출력</h2><pre id="39e720e4-6f49-820d-a480-817b7391d78d" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = s3.list_objects_v2(Bucket=&quot;my-log-bucket&quot;)
+
+for obj in response.get(&quot;Contents&quot;, []):
+    print(obj[&quot;Key&quot;])</code></pre><hr id="3dd720e4-6f49-82bd-8dab-015f4be4f4b4" dir="auto"/><h2 id="55f720e4-6f49-83dc-9a9c-81557ef1b5ed" class="" dir="auto">실습 2. 객체 목록 조회</h2><p id="2a0720e4-6f49-8311-9e69-015a59886095" class="" dir="auto">파일명: <code>s3_list_objects.py</code></p><pre id="d2b720e4-6f49-838a-8b64-01298daefc7a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+bucket_name = &quot;my-log-bucket&quot;
+response = s3.list_objects_v2(Bucket=bucket_name)
+
+print(f&quot;bucket: {bucket_name}&quot;)
+for obj in response.get(&quot;Contents&quot;, []):
+    print(obj[&quot;Key&quot;])</code></pre><ul id="89c720e4-6f49-823e-9fe2-01aeda80a608" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷 이름을 변수로 분리한다.</li></ul><ul id="9eb720e4-6f49-828f-8821-01579ee2d2db" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Contents</code>가 없을 수 있으므로 <code>get(&quot;Contents&quot;, [])</code>를 사용한다.</li></ul><ul id="5d0720e4-6f49-839b-a60f-01e18a851fe3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 Key가 실제 파일 경로처럼 보이지만 S3에서는 객체 이름이라는 점을 이해한다.</li></ul><hr id="798720e4-6f49-8387-bdca-81743ff815e2" dir="auto"/><h1 id="afb720e4-6f49-8301-aeda-81d6f924198e" class="" dir="auto">6.4 prefix 기반 객체 조회</h1><h2 id="f14720e4-6f49-828f-8b29-0140f52a2940" class="" dir="auto">1. prefix란 무엇인가</h2><p id="64b720e4-6f49-83ec-8467-81990b321772" class="" dir="auto">S3에는 전통적인 디렉터리가 없지만, Key 문자열 앞부분을 활용해 경로처럼 관리하는 경우가 많다.</p><p id="99a720e4-6f49-83fa-87c4-819fe3a23a8f" class="" dir="auto">예를 들어 아래 Key들이 있다고 하자.</p><ul id="f07720e4-6f49-8388-8dc4-819e945d78f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>logs/app.log</code></li></ul><ul id="340720e4-6f49-835d-a714-8122966955a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>logs/error.log</code></li></ul><ul id="c05720e4-6f49-83cf-b1f0-810824522ce3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>reports/daily.txt</code></li></ul><p id="07b720e4-6f49-838f-b9a9-01b2c9ac1fa6" class="" dir="auto">이때 <code>logs/</code>를 기준으로 조회하면 로그 관련 객체만 찾을 수 있다.</p><hr id="ea6720e4-6f49-8280-91cd-012aec85a654" dir="auto"/><h2 id="76e720e4-6f49-83bf-8be7-812381832c59" class="" dir="auto">2. Prefix 옵션 사용</h2><p id="fdd720e4-6f49-823b-b2c3-814878729fed" class="" dir="auto"><code>list_objects_v2()</code>에는 <code>Prefix</code> 옵션을 줄 수 있다.</p><pre id="c2b720e4-6f49-827a-9ebe-0100023a99c2" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+response = s3.list_objects_v2(
+    Bucket=&quot;my-log-bucket&quot;,
+    Prefix=&quot;logs/&quot;
+)
+
+for obj in response.get(&quot;Contents&quot;, []):
+    print(obj[&quot;Key&quot;])</code></pre><p id="823720e4-6f49-8378-aa42-01cdc0c72393" class="" dir="auto">이 코드는 <code>logs/</code>로 시작하는 Key만 조회한다.</p><hr id="672720e4-6f49-831c-b80e-0170e47f20bc" dir="auto"/><h2 id="d09720e4-6f49-82e2-8c25-8149d6c70a8c" class="" dir="auto">실습 3. prefix 기반 조회</h2><p id="d32720e4-6f49-8281-81dd-01573c8e1e37" class="" dir="auto">파일명: <code>s3_prefix_list.py</code></p><pre id="f1d720e4-6f49-831b-8c0c-01b2619ae115" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+bucket_name = &quot;my-log-bucket&quot;
+prefix = &quot;logs/&quot;
+
+response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+
+print(f&quot;bucket: {bucket_name}&quot;)
+print(f&quot;prefix: {prefix}&quot;)
+
+for obj in response.get(&quot;Contents&quot;, []):
+    print(obj[&quot;Key&quot;])</code></pre><ul id="772720e4-6f49-8236-b9a6-8172c4cd6293" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Prefix</code>를 사용하면 특정 경로처럼 보이는 그룹만 볼 수 있다.</li></ul><ul id="30f720e4-6f49-83cd-ba93-01897924caf6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 객체 Key 설계가 자동화 편의성과 연결된다는 점을 이해한다.</li></ul><hr id="e99720e4-6f49-82ae-9670-817e7cac1c05" dir="auto"/><h1 id="342720e4-6f49-8335-b4f8-013513066f19" class="" dir="auto">6.5 로컬 파일 업로드 자동화</h1><h2 id="324720e4-6f49-8261-b74a-815f33b154d2" class="" dir="auto">1. upload_file() 메서드</h2><p id="326720e4-6f49-83df-9a1e-81fa9805441f" class="" dir="auto">로컬 파일을 S3에 올릴 때는 <code>upload_file()</code>을 많이 사용한다.</p><p id="3ee720e4-6f49-823c-9bd8-81b59b01168c" class="" dir="auto"> <code>upload_file(Filename, Bucket, Key)</code> 형태로 사용하며, <code>Filename</code>은 로컬 경로, <code>Bucket</code>은 버킷 이름, <code>Key</code>는 업로드할 객체 이름이다.</p><p id="e51720e4-6f49-838b-8450-016eb643e942" class="" dir="auto">기본 예제는 다음과 같다.</p><pre id="dfe720e4-6f49-8227-ada1-011faeef62b7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+s3.upload_file(&quot;report.txt&quot;, &quot;my-log-bucket&quot;, &quot;reports/report.txt&quot;)</code></pre><p id="d9c720e4-6f49-830e-a6ac-810cdedc1b49" class="" dir="auto">이 코드는 로컬의 <code>report.txt</code> 파일을 S3 버킷 <code>my-log-bucket</code>의 <code>reports/report.txt</code>라는 Key로 업로드한다.</p><p id="332720e4-6f49-83cf-8607-81fbb30c524e" class="" dir="auto"> 파일 업로드/다운로드 같은 전송 작업에서 SDK가 재시도와 멀티파트/비멀티파트 전송을 기본 설정으로 관리한다. </p><hr id="f0a720e4-6f49-83a5-8f9e-810bebd97774" dir="auto"/><h2 id="51b720e4-6f49-825d-8d92-818a3acdc743" class="" dir="auto">2. 업로드 성공 메시지 추가</h2><pre id="a06720e4-6f49-8389-ac45-81f816794f86" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+local_file = &quot;report.txt&quot;
+bucket_name = &quot;my-log-bucket&quot;
+object_key = &quot;reports/report.txt&quot;
+
+s3.upload_file(local_file, bucket_name, object_key)
+
+print(&quot;업로드 완료&quot;)
+print(f&quot;local file: {local_file}&quot;)
+print(f&quot;bucket: {bucket_name}&quot;)
+print(f&quot;key: {object_key}&quot;)</code></pre><hr id="672720e4-6f49-8231-8273-01c50aa079e1" dir="auto"/><h2 id="799720e4-6f49-832d-bac7-01535cbc63bd" class="" dir="auto">실습 4. 파일 업로드</h2><p id="163720e4-6f49-8303-a13d-81336ff07894" class="" dir="auto">파일명: <code>s3_upload.py</code></p><pre id="105720e4-6f49-8323-b211-018107401103" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+local_file = &quot;report.txt&quot;
+bucket_name = &quot;my-log-bucket&quot;
+object_key = &quot;uploads/report.txt&quot;
+
+s3.upload_file(local_file, bucket_name, object_key)
+
+print(&quot;업로드 완료&quot;)
+print(f&quot;local file: {local_file}&quot;)
+print(f&quot;bucket: {bucket_name}&quot;)
+print(f&quot;key: {object_key}&quot;)</code></pre><ul id="8c8720e4-6f49-8241-89f3-018013c6869d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로컬 파일 경로, 버킷 이름, 객체 Key를 각각 명확히 구분한다.</li></ul><ul id="7a5720e4-6f49-8315-b030-01a667eb59a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업로드 후 객체가 지정한 Key로 저장된다는 점을 이해한다.</li></ul><hr id="314720e4-6f49-8318-90ec-0109f3f8c3fa" dir="auto"/><h1 id="545720e4-6f49-83bf-b74a-8121f77162e9" class="" dir="auto">6.6 S3 객체 다운로드 자동화</h1><h2 id="c89720e4-6f49-83fb-b3d4-018ce50b8850" class="" dir="auto">1. download_file() 메서드</h2><p id="09e720e4-6f49-82f1-82ab-814b5fb603de" class="" dir="auto">S3 객체를 로컬 파일로 저장할 때는 <code>download_file()</code>을 사용한다.</p><p id="cf3720e4-6f49-827f-b0cf-0159d33712a4" class="" dir="auto">boto3 문서에는 S3 client, Bucket, Object에 다운로드 변형 메서드가 주입되어 있으며, <code>download_file(bucket, key, filename)</code> 구조를 사용할 수 있다고 설명한다. (<a href="https://docs.aws.amazon.com/boto3/latest/reference/customizations/s3.html?utm_source=chatgpt.com">AWS 문서</a>)</p><p id="ebe720e4-6f49-83c9-8e85-011c069ee587" class="" dir="auto">기본 예제는 다음과 같다.</p><pre id="a0d720e4-6f49-822b-9500-01a49f78c85a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+s3.download_file(&quot;my-log-bucket&quot;, &quot;uploads/report.txt&quot;, &quot;downloaded_report.txt&quot;)</code></pre><p id="3c0720e4-6f49-8272-8d2a-01c15eb9bab1" class="" dir="auto">이 코드는 S3 객체를 로컬의 <code>downloaded_report.txt</code>로 저장한다.</p><hr id="15c720e4-6f49-83f4-86de-01bc81c82267" dir="auto"/><h2 id="f7f720e4-6f49-8349-80b0-013974d83734" class="" dir="auto">2. 다운로드 성공 메시지 추가</h2><pre id="85a720e4-6f49-835d-ace2-81367661834c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+bucket_name = &quot;my-log-bucket&quot;
+object_key = &quot;uploads/report.txt&quot;
+local_file = &quot;downloaded_report.txt&quot;
+
+s3.download_file(bucket_name, object_key, local_file)
+
+print(&quot;다운로드 완료&quot;)
+print(f&quot;bucket: {bucket_name}&quot;)
+print(f&quot;key: {object_key}&quot;)
+print(f&quot;local file: {local_file}&quot;)</code></pre><hr id="34a720e4-6f49-8365-9bc1-01786139b622" dir="auto"/><h2 id="df2720e4-6f49-83aa-a996-814933976835" class="" dir="auto">실습 5. 파일 다운로드</h2><p id="c16720e4-6f49-8223-99a2-0192f2d1e3d3" class="" dir="auto">파일명: <code>s3_download.py</code></p><pre id="489720e4-6f49-8266-9503-8127c3bf1bf7" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+session = boto3.Session(profile_name=&quot;lab&quot;)
+s3 = session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+bucket_name = &quot;my-log-bucket&quot;
+object_key = &quot;uploads/report.txt&quot;
+local_file = &quot;downloaded_report.txt&quot;
+
+s3.download_file(bucket_name, object_key, local_file)
+
+print(&quot;다운로드 완료&quot;)
+print(f&quot;bucket: {bucket_name}&quot;)
+print(f&quot;key: {object_key}&quot;)
+print(f&quot;local file: {local_file}&quot;)</code></pre><ul id="5ee720e4-6f49-827f-b857-812f426b094a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업로드와 다운로드의 인자 순서를 구분한다.</li></ul><ul id="da9720e4-6f49-82d6-873a-0195440238dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 객체 Key와 로컬 파일명을 다르게 줄 수 있다는 점을 이해한다.</li></ul><hr id="65d720e4-6f49-8215-b8f5-81a9b4fbb7e1" dir="auto"/><h1 id="60f720e4-6f49-83c3-9364-01f9f0a3ce10" class="" dir="auto">6.7 함수로 구조 정리하기</h1><p id="7f3720e4-6f49-82ed-8884-01e26e4a7eaf" class="" dir="auto">지금까지는 한 파일 안에 모든 흐름을 직접 작성했지만, 실제 자동화 코드에서는 기능별로 분리하는 것이 좋다.</p><p id="7b2720e4-6f49-8207-8e6c-01ed4eaecd5d" class="" dir="auto">예를 들어 아래처럼 나눌 수 있다.</p><ul id="e8d720e4-6f49-8366-b772-01f7caba8926" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 client 생성 함수</li></ul><ul id="8e6720e4-6f49-823d-8116-81d39fd26236" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷 목록 조회 함수</li></ul><ul id="8e6720e4-6f49-82ff-a3c8-81ee43bcaae9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 목록 조회 함수</li></ul><ul id="01d720e4-6f49-83fb-b19b-010a898e66dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업로드 함수</li></ul><ul id="f3a720e4-6f49-820a-aa5b-01323ddc3e55" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다운로드 함수</li></ul><hr id="8e9720e4-6f49-8313-abfb-8172d5f076f7" dir="auto"/><h2 id="4f9720e4-6f49-8315-9ba1-016970fedada" class="" dir="auto">1. 구조 분리 예제</h2><pre id="15e720e4-6f49-82c1-8e51-81d6adbd3cc1" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_s3_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+def list_buckets():
+    s3 = get_s3_client()
+    response = s3.list_buckets()
+
+    for bucket in response[&quot;Buckets&quot;]:
+        print(bucket[&quot;Name&quot;])
+
+list_buckets()</code></pre><p id="6d1720e4-6f49-821b-946d-010a9bd0d2f0" class="" dir="auto">이 구조는 이후 기능을 추가할 때도 유지하기 쉽다.</p><hr id="098720e4-6f49-82ad-8bab-01d23f23253f" dir="auto"/><h2 id="730720e4-6f49-83ed-ae05-81b653acd938" class="" dir="auto">실습 6. 함수 분리 버전 작성</h2><p id="173720e4-6f49-8265-beeb-81d869ec213e" class="" dir="auto">파일명: <code>s3_list_buckets_func.py</code></p><pre id="ba4720e4-6f49-82d8-ab20-816923c6a7d9" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_s3_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+def list_buckets():
+    s3 = get_s3_client()
+    response = s3.list_buckets()
+
+    print(&quot;버킷 목록&quot;)
+    for bucket in response[&quot;Buckets&quot;]:
+        print(bucket[&quot;Name&quot;])
+
+list_buckets()</code></pre><h3 id="8f9720e4-6f49-82a7-b493-01c4e08cba2f" class="" dir="auto">학습 포인트</h3><ul id="fd0720e4-6f49-823d-a733-81a13005978f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3 client 생성 로직을 별도 함수로 분리한다.</li></ul><ul id="752720e4-6f49-8273-80d3-01ea789cf595" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이후 객체 조회, 업로드, 다운로드에도 같은 구조를 재사용할 수 있다.</li></ul><hr id="10b720e4-6f49-8285-8a29-81ec10e30ef2" dir="auto"/><h1 id="345720e4-6f49-8398-837f-013f06344afa" class="" dir="auto">6.8 예외 처리 추가하기</h1><p id="50d720e4-6f49-8237-b5cb-01038dc8cb1c" class="" dir="auto">S3 자동화에서도 예외 처리가 중요하다.</p><p id="f34720e4-6f49-83bd-a7fa-0171101dc7be" class="" dir="auto">버킷 이름이 잘못되었거나, 파일이 없거나, 권한이 부족하면 오류가 발생할 수 있다.</p><hr id="ae2720e4-6f49-820e-bb20-8121258313bd" dir="auto"/><h2 id="d5a720e4-6f49-823c-8992-812a37afbb78" class="" dir="auto">1. 버킷 조회 예외 처리</h2><pre id="828720e4-6f49-83a2-9f00-81bd85a3f9a6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_s3_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+def list_buckets():
+    s3 = get_s3_client()
+    response = s3.list_buckets()
+
+    for bucket in response[&quot;Buckets&quot;]:
+        print(bucket[&quot;Name&quot;])
+
+try:
+    list_buckets()
+except Exception as e:
+    print(&quot;버킷 목록 조회 실패&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><hr id="d1a720e4-6f49-8264-98bb-01247975a364" dir="auto"/><h2 id="36b720e4-6f49-83e9-9183-01f7c0a183e2" class="" dir="auto">2. 업로드 예외 처리</h2><pre id="d7f720e4-6f49-8212-8e90-015be9a8ec16" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_s3_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+def upload_file_to_s3(local_file, bucket_name, object_key):
+    s3 = get_s3_client()
+    s3.upload_file(local_file, bucket_name, object_key)
+
+    print(&quot;업로드 완료&quot;)
+    print(f&quot;local file: {local_file}&quot;)
+    print(f&quot;bucket: {bucket_name}&quot;)
+    print(f&quot;key: {object_key}&quot;)
+
+try:
+    upload_file_to_s3(&quot;report.txt&quot;, &quot;my-log-bucket&quot;, &quot;uploads/report.txt&quot;)
+except Exception as e:
+    print(&quot;업로드 실패&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><hr id="21a720e4-6f49-82df-bd00-014a91e1eacf" dir="auto"/><h2 id="d78720e4-6f49-82b1-a577-81b570a67a8d" class="" dir="auto">실습 7. 예외 처리 포함 업로드</h2><p id="3f7720e4-6f49-8373-841d-0163e72815ac" class="" dir="auto">파일명: <code>s3_upload_safe.py</code></p><pre id="1b1720e4-6f49-82be-ba9d-0170e5df6ee0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_s3_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+def upload_file_to_s3(local_file, bucket_name, object_key):
+    s3 = get_s3_client()
+    s3.upload_file(local_file, bucket_name, object_key)
+
+    print(&quot;업로드 완료&quot;)
+    print(f&quot;local file: {local_file}&quot;)
+    print(f&quot;bucket: {bucket_name}&quot;)
+    print(f&quot;key: {object_key}&quot;)
+
+try:
+    upload_file_to_s3(&quot;report.txt&quot;, &quot;my-log-bucket&quot;, &quot;uploads/report.txt&quot;)
+except Exception as e:
+    print(&quot;업로드 실패&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><ul id="60b720e4-6f49-82f4-838f-8145151b4ac6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일이 없거나 버킷이 잘못되었을 때 오류가 날 수 있음을 이해한다.</li></ul><ul id="6c0720e4-6f49-8216-94b5-81aa805333de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본적인 <code>try/except</code> 구조를 유지하는 습관을 익힌다.</li></ul><hr id="ac0720e4-6f49-8262-8b2e-01482f500d05" dir="auto"/><h1 id="e6f720e4-6f49-82b8-8290-815556728577" class="" dir="auto">6.9 생성형 AI로 S3 자동화 코드 요청하기</h1><pre id="150720e4-6f49-82b7-aefe-81a250034e98" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Python boto3 코드를 작성해줘.
+AWS CLI 프로필 기반 인증을 사용하고 profile_name은 lab으로 해줘.
+region_name은 ap-northeast-2로 지정해줘.
+S3 client 생성 함수와 업로드 함수를 분리해줘.
+로컬 파일 report.txt를 my-log-bucket 버킷의 uploads/report.txt로 업로드해줘.
+업로드 성공 시 local file, bucket, key를 출력해줘.
+try/except 예외 처리도 포함해줘.</code></pre><hr id="ce7720e4-6f49-83b7-99ad-01897a0954c4" dir="auto"/><h1 id="b28720e4-6f49-8369-b4fd-0159b15086e9" class="" dir="auto">6.10 자동화 스타일 종합 예제</h1><p id="dcc720e4-6f49-8328-b890-01a9854e85a2" class="" dir="auto">이제 이 장의 흐름을 모은 종합 예제를 보자.</p><p id="574720e4-6f49-82c5-9b17-01d3035d1cb5" class="" dir="auto">파일명: <code>s3_summary.py</code></p><pre id="aef720e4-6f49-83f2-a889-01f09446d6d5" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+
+def get_s3_client():
+    session = boto3.Session(profile_name=&quot;lab&quot;)
+    return session.client(&quot;s3&quot;, region_name=&quot;ap-northeast-2&quot;)
+
+def list_buckets():
+    s3 = get_s3_client()
+    response = s3.list_buckets()
+
+    print(&quot;버킷 목록&quot;)
+    for bucket in response[&quot;Buckets&quot;]:
+        print(bucket[&quot;Name&quot;])
+
+def list_objects(bucket_name, prefix=None):
+    s3 = get_s3_client()
+
+    if prefix:
+        response = s3.list_objects_v2(Bucket=bucket_name, Prefix=prefix)
+    else:
+        response = s3.list_objects_v2(Bucket=bucket_name)
+
+    print(f&quot;bucket: {bucket_name}&quot;)
+    if prefix:
+        print(f&quot;prefix: {prefix}&quot;)
+
+    for obj in response.get(&quot;Contents&quot;, []):
+        print(obj[&quot;Key&quot;])
+
+def upload_file_to_s3(local_file, bucket_name, object_key):
+    s3 = get_s3_client()
+    s3.upload_file(local_file, bucket_name, object_key)
+
+    print(&quot;업로드 완료&quot;)
+    print(f&quot;local file: {local_file}&quot;)
+    print(f&quot;bucket: {bucket_name}&quot;)
+    print(f&quot;key: {object_key}&quot;)
+
+try:
+    list_buckets()
+    list_objects(&quot;my-log-bucket&quot;, &quot;logs/&quot;)
+    upload_file_to_s3(&quot;report.txt&quot;, &quot;my-log-bucket&quot;, &quot;uploads/report.txt&quot;)
+
+except Exception as e:
+    print(&quot;S3 자동화 실행 실패&quot;)
+    print(f&quot;오류 내용: {e}&quot;)</code></pre><p id="5fd720e4-6f49-8222-bf55-81f19e40cc13" class="" dir="auto">이 예제에는 다음 흐름이 들어 있다.</p><ul id="1a4720e4-6f49-82bd-87bf-8196bf757729" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로필 기반 S3 client 생성</li></ul><ul id="638720e4-6f49-8362-b2dd-81518421ba84" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷 목록 조회</li></ul><ul id="673720e4-6f49-827f-9b3d-81f866f19131" class="bulleted-list" dir="auto"><li style="list-style-type:disc">prefix 기반 객체 목록 조회</li></ul><ul id="f03720e4-6f49-83cf-a24a-018d2134e990" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 업로드</li></ul><ul id="2fe720e4-6f49-8229-a088-01fb9458fe09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수 분리</li></ul><ul id="298720e4-6f49-83bd-93d1-816ad597524a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예외 처리</li></ul><p id="8ec720e4-6f49-829f-acd2-81b4b6a3bdcb" class="" dir="auto">즉, 이후 로그 분석 결과를 S3에 올리거나, 참고할 파일을 S3에서 내려받는 구조의 기본형으로도 확장할 수 있다.</p><hr id="0b8720e4-6f49-8313-a32f-018e8d6700bb" dir="auto"/><h1 id="76f720e4-6f49-83b2-a06f-817973a72eed" class="" dir="auto">6.11 자주 하는 실수</h1><h2 id="54a720e4-6f49-83ca-b036-017e013f9543" class="" dir="auto">1. Bucket과 Key를 혼동하는 경우</h2><p id="ad6720e4-6f49-82a4-bcb6-81463b26cb5d" class="" dir="auto">예를 들어 아래는 서로 다른 개념이다.</p><ul id="80b720e4-6f49-82ba-92ad-8164c02a71e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bucket: <code>my-log-bucket</code></li></ul><ul id="41d720e4-6f49-8243-bbcf-81d301c1e2e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Key: <code>uploads/report.txt</code></li></ul><p id="4d2720e4-6f49-8258-90d5-01df83a579b9" class="" dir="auto">버킷은 저장소 이름이고, Key는 그 안의 객체 이름이다.</p><hr id="b72720e4-6f49-8367-897b-813b338ecfae" dir="auto"/><h2 id="1c5720e4-6f49-8362-a6f9-01c6c5b8f78a" class="" dir="auto">2. 업로드와 다운로드 인자 순서를 혼동하는 경우</h2><p id="3de720e4-6f49-8348-b636-01c72330d3aa" class="" dir="auto"><code>upload_file()</code>과 <code>download_file()</code>은 모두 세 개의 주요 인자를 쓰지만 의미를 구분해야 한다.</p><p id="688720e4-6f49-823e-ab7a-013f62fa8b35" class="" dir="auto">업로드는 로컬 파일을 S3로 보내고, 다운로드는 S3에서 로컬로 가져온다.</p><hr id="6e4720e4-6f49-82b7-a173-01daf5a58115" dir="auto"/><h2 id="443720e4-6f49-835a-89e3-81aad48f1b20" class="" dir="auto">3. 버킷이 비어 있을 때 <code>Contents</code> 키가 없을 수 있다는 점을 놓치는 경우</h2><pre id="112720e4-6f49-823b-bc15-01f41cf135db" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">response[&quot;Contents&quot;]</code></pre><p id="b74720e4-6f49-82fb-b266-81d5824c3d65" class="" dir="auto">이렇게 바로 접근하면 오류가 날 수 있다.</p><p id="9b2720e4-6f49-8201-9988-81f9644f9264" class="" dir="auto">가능하면 아래처럼 쓴다.</p><pre id="7c7720e4-6f49-82b7-a007-8146c6efd51f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">response.get(&quot;Contents&quot;, [])</code></pre><hr id="7c8720e4-6f49-8265-927d-01139d77b5ce" dir="auto"/><h2 id="ef1720e4-6f49-83e7-a28d-01681cda707e" class="" dir="auto">4. 로컬 파일 경로를 잘못 적는 경우</h2><p id="23b720e4-6f49-8271-99e0-81c3ed00e6ed" class="" dir="auto">업로드 시 가장 흔한 실수 중 하나는 로컬 파일명이 잘못된 경우이다.</p><p id="9d0720e4-6f49-82ea-be5f-819961bf3ae0" class="" dir="auto">실행 디렉터리와 파일 위치를 함께 확인해야 한다.</p><hr id="0c9720e4-6f49-82cb-890a-81898259a47a" dir="auto"/><h2 id="f83720e4-6f49-82ba-9c7c-81fc9b058717" class="" dir="auto">5. 조회 코드와 업로드/다운로드 코드를 섞어 복잡하게 만드는 경우</h2><p id="414720e4-6f49-8394-8f9f-81a5ea4221d7" class="" dir="auto">처음에는 기능별로 함수를 분리하는 것이 좋다.</p><ul id="c64720e4-6f49-828d-b7fd-81e782f023dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버킷 목록 조회 함수</li></ul><ul id="9bb720e4-6f49-82ef-aac7-018c20d66276" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 목록 조회 함수</li></ul><ul id="677720e4-6f49-8354-abf5-817404c54936" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업로드 함수</li></ul><ul id="453720e4-6f49-8354-ac94-8161c214f8c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다운로드 함수</li></ul><p id="73d720e4-6f49-8201-b5b9-8136c67502b1" class="" dir="auto">이렇게 나누면 유지보수가 쉬워진다.</p><hr id="9c4720e4-6f49-83eb-8b27-01ccc583f733" dir="auto"/><h1 id="5ee720e4-6f49-8341-aff4-01d8b5f7e93a" class="" dir="auto">6.12 정리</h1><ul id="d9a720e4-6f49-839c-81c1-01bcb133214b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>list_buckets()</code>로 현재 인증된 요청자가 소유한 버킷 목록을 조회할 수 있다. </li></ul><ul id="4de720e4-6f49-822b-ab87-01021e94f1fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>list_objects_v2()</code>로 버킷 안 객체 목록을 조회할 수 있다.</li></ul><ul id="273720e4-6f49-8340-aaf8-0163868b1c8a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">객체 목록은 보통 <code>Contents</code> 리스트에 들어 있으므로 <code>get(&quot;Contents&quot;, [])</code>를 사용하는 것이 안전하다.</li></ul><ul id="54d720e4-6f49-83bd-a20c-8164cf8f0946" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Prefix</code>를 사용하면 특정 경로처럼 보이는 Key 그룹만 조회할 수 있다.</li></ul><ul id="6a9720e4-6f49-82ce-ba22-013c7bff3700" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>upload_file()</code>로 로컬 파일을 S3 객체로 업로드할 수 있고, <code>download_file()</code>로 S3 객체를 로컬 파일로 저장할 수 있다.</li></ul><ul id="42b720e4-6f49-829b-9f70-81e05bfa4b40" class="bulleted-list" dir="auto"><li style="list-style-type:disc">boto3는 파일 전송 시 재시도와 멀티파트/비멀티파트 전송을 기본 설정으로 관리한다.</li></ul><ul id="15a720e4-6f49-8238-8045-81984beff1dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수 분리와 예외 처리를 통해 S3 자동화 코드를 더 읽기 좋고 안정적으로 만들 수 있다.</li></ul><ul id="430720e4-6f49-834c-8410-81788fab82a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">생성형 AI에게 S3 코드 생성을 요청할 때는 프로필, 리전, 버킷 이름, Key, 성공 메시지, 예외 처리 조건을 함께 적는 것이 좋다.</li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,856 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Docker 이미지 생성하기 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="6cf720e4-6f49-83f5-b44f-81afb00850ec" class="page sans"><header><h1 class="page-title" dir="auto">Docker 이미지 생성하기 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="80a720e4-6f49-83ec-8f99-8153f9103e65" dir="auto"/><h2 id="493720e4-6f49-82d1-af6c-8107ce07d46d" class="" dir="auto">1) 이미지 생성하기: <code>docker build</code></h2><p id="f8c720e4-6f49-83dc-a6c1-01e613b5e12a" class="" dir="auto">참고: Docker build 명령 공식 문서</p><ul id="427720e4-6f49-83aa-bcfb-812da1aa8989" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker build</code>: Docker Engine CLI build</li></ul><ul id="920720e4-6f49-82cc-8f47-01afdbe4974a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker buildx build</code>: BuildKit 기반 확장 빌더(멀티 플랫폼/캐시 고급 기능)</li></ul><h3 id="04d720e4-6f49-837a-a0fe-0143c9bb2602" class="" dir="auto">1.1 기본 문법 (정확한 형태)</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="119720e4-6f49-8214-b3e6-015e70f18da5" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker build [OPTIONS] &lt;BUILD_CONTEXT&gt;</code></pre><p id="f4d720e4-6f49-82d1-831a-01b227d94a6c" class="" dir="auto">Dockerfile 위치를 따로 지정하면:</p><pre id="44c720e4-6f49-82ab-8863-81b56ddc47cd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker build -f &lt;DOCKERFILE_PATH&gt; -t &lt;IMAGE:TAG&gt; &lt;BUILD_CONTEXT&gt;</code></pre><p id="c3b720e4-6f49-82d7-8ec1-81b8859a6fe5" class="" dir="auto">예시:</p><pre id="d99720e4-6f49-83a0-99e3-816b3ac26665" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker build -t myapp:1.0 .
+docker build -f Dockerfile.alpine -t myapp:alpine .</code></pre><h3 id="37c720e4-6f49-82c7-9a8c-81cdef727e49" class="" dir="auto">(중요) <code>&lt;BUILD_CONTEXT&gt;</code>란?</h3><p id="2df720e4-6f49-8261-ab77-81d59b5b3d8b" class="" dir="auto"><code>docker build ... &lt;BUILD_CONTEXT&gt;</code>의 마지막 인자(보통 <code>.</code>)는 <strong>빌드 컨텍스트(Build Context)</strong> 이다.</p><ul id="790720e4-6f49-82c4-bf02-812c9e39178a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker는 빌드 시 <code>&lt;BUILD_CONTEXT&gt;</code> 디렉터리를 <strong>스냅샷처럼 묶어서</strong> 빌더로 전달함.</li></ul><ul id="6eb720e4-6f49-82a1-bc3d-01de251a6730" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dockerfile의 <code>COPY</code>, <code>ADD</code>는 <strong>컨텍스트 안의 파일만</strong> 가져올 수 있다.</li></ul><ul id="cf1720e4-6f49-8214-9d16-8128b334d4d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">즉, Dockerfile에 상대 경로가 있으면 기준은 항상 <strong>빌드 컨텍스트</strong>이다.</li></ul><hr id="f34720e4-6f49-8384-8581-810dc9cb1469" dir="auto"/><h2 id="77d720e4-6f49-829c-9ca0-81235f9c129a" class="" dir="auto">2) <code>docker build</code> 주요 옵션</h2><table id="0ba720e4-6f49-83ec-8edb-8140fe46317b" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="084720e4-6f49-8210-8874-01605ff78da5" dir="ltr"><th id="[JKR" class="simple-table-header-color simple-table-header">Option</th><th id="x@JN" class="simple-table-header-color simple-table-header">Short</th><th id="\gpV" class="simple-table-header-color simple-table-header">설명</th><th id="?cHj" class="simple-table-header-color simple-table-header">언제 쓰나(실무 관점)</th></tr></thead><tbody><tr id="1c7720e4-6f49-836c-a71c-013eec119d78" dir="ltr"><td id="[JKR" class=""><code>--build-arg</code></td><td id="x@JN" class=""></td><td id="\gpV" class="">Dockerfile의 <code>ARG</code>에 값 전달</td><td id="?cHj" class="">OS/버전 등 빌드 분기</td></tr><tr id="eb4720e4-6f49-822e-974e-01c4873cf42d" dir="ltr"><td id="[JKR" class=""><code>--file</code></td><td id="x@JN" class=""><code>-f</code></td><td id="\gpV" class="">사용할 Dockerfile 경로 지정</td><td id="?cHj" class="">여러 Dockerfile 운영</td></tr><tr id="0ee720e4-6f49-8364-b873-01f90bd39ae5" dir="ltr"><td id="[JKR" class=""><code>--label</code></td><td id="x@JN" class=""></td><td id="\gpV" class="">이미지 메타데이터 라벨 추가</td><td id="?cHj" class="">버전/빌드정보 기록</td></tr><tr id="d04720e4-6f49-82b3-b085-81b49864ad02" dir="ltr"><td id="[JKR" class=""><code>--no-cache</code></td><td id="x@JN" class=""></td><td id="\gpV" class="">캐시 없이 처음부터 빌드</td><td id="?cHj" class="">캐시 오염 의심/최신 패키지 확인</td></tr><tr id="870720e4-6f49-8241-b4f9-01826441b587" dir="ltr"><td id="[JKR" class=""><code>--platform</code></td><td id="x@JN" class=""></td><td id="\gpV" class="">아키텍처 지정</td><td id="?cHj" class="">amd64/arm64 교차 빌드</td></tr><tr id="64b720e4-6f49-8299-9d97-81aef2468169" dir="ltr"><td id="[JKR" class=""><code>--pull</code></td><td id="x@JN" class=""></td><td id="\gpV" class="">베이스 이미지 강제 최신 pull</td><td id="?cHj" class="">보안 패치 반영</td></tr><tr id="533720e4-6f49-8351-b5d1-014133eea0b9" dir="ltr"><td id="[JKR" class=""><code>--tag</code></td><td id="x@JN" class=""><code>-t</code></td><td id="\gpV" class="">이미지 이름:태그 지정</td><td id="?cHj" class="">버전 관리/배포</td></tr></tbody></table><blockquote id="08d720e4-6f49-8339-b8b6-01671dcb7365" class="" dir="auto">주의: <code>--build-arg</code> (단수)입니다.</blockquote><hr id="99a720e4-6f49-82e7-992d-01a8f32e65b2" dir="auto"/><h2 id="515720e4-6f49-8203-9854-010432f30041" class="" dir="auto">3) <code>.dockerignore</code> </h2><p id="6f3720e4-6f49-8345-b9e4-81dc67fba5b5" class="" dir="auto">빌드 컨텍스트가 커지면:</p><ul id="d85720e4-6f49-83e8-8548-01c303351313" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드가 느려지고</li></ul><ul id="c82720e4-6f49-83cb-910b-01e1647bdf88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">불필요 파일/민감 정보가 이미지에 섞일 위험이 커집니다.</li></ul><p id="9a8720e4-6f49-8337-b136-0183f5e057be" class="" dir="auto"><code>.dockerignore</code>로 컨텍스트에 포함되지 않게 제외합니다.</p><p id="757720e4-6f49-83ac-b6e5-81976aecf38e" class="" dir="auto">예시:</p><pre id="c86720e4-6f49-8381-bf55-81a146be4aca" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">.git
+*.log
+node_modules
+dist
+target</code></pre><blockquote id="46a720e4-6f49-83d9-bae7-01da0cf11695" class="" dir="auto">체크포인트<p id="079720e4-6f49-838a-b174-01aec4579f0a" class="" dir="auto">“컨텍스트는 작을수록 좋다”</p><p id="9fa720e4-6f49-82d2-8ef9-81d62f7b7a46" class="" dir="auto">→ 빌드 속도, 보안, 재현성 모두에 영향을 준다.</p></blockquote><hr id="bba720e4-6f49-83a1-b5b4-01e24fd3d517" dir="auto"/><h2 id="eb4720e4-6f49-8350-80c2-01d70223222d" class="" dir="auto">4) Dockerfile 핵심 Instruction</h2><table id="1d8720e4-6f49-82c7-8de7-81693b44ec57" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="e86720e4-6f49-83a9-aaae-819c33596f5f" dir="ltr"><th id="&gt;vef" class="simple-table-header-color simple-table-header">Instruction</th><th id="DyCv" class="simple-table-header-color simple-table-header">설명</th><th id="gH\w" class="simple-table-header-color simple-table-header">동작 시점</th></tr></thead><tbody><tr id="0fb720e4-6f49-829a-9f52-016fc1db9c9f" dir="ltr"><td id="&gt;vef" class=""><code>FROM</code></td><td id="DyCv" class="">베이스 이미지 지정</td><td id="gH\w" class="">빌드</td></tr><tr id="0e0720e4-6f49-825c-90d8-0115609ea638" dir="ltr"><td id="&gt;vef" class=""><code>ARG</code></td><td id="DyCv" class="">빌드 타임 변수</td><td id="gH\w" class="">빌드</td></tr><tr id="da2720e4-6f49-8256-9a36-8172a6d20031" dir="ltr"><td id="&gt;vef" class=""><code>ENV</code></td><td id="DyCv" class="">런타임 환경 변수</td><td id="gH\w" class="">실행(컨테이너)</td></tr><tr id="d55720e4-6f49-827f-8069-8170ddd35e4c" dir="ltr"><td id="&gt;vef" class=""><code>ADD</code></td><td id="DyCv" class="">복사 + (압축 해제/URL 등) 기능</td><td id="gH\w" class="">빌드</td></tr><tr id="978720e4-6f49-834f-93d1-016826787102" dir="ltr"><td id="&gt;vef" class=""><code>COPY</code></td><td id="DyCv" class="">파일/디렉터리 복사(권장)</td><td id="gH\w" class="">빌드</td></tr><tr id="029720e4-6f49-821d-b6b2-816b75e2309b" dir="ltr"><td id="&gt;vef" class=""><code>LABEL</code></td><td id="DyCv" class="">이미지 라벨(메타데이터)</td><td id="gH\w" class="">빌드</td></tr><tr id="0fb720e4-6f49-8379-ae54-81f58ea4a9ab" dir="ltr"><td id="&gt;vef" class=""><code>EXPOSE</code></td><td id="DyCv" class="">포트 “문서화” 메타데이터</td><td id="gH\w" class="">빌드(메타)</td></tr><tr id="406720e4-6f49-83c2-be70-0171c6089b3e" dir="ltr"><td id="&gt;vef" class=""><code>USER</code></td><td id="DyCv" class="">실행 사용자 지정</td><td id="gH\w" class="">실행</td></tr><tr id="1aa720e4-6f49-8359-ba34-813ff290d792" dir="ltr"><td id="&gt;vef" class=""><code>WORKDIR</code></td><td id="DyCv" class="">작업 디렉터리 지정</td><td id="gH\w" class="">빌드/실행</td></tr><tr id="d78720e4-6f49-823d-a48b-815b31a80778" dir="ltr"><td id="&gt;vef" class=""><code>RUN</code></td><td id="DyCv" class="">빌드 중 명령 실행(레이어 생성)</td><td id="gH\w" class="">빌드</td></tr><tr id="241720e4-6f49-8244-af61-818fd46ba03e" dir="ltr"><td id="&gt;vef" class=""><code>CMD</code></td><td id="DyCv" class="">기본 실행 명령(덮어쓰기 쉬움)</td><td id="gH\w" class="">실행</td></tr><tr id="f5d720e4-6f49-838c-b90c-819965e0b714" dir="ltr"><td id="&gt;vef" class=""><code>ENTRYPOINT</code></td><td id="DyCv" class="">“항상 실행”되는 명령</td><td id="gH\w" class="">실행</td></tr></tbody></table><h3 id="dfa720e4-6f49-8263-b622-01f2d84519e6" class="" dir="auto"> RUN vs CMD</h3><ul id="585720e4-6f49-83b2-bf85-8134cb733a38" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>RUN</code> : 이미지 만들 때 실행 (결과가 이미지 레이어로 굳음)</li></ul><ul id="c15720e4-6f49-837b-8d29-81a362d2790f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>CMD/ENTRYPOINT</code> : 컨테이너 시작할 때 실행 (PID 1 프로세스)</li></ul><hr id="1e9720e4-6f49-8388-9afa-010d7c06d489" dir="auto"/><h2 id="fbc720e4-6f49-83db-b27e-810106137273" class="" dir="auto">5) 주의사항</h2><ol type="1" id="c2f720e4-6f49-8364-ba8a-816e301ffb3a" class="numbered-list" start="1" dir="auto"><li><code>f</code>를 지정하지 않으면 기본 파일명 <code>Dockerfile</code>을 사용한다.</li></ol><ol type="1" id="37a720e4-6f49-83cd-9622-81d470c077e7" class="numbered-list" start="2" dir="auto"><li>Dockerfile의 상대 경로는 <strong>빌드 컨텍스트 기준</strong>으로 계산된다.</li></ol><ol type="1" id="e81720e4-6f49-8228-8e71-810b256531a9" class="numbered-list" start="3" dir="auto"><li>캐시가 켜져 있으면 <code>apt-get update</code> 결과가 오래된 상태로 재사용될 수 있다.<ul id="1c7720e4-6f49-8346-87ea-81061a87a9fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해결: <code>-no-cache</code></li></ul></li></ol><hr id="837720e4-6f49-8263-bb6d-81cd2a46a538" dir="auto"/><h2 id="9ee720e4-6f49-8383-9424-017b1003823b" class="" dir="auto">6) 많이 사용하는 Base 이미지</h2><h3 id="6fc720e4-6f49-837e-bb58-815fb311c0de" class="" dir="auto">6.1 scratch</h3><ul id="115720e4-6f49-83c3-94a0-81dea19d9bca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">“빈 이미지”</li></ul><ul id="3eb720e4-6f49-8224-b4ed-81e772b59441" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정적 바이너리(예: Go static) 같은 최소 실행 파일만 넣을 때 사용</li></ul><ul id="c0f720e4-6f49-8397-8cd5-81583c6b0771" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레이어를 추가하지 않는다는 의미: scratch 자체는 빈 기반이므로 <strong>필요한 파일만 올리게 됨</strong></li></ul><h3 id="279720e4-6f49-83ee-ab73-814b663d4e09" class="" dir="auto">6.2 alpine</h3><ul id="61a720e4-6f49-83b9-be15-81eaa0bbc804" class="bulleted-list" dir="auto"><li style="list-style-type:disc">매우 작은 리눅스(경량)</li></ul><ul id="1d5720e4-6f49-83e8-9e46-81cfe47c46cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">패키지 관리: <code>apk</code></li></ul><ul id="8ef720e4-6f49-8303-8408-01a382026269" class="bulleted-list" dir="auto"><li style="list-style-type:disc">디버깅 도구를 넣기 쉽고, 작고 빠름</li></ul><h3 id="f48720e4-6f49-8293-8cd9-01b8ba4812b6" class="" dir="auto">6.3 distroless</h3><ul id="af3720e4-6f49-83b3-a5d9-0136d4cf8bac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행에 필요한 런타임만 포함 (쉘, 패키지 매니저 없음)</li></ul><ul id="fcd720e4-6f49-8379-8faa-0109304a5d0b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 환경에서 <strong>공격 표면(attack surface)</strong> 감소</li></ul><ul id="cc7720e4-6f49-8261-94ff-817bf1426464" class="bulleted-list" dir="auto"><li style="list-style-type:disc">디버깅은 어렵지만 보안/경량에 유리</li></ul><hr id="548720e4-6f49-8208-b34f-017c090fc5fd" dir="auto"/><h2 id="ea6720e4-6f49-824f-9d3d-817d6e2a41fa" class="" dir="auto">7) Multi-stage build</h2><h3 id="120720e4-6f49-83fb-b050-01fe37e21fcc" class="" dir="auto">7.1 왜 쓰나?</h3><p id="237720e4-6f49-83cc-8216-81d3f14075d1" class="" dir="auto">빌드에 필요한 도구(컴파일러 등)와 실행에 필요한 파일은 다르다.</p><ul id="9ec720e4-6f49-83ee-978a-014d9a7ed917" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 스테이지: 컴파일러/빌드도구 포함 (무거워도 됨)</li></ul><ul id="6d8720e4-6f49-83b8-9e2c-81b966a251c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">런타임 스테이지: 실행 파일만 포함 (가볍고 안전)</li></ul><p id="e4b720e4-6f49-83ef-9026-81e48067358d" class="" dir="auto">결과:</p><ul id="fff720e4-6f49-83ac-84af-81c57ff8a03c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>이미지 크기 감소</strong></li></ul><ul id="aa6720e4-6f49-837d-a16a-016e63281e88" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>보안 강화</strong>(운영 이미지에 bash/curl/gcc 등 제거)</li></ul><ul id="be2720e4-6f49-836c-bead-013abca51273" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>운영 표준 패턴</strong></li></ul><hr id="5ee720e4-6f49-826f-815d-81bf67a6ca9b" dir="auto"/><h1 id="6f3720e4-6f49-83a2-a261-01b25397b85e" class="" dir="auto">8) 실습/연습 1: Go 서버 이미지 제작하기 (Ubuntu/Alpine/Scratch 비교)</h1><h2 id="395720e4-6f49-82a1-85f3-8155c9dfd04a" class="" dir="auto">8.1 폴더 구조</h2><pre id="11d720e4-6f49-8266-a841-81c2ed333ca0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">.
+├── src
+│   ├── go.mod
+│   └── main.go
+└── Dockerfile</code></pre><h3 id="8d4720e4-6f49-8218-b284-0177211d3016" class="" dir="auto">go.mod</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-go.min.js" integrity="sha512-w200Nz1i9KgDNi+IpPMgpZBVRIvfVK/V5vskyHjkz7XJkVnRJcb1uNmpiHhDv0/Ln+GG2VqScKKz/1izBfg64Q==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="5ec720e4-6f49-8229-947b-8199c10b9ed2" class="code code-wrap" data-notion-code-syntax="go"><code class="language-go" style="white-space:pre-wrap;word-break:break-all">module example/hello
+go 1.19</code></pre><h3 id="18a720e4-6f49-8303-ba80-81668659de83" class="" dir="auto">main.go</h3><pre id="2b6720e4-6f49-8369-8483-01a7e39c20e5" class="code code-wrap" data-notion-code-syntax="go"><code class="language-go" style="white-space:pre-wrap;word-break:break-all">package main
+
+import (
+  &quot;io&quot;
+  &quot;net/http&quot;
+  &quot;log&quot;
+)
+
+func HelloServer(w http.ResponseWriter, req *http.Request) {
+  io.WriteString(w, &quot;Hello, Worlds!\n&quot;)
+}
+
+func main() {
+  http.HandleFunc(&quot;/&quot;, HelloServer)
+  log.Fatal(http.ListenAndServe(&quot;:80&quot;, nil))
+}</code></pre><hr id="6e4720e4-6f49-825f-a5d7-811480f84dc6" dir="auto"/><h2 id="eb7720e4-6f49-8233-a4b3-011e545f28b4" class="" dir="auto">8.2 Dockerfile (Debian bullseye 기반)</h2><pre id="9b5720e4-6f49-8220-b9d6-81135119b4d9" class="code code-wrap" data-notion-code-syntax="docker"><code class="language-docker" style="white-space:pre-wrap;word-break:break-all">FROM golang:1.19-bullseye
+
+WORKDIR /app
+COPY src ./
+
+# CGO_ENABLED=0: 정적 링크에 가깝게 빌드(런타임 의존성 감소)
+RUN CGO_ENABLED=0 go build -o main
+
+CMD [&quot;/app/main&quot;]</code></pre><h2 id="c67720e4-6f49-822b-910d-81b100b8fb87" class="" dir="auto">8.3 Dockerfile (Alpine 기반)</h2><pre id="a32720e4-6f49-8208-8127-815416cd5b7f" class="code code-wrap" data-notion-code-syntax="docker"><code class="language-docker" style="white-space:pre-wrap;word-break:break-all">FROM golang:1.19-alpine
+
+WORKDIR /app
+COPY src ./
+RUN CGO_ENABLED=0 go build -o main
+
+CMD [&quot;/app/main&quot;]</code></pre><h2 id="ed1720e4-6f49-8372-91c0-010187aa9e04" class="" dir="auto">8.4 Dockerfile (Scratch 기반, Multi-stage)</h2><pre id="507720e4-6f49-828c-a9f7-817b309515fa" class="code code-wrap" data-notion-code-syntax="docker"><code class="language-docker" style="white-space:pre-wrap;word-break:break-all">FROM golang:1.19-alpine AS build
+
+WORKDIR /app
+COPY src ./
+RUN CGO_ENABLED=0 go build -o main
+
+FROM scratch
+COPY --from=build /app/main /app/main
+CMD [&quot;/app/main&quot;]</code></pre><hr id="b8f720e4-6f49-82b4-a6a3-01c0f74c53e6" dir="auto"/><h2 id="1c6720e4-6f49-825a-8e64-010a3d248096" class="" dir="auto">8.5 빌드 &amp; 실행</h2><pre id="50a720e4-6f49-8257-9c7e-81ebb329f47f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker build -t go:debian -f Dockerfile.debian .
+docker build -t go:alpine -f Dockerfile.alpine .
+docker build -t go:scratch -f Dockerfile.scratch .</code></pre><p id="6a6720e4-6f49-834d-b9c0-81e6a6e4e008" class="" dir="auto">실행 테스트:</p><pre id="984720e4-6f49-82db-aaea-81a36d21bf2f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d -p 80:80 go:scratch
+curl localhost:80
+# Hello, Worlds!</code></pre><p id="f9c720e4-6f49-82a4-9a26-813ef7319170" class="" dir="auto">이미지 크기 비교:</p><pre id="844720e4-6f49-82d9-b154-01341c557302" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker images go</code></pre><blockquote id="72e720e4-6f49-83f0-8251-01385edc7761" class="" dir="auto">체크포인트(강의 질문)<ul id="bbf720e4-6f49-8293-ae0c-010dcc5023a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">왜 scratch가 가장 작나? (OS/쉘/패키지 없음, 바이너리만 포함)</li></ul><ul id="fcd720e4-6f49-83ce-b70b-81e76a2de1cc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">왜 debian이 큰가? (유틸/라이브러리/패키지 포함)</li></ul></blockquote><hr id="37a720e4-6f49-830e-a970-01777d3cc317" dir="auto"/><h1 id="417720e4-6f49-82a6-95e9-018f75eda4b6" class="" dir="auto">9) 연습 2: 실습용 Ubuntu 이미지 제작하기 (Docker CLI 설치)</h1><h2 id="492720e4-6f49-838f-aef8-815e85e85fbc" class="" dir="auto">9.1 파일 구조</h2><pre id="450720e4-6f49-839f-9eeb-011f41bab013" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">.
+├── Dockerfile
+└── install_docker_engine.sh</code></pre><blockquote id="ea8720e4-6f49-8224-bd51-8102529838c0" class="" dir="auto">이 이미지는 “Docker 엔진을 설치한 이미지”일 뿐, 컨테이너 안에서 데몬이 자동으로 뜨지 않.<p id="0b5720e4-6f49-8254-93cc-81cdb1bcb1e3" class="" dir="auto">그래서 <code>docker version</code>은 Client는 나오고 Server 연결은 실패할 수 있습니다(정상).</p></blockquote><hr id="84e720e4-6f49-8380-98cb-01b6cf522cd9" dir="auto"/><p id="e83720e4-6f49-82d9-82f3-01c8c45cc9ec" class="" dir="auto"><strong>install_docker_engine.sh</strong></p><blockquote id="421720e4-6f49-82d6-897e-01f534639b37" class="" dir="auto"><a href="https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository">https://docs.docker.com/engine/install/ubuntu/#install-using-the-repository</a></blockquote><pre id="9ea720e4-6f49-8343-9779-016c9cd43289" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all"># Add Docker&#x27;s official GPG key:
+apt-get update &amp;&amp; apt-get upgrade
+apt-get install -y ca-certificates curl gnupg
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+
+# Add the repository to Apt sources:
+echo \
+  &quot;deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release &amp;&amp; echo &quot;${UBUNTU_CODENAME:-$VERSION_CODENAME}&quot;) stable&quot; | \
+  tee /etc/apt/sources.list.d/docker.list &gt; /dev/null
+apt-get update</code></pre><p id="133720e4-6f49-8348-aa91-8119b4d7e6e3" class="" dir="auto"><strong>Dockerfile</strong></p><pre id="da6720e4-6f49-837a-a99d-81776527e3e6" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">FROM ubuntu:22.04
+
+RUN mkdir -p /scripts
+COPY install_docker_engine.sh /scripts
+
+WORKDIR /scripts
+
+RUN chmod +x install_docker_engine.sh
+RUN ./install_docker_engine.sh
+
+RUN apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin</code></pre><h2 id="8ce720e4-6f49-8244-a6a7-81bf1bb00b85" class="" dir="auto">9.4 빌드 &amp; 확인</h2><pre id="f8f720e4-6f49-820e-a89a-813526b36df1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker build -t mgzmsp:base.v1 .
+docker run --rm mgzmsp:base.v1 docker version</code></pre><h3 id="20a720e4-6f49-82b8-8b30-017ef8dc1dc6" class="" dir="auto">왜 정상인가?</h3><ul id="c7f720e4-6f49-826e-9d64-8193b24676a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너 안에 <code>dockerd</code> 데몬이 실행 중이 아니기 때문</li></ul><ul id="c9a720e4-6f49-82d4-86a7-81dc4be91233" class="bulleted-list" dir="auto"><li style="list-style-type:disc">컨테이너는 systemd 서비스가 기본으로 자동 구동되지 않음</li></ul><blockquote id="5f1720e4-6f49-82cf-8d23-018d3e33ecc5" class="" dir="auto">보너스(선택 실습): 호스트 도커 소켓 공유 시 “Server”도 보이게 만들기</blockquote><pre id="396720e4-6f49-833a-ab65-0198360beed3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run --rm -v /var/run/docker.sock:/var/run/docker.sock mgzmsp:base.v1 docker version</code></pre><hr id="46c720e4-6f49-838b-b479-818deeb3b575" dir="auto"/><h1 id="d33720e4-6f49-8314-8dd8-01e961223846" class="" dir="auto">10) 실습 3: ARG로 base 이미지 변경하기</h1><h2 id="500720e4-6f49-82c1-b653-8102ebba5519" class="" dir="auto">요구사항</h2><ul id="f28720e4-6f49-833f-9a85-8103bb2ef667" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ARG 이름: <code>OS</code></li></ul><ul id="c57720e4-6f49-82cb-8f47-0113f5fd0c10" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>FROM golang:1.19-${OS}</code> 형태로 베이스 변경</li></ul><ul id="9f8720e4-6f49-836b-a288-814e26eecfec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ARG 값을 <code>ENV BASE</code>에 저장</li></ul><ul id="b1d720e4-6f49-8341-82ce-01e25a594606" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-build-arg</code>로 <code>bullseye</code>, <code>alpine</code> 빌드</li></ul><ul id="4f6720e4-6f49-8281-b273-0181db07e561" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker exec</code>로 환경변수 확인</li></ul><h2 id="068720e4-6f49-82fe-811d-81b3eabcdef1" class="" dir="auto">예시 Dockerfile</h2><pre id="ba7720e4-6f49-8223-a801-015d5b8b1d66" class="code code-wrap" data-notion-code-syntax="docker"><code class="language-docker" style="white-space:pre-wrap;word-break:break-all">ARG OS=bullseye
+FROM golang:1.19-${OS}
+
+ARG OS
+ENV BASE=${OS}
+
+WORKDIR /app
+COPY src ./
+RUN CGO_ENABLED=0 go build -o main
+
+CMD [&quot;sh&quot;, &quot;-c&quot;, &quot;echo BASE=$BASE &amp;&amp; /app/main&quot;]</code></pre><p id="588720e4-6f49-82a3-ac4d-01fc146e1149" class="" dir="auto">빌드:</p><pre id="78c720e4-6f49-8243-a078-01f602b736f3" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker build --build-arg OS=bullseye -t go:debian .
+docker build --build-arg OS=alpine  -t go:alpine .</code></pre><p id="b05720e4-6f49-8396-b6ad-01996be266da" class="" dir="auto">실행 후 확인:</p><pre id="ef3720e4-6f49-82f6-9c04-01c048c5eb0a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run -d --name go1 -p 8080:80 go:alpine
+docker exec go1 env | grep BASE
+# BASE=alpine</code></pre><blockquote id="ccf720e4-6f49-821a-8467-018b834e5a3e" class="" dir="auto">오해 방지<p id="7b3720e4-6f49-8396-918d-81cff4ff6590" class="" dir="auto"><code>ARG</code>는 컨테이너에 남지 않음.</p><p id="8e2720e4-6f49-8308-ae0c-81af73180ad7" class="" dir="auto"> <code>ENV BASE=${OS}</code> 에 의해 BASE에는 남아 있음.</p></blockquote><hr id="56b720e4-6f49-835a-bf3e-818b7fab869d" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,897 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>16장. Liveness Probe / Readiness Probe</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="fdc720e4-6f49-83ff-afea-013ac618e360" class="page sans"><header><h1 class="page-title" dir="auto">16장. Liveness Probe / Readiness Probe</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><p id="147720e4-6f49-82f9-b067-81ca31ed4d04" class="" dir="auto">쿠버네티스에서 Pod가 <strong>Running</strong>이라고 해서 서비스가 정상이라는 보장은 없음.</p><p id="568720e4-6f49-823b-be38-81e7e964ac61" class="" dir="auto">프로세스는 살아있는데 응답이 멈추는 경우(Deadlock), 초기화가 끝나지 않았는데 트래픽이 들어오는 경우, 특정 포트는 열렸지만 실제 기능은 망가진 경우가 흔함.</p><p id="c77720e4-6f49-8309-80c6-0129d1293a95" class="" dir="auto">이를 자동으로 감지/복구/차단하기 위해 <strong>Probe(헬스체크)</strong> 를 사용함.</p><hr id="de7720e4-6f49-82a4-8eb8-015cb068d742" dir="auto"/><h1 id="fc6720e4-6f49-82ea-8725-01427919236f" class="" dir="auto">1. Probe가 해결하는 운영 문제</h1><ol type="1" id="c03720e4-6f49-83b0-9d6f-010e23f67243" class="numbered-list" start="1" dir="auto"><li>프로세스가 멈췄는데 Pod는 Running으로 유지됨</li></ol><ol type="1" id="543720e4-6f49-82f3-baf4-01f9f86bf18f" class="numbered-list" start="2" dir="auto"><li>앱이 초기화 중인데 Service가 트래픽을 전달함</li></ol><ol type="1" id="62b720e4-6f49-8353-a8b7-81f79fff62fd" class="numbered-list" start="3" dir="auto"><li>DB 장애로 기능이 불능인데도 트래픽이 계속 유입됨</li></ol><ol type="1" id="7b5720e4-6f49-8241-ab7b-0108b3f17d36" class="numbered-list" start="4" dir="auto"><li>포트는 열려있지만 내부 로직이 실패하는 상태가 계속됨</li></ol><p id="779720e4-6f49-83c6-90d9-815d33f76549" class="" dir="auto">Probe를 쓰면 다음이 가능함.</p><ul id="f7e720e4-6f49-8320-93d9-81da210a1d3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Readiness 실패</strong>: 트래픽 차단(Service Endpoint에서 제외) 됨</li></ul><ul id="844720e4-6f49-83ad-ade1-012bd9f15111" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Liveness 실패</strong>: 컨테이너 재시작되어 자동 복구 시도함</li></ul><hr id="4d4720e4-6f49-839b-bfd0-819ed213bc5e" dir="auto"/><h1 id="136720e4-6f49-83b3-a369-8143eaf92bae" class="" dir="auto">2. Liveness vs Readiness 핵심 차이</h1><table id="66b720e4-6f49-83a3-affb-0148e132fca7" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="76a720e4-6f49-8277-84b9-81d1106a4cf2" dir="ltr"><th id="P~tD" class="simple-table-header-color simple-table-header">구분</th><th id="eQJw" class="simple-table-header-color simple-table-header" style="width:264.00001525878906px">Liveness Probe</th><th id="]yVB" class="simple-table-header-color simple-table-header" style="width:268.80357360839844px">Readiness Probe</th></tr></thead><tbody><tr id="727720e4-6f49-8336-9afb-81d1cb7f4315" dir="ltr"><td id="P~tD" class="">질문</td><td id="eQJw" class="" style="width:264.00001525878906px">“컨테이너가 살아있나?”</td><td id="]yVB" class="" style="width:268.80357360839844px">“지금 트래픽 받아도 되나?”</td></tr><tr id="8df720e4-6f49-8251-9649-81860d7b4055" dir="ltr"><td id="P~tD" class="">실패 시</td><td id="eQJw" class="" style="width:264.00001525878906px">컨테이너 재시작됨</td><td id="]yVB" class="" style="width:268.80357360839844px">Service Endpoint에서 제외됨</td></tr><tr id="d73720e4-6f49-8285-89eb-811a43f1c946" dir="ltr"><td id="P~tD" class="">트래픽 영향</td><td id="eQJw" class="" style="width:264.00001525878906px">간접적(재시작으로 다운타임 발생 가능)</td><td id="]yVB" class="" style="width:268.80357360839844px">직접적(트래픽 차단)</td></tr><tr id="5ca720e4-6f49-82ce-9be8-81566002fb6f" dir="ltr"><td id="P~tD" class="">주 사용 목적</td><td id="eQJw" class="" style="width:264.00001525878906px">Deadlock, 내부 멈춤 복구</td><td id="]yVB" class="" style="width:268.80357360839844px">초기화/의존성 준비 전 트래픽 차단</td></tr></tbody></table><hr id="6ab720e4-6f49-83e2-aea7-8150b969b4e8" dir="auto"/><h1 id="1ec720e4-6f49-8365-aac1-016ac65eb236" class="" dir="auto">3. Probe 방식 3가지 (Readiness / Liveness 공통)</h1><p id="73a720e4-6f49-83fa-97a0-01d6b84e9ae5" class="" dir="auto">Readiness도, Liveness도 <strong>동일하게 3가지 방식</strong> 지원함.</p><ol type="1" id="435720e4-6f49-82e7-a0ee-817e073efbf1" class="numbered-list" start="1" dir="auto"><li><strong>httpGet</strong> : HTTP 응답 코드로 판단함</li></ol><ol type="1" id="c8b720e4-6f49-8353-b39d-01b385b2add6" class="numbered-list" start="2" dir="auto"><li><strong>exec</strong> : 컨테이너 내부 명령 실행 exit code로 판단함</li></ol><ol type="1" id="ea9720e4-6f49-8301-b1f4-81dd49c3b103" class="numbered-list" start="3" dir="auto"><li><strong>tcpSocket</strong> : 특정 포트로 TCP 연결 가능한지로 판단함</li></ol><hr id="01a720e4-6f49-836c-9134-8115cfcf6877" dir="auto"/><h1 id="eb9720e4-6f49-83b6-9abf-81c23947bc09" class="" dir="auto">4. 공통 옵션</h1><table id="1af720e4-6f49-8299-9080-01e2c1d9dcfc" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="6b8720e4-6f49-83c4-9d3a-0151171891d4" dir="ltr"><th id="VgTB" class="simple-table-header-color simple-table-header">옵션</th><th id="xsKK" class="simple-table-header-color simple-table-header" style="width:316.00001525878906px">의미</th></tr></thead><tbody><tr id="578720e4-6f49-83c0-a6dc-014d4a3210bf" dir="ltr"><td id="VgTB" class="">initialDelaySeconds</td><td id="xsKK" class="" style="width:316.00001525878906px">Pod 시작 후 첫 검사까지 대기함</td></tr><tr id="401720e4-6f49-8205-a8bc-817e39137736" dir="ltr"><td id="VgTB" class="">periodSeconds</td><td id="xsKK" class="" style="width:316.00001525878906px">검사 주기임</td></tr><tr id="3e0720e4-6f49-825c-8163-81468e6a58e0" dir="ltr"><td id="VgTB" class="">timeoutSeconds</td><td id="xsKK" class="" style="width:316.00001525878906px">응답/실행 대기 시간임</td></tr><tr id="fb7720e4-6f49-82a5-b1b5-0102dc6f33e7" dir="ltr"><td id="VgTB" class="">failureThreshold</td><td id="xsKK" class="" style="width:316.00001525878906px">연속 실패 몇 번이면 실패로 확정할지 결정함</td></tr><tr id="19e720e4-6f49-8274-821c-0164ed840353" dir="ltr"><td id="VgTB" class="">successThreshold</td><td id="xsKK" class="" style="width:316.00001525878906px">연속 성공 몇 번이면 성공으로 확정할지 결정함(readiness에서 자주 의미 있음)</td></tr></tbody></table><p id="313720e4-6f49-8250-a41e-8162fbf047d6" class="" dir="auto">옵션 조합이 잘못되면 “정상인데 장애로 오판”하거나 “장애인데 정상으로 오판”함.</p><hr id="293720e4-6f49-8220-a4f9-012822d8bdf2" dir="auto"/><h1 id="4db720e4-6f49-8374-9e5a-019a7253aa8d" class="" dir="auto">5. 실습</h1><p id="f55720e4-6f49-8355-8dcd-0106008220fc" class="" dir="auto">실습은 다음 순서로 진행함.</p><ol type="1" id="b50720e4-6f49-8326-b448-0158c8a74c2d" class="numbered-list" start="1" dir="auto"><li>Readiness(HTTP) : 정상/비정상에 따라 Endpoint가 붙었다/빠졌다 확인함</li></ol><ol type="1" id="45a720e4-6f49-828e-af2e-812f67e70615" class="numbered-list" start="2" dir="auto"><li>Readiness(TCP Socket) : 포트 열림 여부로 Endpoint 제어 확인함</li></ol><ol type="1" id="a8f720e4-6f49-82b6-a0cb-01e07d6014ef" class="numbered-list" start="3" dir="auto"><li>Readiness(Exec) : 커스텀 조건으로 Endpoint 제어 확인함</li></ol><ol type="1" id="968720e4-6f49-8363-bd61-811de478484c" class="numbered-list" start="4" dir="auto"><li>Liveness(Exec) : 실패 시 컨테이너 재시작 확인함</li></ol><p id="4d9720e4-6f49-82cb-86fd-012777433e7a" class="" dir="auto">실습 전 공통 명령어는 이 3개를 계속 사용함.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="a53720e4-6f49-8361-9a5c-81bb1883f008" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pod -w
+kubectl describe pod &lt;pod-name&gt;
+kubectl get endpoints &lt;svc-name&gt;</code></pre><hr id="a8a720e4-6f49-83b9-a752-81d57974f4c9" dir="auto"/><h1 id="109720e4-6f49-825d-9fd6-8121ac2f9921" class="" dir="auto">6. 실습 1 — Readiness Probe (HTTP 방식)</h1><h2 id="36c720e4-6f49-82bf-883e-818d74034c00" class="" dir="auto">목표</h2><p id="960720e4-6f49-833a-aa5b-015b9d7dc203" class="" dir="auto">HTTP 응답이 정상일 때만 Service가 트래픽을 전달하도록 만들고, 비정상 상태에서 Endpoint가 제거되는 것 확인함.</p><h2 id="df9720e4-6f49-8293-8c0e-818c10fe1569" class="" dir="auto">1단계: Deployment + Service 생성</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="84d720e4-6f49-8212-8131-01840248a01f" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rd-http-deploy
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rd-http
+  template:
+    metadata:
+      labels:
+        app: rd-http
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.27
+        ports:
+        - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
+          initialDelaySeconds: 3
+          periodSeconds: 3
+          timeoutSeconds: 1
+          failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rd-http-svc
+spec:
+  selector:
+    app: rd-http
+  ports:
+  - port: 80
+    targetPort: 80</code></pre><p id="bcc720e4-6f49-83a8-a3e0-81df4b592dc9" class="" dir="auto">적용함.</p><pre id="42c720e4-6f49-8270-87b8-8140b3e95e98" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f rd-http.yaml</code></pre><h2 id="87a720e4-6f49-8203-9454-81ac1b01fbe1" class="" dir="auto">2단계: Endpoint 확인</h2><pre id="597720e4-6f49-82b9-96b7-019a6ba896dc" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get endpoints rd-http-svc</code></pre><p id="4dc720e4-6f49-8276-9bcb-810a76b2a9a9" class="" dir="auto">Pod IP가 찍히면 readiness 성공했음.</p><h2 id="e12720e4-6f49-8234-b653-0190fc70a264" class="" dir="auto">3단계: 의도적으로 HTTP 실패 만들기</h2><p id="16e720e4-6f49-83c6-91e2-8177c9db717e" class="" dir="auto">nginx를 죽이면 <code>/</code> 응답이 불가해짐.</p><pre id="e87720e4-6f49-832c-a595-818468195943" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pod -l app=rd-http
+kubectl exec -it &lt;pod-name&gt; -- pkill nginx</code></pre><h2 id="25e720e4-6f49-828d-926b-0122672229b0" class="" dir="auto">4단계: Endpoint 제거 확인</h2><pre id="52a720e4-6f49-8396-8efe-011ad2cd692b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get endpoints rd-http-svc -w</code></pre><p id="f81720e4-6f49-82da-b2a5-01adf2b4e08d" class="" dir="auto">Endpoint가 비면 readiness 실패로 판단했음.</p><p id="a94720e4-6f49-83bc-9c98-01cac301fedc" class="" dir="auto">이때 중요한 점은 <strong>컨테이너가 재시작되는 게 아니라 트래픽만 차단됨</strong>임.</p><hr id="b61720e4-6f49-82db-96e6-010438d852a9" dir="auto"/><h1 id="79c720e4-6f49-82b0-ae33-813ff3257efb" class="" dir="auto">7. 실습 2 — Readiness Probe (TCP Socket 방식)</h1><h2 id="c69720e4-6f49-8380-bf71-01c5b1bc572b" class="" dir="auto">목표</h2><p id="e09720e4-6f49-838a-bc62-0105f8facd27" class="" dir="auto">HTTP가 아니라, 특정 포트로 TCP 연결이 되면 준비 완료로 판단하게 구성함.</p><h2 id="6f7720e4-6f49-82aa-b0ff-014094494b68" class="" dir="auto">1단계: netcat 기반 TCP 서버 Pod + Service</h2><p id="46f720e4-6f49-833f-8087-015016146eb2" class="" dir="auto">아래 컨테이너는 8080 포트를 열고 대기함. (단순 TCP 서버)</p><pre id="c13720e4-6f49-82cb-b3f9-017c0100aa4a" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: rd-tcp-pod
+  labels:
+    app: rd-tcp
+spec:
+  containers:
+  - name: tcp-server
+    image: busybox:1.36
+    command: [&quot;sh&quot;,&quot;-c&quot;,&quot;nc -lk -p 8080 -e echo OK&quot;]
+    ports:
+    - containerPort: 8080
+    readinessProbe:
+      tcpSocket:
+        port: 8080
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      timeoutSeconds: 1
+      failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rd-tcp-svc
+spec:
+  selector:
+    app: rd-tcp
+  ports:
+  - port: 8080
+    targetPort: 8080</code></pre><p id="140720e4-6f49-825a-8ce6-8197b7b88e31" class="" dir="auto">적용함.</p><pre id="91e720e4-6f49-836d-8b6a-01a7436a9e42" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f rd-tcp.yaml</code></pre><h2 id="27e720e4-6f49-830e-9d1c-014af415c814" class="" dir="auto">2단계: Endpoint 확인</h2><pre id="38b720e4-6f49-8377-bf45-01e4405f20eb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get endpoints rd-tcp-svc</code></pre><h2 id="5c5720e4-6f49-82a6-bbd3-018cac87454c" class="" dir="auto">3단계: 포트가 닫히도록 프로세스 종료</h2><pre id="58a720e4-6f49-83f4-9c6f-01121b359148" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it rd-tcp-pod -- pkill nc</code></pre><h2 id="2b5720e4-6f49-82f5-9a71-0107e8d33050" class="" dir="auto">4단계: Endpoint 제거 확인</h2><pre id="7f1720e4-6f49-8206-9147-813ed6e8a80e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get endpoints rd-tcp-svc -w</code></pre><p id="476720e4-6f49-8214-a2bc-81af16d5dd94" class="" dir="auto">TCP 연결이 안되니 readiness 실패로 판단했고 Endpoint 제거됐음.</p><h3 id="aee720e4-6f49-8233-8dbe-8103c1b5b483" class="" dir="auto">TCP 방식의 한계</h3><p id="49c720e4-6f49-82b2-97c9-011e9b0c1ac1" class="" dir="auto">포트가 열려있다는 것만 확인함.</p><p id="5e3720e4-6f49-8298-9416-0165e6068545" class="" dir="auto">앱 내부 로직이 고장났는지는 판단 못함.</p><hr id="b75720e4-6f49-838e-adbe-01935b9b28ea" dir="auto"/><h1 id="ee6720e4-6f49-83f5-9918-81efb72d1474" class="" dir="auto">8. 실습 3 — Readiness Probe (Exec 방식)</h1><h2 id="51d720e4-6f49-8260-a073-81730c1d7a10" class="" dir="auto">목표</h2><p id="900720e4-6f49-821a-b2bb-81f2aa79ca5a" class="" dir="auto">“내가 정한 조건”을 만족할 때만 준비 완료로 판단하도록 구성함.</p><p id="613720e4-6f49-83bc-b7e1-012cec815b1d" class="" dir="auto">예시는 <code>/tmp/ready</code> 파일이 있을 때만 준비 완료로 판단함.</p><h2 id="b0b720e4-6f49-836e-a675-01f9c8b58bdf" class="" dir="auto">1단계: Pod + Service 생성</h2><pre id="e41720e4-6f49-82d4-ba3e-0158134985d3" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: rd-exec-pod
+  labels:
+    app: rd-exec
+spec:
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;sh&quot;,&quot;-c&quot;,&quot;sleep 3600&quot;]
+    readinessProbe:
+      exec:
+        command: [&quot;sh&quot;,&quot;-c&quot;,&quot;test -f /tmp/ready&quot;]
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      timeoutSeconds: 1
+      failureThreshold: 2
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rd-exec-svc
+spec:
+  selector:
+    app: rd-exec
+  ports:
+  - port: 80
+    targetPort: 80</code></pre><p id="7df720e4-6f49-8390-81e1-813f2dab532e" class="" dir="auto">적용함.</p><pre id="404720e4-6f49-825e-b6da-0142a1bba7bd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f rd-exec.yaml</code></pre><h2 id="1fe720e4-6f49-8330-b22f-01f3bb94d4b0" class="" dir="auto">2단계: 처음 상태 확인</h2><pre id="563720e4-6f49-8335-8b0c-01e5425a04e1" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe pod rd-exec-pod
+kubectl get endpoints rd-exec-svc</code></pre><p id="8cf720e4-6f49-82ed-b225-011e2c919809" class="" dir="auto">처음엔 <code>/tmp/ready</code> 파일이 없으니 readiness 실패 상태라 Endpoint 비어있음.</p><h2 id="c61720e4-6f49-834b-82ff-01a626d7a806" class="" dir="auto">3단계: 준비 완료 조건 만들기</h2><pre id="28d720e4-6f49-836a-bcdf-019a0b7cdf4c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it rd-exec-pod -- sh -c &quot;touch /tmp/ready&quot;</code></pre><h2 id="ba9720e4-6f49-82fc-baa7-81284c7a80de" class="" dir="auto">4단계: Endpoint 등록 확인</h2><pre id="0d3720e4-6f49-82fd-8816-81977d0666f8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get endpoints rd-exec-svc</code></pre><p id="5f2720e4-6f49-830e-82d8-810b4275f2fe" class="" dir="auto">Pod IP가 나타나면 readiness 성공했음.</p><h2 id="8b0720e4-6f49-828f-b7ef-011fb5321b9b" class="" dir="auto">5단계: 다시 준비 불가 상태 만들기</h2><pre id="465720e4-6f49-8246-97e5-01fcad2b331e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it rd-exec-pod -- sh -c &quot;rm -f /tmp/ready&quot;
+kubectl get endpoints rd-exec-svc -w</code></pre><p id="706720e4-6f49-829e-9c03-01a0db394160" class="" dir="auto">Endpoint가 다시 빠지면 readiness 제어가 제대로 됐음.</p><h3 id="b6c720e4-6f49-834c-b0c3-81df513a73b9" class="" dir="auto">Exec 방식 주의점</h3><ul id="709720e4-6f49-82fe-860e-8192f186f04a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주기가 너무 짧으면 컨테이너 내부 명령 실행이 잦아짐 → CPU 사용량 증가 가능함</li></ul><ul id="fc0720e4-6f49-83ec-8039-016eeaca3974" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단순한 체크 스크립트로 구성하는 것이 안전함</li></ul><hr id="f6b720e4-6f49-831f-804a-81ea520ea755" dir="auto"/><h1 id="88a720e4-6f49-8381-9fd0-01c33e5a44f7" class="" dir="auto">9. 실습 4 — Liveness Probe (Exec 방식)로 “재시작” 확인</h1><h2 id="dad720e4-6f49-8270-a590-010f012d67a4" class="" dir="auto">목표</h2><p id="a0a720e4-6f49-839c-b6ab-812ab52ab96f" class="" dir="auto">liveness는 실패하면 컨테이너를 재시작한다는 것을 눈으로 확인함.</p><p id="2c0720e4-6f49-82a7-905f-0165afbbc6ac" class="" dir="auto">예시는 <code>/tmp/healthy</code> 파일이 없으면 실패하도록 구성함.</p><h2 id="9b2720e4-6f49-83be-91f8-814338f29f1e" class="" dir="auto">1단계: Pod 생성</h2><pre id="921720e4-6f49-8299-922f-0170813f6940" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: lv-exec-pod
+spec:
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;sh&quot;,&quot;-c&quot;,&quot;sleep 3600&quot;]
+    livenessProbe:
+      exec:
+        command: [&quot;sh&quot;,&quot;-c&quot;,&quot;test -f /tmp/healthy&quot;]
+      initialDelaySeconds: 3
+      periodSeconds: 3
+      timeoutSeconds: 1
+      failureThreshold: 2</code></pre><p id="e0f720e4-6f49-83d8-a011-01b4a15a495b" class="" dir="auto">적용함.</p><pre id="1bb720e4-6f49-8341-97bb-0142b3bb9b01" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f lv-exec.yaml</code></pre><h2 id="015720e4-6f49-8282-ae27-01cdb1ed607d" class="" dir="auto">2단계: 바로 재시작 되는지 확인</h2><p id="88e720e4-6f49-82a0-aac3-01b87fb67a9c" class="" dir="auto">처음엔 <code>/tmp/healthy</code> 파일이 없으니 liveness 실패 → 재시작 반복함.</p><pre id="870720e4-6f49-8227-8411-814bf83d7f8a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pod lv-exec-pod -w</code></pre><p id="c34720e4-6f49-8220-979e-017844ffc441" class="" dir="auto">RESTARTS 증가 확인함.</p><h2 id="1ef720e4-6f49-83ad-ae7c-81fe3f4c36f6" class="" dir="auto">3단계: 정상 상태로 만들기</h2><p id="d06720e4-6f49-8360-9009-8167186c055b" class="" dir="auto">재시작 루프를 멈추려면 파일을 만들어야 함.</p><p id="d82720e4-6f49-82a7-aa49-01f44375be4e" class="" dir="auto">다만 재시작이 계속 발생하면 exec 접속이 어려울 수 있음. 이 경우 <code>failureThreshold</code>나 <code>initialDelaySeconds</code>를 늘려서 접근 창을 확보하는 방식이 일반적임.</p><p id="c75720e4-6f49-8232-87bb-81d69b485f22" class="" dir="auto">학습용으로는 아래처럼 Pod를 삭제하고 <code>initialDelaySeconds</code>를 크게 바꿔서 진행하는 편이 편함.</p><p id="d5d720e4-6f49-8215-b372-81866368618d" class="" dir="auto">예시</p><pre id="f6e720e4-6f49-824c-99d1-810c6267e2ef" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: v1
+kind: Pod
+metadata:
+  name: lv-exec-pod
+spec:
+  containers:
+  - name: app
+    image: busybox:1.36
+    command: [&quot;sh&quot;,&quot;-c&quot;,&quot;touch /tmp/healthy; sleep 3600&quot;]
+    livenessProbe:
+      exec:
+        command: [&quot;sh&quot;,&quot;-c&quot;,&quot;test -f /tmp/healthy&quot;]
+      initialDelaySeconds: 10
+      periodSeconds: 3
+      failureThreshold: 2</code></pre><p id="8d6720e4-6f49-8238-bd11-016ea5b83503" class="" dir="auto">이제 실행 후 정상 유지됨.</p><h2 id="134720e4-6f49-8248-a77f-01d95213e6a2" class="" dir="auto">4단계: 일부러 장애 만들기(파일 삭제)</h2><pre id="19d720e4-6f49-8342-8e48-01f5554b2e7e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -it lv-exec-pod -- sh -c &quot;rm -f /tmp/healthy&quot;
+kubectl get pod lv-exec-pod -w</code></pre><p id="a1e720e4-6f49-8261-8517-017f918c3e6d" class="" dir="auto">liveness 실패로 재시작 발생함.</p><hr id="b56720e4-6f49-8397-b4dd-81ffea4936a9" dir="auto"/><h1 id="b69720e4-6f49-8339-924c-81bef845919f" class="" dir="auto">10. 운영 설계 가이드</h1><ol type="1" id="130720e4-6f49-82ab-ae17-8110e8ccefd3" class="numbered-list" start="1" dir="auto"><li>웹 애플리케이션<ul id="f01720e4-6f49-82b2-b027-815a86b85cc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">readiness: HTTP <code>/health</code> 권장</li></ul><ul id="931720e4-6f49-8254-b464-018120831daf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">liveness: HTTP 또는 exec(단순 체크) 권장</li></ul></li></ol><ol type="1" id="c3b720e4-6f49-823b-9b87-81b09fb6a94a" class="numbered-list" start="2" dir="auto"><li>DB/캐시 같은 TCP 서비스<ul id="9ae720e4-6f49-82ba-87b8-8139df6c0b99" class="bulleted-list" dir="auto"><li style="list-style-type:disc">readiness: tcpSocket으로 “포트 오픈” 체크 가능함</li></ul><ul id="872720e4-6f49-82fe-8bb7-018819d109df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다만 “쿼리 가능 상태”까지 보려면 exec/커스텀 스크립트 필요함</li></ul></li></ol><ol type="1" id="b0f720e4-6f49-8220-88ff-8124c57ee9e8" class="numbered-list" start="3" dir="auto"><li>readiness는 의존성(DB, 외부 API) 체크를 넣는 경우가 많음<ul id="ddc720e4-6f49-8317-b789-813cb9404f4b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 시 재시작보다 트래픽 차단이 더 안전한 경우가 많음</li></ul></li></ol><hr id="51e720e4-6f49-83f1-a7de-01c717249a3a" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

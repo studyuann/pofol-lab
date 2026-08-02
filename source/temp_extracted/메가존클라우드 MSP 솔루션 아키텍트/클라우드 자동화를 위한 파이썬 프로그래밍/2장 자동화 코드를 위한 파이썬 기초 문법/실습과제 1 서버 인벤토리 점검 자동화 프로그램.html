@@ -1,0 +1,894 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습과제 1. 서버 인벤토리 점검 자동화 프로그램</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="94d720e4-6f49-8367-b24a-81fedfd84d70" class="page sans"><header><h1 class="page-title" dir="auto">실습과제 1. 서버 인벤토리 점검 자동화 프로그램</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="6bb720e4-6f49-8305-961d-81fd8475f87c" class="" dir="auto">과제 목표</h2><p id="28e720e4-6f49-82a3-bb0d-816a0a632992" class="" dir="auto">여러 서버 정보를 Python 자료구조로 관리하고, 조건에 따라 서버 상태를 점검한 뒤 결과를 JSON 파일로 저장하는 프로그램을 작성한다.</p><p id="a79720e4-6f49-833c-b2f8-01e340807d4e" class="" dir="auto">이 실습에서는 다음 내용을 종합적으로 사용한다.</p><ul id="d05720e4-6f49-8236-914d-81bc739c89eb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변수와 자료형</li></ul><ul id="dbf720e4-6f49-83cf-8777-81fd44f91d39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리스트와 딕셔너리</li></ul><ul id="56b720e4-6f49-82fd-a90e-0195264f5e8d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조건문과 반복문</li></ul><ul id="f1c720e4-6f49-8360-a412-81066f8a1ee9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">함수와 모듈</li></ul><ul id="a3f720e4-6f49-8365-837c-01b355232d82" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 처리</li></ul><ul id="50d720e4-6f49-827f-94c6-81ed698d8008" class="bulleted-list" dir="auto"><li style="list-style-type:disc">JSON 처리</li></ul><ul id="2a5720e4-6f49-8225-938e-017c41f952f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">예외 처리</li></ul><ul id="306720e4-6f49-82cb-b729-8191a26fc46b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">tuple</li></ul><ul id="d59720e4-6f49-8332-8c12-01b364178f6b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">set</li></ul><hr id="3b5720e4-6f49-82b7-aa4e-0166f1311630" dir="auto"/><h2 id="551720e4-6f49-8303-b42e-81e973f93b2b" class="" dir="auto">요구사항</h2><p id="f40720e4-6f49-8376-a62e-814998dd462d" class="" dir="auto">다음 서버 목록을 사용한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="7c1720e4-6f49-82d0-bef8-813701172b24" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">servers = [
+    {
+        &quot;id&quot;: &quot;srv-001&quot;,
+        &quot;name&quot;: &quot;web-1&quot;,
+        &quot;role&quot;: &quot;web&quot;,
+        &quot;status&quot;: &quot;running&quot;,
+        &quot;cpu&quot;: 35,
+        &quot;memory&quot;: 60,
+        &quot;ports&quot;: [80, 443]
+    },
+    {
+        &quot;id&quot;: &quot;srv-002&quot;,
+        &quot;name&quot;: &quot;web-2&quot;,
+        &quot;role&quot;: &quot;web&quot;,
+        &quot;status&quot;: &quot;stopped&quot;,
+        &quot;cpu&quot;: 0,
+        &quot;memory&quot;: 0,
+        &quot;ports&quot;: [80, 443]
+    },
+    {
+        &quot;id&quot;: &quot;srv-003&quot;,
+        &quot;name&quot;: &quot;db-1&quot;,
+        &quot;role&quot;: &quot;db&quot;,
+        &quot;status&quot;: &quot;running&quot;,
+        &quot;cpu&quot;: 72,
+        &quot;memory&quot;: 85,
+        &quot;ports&quot;: [3306]
+    },
+    {
+        &quot;id&quot;: &quot;srv-004&quot;,
+        &quot;name&quot;: &quot;cache-1&quot;,
+        &quot;role&quot;: &quot;cache&quot;,
+        &quot;status&quot;: &quot;running&quot;,
+        &quot;cpu&quot;: 25,
+        &quot;memory&quot;: 40,
+        &quot;ports&quot;: [6379]
+    }
+]</code></pre><hr id="6d9720e4-6f49-8343-9da6-8154580c3a2e" dir="auto"/><h2 id="9cf720e4-6f49-82d0-8178-81a979d79186" class="" dir="auto">구현 조건</h2><h3 id="6f1720e4-6f49-8296-bb36-81f20ef61bdd" class="" dir="auto">1. 서버 상태 점검 함수 작성</h3><p id="8ab720e4-6f49-8368-8665-81e45feffdec" class="" dir="auto">다음 함수를 작성한다.</p><pre id="a77720e4-6f49-83e5-ba7f-010986515df0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def check_server_health(server):
+    ...</code></pre><p id="84a720e4-6f49-827c-b271-81174c044dc4" class="" dir="auto">이 함수는 서버 하나를 전달받아 다음 기준으로 상태를 판단한다.</p><table id="b13720e4-6f49-83f7-8d27-812d2c413eec" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="9bb720e4-6f49-82d8-85d8-01c72d85a454" dir="ltr"><th id="s}nR" class="simple-table-header-color simple-table-header">조건</th><th id="S[o:" class="simple-table-header-color simple-table-header">결과</th></tr></thead><tbody><tr id="915720e4-6f49-825b-bed9-0169b469841f" dir="ltr"><td id="s}nR" class="">status가 stopped이면</td><td id="S[o:" class="">stopped</td></tr><tr id="3c3720e4-6f49-83ad-b675-81ff17441df4" dir="ltr"><td id="s}nR" class="">cpu가 70 이상이거나 memory가 80 이상이면</td><td id="S[o:" class="">warning</td></tr><tr id="ad3720e4-6f49-827f-bd81-0110da401ec3" dir="ltr"><td id="s}nR" class="">그 외</td><td id="S[o:" class="">normal</td></tr></tbody></table><p id="b38720e4-6f49-8266-a9a9-0184c236c2f1" class="" dir="auto">반환값은 문자열로 한다.</p><p id="c7b720e4-6f49-82ef-bdd6-019604016566" class="" dir="auto">예시:</p><pre id="0de720e4-6f49-8260-b1aa-01fdb0e5434b" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">&quot;normal&quot;
+&quot;warning&quot;
+&quot;stopped&quot;</code></pre><hr id="281720e4-6f49-8291-9d30-0168e17d6133" dir="auto"/><h3 id="953720e4-6f49-824a-b0bf-01301bf78247" class="" dir="auto">2. 서버 요약 정보 생성 함수 작성</h3><p id="a9f720e4-6f49-8304-9fca-01b04a96b66e" class="" dir="auto">다음 함수를 작성한다.</p><pre id="e1a720e4-6f49-8297-ab46-017448c0006d" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def make_server_summary(server):
+    ...</code></pre><p id="605720e4-6f49-82e6-a7ad-811e370526f5" class="" dir="auto">이 함수는 서버 하나를 전달받아 다음 형식의 딕셔너리를 반환한다.</p><pre id="92e720e4-6f49-828f-9743-0144b75c1150" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;id&quot;: &quot;srv-001&quot;,
+    &quot;name&quot;: &quot;web-1&quot;,
+    &quot;role&quot;: &quot;web&quot;,
+    &quot;health&quot;: &quot;normal&quot;
+}</code></pre><p id="088720e4-6f49-83b6-a4ac-812f8cf1787b" class="" dir="auto"><code>health</code> 값은 <code>check_server_health()</code> 함수를 호출해서 구한다.</p><hr id="71d720e4-6f49-8323-b890-01afa721ef03" dir="auto"/><h3 id="133720e4-6f49-8266-8b1e-81ff1a74412b" class="" dir="auto">3. 전체 서버 목록을 반복 처리한다</h3><p id="0b3720e4-6f49-82fc-a955-01046eca147a" class="" dir="auto"><code>for</code> 반복문을 사용해서 전체 서버를 점검한다.</p><p id="48e720e4-6f49-82ba-8f9c-81593402286c" class="" dir="auto">점검 결과는 새로운 리스트에 저장한다.</p><pre id="2cf720e4-6f49-83f9-8f60-01f3a1f105be" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">summary_list = []</code></pre><p id="223720e4-6f49-82b5-bc93-81e98811c7fa" class="" dir="auto">최종 결과 예시는 다음과 같다.</p><pre id="45d720e4-6f49-824b-82bc-01c97da3955c" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">[
+    {
+        &quot;id&quot;: &quot;srv-001&quot;,
+        &quot;name&quot;: &quot;web-1&quot;,
+        &quot;role&quot;: &quot;web&quot;,
+        &quot;health&quot;: &quot;normal&quot;
+    },
+    {
+        &quot;id&quot;: &quot;srv-002&quot;,
+        &quot;name&quot;: &quot;web-2&quot;,
+        &quot;role&quot;: &quot;web&quot;,
+        &quot;health&quot;: &quot;stopped&quot;
+    }
+]</code></pre><hr id="ed3720e4-6f49-8371-917d-01a6462c9535" dir="auto"/><h3 id="dd0720e4-6f49-83a6-b4a8-819870da0e45" class="" dir="auto">4. role 목록을 set으로 추출한다</h3><p id="e77720e4-6f49-821d-b4df-01f673a13b19" class="" dir="auto">전체 서버에서 사용 중인 role 목록을 중복 없이 출력한다.</p><p id="8f9720e4-6f49-829f-8161-81c1fb4d6001" class="" dir="auto">예시 출력:</p><pre id="63d720e4-6f49-833c-8877-01a2d79e3aa3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용 중인 서버 역할:
+{&#x27;web&#x27;, &#x27;db&#x27;, &#x27;cache&#x27;}</code></pre><p id="63e720e4-6f49-834b-821b-01ed57d3e278" class="" dir="auto">힌트:</p><pre id="e63720e4-6f49-8232-8964-0186b1e9f0d0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">roles = set()</code></pre><p id="284720e4-6f49-8347-abc7-012e80605ff1" class="" dir="auto">또는 set comprehension을 사용할 수 있다.</p><pre id="a95720e4-6f49-83b9-bf63-81484e9b0c0e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">roles = {server[&quot;role&quot;] for server in servers}</code></pre><hr id="8c2720e4-6f49-835a-b3d5-813e465fe128" dir="auto"/><h3 id="08d720e4-6f49-8294-9ecd-81bbc6b6a8c9" class="" dir="auto">5. 점검 기준을 tuple로 관리한다</h3><p id="38a720e4-6f49-82a6-a1f1-01c5ff821da0" class="" dir="auto">CPU와 메모리 경고 기준은 tuple로 관리한다.</p><pre id="23d720e4-6f49-8365-bbb4-810464b0ab9a" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">THRESHOLD = (70, 80)</code></pre><p id="974720e4-6f49-83a8-b566-81c3c3a729b1" class="" dir="auto">의미는 다음과 같다.</p><pre id="672720e4-6f49-83c7-af2d-812a8eb4d4e1" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">THRESHOLD[0]  # CPU 경고 기준
+THRESHOLD[1]  # Memory 경고 기준</code></pre><p id="d6e720e4-6f49-8375-b4e1-813750db63d7" class="" dir="auto"><code>check_server_health()</code> 함수 내부에서 이 tuple 값을 사용한다.</p><hr id="46b720e4-6f49-82bb-a66b-817ec7ea9c7c" dir="auto"/><h3 id="9a0720e4-6f49-83e3-a260-81d079765ef3" class="" dir="auto">6. JSON 파일로 저장한다</h3><p id="5b3720e4-6f49-82db-affc-015028d5a48f" class="" dir="auto">점검 결과를 다음 파일명으로 저장한다.</p><pre id="953720e4-6f49-82a7-9c02-815a6208ae1c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">server_health_result.json</code></pre><p id="ea8720e4-6f49-8220-b000-0110bdbb2512" class="" dir="auto">저장할 때는 <code>json.dump()</code>를 사용한다.</p><pre id="0c6720e4-6f49-83ec-bd30-819a12ce7fa4" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">json.dump(data, file, ensure_ascii=False, indent=2)</code></pre><hr id="534720e4-6f49-82e4-8239-0186bef85402" dir="auto"/><h3 id="25c720e4-6f49-8234-82c0-8134c2676c87" class="" dir="auto">7. 예외 처리를 추가한다</h3><p id="84c720e4-6f49-8303-9e59-81a87f940e1a" class="" dir="auto">파일 저장 과정에서 오류가 발생할 수 있으므로 <code>try ~ except</code>를 사용한다.</p><p id="d50720e4-6f49-8245-9459-012d35eb30c8" class="" dir="auto">예시 구조:</p><pre id="562720e4-6f49-83de-81ec-015d7ebdc15e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">try:
+    with open(&quot;server_health_result.json&quot;, &quot;w&quot;, encoding=&quot;utf-8&quot;) as file:
+        json.dump(summary_list, file, ensure_ascii=False, indent=2)
+    print(&quot;파일 저장 완료&quot;)
+except Exception as e:
+    print(&quot;파일 저장 중 오류 발생&quot;)
+    print(e)</code></pre><hr id="9e8720e4-6f49-83ef-9fb6-019e91bc71b8" dir="auto"/><h2 id="23e720e4-6f49-82db-91b6-0151fbfa663b" class="" dir="auto">실행 결과 예시</h2><pre id="05b720e4-6f49-8308-8e7b-012181edf0b5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">서버 점검 결과
+srv-001 web-1 normal
+srv-002 web-2 stopped
+srv-003 db-1 warning
+srv-004 cache-1 normal
+
+사용 중인 서버 역할:
+{&#x27;web&#x27;, &#x27;db&#x27;, &#x27;cache&#x27;}
+
+server_health_result.json 파일 저장 완료</code></pre><hr id="724720e4-6f49-832f-bb63-0107486a6165" dir="auto"/><h1 id="cbb720e4-6f49-821d-bcc7-815b4f9441a1" class="" dir="auto">실습과제 2. 보안 그룹 규칙 분석 프로그램</h1><h2 id="a7c720e4-6f49-825b-a544-019e98ca7061" class="" dir="auto">과제 목표</h2><p id="3eb720e4-6f49-8220-a71a-0151dfaf3712" class="" dir="auto">보안 그룹 규칙 데이터를 분석해서 위험한 규칙을 탐지하고, 결과를 JSON 파일로 저장하는 프로그램을 작성한다.</p><p id="74e720e4-6f49-823b-96bc-811ab7086b2c" class="" dir="auto">이 실습은 클라우드 보안 점검 자동화 코드의 기본 형태로 볼 수 있다.</p><hr id="0b3720e4-6f49-827d-b6bb-81237c52047a" dir="auto"/><h2 id="3af720e4-6f49-8263-853b-81e5a760cc95" class="" dir="auto">제공 데이터</h2><pre id="662720e4-6f49-8223-af98-018c3d3369f0" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">security_groups = [
+    {
+        &quot;group_id&quot;: &quot;sg-001&quot;,
+        &quot;group_name&quot;: &quot;web-sg&quot;,
+        &quot;rules&quot;: [
+            {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 80, &quot;source&quot;: &quot;0.0.0.0/0&quot;},
+            {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 443, &quot;source&quot;: &quot;0.0.0.0/0&quot;},
+            {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 22, &quot;source&quot;: &quot;10.0.0.0/24&quot;}
+        ]
+    },
+    {
+        &quot;group_id&quot;: &quot;sg-002&quot;,
+        &quot;group_name&quot;: &quot;admin-sg&quot;,
+        &quot;rules&quot;: [
+            {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 22, &quot;source&quot;: &quot;0.0.0.0/0&quot;},
+            {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 3389, &quot;source&quot;: &quot;0.0.0.0/0&quot;}
+        ]
+    },
+    {
+        &quot;group_id&quot;: &quot;sg-003&quot;,
+        &quot;group_name&quot;: &quot;db-sg&quot;,
+        &quot;rules&quot;: [
+            {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 3306, &quot;source&quot;: &quot;10.0.1.0/24&quot;},
+            {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 5432, &quot;source&quot;: &quot;10.0.2.0/24&quot;}
+        ]
+    }
+]</code></pre><hr id="4a5720e4-6f49-8380-bd7b-813a594708ac" dir="auto"/><h2 id="edf720e4-6f49-8326-b5ed-01a2c61f2003" class="" dir="auto">구현 조건</h2><h3 id="6ba720e4-6f49-83f3-9474-8150050295eb" class="" dir="auto">1. 위험 포트를 tuple로 정의한다</h3><p id="ab1720e4-6f49-83c1-a461-81fec004d04d" class="" dir="auto">관리 포트는 외부에 열려 있으면 위험하다고 판단한다.</p><pre id="2c0720e4-6f49-83f1-851f-01d3e4d0222e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">DANGEROUS_PORTS = (22, 3389)</code></pre><p id="239720e4-6f49-82d3-9691-81f182b337b8" class="" dir="auto">의미는 다음과 같다.</p><table id="2d5720e4-6f49-8291-88a0-01406788872d" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="06b720e4-6f49-8260-951c-8191e6074c80" dir="ltr"><th id="BKTZ" class="simple-table-header-color simple-table-header">포트</th><th id="_@Gt" class="simple-table-header-color simple-table-header">의미</th></tr></thead><tbody><tr id="ef1720e4-6f49-8234-8209-012f4f1507a7" dir="ltr"><td id="BKTZ" class="">22</td><td id="_@Gt" class="">SSH</td></tr><tr id="f26720e4-6f49-83e7-956f-81220acfda97" dir="ltr"><td id="BKTZ" class="">3389</td><td id="_@Gt" class="">RDP</td></tr></tbody></table><hr id="fc9720e4-6f49-83f4-88ed-01d404fae2d7" dir="auto"/><h3 id="79d720e4-6f49-820c-be8e-815958f169a5" class="" dir="auto">2. 외부 공개 대역을 set으로 정의한다</h3><p id="415720e4-6f49-83ff-b396-8122f31fa662" class="" dir="auto">외부 전체 공개 대역은 다음과 같이 관리한다.</p><pre id="87f720e4-6f49-820e-8b19-811890d189ea" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">PUBLIC_SOURCES = {&quot;0.0.0.0/0&quot;, &quot;::/0&quot;}</code></pre><p id="26f720e4-6f49-83f2-b842-01ac90e3330f" class="" dir="auto"><code>set</code>을 사용하는 이유는 특정 source 값이 공개 대역에 포함되는지 빠르게 확인하기 위해서다.</p><pre id="7d9720e4-6f49-8316-9996-0134736bfee6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">if source in PUBLIC_SOURCES:
+    ...</code></pre><hr id="4d0720e4-6f49-836f-b19b-81e2f31323a6" dir="auto"/><h3 id="f7a720e4-6f49-82ff-ad38-0119a6da2ca9" class="" dir="auto">3. 위험 규칙 판별 함수 작성</h3><p id="1a0720e4-6f49-8271-88cb-015328e791f9" class="" dir="auto">다음 함수를 작성한다.</p><pre id="ee2720e4-6f49-83f6-bef2-8152a5e6ca5e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def is_dangerous_rule(rule):
+    ...</code></pre><p id="114720e4-6f49-8260-b81f-01ca6c3bee8d" class="" dir="auto">이 함수는 보안 그룹 규칙 하나를 전달받아 위험 여부를 판단한다.</p><p id="5b0720e4-6f49-827d-8f55-01a6ae71c35f" class="" dir="auto">위험 조건은 다음과 같다.</p><pre id="49e720e4-6f49-8397-a92c-812b1f479bec" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">포트가 22 또는 3389이고, source가 0.0.0.0/0 또는 ::/0이면 위험 규칙이다.</code></pre><p id="966720e4-6f49-835d-a158-014dd903cc40" class="" dir="auto">반환값은 <code>True</code> 또는 <code>False</code>로 한다.</p><p id="2be720e4-6f49-83f0-bf26-819d4ca88908" class="" dir="auto">예시:</p><pre id="155720e4-6f49-82d8-87f5-01150987a44e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">rule = {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 22, &quot;source&quot;: &quot;0.0.0.0/0&quot;}
+
+result = is_dangerous_rule(rule)
+print(result)</code></pre><p id="512720e4-6f49-8307-af43-8176d61fc98d" class="" dir="auto">출력:</p><pre id="2ad720e4-6f49-82bc-b1dc-81ab2a2c7da2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">True</code></pre><hr id="02f720e4-6f49-8251-92dc-81d6c4d8a41a" dir="auto"/><h3 id="07d720e4-6f49-82c1-87b5-81ab18a7f87b" class="" dir="auto">4. 보안 그룹 하나를 분석하는 함수 작성</h3><p id="a55720e4-6f49-8272-9188-8160184f641b" class="" dir="auto">다음 함수를 작성한다.</p><pre id="4bb720e4-6f49-826d-b4db-81ec0b35d30f" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def analyze_security_group(security_group):
+    ...</code></pre><p id="86a720e4-6f49-82c0-9f65-01f76f384794" class="" dir="auto">이 함수는 보안 그룹 하나를 전달받아 위험 규칙만 추출한다.</p><p id="c01720e4-6f49-83f7-ba85-0140f6344af7" class="" dir="auto">반환 형식은 다음과 같다.</p><pre id="739720e4-6f49-82df-9e90-81b8260367a6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">{
+    &quot;group_id&quot;: &quot;sg-002&quot;,
+    &quot;group_name&quot;: &quot;admin-sg&quot;,
+    &quot;dangerous_rules&quot;: [
+        {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 22, &quot;source&quot;: &quot;0.0.0.0/0&quot;},
+        {&quot;protocol&quot;: &quot;tcp&quot;, &quot;port&quot;: 3389, &quot;source&quot;: &quot;0.0.0.0/0&quot;}
+    ],
+    &quot;dangerous_count&quot;: 2
+}</code></pre><hr id="56a720e4-6f49-8307-89a8-81138afddecc" dir="auto"/><h3 id="009720e4-6f49-8305-bf27-01d9f41dbb83" class="" dir="auto">5. 전체 보안 그룹을 반복 분석한다</h3><p id="f62720e4-6f49-82e7-9ac4-814bcf3a47d9" class="" dir="auto">전체 <code>security_groups</code> 목록을 반복하면서 각 보안 그룹을 분석한다.</p><p id="4a4720e4-6f49-8231-86ac-01bf62d1de06" class="" dir="auto">분석 결과는 새로운 리스트에 저장한다.</p><pre id="454720e4-6f49-8391-b97b-81b2b46a662e" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">analysis_result = []</code></pre><p id="f61720e4-6f49-831d-8dec-812eec48bc33" class="" dir="auto">단, 위험 규칙이 하나 이상 있는 보안 그룹만 결과에 포함한다.</p><p id="344720e4-6f49-8261-b983-8110190c6981" class="" dir="auto">즉, <code>dangerous_count</code>가 0이면 결과 리스트에 넣지 않는다.</p><hr id="c66720e4-6f49-826c-ab83-81e7401c7361" dir="auto"/><h3 id="447720e4-6f49-82b7-8628-01dd691501a0" class="" dir="auto">6. 예외 처리를 추가한다</h3><p id="060720e4-6f49-8256-baad-0180741ecb5f" class="" dir="auto">분석 중 특정 규칙에 <code>port</code> 또는 <code>source</code> 키가 없을 수도 있다고 가정한다.</p><p id="efa720e4-6f49-8244-9be5-81cccbc633a1" class="" dir="auto"><code>is_dangerous_rule()</code> 함수 내부에서 예외 처리를 추가한다.</p><p id="1f0720e4-6f49-82af-94ac-01d8a0bacbbe" class="" dir="auto">예시 구조:</p><pre id="774720e4-6f49-83b0-a9fb-01b75d1ecba5" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">try:
+    port = rule[&quot;port&quot;]
+    source = rule[&quot;source&quot;]
+except KeyError as e:
+    print(f&quot;규칙 데이터에 필요한 키가 없음: {e}&quot;)
+    return False</code></pre><hr id="281720e4-6f49-8332-9269-01fa45fd905d" dir="auto"/><h3 id="0eb720e4-6f49-8267-a670-0127cfa33a12" class="" dir="auto">7. 결과를 JSON 파일로 저장한다</h3><p id="c18720e4-6f49-83fe-bb92-0195d2e8fdc6" class="" dir="auto">분석 결과를 다음 파일로 저장한다.</p><pre id="b7a720e4-6f49-83c9-ae12-011ba948bde3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">security_group_audit_result.json</code></pre><p id="51d720e4-6f49-826d-b038-813bea804044" class="" dir="auto">저장할 때는 <code>json.dump()</code>를 사용한다.</p><hr id="148720e4-6f49-838b-b767-818def3bff34" dir="auto"/><h2 id="442720e4-6f49-8221-9697-81465762464c" class="" dir="auto">실행 결과 예시</h2><pre id="560720e4-6f49-8324-8850-0101fd6a1ec7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">보안 그룹 분석 결과
+
+[위험] sg-002 admin-sg
+- tcp 22 0.0.0.0/0
+- tcp 3389 0.0.0.0/0
+
+security_group_audit_result.json 파일 저장 완료</code></pre><hr id="987720e4-6f49-82aa-9531-01fe1691a4bb" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

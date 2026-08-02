@@ -1,0 +1,837 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>17장. Prometheus-Grafana-Loki 설치</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="75e720e4-6f49-8273-9900-01b90ff79143" class="page sans"><header><h1 class="page-title" dir="auto">17장. Prometheus-Grafana-Loki 설치</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="33f720e4-6f49-8286-a8ad-8119892d4340" dir="auto"/><h1 id="b44720e4-6f49-825e-b065-81c8a1e7b7f0" class="" dir="auto">1. 사전 준비</h1><h2 id="4d3720e4-6f49-8282-aeab-812a7a124164" class="" dir="auto">1) Kubernetes 클러스터 상태 확인</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="b89720e4-6f49-83c7-b054-018c01ae6d8d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get node -o wide
+kubectl get pod -A | head</code></pre><h2 id="b94720e4-6f49-83ae-9c9a-816338dcbefc" class="" dir="auto">2) Helm 준비</h2><pre id="5cc720e4-6f49-834a-bbfd-014a1b5cf1cf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">helm version</code></pre><h2 id="8b9720e4-6f49-82a9-bbab-0135922c93f1" class="" dir="auto">3) 네임스페이스 생성</h2><pre id="c64720e4-6f49-838d-8ad8-017c00f87ad2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create ns monitoring</code></pre><h2 id="a40720e4-6f49-8335-86fa-011a23458c02" class="" dir="auto">4) Helm repo 등록/업데이트</h2><pre id="c1e720e4-6f49-8299-8d05-810b8547358a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+helm repo add grafana https://grafana.github.io/helm-charts
+helm repo update</code></pre><hr id="650720e4-6f49-8364-827f-0144e8f03d84" dir="auto"/><h1 id="ac4720e4-6f49-83af-9436-81ab62917ea6" class="" dir="auto">2. Prometheus + Grafana 설치 (kube-prometheus-stack 58.2.2)</h1><h2 id="0de720e4-6f49-82da-bfe0-813f48bb37cd" class="" dir="auto">1) 설치</h2><pre id="57c720e4-6f49-82f9-bf8f-819ac1a88bcb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">helm install prometheus-stack prometheus-community/kube-prometheus-stack \
+  -n monitoring \
+  --version 58.2.2</code></pre><h3 id="9f6720e4-6f49-83b4-8620-01958db0e538" class="" dir="auto">설치 확인</h3><pre id="6e9720e4-6f49-8231-bda1-0176cdc2ee1c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pod -n monitoring
+helm list -n monitoring</code></pre><p id="088720e4-6f49-83da-abb9-8152e6bff539" class="" dir="auto">kube-prometheus-stack 구성요소가 정상적으로 올라왔는지 확인함.</p><ul id="669720e4-6f49-83ba-9bbf-817d2dd8674f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">prometheus-operator</li></ul><ul id="402720e4-6f49-8276-86ff-81fb6a42cf3e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">prometheus-kube-prom-prometheus</li></ul><ul id="220720e4-6f49-8395-bf64-013dab8df7e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">alertmanager</li></ul><ul id="094720e4-6f49-82f2-9df2-81ca1a52d3a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">kube-state-metrics</li></ul><ul id="14f720e4-6f49-8320-967f-8112f1cc6844" class="bulleted-list" dir="auto"><li style="list-style-type:disc">node-exporter</li></ul><ul id="c77720e4-6f49-83f2-bc60-01f0eeeb284d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">grafana</li></ul><hr id="dc4720e4-6f49-827c-8a55-813d743f0add" dir="auto"/><h2 id="454720e4-6f49-8338-ab31-81649dcf58fd" class="" dir="auto">2) Grafana 외부 접속(NodePort로 노출)</h2><p id="f52720e4-6f49-825a-8c34-01c91d42e36f" class="" dir="auto">기본 설치는 ClusterIP일 수 있어서 외부 접속을 위해 NodePort로 바꿈.</p><pre id="35a720e4-6f49-8271-992f-81a714f13620" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">helm upgrade prometheus-stack prometheus-community/kube-prometheus-stack \
+  -n monitoring \
+  --version 58.2.2 \
+  --set grafana.service.type=NodePort</code></pre><h3 id="4fc720e4-6f49-82a5-8499-81a196ac1549" class="" dir="auto">Grafana NodePort 확인</h3><pre id="ad2720e4-6f49-8397-9610-01de57ba1056" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc -n monitoring | grep grafana</code></pre><p id="a65720e4-6f49-827f-adf6-81aad98da0ec" class="" dir="auto">브라우저 접속:</p><pre id="109720e4-6f49-82cd-bc13-01026e680d47" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://&lt;노드IP&gt;:&lt;NodePort&gt;</code></pre><hr id="032720e4-6f49-839c-ba6b-01b111fda3ec" dir="auto"/><h2 id="ecb720e4-6f49-82e0-9ea0-011c7fa3efa3" class="" dir="auto">3) Grafana 초기 비밀번호 확인</h2><p id="b8f720e4-6f49-838c-8935-0161c850d627" class="" dir="auto">kube-prometheus-stack은 grafana secret에 admin password가 들어감.</p><pre id="a99720e4-6f49-823e-9d71-81a48b061a80" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get secret -n monitoring prometheus-stack-grafana \
+  -o jsonpath=&#x27;{.data.admin-password}&#x27; | base64 -d; echo</code></pre><ul id="9ce720e4-6f49-83dd-9ad8-81e9ab7360de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ID: <code>admin</code></li></ul><ul id="3b3720e4-6f49-82cf-aec1-017337110e3f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PW: 위 출력값</li></ul><hr id="ad8720e4-6f49-8327-9f04-819d4212c425" dir="auto"/><h1 id="4ef720e4-6f49-83fe-957c-81881ca29fc5" class="" dir="auto">3. Prometheus 정상 동작 검증</h1><h2 id="fa5720e4-6f49-83ee-9e1b-01ea03aa40ae" class="" dir="auto">1) Prometheus 서비스 확인</h2><pre id="1ce720e4-6f49-83a3-aec4-0119a6009670" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc -n monitoring | egrep -i &quot;prometheus|operated&quot;</code></pre><h2 id="f10720e4-6f49-8231-97df-01e083b5fd67" class="" dir="auto">2) Prometheus Target 확인(권장)-클라이언트</h2><p id="6c0720e4-6f49-833a-8553-81a469957e2a" class="" dir="auto">Prometheus UI를 NodePort로 안 열어도 되지만, 확인이 필요하면 port-forward로 봄.</p><pre id="32a720e4-6f49-8309-9a56-012fa2a02124" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl port-forward -n monitoring svc/prometheus-stack-kube-prom-prometheus 9090:9090</code></pre><p id="ee5720e4-6f49-82c7-8085-01029cf6269e" class="" dir="auto">브라우저:</p><pre id="3ad720e4-6f49-829f-8b34-0108478e0211" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://localhost:9090</code></pre><p id="7f0720e4-6f49-82dd-9bd7-8138d1ebebce" class="" dir="auto">Status → Targets에서 scrape 상태 확인함.</p><hr id="334720e4-6f49-82e4-9864-81eedb4b84ae" dir="auto"/><h1 id="e9a720e4-6f49-82d1-b5b4-8130c98e67e6" class="" dir="auto">4. Loki 설치 (loki-stack 2.10.3, Loki 2.9.3)</h1><h2 id="c83720e4-6f49-8260-94ff-81bb15517427" class="" dir="auto">1) Loki 설치</h2><h3 id="117720e4-6f49-8390-bc0f-81659356b0b7" class="" dir="auto"><strong>loki-values.yaml 파일 작성</strong></h3><h3 id="bd4720e4-6f49-83ec-aecc-0100d91ba0dc" class="" dir="auto">1. 파일 생성</h3><pre id="0d7720e4-6f49-83df-9c87-013cd2b66ce4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">vi loki-values.yaml</code></pre><p id="7b8720e4-6f49-82a3-a960-01ccf8d037b0" class="" dir="auto">
+</p><h3 id="b82720e4-6f49-834f-b64c-012eb67e2451" class="" dir="auto">2. 아래 내용 입력</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="059720e4-6f49-82ab-b63c-011a9b2af5d6" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">loki:
+  image:
+    tag: 2.9.3
+
+  persistence:
+    enabled: false
+
+  config:
+    auth_enabled: false
+
+    server:
+      http_listen_port: 3100
+
+    common:
+      path_prefix: /data/loki
+      replication_factor: 1
+
+    ingester:
+      lifecycler:
+        ring:
+          kvstore:
+            store: inmemory
+      chunk_idle_period: 3m
+      chunk_block_size: 262144
+
+    schema_config:
+      configs:
+        - from: 2023-01-01
+          store: boltdb-shipper
+          object_store: filesystem
+          schema: v12
+          index:
+            prefix: index_
+            period: 24h
+
+    storage_config:
+      boltdb_shipper:
+        active_index_directory: /data/loki/index
+        cache_location: /data/loki/index_cache
+        shared_store: filesystem
+      filesystem:
+        directory: /data/loki/chunks
+
+promtail:
+  enabled: true
+
+  config:
+    clients:
+      - url: http://loki:3100/loki/api/v1/push</code></pre><hr id="3f0720e4-6f49-822a-8537-811250a3adee" dir="auto"/><h3 id="c64720e4-6f49-82be-bf8d-0166cb8695cb" class="" dir="auto">Loki + Promtail 설치</h3><pre id="474720e4-6f49-8303-9605-01f5c8b96d58" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">helm install loki grafana/loki-stack -n monitoring \
+  -f loki-values.yaml</code></pre><p id="e44720e4-6f49-8210-8a33-814fce3b55c2" class="" dir="auto">설치 확인:</p><pre id="841720e4-6f49-833d-84d9-81d316061338" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">helm list -n monitoring
+kubectl get pod -n monitoring</code></pre><p id="3e0720e4-6f49-8270-8c70-01d623c8594a" class="" dir="auto">정상 상태:</p><ul id="894720e4-6f49-8369-b89a-81f74be785d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">loki-0 Running</li></ul><ul id="060720e4-6f49-8245-84a3-015d130c1743" class="bulleted-list" dir="auto"><li style="list-style-type:disc">promtail-xxxxx (DaemonSet) Running (노드 수만큼)</li></ul><hr id="e59720e4-6f49-8258-8741-01a92abcd736" dir="auto"/><h3 id="c6e720e4-6f49-83f6-be90-81208b25dbf6" class="" dir="auto">Loki 정상 동작 확인</h3><h3 id="b71720e4-6f49-8295-b5c4-81e179b4542a" class="" dir="auto">1. Loki readiness 확인</h3><pre id="59a720e4-6f49-82ff-b383-011d45d22e55" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n monitoring -it \
+&lt;grafana pod명&gt; \
+-- curl -s http://loki:3100/ready</code></pre><p id="b1d720e4-6f49-8299-a4b9-01683eb02778" class="" dir="auto">정상 출력:</p><pre id="795720e4-6f49-830b-9409-81461f2b7a43" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ready</code></pre><hr id="07c720e4-6f49-83b9-9f99-01d847302854" dir="auto"/><h2 id="471720e4-6f49-8311-938c-81ae18f4cc2b" class="" dir="auto">2. 버전 확인</h2><pre id="bd8720e4-6f49-8359-9ff2-01e9b0710454" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl exec -n monitoring -it \
+&lt;grafana pod명&gt; -- curl -s http://loki:3100/loki/api/v1/status/buildinfo</code></pre><p id="9a3720e4-6f49-8306-b136-0169d48f18a3" class="" dir="auto">출력에:</p><pre id="3ba720e4-6f49-82ad-a155-819e5a257249" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&quot;version&quot;:&quot;2.9.3&quot;</code></pre><p id="655720e4-6f49-824e-a89a-0188e4bcbf10" class="" dir="auto">확인</p><hr id="732720e4-6f49-82fa-b83b-81e9d263bc4c" dir="auto"/><h3 id="00b720e4-6f49-8240-971a-01a5b3f6ecca" class="" dir="auto">Promtail 정상 동작 확인</h3><h3 id="8cb720e4-6f49-8311-8b4a-817a0e303c7d" class="" dir="auto">1. DaemonSet 확인</h3><pre id="de5720e4-6f49-829d-8350-01611464b34b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ds -n monitoring | grep promtail</code></pre><p id="225720e4-6f49-830c-a407-014bc8da1da1" class="" dir="auto">노드 수만큼 READY 1/1 확인</p><hr id="5f3720e4-6f49-83e1-83ac-8130a5ca5d85" dir="auto"/><h3 id="081720e4-6f49-82ae-86c1-8157980cc652" class="" dir="auto">2. 로그 확인</h3><pre id="dc8720e4-6f49-82e3-a17b-0119f1a862bd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl logs -n monitoring -l app.kubernetes.io/name=promtail --tail=50</code></pre><p id="8a3720e4-6f49-82b7-9866-01329b16b29b" class="" dir="auto">정상일 경우:</p><ul id="3e7720e4-6f49-8334-b289-01e41a6ec369" class="bulleted-list" dir="auto"><li style="list-style-type:disc">&quot;client connected&quot;</li></ul><ul id="dad720e4-6f49-8261-b9ad-015c961b9b0a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">&quot;pushed log batch&quot;</li></ul><p id="126720e4-6f49-82db-98f9-81490a332b0a" class="" dir="auto">같은 메시지 출력됨Grafana에서 Loki 연결</p><hr id="ca0720e4-6f49-83c4-83a5-810524b4e339" dir="auto"/><p id="4b4720e4-6f49-82b6-b58b-01e9062a79e2" class="" dir="auto">Grafana → Connections → Data Sources → Add data source → Loki</p><p id="b43720e4-6f49-8357-9dd2-016725a3f38f" class="" dir="auto">설정:</p><pre id="626720e4-6f49-83b0-af90-81124c236f41" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">URL: http://loki:3100</code></pre><p id="ee1720e4-6f49-8327-b738-81479dad6377" class="" dir="auto">Save &amp; Test</p><hr id="dc3720e4-6f49-8306-bef2-01856417570d" dir="auto"/><h3 id="fe0720e4-6f49-8378-ada3-01db9aa56a92" class="" dir="auto">로그 확인</h3><p id="57f720e4-6f49-8300-ae1a-811742dbf349" class="" dir="auto">Grafana → Explore → Loki 선택</p><p id="5eb720e4-6f49-82e6-9f57-81280ecfcff9" class="" dir="auto">쿼리 입력:</p><pre id="8e3720e4-6f49-8258-8406-01bf7d715861" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{namespace=&quot;monitoring&quot;}</code></pre><p id="f48720e4-6f49-8340-a935-817452f4a5c6" class="" dir="auto">또는</p><pre id="6ef720e4-6f49-83d6-b750-01b07513e717" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{job=&quot;varlogs&quot;}</code></pre><p id="816720e4-6f49-8308-9cc0-010e023ed799" class="" dir="auto">로그 출력되면 성공</p><hr id="e1c720e4-6f49-829c-bf1a-010a37f60c7a" dir="auto"/><h3 id="10a720e4-6f49-82ac-82a1-0104e34a4953" class="" dir="auto">구성 구조 이해</h3><h2 id="e37720e4-6f49-8314-8231-01bac7997f5f" class="" dir="auto">🔹 전체 흐름</h2><pre id="0ba720e4-6f49-8369-aa0b-018423a5a214" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Node Container Logs
+        ↓
+    Promtail (DaemonSet)
+        ↓  (push)
+      Loki
+        ↓
+     Grafana</code></pre><hr id="af0720e4-6f49-827d-99c7-01e7e1330991" dir="auto"/><h2 id="e03720e4-6f49-8263-a0c5-01b11ceed294" class="" dir="auto">🔹 promtail 역할</h2><ul id="275720e4-6f49-8200-addf-8147ad37944e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">/var/log/containers 파일 감시</li></ul><ul id="35b720e4-6f49-82e4-8f2f-01411c605c65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그에 라벨(namespace, pod, container 등) 추가</li></ul><ul id="c02720e4-6f49-83a8-bad5-819fd7d18fd4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Loki에 push</li></ul><hr id="bed720e4-6f49-83f0-9b49-0129d014a7b1" dir="auto"/><h3 id="c21720e4-6f49-8212-b4fb-0183af4c0a1a" class="" dir="auto">설치 완료 검증 체크리스트</h3><table id="d45720e4-6f49-83c8-892d-81b1d1fb95a1" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="b02720e4-6f49-8332-91ad-8176dffdc5da" dir="ltr"><th id="vKrk" class="simple-table-header-color simple-table-header">확인 항목</th><th id="t=Fb" class="simple-table-header-color simple-table-header">명령</th></tr></thead><tbody><tr id="6ef720e4-6f49-8297-b645-0168a33eb502" dir="ltr"><td id="vKrk" class="">Loki Pod Running</td><td id="t=Fb" class="">kubectl get pod -n monitoring</td></tr><tr id="f04720e4-6f49-824e-996d-01b18f24160f" dir="ltr"><td id="vKrk" class="">Promtail DS Running</td><td id="t=Fb" class="">kubectl get ds -n monitoring</td></tr><tr id="cbb720e4-6f49-823c-8b95-01e57076493d" dir="ltr"><td id="vKrk" class="">Loki Ready</td><td id="t=Fb" class="">curl /ready</td></tr><tr id="c19720e4-6f49-8228-8c3d-010aa11e171e" dir="ltr"><td id="vKrk" class="">Buildinfo 버전</td><td id="t=Fb" class="">curl /status/buildinfo</td></tr><tr id="21c720e4-6f49-83eb-853f-012b87c57d5f" dir="ltr"><td id="vKrk" class="">Grafana 연결 성공</td><td id="t=Fb" class="">Save &amp; Test OK</td></tr><tr id="85e720e4-6f49-8379-b5d0-015ab1795bae" dir="ltr"><td id="vKrk" class="">로그 조회 가능</td><td id="t=Fb" class="">Explore에서 LogQL</td></tr></tbody></table><hr id="177720e4-6f49-836f-b38c-01b81f29aa4e" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

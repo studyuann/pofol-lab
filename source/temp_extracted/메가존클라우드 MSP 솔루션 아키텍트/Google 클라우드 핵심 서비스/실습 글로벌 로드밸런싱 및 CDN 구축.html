@@ -1,0 +1,792 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. 글로벌 로드밸런싱 및 CDN 구축</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="83f720e4-6f49-8252-ba70-01a36811ceb1" class="page sans"><header><h1 class="page-title" dir="auto">실습. 글로벌 로드밸런싱 및 CDN 구축</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><p id="a6e720e4-6f49-8329-ad92-01097ae3cdb8" class="" dir="auto"><strong>Anycast IP와 Google 전용 네트워크를 활용한 고가용성 인프라 실습</strong></p><hr id="626720e4-6f49-8366-a132-815a6ec9bfb8" dir="auto"/><h2 id="07c720e4-6f49-8350-9fcc-010a6877b23b" class="" dir="auto">1. 실습 개요</h2><p id="3e6720e4-6f49-83ae-90ad-81d89c9ba181" class="" dir="auto">GCP에서 2대의 가상 머신(GCE)을 백엔드로 구성하고, <strong>글로벌 외부 HTTP(S) 부하 분산기</strong>와 <strong>Cloud CDN</strong>을 결합하여 가용성과 응답 속도를 최적화한다.</p><h3 id="f04720e4-6f49-8266-ace1-016f75c75489" class="" dir="auto"><strong>학습 목표</strong></h3><ul id="05e720e4-6f49-82d9-bb27-01bb7e422d95" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Compute Engine(GCE)을 사용하여 웹 서버 2대를 구축한다.</li></ul><ul id="f90720e4-6f49-821c-8793-81ec745a60b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 그룹(Instance Group)으로 백엔드 자원을 구조화한다.</li></ul><ul id="d3b720e4-6f49-8323-9cd7-819323680708" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>애니캐스트(Anycast) IP</strong>를 할당받아 전 세계 단일 진입점을 만든다.</li></ul><ul id="225720e4-6f49-82a9-a7f1-01826525bd36" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Cloud CDN</strong>을 활성화하여 엣지 로케이션의 캐싱 동작을 확인한다.</li></ul><hr id="148720e4-6f49-8341-9ec8-816144f510cc" dir="auto"/><h2 id="e1c720e4-6f49-82fa-a7c8-0193b77e45b6" class="" dir="auto">2. 실습 준비물</h2><ul id="c3f720e4-6f49-83ee-86cc-81e55d4d2e22" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GCP 계정 (프로젝트 생성 완료 상태)</li></ul><ul id="661720e4-6f49-837f-a2d2-81e189dd6c35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방화벽 설정: <code>default-allow-http</code> (80번 포트 허용)</li></ul><hr id="e1a720e4-6f49-823d-a9c9-81e8b53f7f6f" dir="auto"/><h1 id="e36720e4-6f49-832c-8c5d-01e04b9739c7" class="" dir="auto">3. 단계별 실습 절차</h1><h2 id="c61720e4-6f49-83e0-92ca-01ad282569f7" class="" dir="auto">Step 1: 백엔드 VM 인스턴스 구성</h2><p id="d38720e4-6f49-839d-a293-81110eb32505" class="" dir="auto">먼저 부하분산기의 백엔드가 될 웹 서버 2대를 생성한다.</p><h3 id="199720e4-6f49-83d8-8b5a-81634aee1573" class="" dir="auto">1. VM 인스턴스 2대 생성</h3><ul id="189720e4-6f49-839c-bb35-0125274de81c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름: <code>web-server-1</code>, <code>web-server-2</code></li></ul><ul id="a52720e4-6f49-82a8-a988-01864389748d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전: <code>asia-northeast3</code>(서울) 권장</li></ul><ul id="f28720e4-6f49-8308-8814-01e48f407376" class="bulleted-list" dir="auto"><li style="list-style-type:disc">머신 유형: 실습용 소형 인스턴스 사용</li></ul><ul id="b1b720e4-6f49-825c-830c-812c9c77a939" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부팅 디스크: Ubuntu 계열 또는 Debian 계열 사용 가능</li></ul><ul id="9fe720e4-6f49-82fc-9844-81e1d8a4d192" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방화벽: <strong>HTTP 트래픽 허용</strong> 체크 권장</li></ul><h3 id="6a2720e4-6f49-83a2-b08d-0102df9f6672" class="" dir="auto">2. Startup Script 설정</h3><p id="a57720e4-6f49-82bc-b728-018a9ddfdbe5" class="" dir="auto">인스턴스 생성 화면에서 <strong>고급 옵션 &gt; 관리 &gt; 자동화(Startup script)</strong> 영역에 아래 스크립트를 입력한다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="2fb720e4-6f49-82eb-aa6f-01bddb325edf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+apt-get update
+apt-get install -y nginx
+
+HOSTNAME=$(hostname)
+
+cat &lt;&lt;EOF &gt; /var/www/html/index.html
+&lt;h1&gt;This is Server: ${HOSTNAME}&lt;/h1&gt;
+&lt;p&gt;Loaded from backend VM&lt;/p&gt;
+EOF
+
+cat &lt;&lt;EOF &gt; /etc/nginx/conf.d/cache-control.conf
+server {
+    listen 80 default_server;
+    listen [::]:80 default_server;
+    root /var/www/html;
+    index index.html;
+    location / {
+        add_header Cache-Control &quot;public, max-age=60&quot;;
+        try_files \$uri \$uri/ =404;
+    }
+}
+EOF
+
+rm -f /etc/nginx/sites-enabled/default
+systemctl restart nginx</code></pre><h3 id="355720e4-6f49-8346-bd71-016c05b7d93f" class="" dir="auto">보완 설명</h3><p id="673720e4-6f49-8236-9240-81a0b1395306" class="" dir="auto">기존 스크립트도 동작은 하지만, Cloud CDN 테스트까지 고려하면 <strong>응답 헤더에 </strong><code><strong>Cache-Control</strong></code><strong>을 명시적으로 넣는 편이 더 안정적</strong>임. Cloud CDN은 백엔드 서비스에서 CDN을 활성화한 뒤 캐시 정책에 따라 객체를 캐싱하며, 캐시 동작은 백엔드 설정과 원본 응답 헤더의 영향을 받음.</p><hr id="b10720e4-6f49-824f-91ca-01da25037664" dir="auto"/><h2 id="341720e4-6f49-82dd-b3b2-01c8bac47ec8" class="" dir="auto">Step 2: 인스턴스 그룹 생성</h2><p id="778720e4-6f49-82fc-8fc6-810a3d914a1a" class="" dir="auto">로드밸런서는 개별 VM이 아니라 <strong>인스턴스 그룹</strong>을 대상으로 트래픽을 전달한다.</p><h3 id="435720e4-6f49-8281-9a17-0157c2bfc8d9" class="" dir="auto">1. 메뉴 이동</h3><ul id="570720e4-6f49-8318-9e96-818ae191850b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Compute Engine &gt; 인스턴스 그룹</strong></li></ul><ul id="c6c720e4-6f49-82b3-bf26-8143268a50df" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>인스턴스 그룹 만들기</strong> 클릭</li></ul><h3 id="ebc720e4-6f49-82e7-9c16-010f6def7da2" class="" dir="auto">2. 설정</h3><ul id="647720e4-6f49-831c-94f0-81b641e731c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">그룹 유형: <strong>비관리형 인스턴스 그룹</strong></li></ul><ul id="db7720e4-6f49-821a-8e8a-014c51e687e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름: 예시 <code>web-servers-ig</code></li></ul><ul id="3a5720e4-6f49-82f4-8cfb-012e0631614f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크/영역: VM이 있는 영역과 동일하게 선택</li></ul><ul id="49b720e4-6f49-8305-ab8e-01decf381d1d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 추가: <code>web-server-1</code>, <code>web-server-2</code></li></ul><h3 id="6b0720e4-6f49-837a-a9c0-017f90ea35ef" class="" dir="auto">보완 설명</h3><p id="aeb720e4-6f49-8253-b779-8159e7d6695a" class="" dir="auto">실습은 <strong>비관리형 인스턴스 그룹</strong>으로 진행해도 충분함. 다만 운영 환경에서는 자동 복구, 자동 확장, 템플릿 기반 관리가 가능한 <strong>관리형 인스턴스 그룹(MIG)</strong> 이 더 일반적임. Cloud CDN은 인스턴스 그룹을 백엔드로 사용하는 외부 애플리케이션 부하분산기와 함께 사용할 수 있음.</p><hr id="2f5720e4-6f49-82d4-8947-01b9f29d33b1" dir="auto"/><h2 id="374720e4-6f49-833e-ad66-0188c0c9a577" class="" dir="auto">Step 3: 부하 분산기 생성</h2><p id="b66720e4-6f49-83a1-9b98-016c5b8601ad" class="" dir="auto">이번 단계에서는 <strong>Cloud CDN은 아직 켜지지 않은 상태</strong>로 먼저 부하분산기를 생성한다.</p><h3 id="eec720e4-6f49-8206-a219-81182a552bbd" class="" dir="auto">1. 메뉴 이동</h3><ul id="a5f720e4-6f49-82cf-896d-81745dfb1110" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>네트워크 서비스 &gt; 부하 분산</strong></li></ul><ul id="4e5720e4-6f49-83c0-9469-815d00983f8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>부하 분산기 만들기</strong></li></ul><h3 id="9ae720e4-6f49-82d0-93ae-01250f7f9e4f" class="" dir="auto">2. 유형 선택</h3><p id="84b720e4-6f49-82ed-a34b-81d5b862fed2" class="" dir="auto">다음과 같이 선택한다.</p><ul id="285720e4-6f49-8381-b27a-01dbd225e30d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>애플리케이션 부하 분산기(HTTP/S)</strong></li></ul><ul id="87f720e4-6f49-8210-a69e-817b562c7a4e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>외부용(Public facing / external)</strong></li></ul><ul id="208720e4-6f49-839c-9d6e-0123b7ef0368" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>전역(Global)</strong></li></ul><ul id="cf7720e4-6f49-8384-aa12-018fd6ba8aa2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Global external Application Load Balancer</strong></li></ul><p id="ec4720e4-6f49-832a-80e5-81218e8b65f3" class="" dir="auto">이 부하분산기는 단일 외부 IP를 통해 전역 사용자 요청을 받아 백엔드 서비스로 전달하는 L7 프록시형 로드밸런서임.</p><h3 id="1a7720e4-6f49-83c7-839f-018bb729e837" class="" dir="auto">3. 백엔드 구성</h3><ul id="4cd720e4-6f49-82a2-8d61-018dda6dabf2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드 유형: <strong>인스턴스 그룹</strong></li></ul><ul id="165720e4-6f49-8281-b1bc-0184996321d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드 서비스 생성</li></ul><ul id="571720e4-6f49-8270-9a99-01a75683f94d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백엔드로 <code>web-servers-ig</code> 선택</li></ul><ul id="026720e4-6f49-823e-bbb4-018a52565b86" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로토콜: <code>HTTP</code></li></ul><ul id="c7a720e4-6f49-826c-aec8-81e62a004747" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트: <code>80</code></li></ul><h3 id="82f720e4-6f49-82ea-a645-015b566625e8" class="" dir="auto">4. 상태 확인(Health Check) 생성</h3><p id="d13720e4-6f49-8295-bc03-01b0f8d048d4" class="" dir="auto">상태 확인은 매우 중요함. 로드밸런서는 정상 응답을 반환하는 인스턴스에만 트래픽을 전달한다.</p><ul id="81d720e4-6f49-8288-8b69-813fea56ac13" class="bulleted-list" dir="auto"><li style="list-style-type:disc">유형: <code>HTTP</code></li></ul><ul id="067720e4-6f49-8232-9642-812c4532b6de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트: <code>80</code></li></ul><ul id="9b9720e4-6f49-8351-b7c4-01cdda0d2699" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 경로: <code>/</code></li></ul><h3 id="a16720e4-6f49-8304-9c4c-0181f1ded772" class="" dir="auto">5. 프론트엔드 구성</h3><ul id="715720e4-6f49-829b-9ea4-81b0622a7038" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로토콜: <code>HTTP</code></li></ul><ul id="b02720e4-6f49-8246-bcca-01e93842e43f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 버전: <code>IPv4</code></li></ul><ul id="546720e4-6f49-83e0-ad5c-81b4fad6d4a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 주소: <strong>새 고정 IP 예약</strong></li></ul><ul id="ce2720e4-6f49-8260-8321-818e852842dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름: 예시 <code>web-lb-ip</code></li></ul><ul id="200720e4-6f49-8224-b5dd-0194b9d28b1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">포트: <code>80</code></li></ul><h3 id="76c720e4-6f49-83c8-a0d9-81d86eda8d43" class="" dir="auto">6. 검토 후 생성</h3><p id="98c720e4-6f49-837a-9614-817092c927b2" class="" dir="auto">설정을 검토한 뒤 부하분산기를 생성한다.</p><hr id="0c5720e4-6f49-823a-bea5-01911d204208" dir="auto"/><h2 id="99b720e4-6f49-8335-b394-81e209f11d95" class="" dir="auto">Step 4: 부하분산기 동작 먼저 검증</h2><p id="816720e4-6f49-835d-a668-01cfce2ad739" class="" dir="auto">이유는 <strong>Cloud CDN을 먼저 켜면 캐시 때문에 백엔드 서버가 번갈아 응답하는 모습이 잘 보이지 않을 수 있기 때문</strong>임.</p><h3 id="2a1720e4-6f49-833e-81fd-0147820ff0e2" class="" dir="auto">1. 프론트엔드 IP 접속</h3><p id="b66720e4-6f49-8321-89ea-8199d20210d7" class="" dir="auto">브라우저에서 다음과 같이 접속한다.</p><pre id="3ec720e4-6f49-8200-9d1d-017048b73f93" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">http://[부하분산기_프론트엔드_IP]</code></pre><h3 id="b23720e4-6f49-82f5-bed4-8174752b3ff8" class="" dir="auto">2. 새로고침 반복</h3><p id="eb7720e4-6f49-838f-a5a9-015555b7a382" class="" dir="auto">여러 번 새로고침하여 다음과 같은 응답이 교대로 보이는지 확인한다.</p><ul id="88f720e4-6f49-82b4-a906-81c0b58edec8" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>This is Server: web-server-1</code></li></ul><ul id="ce2720e4-6f49-8359-b647-8103b42cb20f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>This is Server: web-server-2</code></li></ul><h3 id="40a720e4-6f49-8238-8759-01a08a9bb608" class="" dir="auto">보완 설명</h3><p id="fa7720e4-6f49-8330-bd9e-01958b51d36e" class="" dir="auto">로드밸런싱 검증은 <strong>CDN 활성화 전</strong>에 먼저 하는 것이 좋음. CDN이 활성화되면 첫 요청 이후 응답이 엣지 캐시에 저장될 수 있어서, 이후 요청은 백엔드까지 가지 않을 수 있음. 그러면 두 서버가 번갈아 나오는 현상이 눈에 잘 안 띌 수 있음. Cloud CDN은 백엔드 서비스 수준에서 활성화되며, 캐시된 응답은 엣지에서 바로 전달될 수 있음.</p><hr id="430720e4-6f49-83c9-a5a7-01b8f1e60fb1" dir="auto"/><h2 id="e8b720e4-6f49-82df-97bf-01a191feef80" class="" dir="auto">Step 5: 생성된 부하분산기에 Cloud CDN 연결</h2><p id="050720e4-6f49-82d3-a42b-816c82776084" class="" dir="auto">이제 <strong>이미 만들어진 부하분산기</strong>에 Cloud CDN을 붙인다.</p><h3 id="0b0720e4-6f49-828f-97a6-81c48cb6c24e" class="" dir="auto">1. 메뉴 이동</h3><ul id="8fe720e4-6f49-82bb-89fb-81cc48ae47bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>네트워크 서비스 &gt; 부하 분산</strong></li></ul><ul id="c60720e4-6f49-8361-9e40-81b3df100c6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">방금 만든 부하분산기 이름 클릭</li></ul><h3 id="ce1720e4-6f49-82a7-a41c-81c5573c8e6a" class="" dir="auto">2. 편집 모드 진입</h3><ul id="b45720e4-6f49-835f-a5a7-01497659b073" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상단의 <strong>수정(Edit)</strong> 클릭</li></ul><ul id="336720e4-6f49-839a-a7a9-817b4f8ae500" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Backend configuration</strong> 단계로 이동</li></ul><p id="26b720e4-6f49-8371-967f-01fbe2d4db72" class="" dir="auto">공식 문서 기준으로 기존 부하분산기 수정은 <strong>Load balancing &gt; 해당 LB 선택 &gt; Edit &gt; Backend Configuration &gt; backend service 편집</strong> 흐름으로 진행한다. </p><h3 id="63e720e4-6f49-8379-9bf0-01e3942a98c4" class="" dir="auto">3. 백엔드 서비스 편집</h3><ul id="503720e4-6f49-831f-897d-815e3c4f70bd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결된 <strong>백엔드 서비스(Edit)</strong> 클릭</li></ul><ul id="731720e4-6f49-8235-98b6-01829e989b33" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정 화면에서 <strong>Enable Cloud CDN</strong> 또는 <strong>Cloud CDN 사용 설정</strong> 체크</li></ul><h3 id="5d3720e4-6f49-830b-8835-81257b47ceba" class="" dir="auto">4. 캐시 모드 설정</h3><p id="157720e4-6f49-82e7-879d-013ef3705c6d" class="" dir="auto">실습에서는 다음 중 하나를 권장한다.</p><ul id="55b720e4-6f49-820d-a092-815382048d07" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Cache static content</strong></li></ul><ul id="968720e4-6f49-836e-990f-01eb919b2005" class="bulleted-list" dir="auto"><li style="list-style-type:disc">또는 기본 캐시 모드 유지</li></ul><p id="265720e4-6f49-82c4-a1b0-01c28f663259" class="" dir="auto">정적 HTML 파일을 서비스하는 구조이므로 실습 목적에는 충분함. <code>index.html</code> 같은 정적 콘텐츠는 CDN 캐시 테스트에 적합하다. Cloud CDN은 백엔드 서비스 설정에서 캐시 모드와 TTL 관련 옵션을 조정할 수 있다. </p><h3 id="0f0720e4-6f49-8359-8ccd-019be1905b46" class="" dir="auto">5. 저장 및 업데이트</h3><ul id="423720e4-6f49-829c-9afe-81b789895932" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변경 사항 저장</li></ul><ul id="70a720e4-6f49-83dc-a2e4-01dc59d17b06" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Review and finalize</strong></li></ul><ul id="93d720e4-6f49-83ed-9204-01d883ec5cf3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Update</strong></li></ul><hr id="1b4720e4-6f49-839f-b539-01604e59d428" dir="auto"/><h2 id="ba9720e4-6f49-832f-89e3-0160bb93eb9c" class="" dir="auto">Step 6: Cloud CDN 캐싱 확인</h2><p id="028720e4-6f49-8210-b517-811c0d58c752" class="" dir="auto">이제 캐시가 실제로 적용되는지 확인한다.</p><h3 id="60d720e4-6f49-836d-8faa-81b6f92a8195" class="" dir="auto">1. 헤더 확인 명령 실행</h3><p id="5db720e4-6f49-8345-ade6-817399d8615e" class="" dir="auto">Cloud Shell 또는 로컬 터미널에서 실행한다.</p><pre id="264720e4-6f49-82ae-a324-012f986e0a46" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -I http://[부하분산기_프론트엔드_IP]</code></pre><h3 id="e87720e4-6f49-8212-978a-014fc44d78fe" class="" dir="auto">2. 응답 헤더 확인</h3><p id="085720e4-6f49-83ba-ace1-81bcf5925dc5" class="" dir="auto">다음과 비슷한 헤더를 확인한다.</p><pre id="e8b720e4-6f49-839f-9971-01bdfcd68ccb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">x-cache: HIT</code></pre><p id="fb3720e4-6f49-8270-a5ae-01556e89c66c" class="" dir="auto">또는 환경에 따라 Cloud CDN 관련 캐시 상태 헤더가 표시될 수 있다. 최초 요청은 <code>MISS</code>일 수 있고, 반복 요청 시 <code>HIT</code>로 바뀌는 흐름을 확인하면 됨.</p><h3 id="b30720e4-6f49-82e6-9de0-811018bdc6a2" class="" dir="auto">보완 설명</h3><p id="6b0720e4-6f49-839f-8930-81b507dade27" class="" dir="auto">캐시는 첫 요청 직후 바로 HIT가 되지 않을 수 있음. 최초 요청은 원본 서버에서 받아와 엣지에 저장하는 과정이라 <code>MISS</code>가 보일 수 있음. 이후 동일한 객체 요청에서 <code>HIT</code>가 보이면 캐싱이 동작하는 것임.</p><p id="1b7720e4-6f49-82df-a3e6-01ccd18cf72b" class="" dir="auto">실습 문서에는 특정 헤더 이름을 하나로 단정하기보다 **“캐시 상태가 MISS → HIT로 바뀌는지 확인”**이라고 적는 편이 더 안전함. 콘솔/플랫폼 변화나 헤더 노출 방식 차이 때문에 환경별로 다르게 보일 수 있기 때문임.</p><hr id="3fe720e4-6f49-832f-8069-018118d220dd" dir="auto"/><h2 id="4fe720e4-6f49-83b3-863d-81c904eb46ec" class="" dir="auto">Step 7: 고가용성(Failover) 테스트</h2><p id="436720e4-6f49-8307-a7bc-015869642dc0" class="" dir="auto">부하분산기와 상태 확인이 정상 동작하는지 확인한다.</p><h3 id="cb8720e4-6f49-83ff-b197-01db08ed8c3d" class="" dir="auto">1. 인스턴스 하나 중지</h3><ul id="243720e4-6f49-82ce-8a61-014268ce541a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>web-server-1</code> 인스턴스를 중지</li></ul><h3 id="24a720e4-6f49-83cb-bf47-819683afa087" class="" dir="auto">2. 잠시 대기 후 재접속</h3><p id="09b720e4-6f49-8248-bbaa-818937cfe650" class="" dir="auto">다시 아래 주소로 접속한다.</p><pre id="293720e4-6f49-8243-bb7f-815e1ba06a80" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">http://[부하분산기_프론트엔드_IP]</code></pre><h3 id="b82720e4-6f49-8265-b11a-81141435e44b" class="" dir="auto">3. 결과 확인</h3><ul id="f48720e4-6f49-8374-b795-81c6c970cb19" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스가 계속 응답하는지 확인</li></ul><ul id="13c720e4-6f49-82e8-b973-01e25b4ef85e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">남아 있는 <code>web-server-2</code>가 요청을 처리하는지 확인</li></ul><h3 id="422720e4-6f49-8337-8ce5-8112b8d1c4a9" class="" dir="auto">보완 설명</h3><p id="b62720e4-6f49-82d6-a650-01b8e65cc10a" class="" dir="auto">이 테스트는 <strong>상태 확인(Health Check)</strong> 이 제대로 동작하는지 검증하는 과정임. 로드밸런서는 비정상 백엔드를 자동으로 제외하고 정상 백엔드로만 트래픽을 전달한다. 백엔드 서비스는 상태 확인과 함께 동작하며, 어떤 백엔드가 요청을 처리할지 결정하는 핵심 구성 요소다. </p><hr id="c83720e4-6f49-83e0-86a8-81fb28764657" dir="auto"/><h1 id="fcd720e4-6f49-830d-b8b5-819678f03884" class="" dir="auto">4. 결과 검증 및 테스트</h1><h2 id="243720e4-6f49-824b-9cc0-81c7492db139" class="" dir="auto">① 로드밸런싱 확인</h2><p id="07b720e4-6f49-83f6-b5db-81925c04105e" class="" dir="auto">Cloud CDN을 붙이기 전에 먼저 검증한다.</p><ul id="8b3720e4-6f49-82c5-8084-014cfe917a31" class="bulleted-list" dir="auto"><li style="list-style-type:disc">부하분산기 프론트엔드 IP 접속</li></ul><ul id="ec4720e4-6f49-835e-8490-0109d3fb3193" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새로고침 반복</li></ul><ul id="917720e4-6f49-8325-924d-8150c35b8f42" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>web-server-1</code>, <code>web-server-2</code>가 번갈아 보이는지 확인</li></ul><h2 id="f4b720e4-6f49-83c9-bc63-01779dc5b17a" class="" dir="auto">② Cloud CDN 캐싱 확인</h2><p id="2fa720e4-6f49-8209-84f9-81273b975563" class="" dir="auto">Cloud CDN 활성화 후 아래 명령 실행</p><pre id="f8e720e4-6f49-83a3-bb57-01edc9f55924" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl -I http://[부하분산기_프론트엔드_IP]</code></pre><p id="2e8720e4-6f49-82db-9e73-01cc736238bb" class="" dir="auto">확인 포인트</p><ul id="1c3720e4-6f49-8396-9d35-01fd40459eb5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">첫 요청: <code>MISS</code> 가능</li></ul><ul id="dea720e4-6f49-82e0-bc88-019680d9b9c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재요청: <code>HIT</code> 확인 가능</li></ul><ul id="02c720e4-6f49-8398-ac0f-015b3ce87a57" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Cache-Control</code> 헤더도 함께 확인 가능</li></ul><h2 id="d34720e4-6f49-833a-a3f5-01bbd457758b" class="" dir="auto">③ 장애 조치 확인</h2><ul id="d10720e4-6f49-82bf-a639-01e52affd7e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>web-server-1</code> 중지</li></ul><ul id="2bd720e4-6f49-82ac-900e-81e65d03f31e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일정 시간 후 재접속</li></ul><ul id="54d720e4-6f49-8210-9775-0105efbedf98" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>web-server-2</code>만으로도 정상 서비스되는지 확인</li></ul><hr id="4db720e4-6f49-825f-b959-81d2555042dc" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

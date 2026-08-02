@@ -1,0 +1,885 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>6장. ReplicaSet &amp; Deployment</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="c31720e4-6f49-835b-82aa-811f0d2cea07" class="page sans"><header><h1 class="page-title" dir="auto">6장. ReplicaSet &amp; Deployment</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="f9f720e4-6f49-821a-b945-81c690e84a0a" dir="auto"/><h1 id="eb7720e4-6f49-8374-b636-01e0ebcbe12f" class="" dir="auto">1. Controller란 무엇인가?</h1><p id="5ca720e4-6f49-829b-b77d-016ae8545823" class="" dir="auto"><strong>Controller = 원하는 상태(Desired State)를 실제 상태(Current State)와 일치시키는 자동 조정기</strong></p><p id="356720e4-6f49-831e-905b-81798c8eb8d8" class="" dir="auto">쿠버네티스는 선언형(Declarative) 시스템임.</p><hr id="a0e720e4-6f49-82c9-b94e-8156c5a8d686" dir="auto"/><h1 id="995720e4-6f49-828b-9566-01ba848f1d40" class="" dir="auto">2. Controller 동작 원리</h1><p id="31c720e4-6f49-8274-9d82-0197670a1f1f" class="" dir="auto">동작 구조는 다음과 같음.</p><ol type="1" id="27a720e4-6f49-8235-971a-815b4ecfffa1" class="numbered-list" start="1" dir="auto"><li>사용자가 <code>kubectl apply</code> 실행</li></ol><ol type="1" id="e70720e4-6f49-83f7-8400-814a1ecffb89" class="numbered-list" start="2" dir="auto"><li>API Server가 요청을 검증하고 etcd에 저장</li></ol><ol type="1" id="f9e720e4-6f49-83ba-b97a-8179599ed03b" class="numbered-list" start="3" dir="auto"><li>Controller가 API Server를 Watch</li></ol><ol type="1" id="bb1720e4-6f49-8229-8541-81ec3747472a" class="numbered-list" start="4" dir="auto"><li>Desired State와 Current State 비교</li></ol><ol type="1" id="3f4720e4-6f49-8344-807a-01c8f5ce0ebc" class="numbered-list" start="5" dir="auto"><li>차이가 있으면 수정 작업 수행</li></ol><p id="4c9720e4-6f49-834c-b5bd-01955aca92ca" class="" dir="auto">즉, Controller는:</p><ul id="b45720e4-6f49-82d5-ba9d-81402cb9be46" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계속 감시(Watch)</li></ul><ul id="ee6720e4-6f49-83d0-8191-01392c6483c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">상태 비교(Reconcile)</li></ul><ul id="ba9720e4-6f49-83cc-ac21-01fbd58db3ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">수정(Action)</li></ul><p id="994720e4-6f49-83e1-8a8d-812b8dfba081" class="" dir="auto">이 과정을 반복함.</p><p id="b3a720e4-6f49-8260-bc40-8115d932308f" class="" dir="auto">이를 <strong>Reconciliation Loop</strong>라고 부름.</p><hr id="b7c720e4-6f49-83d3-9bc7-01186d633aa1" dir="auto"/><h1 id="4e0720e4-6f49-839d-a1b3-011508f4eed7" class="" dir="auto">3. Control Loop 구조</h1><p id="a63720e4-6f49-83b5-b5e8-810abbe3767e" class="" dir="auto">간단히 표현하면:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="974720e4-6f49-8305-8dc9-01b92ce6475a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">while(true) {
+  현재상태 = API 조회
+  원하는상태 = Spec 확인
+  차이점 계산
+  수정 실행
+}</code></pre><p id="ed1720e4-6f49-83a8-8cae-81b166422519" class="" dir="auto">이 루프가 계속 돈다고 보면 됨.</p><hr id="a58720e4-6f49-83ab-945b-01fcb5df5a6c" dir="auto"/><h1 id="fdd720e4-6f49-835b-b05a-811935287dee" class="" dir="auto">4. 주요 Controller 종류</h1><p id="168720e4-6f49-8342-b795-81dd57db43bb" class="" dir="auto">쿠버네티스에는 여러 Controller가 있음.</p><figure id="805720e4-6f49-82c5-a967-0160f1b67c9d" class="image" data-notion-image="6%EC%9E%A5%20ReplicaSet%20&amp;%20Deployment/image.png" dir="ltr"><a href="6%EC%9E%A5%20ReplicaSet%20&amp;%20Deployment/image.png"><img style="width:709.96875px" src="6%EC%9E%A5%20ReplicaSet%20&amp;%20Deployment/image.png"/></a></figure><hr id="502720e4-6f49-83c0-ba4c-812ba9a720ef" dir="auto"/><h2 id="c00720e4-6f49-8341-a871-81932d5652eb" class="" dir="auto">1) ReplicationController란?</h2><p id="148720e4-6f49-82f0-94c4-81809d06d11b" class="" dir="auto"><strong>ReplicationController = 지정한 개수의 Pod를 유지하는 가장 초기 Controller</strong></p><p id="213720e4-6f49-8371-99f0-0128788edced" class="" dir="auto">ReplicaSet의 전신(구버전)임.</p><p id="c0f720e4-6f49-8252-a99b-8113f68d94be" class="" dir="auto">역할은 동일함.</p><blockquote id="e56720e4-6f49-8281-b10d-81ae02e7db35" class="" dir="auto">항상 N개의 Pod를 유지한다.</blockquote><h2 id="979720e4-6f49-8216-9e0c-81cfc6269d7f" class="" dir="auto">2) ReplicaSet Controller</h2><h3 id="4aa720e4-6f49-8381-9423-8141b8576488" class="" dir="auto">역할</h3><ul id="b72720e4-6f49-8319-98a4-01baa827e423" class="bulleted-list" dir="auto"><li style="list-style-type:disc">지정한 개수만큼 Pod 유지</li></ul><h3 id="e42720e4-6f49-82cf-a5da-015f14589b40" class="" dir="auto">예시</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="9c1720e4-6f49-82a6-8bad-811ddcd53486" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-rs
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx</code></pre><p id="c7e720e4-6f49-82a7-bd5d-01936ce47069" class="" dir="auto">Pod 하나 삭제해보면:</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="bad720e4-6f49-8342-82d1-81e64afabd7d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete pod &lt;pod이름&gt;</code></pre><p id="c3e720e4-6f49-821d-929b-01729b06ac6c" class="" dir="auto">→ 자동으로 새 Pod 생성됨.</p><p id="1b2720e4-6f49-8296-89d2-8144323edd47" class="" dir="auto">왜?</p><p id="631720e4-6f49-820c-b353-8159808a9f00" class="" dir="auto">ReplicaSet Controller가 감지했기 때문임.</p><hr id="8ab720e4-6f49-8209-8790-81863af93b17" dir="auto"/><h2 id="b88720e4-6f49-8258-b601-017a2d4af867" class="" dir="auto">3) Deployment Controller</h2><p id="780720e4-6f49-839b-ac33-81322962e35c" class="" dir="auto">ReplicaSet을 관리하는 상위 Controller임.</p><h3 id="1e0720e4-6f49-82e0-8db0-81457cef60a9" class="" dir="auto">역할</h3><ul id="6c7720e4-6f49-8319-ad73-8191a0fce58d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ReplicaSet 생성ㅊ</li></ul><ul id="e01720e4-6f49-8237-a78a-810bdcec744d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Rolling Update 관리</li></ul><ul id="aef720e4-6f49-83f7-976e-81897dd58ad9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">롤백 지원</li></ul><h3 id="804720e4-6f49-82fb-988a-810d8baaec97" class="" dir="auto">예시</h3><pre id="eec720e4-6f49-83a6-9cef-81b544bdb57f" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deploy
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.25</code></pre><p id="b07720e4-6f49-83b0-8a41-01d856b2facb" class="" dir="auto">이미지 버전 변경:</p><pre id="82c720e4-6f49-8206-ac7f-01dab33bbe58" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl set image deployment nginx-deploy nginx=nginx:1.26</code></pre><p id="cc3720e4-6f49-8338-9b79-017d369ca96d" class="" dir="auto">→ 새로운 ReplicaSet 생성</p><p id="ff5720e4-6f49-8283-9fa4-014c9fa2b148" class="" dir="auto">→ 기존 ReplicaSet 점진적으로 감소</p><p id="ea5720e4-6f49-8365-b5f1-81ca9e646544" class="" dir="auto">→ Rolling Update 수행</p><p id="a2b720e4-6f49-82af-a966-01e080c3b849" class="" dir="auto">이 과정을 관리하는 것이 Deployment Controller임.</p><hr id="264720e4-6f49-8311-955f-019371659af4" dir="auto"/><h2 id="0a6720e4-6f49-83cb-96ef-0144e1a11a93" class="" dir="auto">4) StatefulSet Controller</h2><h3 id="169720e4-6f49-823f-ba96-81121399eb63" class="" dir="auto">역할</h3><ul id="bd9720e4-6f49-8313-a84e-01640562a63f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 이름 고정</li></ul><ul id="4f2720e4-6f49-82ba-84f0-8181cfec7618" class="bulleted-list" dir="auto"><li style="list-style-type:disc">순차적 생성/삭제</li></ul><ul id="705720e4-6f49-83d3-a1e1-81f4ed36defb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">영구 스토리지 연결</li></ul><p id="70c720e4-6f49-8366-aeea-01c2f4920eae" class="" dir="auto">DB, Kafka, Redis 같은 Stateful 앱에서 사용함.</p><hr id="533720e4-6f49-83b4-94ee-01ff9024db84" dir="auto"/><h2 id="f4a720e4-6f49-83ba-815e-81ca5ef19d83" class="" dir="auto">5) DaemonSet Controller</h2><h3 id="30f720e4-6f49-836f-83c3-8152e8689a09" class="" dir="auto">역할</h3><ul id="211720e4-6f49-83bd-b9ad-0106a7a1d2e0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 노드에 Pod 하나씩 배포</li></ul><p id="a40720e4-6f49-83af-a790-815b5ad01bd6" class="" dir="auto">예:</p><ul id="5c7720e4-6f49-83aa-819c-8110fd3fee2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 수집기</li></ul><ul id="317720e4-6f49-8399-8caa-81edfba054b5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모니터링 에이전트</li></ul><ul id="237720e4-6f49-828e-994b-81ec228d7b54" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CNI 플러그인</li></ul><p id="737720e4-6f49-83d9-9cd5-01757fc4f80e" class="" dir="auto">예시:</p><pre id="250720e4-6f49-83f9-93d2-01b1ef359efc" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: node-exporter
+spec:
+  selector:
+    matchLabels:
+      app: node-exporter
+  template:
+    metadata:
+      labels:
+        app: node-exporter
+    spec:
+      containers:
+      - name: node-exporter
+        image: prom/node-exporter</code></pre><p id="e36720e4-6f49-83fa-aae0-0117b107862c" class="" dir="auto">노드 추가하면 자동으로 Pod 생성됨.</p><hr id="e9c720e4-6f49-82e9-ba41-814ab19ac9e3" dir="auto"/><h2 id="178720e4-6f49-8261-a7ed-816a2417a458" class="" dir="auto">6) Job Controller</h2><h3 id="342720e4-6f49-83b7-b937-81d728fabd21" class="" dir="auto">역할</h3><ul id="ff3720e4-6f49-8386-a1fb-81ccafb64dc9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한 번 실행하고 종료되는 작업 관리</li></ul><p id="a8b720e4-6f49-8397-94f1-81280fee5b70" class="" dir="auto">예:</p><ul id="63f720e4-6f49-8399-af0d-812a778f1afb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배치 처리</li></ul><ul id="8df720e4-6f49-8215-bc81-8122cdedaefe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DB 마이그레이션</li></ul><hr id="814720e4-6f49-8274-a840-8168e6faeef8" dir="auto"/><h2 id="fbf720e4-6f49-8290-b3f5-015b6ef4b69e" class="" dir="auto">7) CronJob Controller</h2><h3 id="23b720e4-6f49-82e9-b1fb-01bd7bd43b93" class="" dir="auto">역할</h3><ul id="d50720e4-6f49-83a8-9a70-81305cf3dbba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스케줄 기반 실행</li></ul><p id="a33720e4-6f49-8246-82e8-81c151cd08cf" class="" dir="auto">Linux cron과 동일 개념임.</p><hr id="08d720e4-6f49-824e-8158-01c647b507f2" dir="auto"/><h1 id="bc4720e4-6f49-82fa-82bf-01d8ca59f47f" class="" dir="auto">1️⃣ Kubernetes 리소스 계층 구조</h1><h2 id="dc3720e4-6f49-8373-91b2-810c99fc0b9f" class="" dir="auto">1.1 생성 관계도</h2><pre id="8be720e4-6f49-8305-bc6f-014831c5afb7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Deployment (선언)
+    ↓ 생성/관리
+ReplicaSet (복제 관리)
+    ↓ 생성/관리
+Pod (실행 단위)
+    ↓
+Container (실행 프로세스)</code></pre><p id="d51720e4-6f49-823a-9d80-01e80b4de32e" class="" dir="auto">👉 중요한 점</p><ul id="ecb720e4-6f49-83a9-9ce6-0158ffbc88d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자는 <strong>Deployment만 직접 관리</strong></li></ul><ul id="2f8720e4-6f49-83a7-9c4d-81061c7c85c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ReplicaSet은 대부분 직접 생성하지 않음</li></ul><ul id="c7d720e4-6f49-83a3-8dd7-01b7e141f329" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod은 Deployment에 의해 생성됨</li></ul><hr id="4df720e4-6f49-8376-bced-819282c705a5" dir="auto"/><h2 id="b63720e4-6f49-8305-bd25-81f9db14b5e1" class="" dir="auto">1.2 개념 정의</h2><h3 id="e39720e4-6f49-8252-b4b7-816bc722288e" class="" dir="auto">🔹 Pod</h3><ul id="900720e4-6f49-8376-be2e-01e94ffc4a1e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가장 작은 실행 단위</li></ul><ul id="43b720e4-6f49-8224-ba43-816602046001" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하나 이상의 컨테이너 포함</li></ul><ul id="5a3720e4-6f49-82d3-b00a-81b1ecf07e75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">직접 운영용으로 사용하지 않음</li></ul><ul id="c99720e4-6f49-8385-9225-01d16a2e5ca6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">삭제되면 사라짐 (관리 객체 필요)</li></ul><hr id="27f720e4-6f49-8294-a178-815d647f6a18" dir="auto"/><h3 id="582720e4-6f49-82cd-acac-012f33ee213c" class="" dir="auto">🔹 ReplicaSet</h3><p id="ab1720e4-6f49-8242-a2e8-81ad5b4df473" class="" dir="auto">역할:</p><blockquote id="95d720e4-6f49-82e9-b3c9-81b3e1412491" class="" dir="auto">지정된 수의 Pod을 항상 유지</blockquote><p id="c21720e4-6f49-83ef-9c76-010d26094369" class="" dir="auto">특징:</p><ul id="2ac720e4-6f49-8289-829b-0110ee3234f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">self-healing (자동 복구)</li></ul><ul id="254720e4-6f49-82bf-8268-014cbeb964bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라벨 기반 Pod 관리</li></ul><ul id="e92720e4-6f49-839f-97dc-0118d372105e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스케일링 가능</li></ul><ul id="236720e4-6f49-831c-abba-811f33f50bfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업그레이드 기능 없음</li></ul><hr id="02e720e4-6f49-83b5-9426-813f48fa6a6c" dir="auto"/><h3 id="d07720e4-6f49-83eb-873b-8147ac16da40" class="" dir="auto">🔹 Deployment</h3><p id="713720e4-6f49-82d8-805c-01c5f96ce5e5" class="" dir="auto">역할:</p><blockquote id="bc3720e4-6f49-836b-8349-81e9e48bbdb7" class="" dir="auto">ReplicaSet을 관리하면서 배포 전략 제공</blockquote><p id="585720e4-6f49-8219-a246-01a9154f810d" class="" dir="auto">기능:</p><ul id="72c720e4-6f49-82ed-afe0-811c70f13291" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Rolling Update</li></ul><ul id="aad720e4-6f49-8257-842d-01b299a4563f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Rollback</li></ul><ul id="5ef720e4-6f49-820a-898d-8146cb555f0e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버전 관리</li></ul><ul id="f53720e4-6f49-8215-9e10-0157720979af" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업그레이드 일시중지</li></ul><ul id="2ba720e4-6f49-8281-bdbc-8100c2120922" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 ReplicaSet 생성</li></ul><p id="8ef720e4-6f49-82ff-9fbd-01d7a2605e64" class="" dir="auto">👉 실무에서는 거의 항상 Deployment 사용</p><hr id="da5720e4-6f49-82a2-9083-81e4a980690a" dir="auto"/><h1 id="b2c720e4-6f49-83c2-93f8-0123f6f0945e" class="" dir="auto">2️⃣ ReplicaSet</h1><hr id="0ae720e4-6f49-8392-8471-81e362c6baca" dir="auto"/><h2 id="384720e4-6f49-82f5-9cb1-81811641c0ef" class="" dir="auto">2.1 동작 원리</h2><p id="b0f720e4-6f49-830c-bf65-019c1c7053a4" class="" dir="auto">ReplicaSet의 컨트롤 루프:</p><pre id="408720e4-6f49-8293-8990-01d9158ccf8c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">1. desired replicas 확인
+2. 현재 Pod 수 확인
+3. 부족하면 생성
+4. 초과하면 삭제
+5. Pod 죽으면 다시 생성</code></pre><p id="921720e4-6f49-82ab-9d32-01ffc8096620" class="" dir="auto">핵심은:</p><blockquote id="f1c720e4-6f49-83f6-91f0-81c9d3ce5058" class="" dir="auto">ReplicaSet은 &quot;Pod 개수&quot;만 관리한다.</blockquote><hr id="02f720e4-6f49-83d6-84b6-814e0361565e" dir="auto"/><h2 id="a7b720e4-6f49-83e7-bb0a-01769544a4d4" class="" dir="auto">2.2 YAML 구조 분석</h2><pre id="fb5720e4-6f49-827f-87e6-010df63b2176" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: ReplicaSet
+metadata:
+  name: nginx-rs
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.19</code></pre><hr id="066720e4-6f49-831a-9fa8-81ca5683df99" dir="auto"/><h3 id="790720e4-6f49-82f7-8836-81d66c9ab53e" class="" dir="auto">🔴 매우 중요</h3><pre id="9b1720e4-6f49-839e-9cb7-0139a364d3f9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">selector.matchLabels
+=
+template.metadata.labels</code></pre><p id="706720e4-6f49-82fe-a4dc-817331014005" class="" dir="auto">이 값이 반드시 동일해야 한다.</p><p id="f68720e4-6f49-83ba-a81c-0156b1908156" class="" dir="auto">불일치하면:</p><ul id="507720e4-6f49-832d-94dd-814e6c36db00" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod이 관리되지 않음</li></ul><ul id="15b720e4-6f49-82ad-9be5-01781786cb70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ReplicaSet이 계속 새 Pod 생성</li></ul><hr id="75b720e4-6f49-82b2-b52e-813e64b31f3d" dir="auto"/><h2 id="8b7720e4-6f49-825f-b008-81984383d428" class="" dir="auto">2.3 자동 복구 실습</h2><pre id="9e5720e4-6f49-8333-94a5-0152138024c9" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f replicaset.yaml
+kubectl get pods -w</code></pre><p id="b2d720e4-6f49-839b-a46e-818d123032c0" class="" dir="auto">다른 터미널:</p><pre id="be5720e4-6f49-8304-8250-81183da3b4fd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl delete pod &lt;pod-name&gt;</code></pre><p id="eaf720e4-6f49-8247-a305-010b5ca35df3" class="" dir="auto">→ 즉시 새 Pod 생성</p><p id="ba1720e4-6f49-83d1-a225-817bac77920b" class="" dir="auto">이것이 self-healing이다.</p><hr id="247720e4-6f49-8366-895a-013a4d66d5ab" dir="auto"/><h2 id="92c720e4-6f49-837b-81c7-01a186337e9d" class="" dir="auto">2.4 ReplicaSet의 한계</h2><p id="c23720e4-6f49-83f3-94f7-811b5bbf16d1" class="" dir="auto">이미지를 수정해보자.</p><pre id="12f720e4-6f49-825d-98d7-81524b7649eb" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl edit rs nginx-rs</code></pre><p id="ea0720e4-6f49-82ae-824e-811a0609b479" class="" dir="auto">image 변경</p><p id="6ca720e4-6f49-821c-ad55-01162799fec0" class="" dir="auto">→ 기존 Pod은 그대로</p><p id="939720e4-6f49-8354-b7e4-81b949bd5767" class="" dir="auto">→ 새 Pod만 변경된 이미지</p><p id="a76720e4-6f49-82f1-aa02-8149815ac055" class="" dir="auto">즉,</p><blockquote id="4e4720e4-6f49-83af-9dfc-81c65cc1d509" class="" dir="auto">ReplicaSet은 무중단 업그레이드를 보장하지 않는다.</blockquote><hr id="d63720e4-6f49-831a-a4e0-01b7d5149506" dir="auto"/><h1 id="f3c720e4-6f49-8209-8ba2-81862e59efb5" class="" dir="auto">3️⃣ Deployment</h1><hr id="49f720e4-6f49-82c3-975f-81b07f13be4e" dir="auto"/><h2 id="040720e4-6f49-83bf-a80d-016fcb72b5f9" class="" dir="auto">3.1 Deployment의 핵심 역할</h2><p id="9a8720e4-6f49-83bf-a845-01a9e41dee9e" class="" dir="auto">Deployment는 내부적으로:</p><pre id="978720e4-6f49-831e-8a6c-818a7f31764b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">새 ReplicaSet 생성
+→ 기존 ReplicaSet 점진적 축소
+→ 새 ReplicaSet 점진적 증가</code></pre><p id="d47720e4-6f49-8234-82eb-01087550665f" class="" dir="auto">즉,</p><blockquote id="37a720e4-6f49-8275-b40a-814252d3bd02" class="" dir="auto">Deployment는 ReplicaSet을 교체하는 전략 관리자다.</blockquote><hr id="d22720e4-6f49-8250-bc34-01137b65619f" dir="auto"/><h2 id="0da720e4-6f49-8397-b002-01b261bedafd" class="" dir="auto">3.2 Deployment YAML (보강 버전)</h2><pre id="d8a720e4-6f49-82ab-95f3-01859c6a830a" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-deployment
+spec:
+  replicas: 3
+  revisionHistoryLimit: 5  # 이전 버전 보관 개수
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  selector:
+    matchLabels:
+      app: nginx
+  template:
+    metadata:
+      labels:
+        app: nginx
+    spec:
+      containers:
+      - name: nginx
+        image: nginx:1.19
+        ports:
+        - containerPort: 80</code></pre><hr id="6df720e4-6f49-8227-8002-011b81784b28" dir="auto"/><h2 id="1d4720e4-6f49-83c7-97a4-81f20b0b444c" class="" dir="auto">🔹 revisionHistoryLimit</h2><p id="c3c720e4-6f49-8249-9a30-8111ec1427b8" class="" dir="auto">이전 ReplicaSet을 몇 개까지 보관할지 지정.</p><p id="fc2720e4-6f49-829b-bf51-81def855bb8f" class="" dir="auto">기본값: 10</p><p id="c4f720e4-6f49-83ea-90c4-01731d82edf2" class="" dir="auto">운영 환경에서는 관리 필요.</p><hr id="26b720e4-6f49-83b0-94fb-81271dfa6b13" dir="auto"/><h1 id="be9720e4-6f49-8218-b0ea-816d36168714" class="" dir="auto">4️⃣ Rolling Update 내부 동작</h1><p id="0d2720e4-6f49-830e-8518-81857b06655a" class="" dir="auto">예:</p><p id="00c720e4-6f49-83f4-8a07-01d8b669086f" class="" dir="auto">replicas: 3</p><p id="64b720e4-6f49-83f3-8854-01a4d7d341dc" class="" dir="auto">maxSurge: 1</p><p id="baf720e4-6f49-8200-bca0-81755d01cb8b" class="" dir="auto">maxUnavailable: 1</p><p id="535720e4-6f49-82d3-b737-011e414073e9" class="" dir="auto">의미:</p><ul id="fab720e4-6f49-8228-bfb0-81a3e2ae7cfa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최대 4개까지 생성 가능</li></ul><ul id="24d720e4-6f49-8340-967e-0110e5f7f9c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최소 2개는 항상 유지</li></ul><p id="e01720e4-6f49-824b-ad11-81654ef4c80f" class="" dir="auto">업데이트 흐름:</p><pre id="b5a720e4-6f49-82c8-be3a-016d1ab5ea0a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">3 → 4 → 3 → 4 → 3</code></pre><p id="520720e4-6f49-8314-93c6-01f46b99e3d6" class="" dir="auto">항상 최소 2개 유지 → 무중단</p><hr id="071720e4-6f49-829f-9d1e-8155c21ff18d" dir="auto"/><h2 id="0db720e4-6f49-83ae-9a95-0169ad7b1894" class="" dir="auto">전략 비교</h2><h3 id="272720e4-6f49-826f-96e2-81de7135a6d3" class="" dir="auto">RollingUpdate (기본)</h3><ul id="737720e4-6f49-8347-aab3-81057b355fed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하나씩 교체</li></ul><ul id="342720e4-6f49-8211-8f91-01fafc450036" class="bulleted-list" dir="auto"><li style="list-style-type:disc">무중단</li></ul><h3 id="9b9720e4-6f49-8227-a700-0184fa06a0a8" class="" dir="auto">Recreate</h3><pre id="d67720e4-6f49-83c4-b7d9-0193b7358ece" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">strategy:
+  type: Recreate</code></pre><ul id="43d720e4-6f49-826a-aaf4-814b909f3105" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 Pod 모두 삭제</li></ul><ul id="8df720e4-6f49-833c-81e8-01459b005e70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새 Pod 생성</li></ul><ul id="f36720e4-6f49-82dc-9844-81037b9dc820" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다운타임 발생</li></ul><p id="11c720e4-6f49-839b-98d3-01ad8c9bc581" class="" dir="auto">DB처럼 단일 인스턴스 환경에서 사용</p><hr id="89a720e4-6f49-83e3-bbb7-8198c03c826d" dir="auto"/><h1 id="8ea720e4-6f49-8292-8546-01ea0ddc4dd8" class="" dir="auto">5️⃣ 실습: Deployment 업그레이드</h1><hr id="8d8720e4-6f49-82ad-bdbc-0194db502cf2" dir="auto"/><h2 id="d1a720e4-6f49-827c-a557-8136d1152f94" class="" dir="auto">5.1 이미지 변경</h2><pre id="89e720e4-6f49-8272-b880-013e6fe9a088" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl set image deployment/nginx-deployment nginx=nginx:1.20</code></pre><hr id="6ff720e4-6f49-83d8-9349-011072448a18" dir="auto"/><h2 id="252720e4-6f49-8245-98bb-01e663df2c3d" class="" dir="auto">5.2 실시간 관찰</h2><pre id="3d6720e4-6f49-833b-b5be-81273c792c23" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -w</code></pre><p id="90e720e4-6f49-8323-b07e-012e33fc73c5" class="" dir="auto">관찰 포인트:</p><ul id="b9a720e4-6f49-8358-aafb-81cc5256eb9a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새 ReplicaSet 생성됨</li></ul><ul id="d7b720e4-6f49-8388-b1cf-8160810c27d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기존 ReplicaSet 점진적 감소</li></ul><p id="ec3720e4-6f49-8295-86d7-018ffb36bf56" class="" dir="auto">확인:</p><pre id="755720e4-6f49-837d-b6f7-81d5dd3365be" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get rs</code></pre><p id="cb4720e4-6f49-835e-a3d3-811842472e9f" class="" dir="auto">→ 두 개의 ReplicaSet 존재</p><hr id="bdc720e4-6f49-8310-95e6-81e5a087f167" dir="auto"/><h1 id="831720e4-6f49-835a-954c-01da6aa5bd20" class="" dir="auto">6️⃣ 롤백</h1><hr id="fd9720e4-6f49-8336-8b7e-01d15ae8abb0" dir="auto"/><h2 id="de7720e4-6f49-8395-a1a0-815750edf41e" class="" dir="auto">히스토리 확인</h2><pre id="3e5720e4-6f49-82f5-98f2-81d4d3a80069" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl rollout history deployment/nginx-deployment</code></pre><hr id="99f720e4-6f49-82d6-beae-01e3b792ec50" dir="auto"/><h2 id="3aa720e4-6f49-8364-9b60-0149e0953b31" class="" dir="auto">특정 버전으로 롤백</h2><pre id="8e0720e4-6f49-8269-aa01-01c00c9b7995" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl rollout undo deployment/nginx-deployment --to-revision=1</code></pre><p id="098720e4-6f49-82e0-811b-818b73a2da4b" class="" dir="auto">Deployment는 내부적으로 이전 ReplicaSet을 다시 활성화한다.</p><hr id="f09720e4-6f49-837c-8466-01cfc21db5a2" dir="auto"/><h1 id="1aa720e4-6f49-827e-aa55-815616de1b7c" class="" dir="auto">7️⃣ Scale과 Rolling Update의 차이</h1><p id="114720e4-6f49-8386-95b9-010989a9d3aa" class="" dir="auto">스케일링:</p><pre id="841720e4-6f49-82fb-b19a-01988923740e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl scale deployment nginx-deployment --replicas=5</code></pre><p id="135720e4-6f49-8222-bad6-017b309fd504" class="" dir="auto">→ 동일 ReplicaSet 내부 Pod 수 변경</p><p id="296720e4-6f49-83ec-9202-8153dbe0a82f" class="" dir="auto">업그레이드:</p><pre id="ea2720e4-6f49-8231-b485-8130ff4a0d48" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl set image ...</code></pre><p id="ce5720e4-6f49-8386-93be-8166d2f14594" class="" dir="auto">→ 새 ReplicaSet 생성</p><p id="624720e4-6f49-8305-85b9-81f5f57f3e38" class="" dir="auto">이 차이를 반드시 이해해야 한다.</p><hr id="fb1720e4-6f49-83fd-adb4-019c10c70d34" dir="auto"/><h1 id="0f6720e4-6f49-82a6-8aec-01d424cc91fa" class="" dir="auto">8️⃣ Selector &amp; Label</h1><hr id="e52720e4-6f49-838e-98db-8101ff61b46e" dir="auto"/><h2 id="356720e4-6f49-836b-8025-01a423664ca5" class="" dir="auto">실습: 라벨 변경</h2><pre id="d47720e4-6f49-836d-a8a3-811d3d9ebcde" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods --show-labels
+kubectl label pod &lt;pod-name&gt; app=other --overwrite</code></pre><p id="37d720e4-6f49-8325-9412-814bacdb7556" class="" dir="auto">결과:</p><ul id="069720e4-6f49-825b-a4ab-0122ad455a7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Deployment가 해당 Pod을 관리하지 못함</li></ul><ul id="f80720e4-6f49-8393-8092-01ad5c2e51a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">새로운 Pod 생성</li></ul><hr id="141720e4-6f49-823f-a821-813b858d1717" dir="auto"/><h1 id="ccd720e4-6f49-8370-bf2f-01cbcef94589" class="" dir="auto">9️⃣ 트러블슈팅 보강</h1><hr id="bbf720e4-6f49-8231-87f4-012e015bb555" dir="auto"/><h2 id="842720e4-6f49-82b5-b696-81eb77483b23" class="" dir="auto">Pod가 Pending 상태인 경우</h2><pre id="629720e4-6f49-835b-8ea9-01e9f0bd0522" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl describe pod &lt;pod&gt;</code></pre><p id="134720e4-6f49-82a0-bb73-81d35b5db308" class="" dir="auto">확인:</p><ul id="9e8720e4-6f49-8265-aeb6-8132b511a617" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Node 리소스 부족</li></ul><ul id="b16720e4-6f49-8215-a6ea-81525df8a61c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">taints 문제</li></ul><ul id="3ee720e4-6f49-83e8-b6e2-01596f3fc413" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 pull 실패</li></ul><hr id="b07720e4-6f49-83ab-9b02-014735060dcd" dir="auto"/><h2 id="938720e4-6f49-8214-8963-814bf958830a" class="" dir="auto">롤아웃이 멈춘 경우</h2><pre id="6e7720e4-6f49-83e3-ad9e-017f544cc11d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl rollout status deployment/&lt;name&gt;
+kubectl describe deployment &lt;name&gt;
+kubectl get events</code></pre><hr id="4a0720e4-6f49-824a-950b-016d53225f51" dir="auto"/><h2 id="8bf720e4-6f49-822f-aa54-812d8fcaeea3" class="" dir="auto">CrashLoopBackOff</h2><pre id="8fd720e4-6f49-8368-a468-812e6ee4631b" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl logs &lt;pod&gt;
+kubectl logs &lt;pod&gt; --previous</code></pre><hr id="167720e4-6f49-828b-b88d-81a2d01b0840" dir="auto"/><h1 id="afc720e4-6f49-8201-9f7b-8186495009b1" class="" dir="auto">🔟 최종 정리</h1><h3 id="53c720e4-6f49-822d-9e7c-81eeaf55d24c" class="" dir="auto">ReplicaSet</h3><ul id="b18720e4-6f49-8300-9966-8131bc1cfc76" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod 개수 유지</li></ul><ul id="8a5720e4-6f49-8299-8cda-81a8127f62c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 복구</li></ul><ul id="9b3720e4-6f49-8297-ba6a-81e3f10a8a7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업그레이드 전략 없음</li></ul><hr id="f0a720e4-6f49-8384-9655-01ad90015b39" dir="auto"/><h3 id="5cb720e4-6f49-839a-8675-8166e13196ce" class="" dir="auto">Deployment</h3><ul id="a29720e4-6f49-83cc-8e13-012d5b7a4064" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ReplicaSet 관리</li></ul><ul id="5fc720e4-6f49-8372-a454-8184b1972dd3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">무중단 배포</li></ul><ul id="35e720e4-6f49-8383-97c3-014841e7c3e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">롤백 가능</li></ul><ul id="29f720e4-6f49-83b3-8516-013d0b56c94e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로덕션 기본 단위</li></ul><hr id="597720e4-6f49-82d1-88f9-8172871a5c27" dir="auto"/><h3 id="b16720e4-6f49-8260-9a7e-814214aa4c09" class="" dir="auto">전체 생성 흐름</h3><pre id="210720e4-6f49-839e-bcb7-01c384db2368" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Deployment 생성
+   ↓
+ReplicaSet 자동 생성
+   ↓
+Pod 생성
+   ↓
+Container 실행</code></pre><hr id="5c5720e4-6f49-838e-bd82-818eb5e2d19b" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

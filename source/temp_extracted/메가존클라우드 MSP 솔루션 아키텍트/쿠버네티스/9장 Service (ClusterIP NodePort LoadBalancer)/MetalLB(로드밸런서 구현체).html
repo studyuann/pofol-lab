@@ -1,0 +1,786 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>MetalLB(로드밸런서 구현체)</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="6ed720e4-6f49-8295-b96d-01849a79a168" class="page sans"><header><h1 class="page-title" dir="auto">MetalLB(로드밸런서 구현체)</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="27c720e4-6f49-8346-a47d-0102e11b999c" class="" dir="auto">1. 학습 목표</h2><ul id="638720e4-6f49-83f1-b5dd-8191c0128baf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes <code>Service</code>의 역할과 <code>type: LoadBalancer</code> 동작 원리 이해</li></ul><ul id="03c720e4-6f49-838b-a8c0-017f51a53674" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM 기반 클러스터에서 <code>LoadBalancer</code>를 쓰기 위해 필요한 구성(= <strong>MetalLB</strong>) 설치</li></ul><ul id="d9b720e4-6f49-8300-a52e-0120bc9c2804" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>EXTERNAL-IP</code>를 할당받아 외부에서 접속(브라우저/curl)까지 검증</li></ul><ul id="a12720e4-6f49-8353-8011-81d3e77a8849" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애/미할당(“pending”) 시 확인 포인트 숙지</li></ul><hr id="353720e4-6f49-8398-8a2c-018638ee0758" dir="auto"/><h2 id="32c720e4-6f49-822d-96c7-81c2abc6cb83" class="" dir="auto">2. 사전 구성(실습 환경)</h2><h3 id="601720e4-6f49-833a-8adf-01ca719683b9" class="" dir="auto">2.1 VM 구성 예시</h3><ul id="eb3720e4-6f49-834d-88b0-81797162a0de" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>k8s-m1</code> (Control Plane) : <code>192.168.80.110</code></li></ul><ul id="32e720e4-6f49-8368-b5d8-81fc17d66a3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>k8s-w1</code> (Worker) : <code>192.168.80.120</code></li></ul><ul id="336720e4-6f49-83bd-9714-01fd67d8b03f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>k8s-w2</code> (Worker) : <code>192.168.80.130</code></li></ul><ul id="2d0720e4-6f49-8263-ac66-817eacda864c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM들은 같은 L2 네트워크(같은 브리지/Host-only 등)에 있다고 가정</li></ul><blockquote id="fba720e4-6f49-8256-aa1c-816b00045531" class="" dir="auto"><strong>중요 포인트</strong><p id="dda720e4-6f49-8265-b905-01a7e340f129" class="" dir="auto">MetalLB(L2 모드)는 “외부에서 접속할 IP(= EXTERNAL-IP)”를 <strong>같은 네트워크 대역에서 하나 골라</strong> 클러스터 노드가 <strong>ARP로 ‘내가 그 IP의 주인’이라고 광고</strong>해서 트래픽을 받는 방식.</p><p id="cb4720e4-6f49-834b-bd3b-012a8e14b1c2" class="" dir="auto">그래서 <strong>IP 풀</strong>은 “VM들이 붙어 있는 네트워크에서 사용 가능한(다른 장비가 안 쓰는) IP 범위”여야 한다.</p></blockquote><h3 id="234720e4-6f49-82dd-a451-01633723596e" class="" dir="auto">2.2 kubectl 동작 확인</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="d4a720e4-6f49-836b-8d7d-817996c1e977" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get nodes -o wide</code></pre><ul id="306720e4-6f49-828f-9f70-018e54684809" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>STATUS</code>가 <code>Ready</code>인지 확인</li></ul><ul id="7d0720e4-6f49-830b-b312-81853d348120" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>INTERNAL-IP</code>(노드 IP)가 예상한 대역인지 확인</li></ul><hr id="2ae720e4-6f49-8368-b1c3-010df74c71a3" dir="auto"/><h2 id="5d1720e4-6f49-83e1-9469-01ae311d41d3" class="" dir="auto">3. 이론: LoadBalancer 서비스가 하는 일</h2><h3 id="4f6720e4-6f49-8368-b71b-01c0845a18ac" class="" dir="auto">3.1 Service란?</h3><ul id="a00720e4-6f49-8257-a65e-81b7fd4f42d5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pod는 IP가 자주 바뀔 수 있고(재배치/재시작), 여러 개로 수평 확장됨</li></ul><ul id="916720e4-6f49-82d1-9035-01179cbcff11" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Service는 **“고정된 접속 지점(가상 IP + DNS)”**을 제공하고, 내부적으로 <strong>Pod로 로드밸런싱</strong>함</li></ul><h3 id="193720e4-6f49-83c9-9340-811b314308ae" class="" dir="auto">3.2 Service 타입 비교 핵심</h3><ul id="fbd720e4-6f49-82fb-8d38-8167851360f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>ClusterIP</code> : 클러스터 내부에서만 접근(기본값)</li></ul><ul id="9ca720e4-6f49-8352-83b6-01e2c30e5bda" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>NodePort</code> : 모든 노드의 특정 포트를 열어 외부 접근 가능(예: <code>nodeIP:30080</code>)</li></ul><ul id="587720e4-6f49-823e-954c-01f534c7c2fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>LoadBalancer</code> : 외부용 IP(또는 도메인)를 제공하고 그 IP로 들어온 트래픽을 서비스로 전달<ul id="8c5720e4-6f49-8324-862c-01575aa0eacf" class="bulleted-list" dir="auto"><li style="list-style-type:circle">클라우드: 클라우드 LB가 자동 생성됨</li></ul><ul id="41c720e4-6f49-82c4-970a-01313d35e556" class="bulleted-list" dir="auto"><li style="list-style-type:circle">온프레미스: <strong>MetalLB</strong> 등으로 LoadBalancer 기능을 구현해야 함</li></ul></li></ul><hr id="acc720e4-6f49-82e3-ae65-813ba7142561" dir="auto"/><h2 id="28c720e4-6f49-83db-a047-013aaf579d81" class="" dir="auto">4. 실습 1: MetalLB 설치 (온프레미스 LoadBalancer 구현)</h2><blockquote id="7d5720e4-6f49-8203-96ed-01db67eac810" class="" dir="auto">아래 실습은 “<strong>MetalLB + L2 모드</strong>” 기준입니다. 가장 단순하고 VM 환경에서 많이 쓴다.</blockquote><h3 id="d64720e4-6f49-8368-b252-01b1755c4fe4" class="" dir="auto">4.1 MetalLB 설치</h3><p id="8d1720e4-6f49-82dd-a68e-8174b08ed8a7" class="" dir="auto">공식 매니페스트를 적용합니다(버전 고정 추천). 예시는 <code>v0.14.8</code> 기준:</p><pre id="07c720e4-6f49-82bb-9cca-81fe00c7cd05" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f https://raw.githubusercontent.com/metallb/metallb/v0.15.3/config/manifests/metallb-native.yaml</code></pre><h3 id="68d720e4-6f49-83a2-b863-01b16bf52c80" class="" dir="auto">명령어 해설</h3><ul id="d51720e4-6f49-82a6-bdb1-8148b882d08e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>kubectl apply -f &lt;URL 또는 파일&gt;</code><ul id="61a720e4-6f49-83ab-b8bd-01874c3dbf7b" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Kubernetes 리소스(YAML)를 클러스터에 <strong>생성/갱신</strong>합니다.</li></ul><ul id="340720e4-6f49-828d-8022-01742801fe28" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>f</code>는 “파일(file) 또는 URL에 있는 매니페스트를 적용”한다는 뜻입니다.</li></ul></li></ul><ul id="64d720e4-6f49-82e7-bdf1-0198eac719b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">위 URL의 매니페스트에는 MetalLB가 동작하는 데 필요한 구성요소가 포함된다.<ul id="576720e4-6f49-8247-ba8a-815840dfafee" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>metallb-system</code> 네임스페이스</li></ul><ul id="664720e4-6f49-8392-83a5-81784edea2c8" class="bulleted-list" dir="auto"><li style="list-style-type:circle">컨트롤러/스피커(노드에서 ARP/NDP 광고 담당) 관련 Deployment/DaemonSet 등</li></ul></li></ul><p id="929720e4-6f49-828d-8da0-81c856f1114d" class="" dir="auto">설치 후 확인:</p><pre id="843720e4-6f49-82d5-bad4-81836a1ebe26" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ns | grep metallb
+kubectl get pods -n metallb-system -o wide</code></pre><ul id="252720e4-6f49-8211-a772-81e97e0e62c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>controller</code> Pod와 <code>speaker</code> Pod들이 <code>Running</code>인지 확인한다.</li></ul><ul id="da8720e4-6f49-8288-adf9-010765bd0979" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>speaker</code>는 보통 DaemonSet이라 노드마다 1개씩 뜬다.</li></ul><hr id="6b8720e4-6f49-83d1-8ce7-81f8c0ff918c" dir="auto"/><h2 id="440720e4-6f49-826c-a2cf-01fd3a9f636e" class="" dir="auto">5. 실습 2: IPAddressPool / L2Advertisement 설정</h2><p id="018720e4-6f49-82c4-8335-0158738e35e5" class="" dir="auto">MetalLB는 “어떤 IP를 LoadBalancer용으로 나눠줄지”를 풀(Pool)로 정의한다.</p><h3 id="02d720e4-6f49-8375-a0aa-017892bc7574" class="" dir="auto">5.1 사용할 IP 범위 정하기</h3><p id="ccf720e4-6f49-82fa-8757-8124acedba81" class="" dir="auto">예: <code>192.168.80.200 ~ 192.168.80.220</code>을 LB 전용으로 쓰겠다고 가정</p><p id="3bf720e4-6f49-82ca-906f-81008bd323a1" class="" dir="auto">(이 범위는 <strong>DHCP/다른 장비가 사용하지 않는</strong> 범위여야 한다)</p><h3 id="c6b720e4-6f49-8366-8f44-01c845aa1c8f" class="" dir="auto">5.2 IP 풀과 L2 광고 설정 YAML 작성</h3><p id="d9f720e4-6f49-824e-9602-812fe083dfd1" class="" dir="auto">아래 내용을 <code>metallb-pool.yaml</code>로 저장합니다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js" integrity="sha512-6O/PZimM3TD1NN3yrazePA4AbZrPcwt1QCGJrVY7WoHDJROZFc9TlBvIKMe+QfqgcslW4lQeBzNJEJvIMC8WhA==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="548720e4-6f49-8251-82a2-0169c8bad480" class="code code-wrap" data-notion-code-syntax="yaml"><code class="language-yaml" style="white-space:pre-wrap;word-break:break-all">apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: lb-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - 192.168.80.200-192.168.80.220
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: lb-l2adv
+  namespace: metallb-system
+spec:
+  ipAddressPools:
+  - lb-pool</code></pre><p id="6ff720e4-6f49-833c-98e1-810cf8f2a0b0" class="" dir="auto">적용:</p><pre id="c70720e4-6f49-83e2-b252-819dd6455fe8" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl apply -f metallb-pool.yaml</code></pre><h3 id="1b4720e4-6f49-83b5-bf8f-81d97ae7e196" class="" dir="auto">YAML 해설</h3><ul id="2fc720e4-6f49-83d9-aa7b-8101f8b3a2cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>IPAddressPool</code><ul id="182720e4-6f49-8243-813b-81f066ed31fd" class="bulleted-list" dir="auto"><li style="list-style-type:circle">MetalLB가 <strong>EXTERNAL-IP로 할당 가능한 IP 목록/범위</strong>를 정의한다.</li></ul><ul id="eb7720e4-6f49-83cc-bde8-01f552351450" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>addresses</code>에 CIDR(<code>192.168.80.0/24</code>) 또는 범위(<code>A-B</code>)를 넣을 수 있습니다.</li></ul></li></ul><ul id="12f720e4-6f49-8275-8341-81021f5c8f7f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>L2Advertisement</code><ul id="770720e4-6f49-8345-8e58-8118a7553299" class="bulleted-list" dir="auto"><li style="list-style-type:circle">L2 모드로 동작하겠다는 의미이다.</li></ul><ul id="6da720e4-6f49-83a9-a680-012245d1737d" class="bulleted-list" dir="auto"><li style="list-style-type:circle">“이 풀에서 할당한 IP는 ARP로 광고해서 트래픽을 받겠다”는 동작을 활성화한다.</li></ul></li></ul><ul id="b5f720e4-6f49-82b5-b361-01d07a47951e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">에러발생시 다음 명령 실행: <strong>Validating Webhook 삭제</strong> (설정값이 올바른지 검사하는 기능 제거)</li></ul><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js" integrity="sha512-m3JYEI6gx5fh9jF10FjGoMzVKcV2N6nchcDcqPCdI1L3R2WQV7br2XVNR8iTLb2daOMRl3zldbcfT40xU2ntVw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="2e7720e4-6f49-83cc-9175-81eb0f454498" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">kubectl delete validatingwebhookconfigurations.admissionregistration.k8s.io metallb-webhook-configuration</code></pre><hr id="45e720e4-6f49-8254-92d8-819345697610" dir="auto"/><h2 id="e47720e4-6f49-831c-8959-817ebae27e3c" class="" dir="auto">6. 실습 3: 테스트용 애플리케이션 배포 + LoadBalancer 서비스 생성</h2><h3 id="6c7720e4-6f49-83de-8278-81a80dce6afb" class="" dir="auto">6.1 웹 서버 배포(nginx)</h3><pre id="eea720e4-6f49-8310-b312-015b8470a19e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl create deploy web --image=nginx</code></pre><p id="604720e4-6f49-8347-9f50-81b7b27f77f7" class="" dir="auto">Pod 확인:</p><pre id="5ff720e4-6f49-8307-9cbd-01ec770de0ff" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -o wide</code></pre><h3 id="b97720e4-6f49-8296-a348-01d52bb5a984" class="" dir="auto">6.2 Service를 LoadBalancer로 노출</h3><pre id="59e720e4-6f49-8379-983f-81da161f4e9e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl expose deploy web --port=80 --target-port=80 --type=LoadBalancer</code></pre><h3 id="63e720e4-6f49-8262-bebe-01a19cef605f" class="" dir="auto">명령어 옵션 해설</h3><ul id="071720e4-6f49-82d7-8ee0-81db010d4736" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>kubectl expose deploy web</code><ul id="539720e4-6f49-824d-8710-816e90e4b41a" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>web</code> Deployment를 대상으로 Service를 생성한다.</li></ul></li></ul><ul id="340720e4-6f49-8308-99ba-81d1bc4953dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--port=80</code><ul id="dde720e4-6f49-831f-b4d8-01a4992ed467" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Service가 외부/내부에서 <strong>제공할 포트</strong>이다.</li></ul></li></ul><ul id="88a720e4-6f49-82cd-93bd-81713113aec0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--target-port=80</code><ul id="b0b720e4-6f49-8370-bbca-811af675d503" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Service가 트래픽을 전달할 <strong>Pod(컨테이너) 포트</strong>이다.</li></ul></li></ul><ul id="4a5720e4-6f49-823e-a991-81910adb0c21" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--type=LoadBalancer</code><ul id="7d2720e4-6f49-82b2-8557-81e248b94abd" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Service 타입을 LoadBalancer로 생성한다.</li></ul><ul id="2e5720e4-6f49-82ce-8d20-0164eaefd619" class="bulleted-list" dir="auto"><li style="list-style-type:circle">MetalLB가 있다면 <code>EXTERNAL-IP</code>가 IP 풀에서 할당된다.</li></ul></li></ul><p id="100720e4-6f49-83d7-a7cf-01eeb8f0fc7c" class="" dir="auto">서비스 확인:</p><pre id="e12720e4-6f49-82f3-b867-81a4fde22651" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get svc -o wide</code></pre><p id="718720e4-6f49-82f0-9a28-01f8521c1051" class="" dir="auto">정상 예시:</p><ul id="6d2720e4-6f49-8337-ac98-01494d00730b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>EXTERNAL-IP</code>에 <code>192.168.80.200</code> 같은 값이 잡힘</li></ul><ul id="497720e4-6f49-82e0-84e4-810f185a6eca" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>PORT(S)</code>는 <code>80:&lt;NodePort&gt;/TCP</code> 형태로 보일 수 있음<ul id="303720e4-6f49-8291-bd45-818c34352e26" class="bulleted-list" dir="auto"><li style="list-style-type:circle">LoadBalancer는 내부적으로 NodePort도 함께 만들어서 트래픽을 전달하는 경우가 많다.</li></ul></li></ul><hr id="28a720e4-6f49-836f-ab0b-013aa8177adb" dir="auto"/><h2 id="138720e4-6f49-8332-9c52-01fd44be6a63" class="" dir="auto">7. 실습 4: “클러스터 외부”에서 접속 확인</h2><h3 id="bd7720e4-6f49-8360-83c5-81cf905002d2" class="" dir="auto">7.1 같은 네트워크 대역(예: 내 PC가 VM 네트워크에 붙어있음)에서 접속</h3><p id="9ab720e4-6f49-8296-b19b-81c27df5820d" class="" dir="auto">이제 외부 PC에서:</p><pre id="d58720e4-6f49-8358-8390-81f506f611ee" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://192.168.80.200</code></pre><p id="eda720e4-6f49-825a-bd02-01de55fcc4a6" class="" dir="auto">또는 브라우저로 <code>http://192.168.80.200</code> 접속 → nginx 기본 페이지가 뜨면 성공</p><h3 id="8e9720e4-6f49-8271-9e72-01a76c0dc693" class="" dir="auto">7.2 “진짜 외부 인터넷”에서 접속하려면?</h3><p id="527720e4-6f49-8241-a321-81480ca8f43e" class="" dir="auto">VM 네트워크가 NAT/사설망이면, 인터넷에서 바로 <code>192.168.80.200</code>으로는 접근이 안 됩니다. 이 경우 보통 두 가지 중 하나가 필요하다.</p><ol type="1" id="c4d720e4-6f49-83f9-b877-819ba4715dda" class="numbered-list" start="1" dir="auto"><li><strong>라우터/방화벽에서 포트포워딩(DNAT)</strong></li></ol><ul id="de9720e4-6f49-83d0-a797-018692ecdcba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">공인 IP(또는 외부 라우터 IP)의 80 포트를 <code>192.168.80.200:80</code>으로 포워딩</li></ul><ul id="94d720e4-6f49-826a-bc96-81afa305e7ef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부에서는 <code>http://&lt;공인IP&gt;</code>로 접속</li></ul><ol type="1" id="cd1720e4-6f49-83e3-be12-81d43f5f1574" class="numbered-list" start="1" dir="auto"><li><strong>퍼블릭 대역 IP를 VM 네트워크에 직접 부여</strong></li></ol><ul id="9d7720e4-6f49-83a4-99ed-01b9590e0ac7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터센터/공인망에서 VM이 공인 대역을 직접 받는 구조라면<ul id="a06720e4-6f49-8287-80c8-0166f63794bd" class="bulleted-list" dir="auto"><li style="list-style-type:circle">MetalLB 풀도 그 공인 대역에서 잡고</li></ul><ul id="ae8720e4-6f49-82e5-9ad2-818bc0d41d66" class="bulleted-list" dir="auto"><li style="list-style-type:circle">외부에서 공인 IP로 바로 접속 가능</li></ul></li></ul><hr id="124720e4-6f49-8216-829f-811f875b29e4" dir="auto"/><h2 id="dd5720e4-6f49-8235-97f9-0194f825c948" class="" dir="auto">8. 동작 원리</h2><ol type="1" id="80b720e4-6f49-8210-86df-813c1b22a7d7" class="numbered-list" start="1" dir="auto"><li>사용자가 <code>type: LoadBalancer</code> Service 생성</li></ol><ol type="1" id="959720e4-6f49-827e-8395-8159aeb2929d" class="numbered-list" start="2" dir="auto"><li>MetalLB가 Service를 감지하고 IP 풀에서 <strong>사용 가능한 IP</strong>를 하나 할당</li></ol><ol type="1" id="3e5720e4-6f49-83c7-9dcc-01d983a78cf2" class="numbered-list" start="3" dir="auto"><li>speaker(노드)가 그 IP에 대해 <strong>ARP 응답</strong>(L2 광고)</li></ol><ol type="1" id="031720e4-6f49-8388-b827-8101d2639e31" class="numbered-list" start="4" dir="auto"><li>외부 클라이언트가 <code>EXTERNAL-IP:80</code>으로 접속 → 해당 노드로 패킷 도착</li></ol><ol type="1" id="a71720e4-6f49-83b8-af2e-015ca5ebb36c" class="numbered-list" start="5" dir="auto"><li>Kubernetes 서비스(iptables/IPVS)가 트래픽을 적절한 Pod로 전달</li></ol><ol type="1" id="bd1720e4-6f49-8294-b08b-8146bad53a7f" class="numbered-list" start="6" dir="auto"><li>여러 Pod가 있으면 Service가 라운드로빈/해시 등으로 분산</li></ol><hr id="907720e4-6f49-8356-925f-0161cb04da7a" dir="auto"/><h2 id="878720e4-6f49-829a-a559-0118b6830a5e" class="" dir="auto">9. 자주 발생하는 문제 &amp; 트러블슈팅</h2><h3 id="014720e4-6f49-82ec-8005-81e591020eaa" class="" dir="auto">9.1 <code>EXTERNAL-IP</code>가 <code>&lt;pending&gt;</code>에서 안 바뀜</h3><p id="b8a720e4-6f49-8313-9c2e-815351d0dcc4" class="" dir="auto">체크리스트:</p><ul id="4b4720e4-6f49-82e9-8248-011f2d60b019" class="bulleted-list" dir="auto"><li style="list-style-type:disc">MetalLB Pod 정상?<pre id="d94720e4-6f49-8388-9639-010d709ea28f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get pods -n metallb-system</code></pre></li></ul><ul id="09f720e4-6f49-83a7-b3a5-814268fe1784" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IPAddressPool/L2Advertisement 적용했나?<pre id="997720e4-6f49-8253-ae62-01d6f9c4293e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl get ipaddresspool -n metallb-system
+kubectl get l2advertisement -n metallb-system</code></pre></li></ul><ul id="09f720e4-6f49-83ac-a681-01cb1447c959" class="bulleted-list" dir="auto"><li style="list-style-type:disc">풀에 준 IP가 <strong>실제로 사용 가능한 IP</strong>인가? (중복 사용/ DHCP 충돌)</li></ul><ul id="c0b720e4-6f49-8280-b763-017bc89e907d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드들이 같은 L2 네트워크인가? (서로 ARP가 통하는 구조인지)</li></ul><p id="6df720e4-6f49-83e3-b88e-819752bc0f03" class="" dir="auto">로그 확인:</p><pre id="5eb720e4-6f49-839d-afa7-81f7bf84723e" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">kubectl logs -n metallb-system deploy/controller
+kubectl logs -n metallb-system ds/speaker</code></pre><h3 id="86c720e4-6f49-83bf-83ee-810144a2395c" class="" dir="auto">9.2 외부에서 접속이 안 되는데 EXTERNAL-IP는 있음</h3><ul id="9dd720e4-6f49-83f3-ab91-01952e05fc69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">내 PC에서 그 대역으로 라우팅이 되는지 확인(같은 네트워크냐?)</li></ul><ul id="d0f720e4-6f49-835e-9bd3-812631d91ed8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM/호스트 방화벽이 80 포트를 막는지 확인</li></ul><ul id="b7c720e4-6f49-8387-8d01-81026a971106" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 인터넷이라면 <strong>포트포워딩/라우팅</strong>이 구성되어 있는지 확인</li></ul><h3 id="32a720e4-6f49-83ff-b305-015225f115ff" class="" dir="auto">9.3 NodePort와 혼동</h3><ul id="95f720e4-6f49-83a0-8f3c-817e2e4e277e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>LoadBalancer</code>는 보통 내부적으로 <code>NodePort</code>도 같이 잡힌다.</li></ul><ul id="52f720e4-6f49-82f6-97a7-810a335dea9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일반 사용자는  <code>EXTERNAL-IP:서비스포트(80)</code>로 접근한다.</li></ul><hr id="098720e4-6f49-82fb-b450-81f8c9dc24d1" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

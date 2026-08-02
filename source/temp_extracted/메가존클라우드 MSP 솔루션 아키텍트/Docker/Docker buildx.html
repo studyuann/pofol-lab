@@ -1,0 +1,797 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Docker buildx</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="aab720e4-6f49-83f5-9232-0146844d4304" class="page sans"><header><h1 class="page-title" dir="auto">Docker buildx</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="0d2720e4-6f49-839f-8827-81fa73c39c75" class="" dir="auto">1. buildx가 필요한 이유</h2><h3 id="662720e4-6f49-836c-b0a1-815f28af8950" class="" dir="auto">1.1 기존 <code>docker build</code>의 한계</h3><ul id="b50720e4-6f49-82eb-a7a3-017d4572ff4f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 <code>docker build</code>는 “현재 머신 아키텍처” 기준으로 이미지를 빌드함<ul id="dfb720e4-6f49-838e-84de-81888ff75714" class="bulleted-list" dir="auto"><li style="list-style-type:circle">예: M1/M2(Mac arm64)에서 빌드한 이미지를 x86 서버(amd64)에서 실행 시 <code>exec format error</code> 발생할 수 있음</li></ul></li></ul><ul id="63a720e4-6f49-82d5-b3e0-81af7918d8fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 아키텍처 이미지를 만들려면 “이미지 2개를 따로 빌드해서 관리”해야 해서 운영이 번거로움</li></ul><h3 id="e5b720e4-6f49-8299-a535-81c186e6ad56" class="" dir="auto">1.2 buildx가 해결하는 것</h3><ul id="e39720e4-6f49-8316-99f9-01f15242ab68" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>멀티 아키텍처 이미지</strong>를 한 번에 생성 가능 (amd64 + arm64)</li></ul><ul id="a9c720e4-6f49-83c6-8c6e-8108c2bf791d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>BuildKit 기반</strong>으로 빌드 성능/캐시/병렬 처리 개선</li></ul><ul id="d8d720e4-6f49-824d-82cf-01f149002e11" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CI/CD에서 표준적으로 사용하는 빌드 방식</li></ul><hr id="86c720e4-6f49-82a2-b54e-819d664df4d4" dir="auto"/><h2 id="a40720e4-6f49-82fa-85f9-81e563c11267" class="" dir="auto">2. 핵심 개념 정리</h2><h3 id="c11720e4-6f49-822e-902b-011e4f141cc0" class="" dir="auto">2.1 BuildKit</h3><ul id="652720e4-6f49-83df-ba33-81b644070193" class="bulleted-list" dir="auto"><li style="list-style-type:disc">도커 빌드 엔진의 차세대 구현체임</li></ul><ul id="457720e4-6f49-829c-b64e-0105f234b5ae" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장점: 캐시 활용 최적화, 병렬 빌드, 출력 유형 다양(로컬 로드/레지스트리 푸시 등)</li></ul><h3 id="2f4720e4-6f49-83e9-9c1f-81de7b1e7f9c" class="" dir="auto">2.2 buildx</h3><ul id="aa6720e4-6f49-82e0-9b0d-0138f4fac1a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">BuildKit을 CLI에서 쉽게 쓰도록 만든 도커 플러그인임</li></ul><ul id="7ff720e4-6f49-8362-a92c-8168a90bf1d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker buildx build</code> 명령으로 BuildKit 기능을 사용함</li></ul><h3 id="b7b720e4-6f49-835e-8bb3-817d75d1c8b2" class="" dir="auto">2.3 멀티 아키텍처 이미지(Manifest List)</h3><ul id="6ec720e4-6f49-83d2-ace6-81a850b434b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하나의 태그(<code>myapp:1.0</code>) 아래에<ul id="618720e4-6f49-836f-9454-01251f9d2551" class="bulleted-list" dir="auto"><li style="list-style-type:circle">amd64 이미지</li></ul><ul id="b8e720e4-6f49-8398-93d4-015d3e7e86a2" class="bulleted-list" dir="auto"><li style="list-style-type:circle">arm64 이미지<p id="c58720e4-6f49-83e6-9880-0114bbc6d3d1" class="" dir="auto">를 함께 묶어둔 “목록(Manifest List)”을 생성함</p></li></ul></li></ul><ul id="c36720e4-6f49-832e-9a29-819471bcf520" class="bulleted-list" dir="auto"><li style="list-style-type:disc">클라이언트가 <code>docker pull myapp:1.0</code> 하면 <strong>자기 CPU에 맞는 이미지가 자동 선택됨</strong></li></ul><hr id="bdf720e4-6f49-837d-962c-01e962977090" dir="auto"/><h2 id="270720e4-6f49-834f-9bb7-01d2842a83bd" class="" dir="auto">3. 사전 점검</h2><h3 id="43f720e4-6f49-8340-943e-810121dec3ad" class="" dir="auto">3.1 버전 및 기능 확인</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="3fd720e4-6f49-8353-ba75-017f5fa4bbae" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker version
+docker buildx version</code></pre><ul id="d8f720e4-6f49-82ab-9fa7-81210a97685b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker buildx version</code>이 동작하면 buildx 사용 가능 상태임</li></ul><h3 id="787720e4-6f49-8322-9cc5-01c77592167a" class="" dir="auto">3.2 현재 빌더 목록 확인</h3><pre id="562720e4-6f49-833b-a588-014bbd61b7e2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker buildx ls</code></pre><ul id="17e720e4-6f49-824d-b6b7-0196165eb17e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여기서  표시가 붙은 빌더가 현재 사용 중인 빌더임</li></ul><hr id="2f3720e4-6f49-836e-b4f2-81af6cf05841" dir="auto"/><h2 id="952720e4-6f49-8308-b095-81e8f27294db" class="" dir="auto">4. 실습 1: buildx 빌더 생성 및 전환</h2><h3 id="c2a720e4-6f49-82dc-9acf-01a2876277a5" class="" dir="auto">4.1 빌더 생성</h3><pre id="0ed720e4-6f49-833e-aeb7-01f590b6d293" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker buildx create --name bootcamp-builder --use</code></pre><ul id="be3720e4-6f49-83dd-a8c8-818f75b7e60a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>create</code>: 새로운 buildx 빌더 인스턴스를 생성함</li></ul><ul id="a8f720e4-6f49-83f5-a422-01cb07017786" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-name</code>: 빌더 이름 지정함</li></ul><ul id="77b720e4-6f49-827d-bac1-013d5e1c91f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-use</code>: 생성 직후 해당 빌더를 기본 빌더로 전환함</li></ul><h3 id="efc720e4-6f49-8343-87ee-81169bed60f0" class="" dir="auto">4.2 빌더 상태 확인</h3><pre id="26b720e4-6f49-828d-b82f-81e6ca95abbf" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker buildx inspect --bootstrap</code></pre><ul id="acc720e4-6f49-83d6-b832-016495206643" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>inspect</code>: 빌더 설정/드라이버/플랫폼 지원 정보를 출력함</li></ul><ul id="4f5720e4-6f49-837d-819f-01cc20eb3eda" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-bootstrap</code>: 빌더 백엔드(BuildKit)를 실제로 기동함(초기화 수행함)</li></ul><hr id="d2b720e4-6f49-82af-b15a-81f9cfea2ebb" dir="auto"/><h2 id="04f720e4-6f49-839b-844c-810cc8a16392" class="" dir="auto">5. 실습 2: 단일 플랫폼 빌드 (기본 감 잡기)</h2><h3 id="ee9720e4-6f49-8292-8512-817bbca4c330" class="" dir="auto">5.1 예제 프로젝트 준비</h3><p id="757720e4-6f49-824e-b1e0-01fccc1dd972" class="" dir="auto">아래 구조를 사용한다고 가정함.</p><pre id="d8f720e4-6f49-820d-8002-812333b8ba18" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">app/
+ ├─ Dockerfile
+ └─ server.py</code></pre><h3 id="517720e4-6f49-83ae-9771-0145f6d79634" class="" dir="auto">server.py</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="479720e4-6f49-826c-9673-815bc6f34cbc" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from flask import Flask
+import platform
+
+app = Flask(__name__)
+
+@app.get(&quot;/&quot;)
+def home():
+    return f&quot;hello buildx! arch={platform.machine()}\n&quot;
+
+if __name__ == &quot;__main__&quot;:
+    app.run(host=&quot;0.0.0.0&quot;, port=8080)</code></pre><h3 id="af9720e4-6f49-8261-871c-0163ad698645" class="" dir="auto">Dockerfile</h3><pre id="96d720e4-6f49-82b8-981f-81e57442c499" class="code code-wrap" data-notion-code-syntax="docker"><code class="language-docker" style="white-space:pre-wrap;word-break:break-all">FROM python:3.12-slim
+WORKDIR /app
+RUN pip install flask
+COPY server.py .
+EXPOSE 8080
+CMD [&quot;python&quot;, &quot;server.py&quot;]</code></pre><h3 id="87c720e4-6f49-83d9-8727-81e0c5ace1df" class="" dir="auto">5.2 빌드 결과를 로컬에 로드해서 실행</h3><pre id="993720e4-6f49-8321-af43-810121d0798f" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker buildx build -t myflask:local --load .</code></pre><ul id="62e720e4-6f49-8328-ac55-0155eedf0102" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>t</code>: 이미지 태그 지정함</li></ul><ul id="7b0720e4-6f49-8279-8d80-815072e7bcf1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>-load</code>: 빌드 결과를 <strong>로컬 도커 엔진 이미지 저장소</strong>로 로드함<ul id="98a720e4-6f49-83ff-8e5f-81164f5de5b5" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>docker images</code>에서 보이게 됨</li></ul><ul id="5b6720e4-6f49-834c-8ce4-011019d732ef" class="bulleted-list" dir="auto"><li style="list-style-type:circle">단점: 멀티 아키 빌드 결과는 <code>--load</code>로 바로 로드하지 못함(대신 <code>--push</code> 사용함)</li></ul></li></ul><h3 id="d9c720e4-6f49-82ad-abe2-81874820d417" class="" dir="auto">5.3 실행 확인</h3><pre id="e38720e4-6f49-8284-bc3a-811957b1001d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker run --rm -p 8080:8080 myflask:local</code></pre><hr id="633720e4-6f49-83a9-95a3-8154e75f8cf5" dir="auto"/><h2 id="415720e4-6f49-8264-8f36-81b8fd019bb0" class="" dir="auto">6. 실습 3: 멀티 아키텍처 빌드 + 레지스트리 푸시</h2><h3 id="9d4720e4-6f49-826d-84e8-01b79adc74a2" class="" dir="auto">6.1 왜 <code>--push</code>가 필요한가</h3><ul id="9aa720e4-6f49-83e9-a9a7-813477aa2176" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 아키 이미지는 “Manifest List”까지 생성해야 하므로 로컬 로드보다 <strong>레지스트리 푸시가 자연스러운 결과물</strong>임</li></ul><ul id="48c720e4-6f49-8396-ae02-01c6d42a370a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">즉, 멀티 아키는 보통 <code>--push</code>를 사용함</li></ul><h3 id="c9c720e4-6f49-8371-90ab-013e5560a961" class="" dir="auto">6.2 Docker Hub 로그인</h3><pre id="f03720e4-6f49-83bf-9ebb-81276e614404" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker login</code></pre><h3 id="409720e4-6f49-8238-8bbf-0193b8e15a29" class="" dir="auto">6.3 멀티 아키 빌드 및 푸시</h3><pre id="521720e4-6f49-836a-b45c-0152a663da77" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t &lt;도커허브ID&gt;/myflask:1.0 \
+  --push .</code></pre><ul id="a7d720e4-6f49-831d-afa2-01cf3f87370e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--platform</code>: 빌드 대상 플랫폼을 지정함</li></ul><ul id="d6e720e4-6f49-83f0-a196-01337358d0d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--push</code>: 결과를 레지스트리에 푸시함(Manifest List 포함)</li></ul><h3 id="ca8720e4-6f49-83b9-81cc-819443107a90" class="" dir="auto">6.4 결과 검증</h3><pre id="624720e4-6f49-8392-9671-01c4fdeb48cd" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker buildx imagetools inspect &lt;도커허브ID&gt;/myflask:1.0</code></pre><ul id="283720e4-6f49-8205-ab27-01cf074fa887" class="bulleted-list" dir="auto"><li style="list-style-type:disc">amd64/arm64 digest가 함께 보이면 멀티 아키 구성 완료됐음</li></ul><hr id="018720e4-6f49-830f-a0e8-017a62d10c1d" dir="auto"/><h2 id="901720e4-6f49-8363-a01a-018fa8b9ca21" class="" dir="auto">7. 실습 4: QEMU 기반 크로스 빌드 이해</h2><h3 id="26f720e4-6f49-837a-8c14-01e5d6fd663c" class="" dir="auto">7.1 크로스 빌드가 가능한 이유</h3><ul id="f7a720e4-6f49-8307-93ff-011f6258c0d0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">x86 머신에서 arm64를 빌드할 때 실제로는 <strong>QEMU 에뮬레이션</strong>이 동작함</li></ul><ul id="f23720e4-6f49-83ee-b2bb-81ab5eb5e940" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌더가 지원 플랫폼 목록을 가지고, 해당 플랫폼용으로 빌드 파이프라인을 수행함</li></ul><h3 id="47d720e4-6f49-829c-bc32-0139d61deb91" class="" dir="auto">7.2 플랫폼 지원 여부 확인</h3><pre id="535720e4-6f49-828c-abcf-01b49a0bba8d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker buildx inspect --bootstrap</code></pre><ul id="9db720e4-6f49-8297-8b20-818591b94c89" class="bulleted-list" dir="auto"><li style="list-style-type:disc">출력에 <code>Platforms:</code> 항목이 있으며, <code>linux/amd64</code>, <code>linux/arm64</code>가 포함되면 준비됐음</li></ul><hr id="231720e4-6f49-83cb-b279-0197878090ee" dir="auto"/><h2 id="e21720e4-6f49-835c-bcc1-8149e47c61b5" class="" dir="auto">8. 실습 5: 캐시 적용</h2><h3 id="547720e4-6f49-82e6-aede-81671b038455" class="" dir="auto">8.1 캐시가 중요한 이유</h3><ul id="fe5720e4-6f49-8245-88b5-013c78d24278" class="bulleted-list" dir="auto"><li style="list-style-type:disc">매 빌드마다 <code>pip install</code>, <code>npm install</code> 같은 단계가 반복되면 빌드 시간이 폭증함</li></ul><ul id="43a720e4-6f49-82c3-8deb-818b3ac48520" class="bulleted-list" dir="auto"><li style="list-style-type:disc">buildx는 캐시를 레지스트리에 저장/재사용 가능함<ul id="62c720e4-6f49-8225-b974-0172d45b9d45" class="bulleted-list" dir="auto"><li style="list-style-type:circle">CI 환경(빌드 머신이 매번 바뀌는 환경)에서 특히 중요함</li></ul></li></ul><h3 id="1dc720e4-6f49-82e3-b6f3-81fea7570bb6" class="" dir="auto">8.2 레지스트리 캐시 사용 예시</h3><pre id="49a720e4-6f49-82b3-9f84-01bf49b16d4d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">docker buildx build \
+  --platform linux/amd64,linux/arm64 \
+  -t &lt;도커허브ID&gt;/myflask:1.1 \
+  --cache-to type=registry,ref=&lt;도커허브ID&gt;/myflask:buildcache,mode=max \
+  --cache-from type=registry,ref=&lt;도커허브ID&gt;/myflask:buildcache \
+  --push .</code></pre><ul id="4f7720e4-6f49-83c7-9c6d-81b2b4b228af" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--cache-to</code>: 캐시를 어디에 저장할지 지정함<ul id="40b720e4-6f49-82fa-9ba5-8121359491e4" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>type=registry</code>: 레지스트리에 캐시 레이어 저장함</li></ul><ul id="725720e4-6f49-8399-b6c1-01a533c0c885" class="bulleted-list" dir="auto"><li style="list-style-type:circle"><code>mode=max</code>: 가능한 많은 캐시를 저장함</li></ul></li></ul><ul id="35c720e4-6f49-833f-9e29-011a027e2c35" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--cache-from</code>: 저장된 캐시를 가져와서 재사용함</li></ul><hr id="e56720e4-6f49-82ea-b656-01b4438c9c4a" dir="auto"/><h2 id="aba720e4-6f49-839c-a497-018c18c2db24" class="" dir="auto">9. 쿠버네티스로 이어지는 포인트</h2><h3 id="fd3720e4-6f49-8219-aea2-810a38fa09fb" class="" dir="auto">9.1 쿠버네티스는 “이미지 pull”만 한다</h3><ul id="f7e720e4-6f49-8356-a9ae-813a88ec15fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">쿠버네티스 노드는 이미지를 “빌드”하지 않음</li></ul><ul id="b6d720e4-6f49-82b3-9ea8-010d4bd5e2ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">따라서 실무에서는<ul id="5d5720e4-6f49-8256-a536-01d3e8a4d5f6" class="bulleted-list" dir="auto"><li style="list-style-type:circle">빌드(=buildx)</li></ul><ul id="e4d720e4-6f49-8208-a582-81629c1eccfd" class="bulleted-list" dir="auto"><li style="list-style-type:circle">푸시(=registry)</li></ul><ul id="6b5720e4-6f49-8253-bd6a-81a13d26dacd" class="bulleted-list" dir="auto"><li style="list-style-type:circle">배포(=k8s)<p id="d6e720e4-6f49-8333-8195-815b4302dc6f" class="" dir="auto">흐름이 표준임</p></li></ul></li></ul><h3 id="e4e720e4-6f49-837d-876e-811312553477" class="" dir="auto">9.2 멀티 아키가 왜 중요하나</h3><ul id="5f0720e4-6f49-836a-8b85-8123c6d99522" class="bulleted-list" dir="auto"><li style="list-style-type:disc">노드가 amd64/arm64 혼재 가능함(클라우드/엣지/개발환경 포함)</li></ul><ul id="3dc720e4-6f49-8386-92ad-813e896c35c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동일 태그로 배포했는데 노드에 따라 실행 실패하면 운영이 깨짐</li></ul><ul id="891720e4-6f49-8260-8d1b-81e7ec78c379" class="bulleted-list" dir="auto"><li style="list-style-type:disc">buildx 멀티 아키는 이 문제를 구조적으로 제거함</li></ul><hr id="232720e4-6f49-82c5-9f42-01fade9cea8b" dir="auto"/><h2 id="cd4720e4-6f49-82ad-83e4-8128ea5df99c" class="" dir="auto">10. 트러블슈팅 체크리스트</h2><h3 id="7b3720e4-6f49-83ee-8125-81e0915eadf9" class="" dir="auto">10.1 <code>--load</code> 했는데 이미지가 안 보임</h3><ul id="7b1720e4-6f49-8280-a9d9-81b444d43271" class="bulleted-list" dir="auto"><li style="list-style-type:disc">멀티 아키 빌드인 경우 <code>--load</code>가 제약 있음</li></ul><ul id="ee5720e4-6f49-8344-830e-01f9623189cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해결: 멀티 아키는 <code>--push</code> 사용했음</li></ul><h3 id="84f720e4-6f49-8313-bb6a-01c84c5e8344" class="" dir="auto">10.2 <code>docker buildx build</code>가 느림</h3><ul id="03a720e4-6f49-8319-a0b1-01e190bb5cf5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">QEMU 에뮬레이션이 들어가면 느려질 수 있음</li></ul><ul id="35e720e4-6f49-832f-8598-017af3721748" class="bulleted-list" dir="auto"><li style="list-style-type:disc">캐시(<code>--cache-from/--cache-to</code>) 적용했음</li></ul><ul id="365720e4-6f49-82b9-aa1f-81a5d1abfc39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가능한 경우, 각 아키텍처 네이티브 빌드 러너(CI에서 amd64 runner, arm64 runner) 분리했음</li></ul><h3 id="eb5720e4-6f49-835f-bd2d-8137a3b8e7a4" class="" dir="auto">10.3 <code>docker buildx imagetools inspect</code>가 안 됨</h3><ul id="066720e4-6f49-8286-9770-01ee5714c539" class="bulleted-list" dir="auto"><li style="list-style-type:disc">구버전 도커/플러그인 이슈일 수 있음</li></ul><ul id="c5e720e4-6f49-82b7-a021-019026c1cd8d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker buildx version</code> 확인했음</li></ul><hr id="1cd720e4-6f49-82ce-958b-018a2d52e5bc" dir="auto"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-jsx.min.js" integrity="sha512-m3JYEI6gx5fh9jF10FjGoMzVKcV2N6nchcDcqPCdI1L3R2WQV7br2XVNR8iTLb2daOMRl3zldbcfT40xU2ntVw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="5de720e4-6f49-823d-b35d-81d19b3ea7b8" class="code code-wrap" data-notion-code-syntax="jsx"><code class="language-jsx" style="white-space:pre-wrap;word-break:break-all">docker buildx create --driver docker-container --name multi-builder --platform linux/amd64,linux/arm64
+
+docker buildx use --default multi-builder
+
+docker buildx ls</code></pre></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

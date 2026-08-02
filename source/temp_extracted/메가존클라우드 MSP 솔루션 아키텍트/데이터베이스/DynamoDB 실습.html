@@ -1,0 +1,792 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>DynamoDB 실습</title><meta name="data-notion-page-icon" content="📘"/><link rel="icon" href="data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%20100%20100%22%3E%3Ctext%20y%3D%22.9em%22%20font-size%3D%2290%22%3E%F0%9F%93%98%3C%2Ftext%3E%3C%2Fsvg%3E"/><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="5e8720e4-6f49-8234-aa14-819113de689e" class="page sans" data-notion-page-icon="📘"><header><div class="page-header-icon undefined"><span class="icon" data-emoji="📘"></span></div><h1 class="page-title" dir="auto">DynamoDB 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="6ce720e4-6f49-8287-9ddb-8168e6640723" dir="auto"/><h2 id="ca2720e4-6f49-83be-a55d-81ad77746edf" class="" dir="auto">실습 개요</h2><ul id="bb7720e4-6f49-833b-a5b6-8142e4ad60c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">목표:<ul id="69b720e4-6f49-824d-be0b-81765e5c7eca" class="bulleted-list" dir="auto"><li style="list-style-type:circle">DynamoDB 기본 개념 이해</li></ul><ul id="caa720e4-6f49-833b-ae03-81ce443b9021" class="bulleted-list" dir="auto"><li style="list-style-type:circle">테이블/아이템/키 구조 체험</li></ul><ul id="f57720e4-6f49-82bd-a02b-01ec3a399985" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Query vs Scan 차이 이해</li></ul><ul id="998720e4-6f49-82bd-b8cf-01270703dd7f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">GSI 활용 경험</li></ul></li></ul><hr id="6f5720e4-6f49-83e3-932a-014c51347c18" dir="auto"/><h2 id="8c8720e4-6f49-83fc-ad91-81d36ab288c3" class="" dir="auto">실습 0. 사전 준비</h2><h3 id="cbb720e4-6f49-8349-ab2f-013a5493cfa6" class="" dir="auto">준비 사항</h3><ul id="2bb720e4-6f49-826a-91c7-01a42015fcbd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS 계정</li></ul><ul id="c79720e4-6f49-8283-a47a-01ef7177ac1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Region: <strong>ap-northeast-2 (서울)</strong> 권장</li></ul><ul id="781720e4-6f49-83b7-83d7-01b28ebfc115" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM 사용자 (DynamoDB Full Access)</li></ul><hr id="ddd720e4-6f49-82cb-8de6-010852bfaf22" dir="auto"/><h2 id="cc0720e4-6f49-833f-9d19-01f2268dc8bc" class="" dir="auto">실습 1. DynamoDB 테이블 생성</h2><h3 id="460720e4-6f49-839c-af41-018401d92c8b" class="" dir="auto">1) 목표</h3><ul id="785720e4-6f49-83bb-8de9-01f6f58b9550" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB 테이블 구조 이해</li></ul><ul id="4e8720e4-6f49-82e0-afbe-8103762086d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Partition Key / Sort Key 개념 습득</li></ul><h3 id="d88720e4-6f49-8359-8a18-819670b8fe51" class="" dir="auto">2) 시나리오</h3><blockquote id="817720e4-6f49-82b8-a13d-814fb263dbcf" class="" dir="auto">사용자 주문 정보를 저장하는 테이블 생성</blockquote><hr id="733720e4-6f49-82aa-b096-01e3207068e0" dir="auto"/><h3 id="11d720e4-6f49-8375-85a4-81cd24fa6306" class="" dir="auto">3) 테이블 설계</h3><table id="7f8720e4-6f49-8333-b32b-81157fbf9138" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="04a720e4-6f49-83ac-a602-01ed5b01335e" dir="ltr"><th id="|cot" class="simple-table-header-color simple-table-header">항목</th><th id="G{dg" class="simple-table-header-color simple-table-header">값</th></tr></thead><tbody><tr id="2b2720e4-6f49-8266-a759-01a14a9c0c4c" dir="ltr"><td id="|cot" class="">테이블 이름</td><td id="G{dg" class=""><code>Orders</code></td></tr><tr id="3b1720e4-6f49-8257-b5ff-014ae747c180" dir="ltr"><td id="|cot" class="">Partition Key</td><td id="G{dg" class=""><code>userId</code> (String)</td></tr><tr id="596720e4-6f49-826e-bda9-01fe21a1f889" dir="ltr"><td id="|cot" class="">Sort Key</td><td id="G{dg" class=""><code>orderId</code> (String)</td></tr><tr id="5c7720e4-6f49-8256-8c5b-81109f43d769" dir="ltr"><td id="|cot" class="">Billing Mode</td><td id="G{dg" class="">On-Demand</td></tr></tbody></table><hr id="374720e4-6f49-82f9-bd1b-813238853706" dir="auto"/><h3 id="a9e720e4-6f49-8217-88d7-01a12b505fe5" class="" dir="auto">4) 실습 단계</h3><ol type="1" id="80e720e4-6f49-83c0-83ca-0100c368e56e" class="numbered-list" start="1" dir="auto"><li>AWS Console → DynamoDB → <strong>Tables</strong></li></ol><ol type="1" id="eeb720e4-6f49-8263-9fc4-01450f4b5d37" class="numbered-list" start="2" dir="auto"><li><strong>Create table</strong></li></ol><ol type="1" id="0a4720e4-6f49-827f-b9e2-01901e948afb" class="numbered-list" start="3" dir="auto"><li>설정<ul id="08e720e4-6f49-8215-8190-81463f11abb8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Table name: <code>Orders</code></li></ul><ul id="e6d720e4-6f49-83cd-95f4-81e2f7420809" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Partition key: <code>userId</code> (String)</li></ul><ul id="758720e4-6f49-83bb-ae3a-8196654724ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Sort key: <code>orderId</code> (String)</li></ul></li></ol><ol type="1" id="115720e4-6f49-833c-a813-81a1823c0af0" class="numbered-list" start="4" dir="auto"><li>Billing mode: <strong>On-Demand</strong></li></ol><ol type="1" id="e03720e4-6f49-83ae-89e7-811fdef16300" class="numbered-list" start="5" dir="auto"><li>Create table</li></ol><hr id="a4a720e4-6f49-82bb-ac94-01c08552a5a6" dir="auto"/><h3 id="3a8720e4-6f49-8319-a026-014f93cd64f5" class="" dir="auto">&gt;&gt;  확인 포인트</h3><ul id="cae720e4-6f49-837a-9482-01c12202d98b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테이블 상태가 <strong>Active</strong></li></ul><ul id="68f720e4-6f49-829e-88cf-01f53bc6dd2e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Primary key 구조 확인</li></ul><hr id="edc720e4-6f49-8300-809f-81f7fea92c73" dir="auto"/><h2 id="e33720e4-6f49-8293-91fe-81ed5cffb6cd" class="" dir="auto">실습 2. 아이템(Item) 추가</h2><h3 id="270720e4-6f49-8233-a733-013ae292315d" class="" dir="auto">1) 목표</h3><ul id="940720e4-6f49-8205-a945-01ab48c585c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Item과 Attribute 구조 이해</li></ul><hr id="d27720e4-6f49-8228-8b10-01810e6aade2" dir="auto"/><h3 id="5dc720e4-6f49-829b-9eea-816785046be2" class="" dir="auto">2) 실습 단계</h3><ol type="1" id="7e5720e4-6f49-82b4-a5d1-81eef27b8165" class="numbered-list" start="1" dir="auto"><li><code>Orders</code> 테이블 클릭</li></ol><ol type="1" id="c4e720e4-6f49-82b0-b251-81729fcb9a5f" class="numbered-list" start="2" dir="auto"><li><strong>Explore table items</strong></li></ol><ol type="1" id="eef720e4-6f49-835d-8f22-012267a4da20" class="numbered-list" start="3" dir="auto"><li><strong>Create item</strong></li></ol><ol type="1" id="e96720e4-6f49-8256-b63c-017d61c8deb6" class="numbered-list" start="4" dir="auto"><li>JSON View 선택 후 입력</li></ol><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-json.min.js" integrity="sha512-QXFMVAusM85vUYDaNgcYeU3rzSlc+bTV4JvkfJhjxSHlQEo+ig53BtnGkvFTiNJh8D+wv6uWAQ2vJaVmxe8d3w==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="260720e4-6f49-8300-af7a-817cfbdfeb78" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;userId&quot;: &quot;user-001&quot;,
+  &quot;orderId&quot;: &quot;order-001&quot;,
+  &quot;product&quot;: &quot;Keyboard&quot;,
+  &quot;price&quot;: 50000,
+  &quot;orderDate&quot;: &quot;2026-01-01&quot;,
+  &quot;status&quot;: &quot;PAID&quot;
+}
+</code></pre><ol type="1" id="800720e4-6f49-8324-88d4-01852ccb2c91" class="numbered-list" start="5" dir="auto"><li><strong>Create item</strong></li></ol><hr id="9ce720e4-6f49-827d-bc14-81a5083905d3" dir="auto"/><h3 id="196720e4-6f49-8357-9c7e-819bb1ed7cca" class="" dir="auto">➕ 추가 아이템</h3><pre id="588720e4-6f49-823d-8cea-0184d58213d2" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;userId&quot;: &quot;user-001&quot;,
+  &quot;orderId&quot;: &quot;order-002&quot;,
+  &quot;product&quot;: &quot;Mouse&quot;,
+  &quot;price&quot;: 30000,
+  &quot;orderDate&quot;: &quot;2026-01-02&quot;,
+  &quot;status&quot;: &quot;SHIPPED&quot;
+}
+</code></pre><pre id="f29720e4-6f49-8361-9903-0183b27a5075" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">{
+  &quot;userId&quot;: &quot;user-002&quot;,
+  &quot;orderId&quot;: &quot;order-001&quot;,
+  &quot;product&quot;: &quot;Monitor&quot;,
+  &quot;price&quot;: 250000,
+  &quot;orderDate&quot;: &quot;2026-01-03&quot;,
+  &quot;status&quot;: &quot;PAID&quot;
+}
+</code></pre><hr id="6eb720e4-6f49-8374-8b01-01958aca0c90" dir="auto"/><h3 id="8dc720e4-6f49-82e0-8cbe-01a81d7cc664" class="" dir="auto">&gt;&gt; 확인 포인트</h3><ul id="d32720e4-6f49-83c9-aeb6-0124ed3b79c9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 <code>userId</code> 내에서 <code>orderId</code> 기준 정렬</li></ul><ul id="d8f720e4-6f49-827c-bc5e-817f53e50dc2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서로 다른 <code>userId</code>는 다른 파티션</li></ul><hr id="c1d720e4-6f49-82ab-86d4-81014a023930" dir="auto"/><h2 id="73a720e4-6f49-82ff-8eeb-81870ad15f7c" class="" dir="auto">실습 3. GetItem vs Query</h2><h3 id="d89720e4-6f49-832c-a369-018e611e4bb9" class="" dir="auto">-  목표</h3><ul id="518720e4-6f49-826a-8014-01aa8dcbadbc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단건 조회와 조건 조회 차이 이해</li></ul><hr id="5e6720e4-6f49-830f-a80b-81d783fe18be" dir="auto"/><h3 id="a36720e4-6f49-83e8-826b-819b4e3e6c39" class="" dir="auto">1) GetItem (기본 키 전체 필요)</h3><ol type="1" id="405720e4-6f49-8231-be5d-81dadc986af2" class="numbered-list" start="1" dir="auto"><li><strong>Explore table items</strong></li></ol><ol type="1" id="66b720e4-6f49-8259-8115-015022fa7d6a" class="numbered-list" start="2" dir="auto"><li>Partition key: <code>user-001</code></li></ol><ol type="1" id="5b7720e4-6f49-8359-81f9-01c7c9eb4ffe" class="numbered-list" start="3" dir="auto"><li>Sort key: <code>order-001</code></li></ol><ol type="1" id="e86720e4-6f49-83bd-9956-01046d32e341" class="numbered-list" start="4" dir="auto"><li>Get item</li></ol><p id="d6a720e4-6f49-826b-a2df-01eb4aa84bf4" class="" dir="auto">📌 특징</p><ul id="aed720e4-6f49-828d-8a84-01ea7bd11d1f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빠름</li></ul><ul id="7c9720e4-6f49-8369-9c91-011edbcf56e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정확한 키 값 필요</li></ul><hr id="e58720e4-6f49-835e-b5e7-0149ceaaf80c" dir="auto"/><h3 id="292720e4-6f49-83f4-8c60-813764014707" class="" dir="auto">2) Query (Partition Key 기준)</h3><ol type="1" id="8d7720e4-6f49-8310-b2e4-813e4cf714be" class="numbered-list" start="1" dir="auto"><li><strong>Query</strong> 탭 선택</li></ol><ol type="1" id="bf9720e4-6f49-8340-803b-8196078cebb5" class="numbered-list" start="2" dir="auto"><li>Partition key = <code>user-001</code></li></ol><ol type="1" id="45a720e4-6f49-82d8-ba7e-011f17051ac0" class="numbered-list" start="3" dir="auto"><li>실행</li></ol><p id="9e4720e4-6f49-8217-bde1-819c2db5b733" class="" dir="auto">📌 특징</p><ul id="473720e4-6f49-83b7-8932-813452c47be5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">동일 사용자 주문 전체 조회</li></ul><ul id="a48720e4-6f49-8374-9a25-01bc50cc2cfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실무에서 가장 많이 사용</li></ul><hr id="702720e4-6f49-83f4-959c-01108557ab39" dir="auto"/><h3 id="701720e4-6f49-8359-abce-01e0954ffc5d" class="" dir="auto">&gt;&gt; 확인 포인트</h3><ul id="e15720e4-6f49-83b6-814b-0165e5d4ef35" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Query는 <strong>Partition Key 필수</strong></li></ul><ul id="0c7720e4-6f49-82dd-8a89-8158ae55cbca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Scan보다 훨씬 빠름</li></ul><hr id="488720e4-6f49-82b7-90c2-019f1e6e1250" dir="auto"/><h2 id="47f720e4-6f49-83e0-b804-0111182d163b" class="" dir="auto">실습 4. Scan 사용해보기 (비권장)</h2><h3 id="fcd720e4-6f49-833f-a549-01d8f5d1af06" class="" dir="auto">1) 목표</h3><ul id="117720e4-6f49-8258-9624-81558129e8dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Scan의 문제점 체감</li></ul><hr id="27e720e4-6f49-828b-868f-81a43a682282" dir="auto"/><h3 id="819720e4-6f49-8205-bff9-814aa38a3e7f" class="" dir="auto">2) 실습 단계</h3><ol type="1" id="99d720e4-6f49-8220-8b76-015e8f538df7" class="numbered-list" start="1" dir="auto"><li><strong>Scan</strong> 탭 선택</li></ol><ol type="1" id="870720e4-6f49-82b2-9aac-0155d47c36be" class="numbered-list" start="2" dir="auto"><li>실행</li></ol><hr id="856720e4-6f49-8369-a6d8-01b087126619" dir="auto"/><h3 id="8ca720e4-6f49-83c3-a174-8191b05f0598" class="" dir="auto">&gt;&gt; 확인 포인트</h3><ul id="f69720e4-6f49-827f-ab72-81001d00e7f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">모든 아이템을 읽음</li></ul><ul id="eb8720e4-6f49-83bc-8f1d-81dcda674d1f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 많을수록 비용 &amp; 속도 문제</li></ul><p id="a2c720e4-6f49-82a4-9d72-011cb093b551" class="" dir="auto">📌 <strong>결론</strong></p><blockquote id="530720e4-6f49-82a2-86e9-0186096ebfb6" class="" dir="auto">Scan은 테스트용, 운영 환경에서는 지양</blockquote><hr id="96f720e4-6f49-83c6-a84f-01b6e10314c3" dir="auto"/><h2 id="d6a720e4-6f49-8211-a9e1-81fec157d680" class="" dir="auto">실습 5. GSI (Global Secondary Index) 생성</h2><h3 id="f33720e4-6f49-834d-8f1d-81aeb938f678" class="" dir="auto">1) 목표</h3><ul id="b02720e4-6f49-839c-aba9-81a3b5002da2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 키 외 조회 패턴 해결</li></ul><hr id="e4b720e4-6f49-8281-9e66-012620caa377" dir="auto"/><h3 id="5e2720e4-6f49-83fc-a9ea-017d31dbb33c" class="" dir="auto">2) 요구사항</h3><blockquote id="eb9720e4-6f49-8297-b525-01f5795373d5" class="" dir="auto">주문 상태(status)로 주문 조회</blockquote><hr id="bb3720e4-6f49-82c2-97d9-81575b6eb7da" dir="auto"/><h3 id="ce0720e4-6f49-82c0-b30a-81b619fb31c5" class="" dir="auto">3) GSI 생성</h3><ol type="1" id="406720e4-6f49-82d0-bd8b-013265ada7c0" class="numbered-list" start="1" dir="auto"><li><code>Orders</code> 테이블 → <strong>Indexes</strong></li></ol><ol type="1" id="19b720e4-6f49-82b1-8cac-015c56467f23" class="numbered-list" start="2" dir="auto"><li><strong>Create index</strong></li></ol><ol type="1" id="276720e4-6f49-8207-8a5e-81ae1ca3b92f" class="numbered-list" start="3" dir="auto"><li>설정<ul id="3fa720e4-6f49-8217-8b0c-01e686052c1c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Index name: <code>status-index</code></li></ul><ul id="e15720e4-6f49-824c-848e-01c41e692ec5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Partition key: <code>status</code> (String)</li></ul><ul id="33b720e4-6f49-8394-aa55-817fcca2e70d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Sort key: <code>orderDate</code> (String)</li></ul><ul id="fa9720e4-6f49-8234-8a4c-01c84c37519f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Projection: All</li></ul></li></ol><hr id="fae720e4-6f49-83d7-95d3-812aeab7df0d" dir="auto"/><h3 id="5b4720e4-6f49-827d-b157-81f165c644cc" class="" dir="auto">&gt;&gt; 확인 포인트</h3><ul id="0e9720e4-6f49-82c4-bd4a-817da9aaaedf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GSI 생성 완료 상태</li></ul><ul id="597720e4-6f49-82f4-b5d3-018e7c759cd5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">별도 용량 관리 없음 (On-Demand)</li></ul><hr id="5cc720e4-6f49-828e-b2cf-8168ce7781e2" dir="auto"/><h2 id="0bf720e4-6f49-82bb-b2f9-018f116e0a2b" class="" dir="auto">실습 6. GSI Query</h2><h3 id="8d6720e4-6f49-83f2-a1c5-81718b8fd63a" class="" dir="auto">1) 목표</h3><ul id="988720e4-6f49-8283-9d18-0159ce8e01ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GSI 기반 조회 수행</li></ul><hr id="2f0720e4-6f49-82a3-adf9-01578fe98c40" dir="auto"/><h3 id="e45720e4-6f49-8239-bec7-0188f75e47ee" class="" dir="auto">2) 실습 단계</h3><ol type="1" id="98e720e4-6f49-8237-960c-01b4392ed794" class="numbered-list" start="1" dir="auto"><li><strong>Explore table items</strong></li></ol><ol type="1" id="5c6720e4-6f49-8334-a652-01f675a792da" class="numbered-list" start="2" dir="auto"><li>Index 선택: <code>status-index</code></li></ol><ol type="1" id="d07720e4-6f49-83fc-89c8-0121b8c7d056" class="numbered-list" start="3" dir="auto"><li>Partition key = <code>PAID</code></li></ol><ol type="1" id="93a720e4-6f49-82c5-a8ee-018c0dbac8c6" class="numbered-list" start="4" dir="auto"><li>Query 실행</li></ol><hr id="012720e4-6f49-8327-8b60-018e746d4178" dir="auto"/><h3 id="573720e4-6f49-8384-af4d-8180ec1da89a" class="" dir="auto">3) 확인 포인트</h3><ul id="30c720e4-6f49-82d8-acf9-01351e73384e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>PAID</code> 상태 주문만 조회</li></ul><ul id="b17720e4-6f49-8264-a1fa-81de0fc7f370" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 테이블 키 없이도 조회 가능</li></ul><hr id="bed720e4-6f49-8367-b258-81ed189baab3" dir="auto"/><h2 id="0c3720e4-6f49-820b-a690-8106d4d8ecad" class="" dir="auto">실습 7. UpdateItem</h2><h3 id="d66720e4-6f49-82e1-9c17-01f57e577e61" class="" dir="auto">1) 목표</h3><ul id="dc2720e4-6f49-82eb-8a51-015acfd5480e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 속성만 수정</li></ul><hr id="e4f720e4-6f49-826a-97a9-81813f68472c" dir="auto"/><h3 id="028720e4-6f49-82ba-8c40-01977ee7fbe8" class="" dir="auto">2) 실습 단계</h3><ol type="1" id="fc9720e4-6f49-831b-af4b-010a88f40105" class="numbered-list" start="1" dir="auto"><li><code>user-001</code> / <code>order-001</code> 선택</li></ol><ol type="1" id="8ac720e4-6f49-8226-b112-01f15d16e3fa" class="numbered-list" start="2" dir="auto"><li><strong>Edit</strong></li></ol><ol type="1" id="1c4720e4-6f49-8331-9442-01017917a48c" class="numbered-list" start="3" dir="auto"><li><code>status</code> → <code>DELIVERED</code></li></ol><ol type="1" id="b1b720e4-6f49-8396-b837-01ba6bdd3572" class="numbered-list" start="4" dir="auto"><li>Save changes</li></ol><hr id="d7b720e4-6f49-8227-ab77-81301a512e27" dir="auto"/><h3 id="4a8720e4-6f49-82a1-95f6-81f2ba7a9d78" class="" dir="auto">&gt;&gt; 확인 포인트</h3><ul id="c3b720e4-6f49-820c-81aa-815c7cb94700" class="bulleted-list" dir="auto"><li style="list-style-type:disc">전체 아이템 덮어쓰지 않음</li></ul><ul id="21e720e4-6f49-8213-91e1-81c292bfbeed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">필요한 필드만 수정</li></ul><hr id="1e7720e4-6f49-83f8-a7d0-8139e5f0b17b" dir="auto"/><h2 id="293720e4-6f49-8398-9d75-01f0043c5c62" class="" dir="auto">실습 8. TTL(Time To Live)</h2><h3 id="1d2720e4-6f49-83f4-a841-019433d1f33e" class="" dir="auto">1) 목표</h3><ul id="1d5720e4-6f49-823b-911b-01c825a05810" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자동 데이터 삭제 기능 이해</li></ul><hr id="6b9720e4-6f49-8287-a923-01d50ba2a360" dir="auto"/><h3 id="036720e4-6f49-82cb-bd77-0100442b80be" class="" dir="auto">2) TTL 설정</h3><ol type="1" id="a63720e4-6f49-824a-9cbc-816659fa5a1c" class="numbered-list" start="1" dir="auto"><li>Table settings → <strong>TTL</strong></li></ol><ol type="1" id="7fc720e4-6f49-82e3-9203-81469efd84bd" class="numbered-list" start="2" dir="auto"><li>Attribute name: <code>expireAt</code></li></ol><ol type="1" id="e72720e4-6f49-8307-8e07-81530cc6ad2d" class="numbered-list" start="3" dir="auto"><li>Enable TTL</li></ol><hr id="87d720e4-6f49-83f7-a24d-8182f3e5ec38" dir="auto"/><h3 id="2d5720e4-6f49-82c6-94cb-81b949aa3317" class="" dir="auto">3) 아이템 수정</h3><pre id="b60720e4-6f49-83bc-bc3f-81c1ae419b87" class="code code-wrap" data-notion-code-syntax="json"><code class="language-json" style="white-space:pre-wrap;word-break:break-all">&quot;expireAt&quot;: 1767225600
+</code></pre><p id="9c6720e4-6f49-839a-9ba0-01a86f8e12fc" class="" dir="auto">(Unix Timestamp)</p><hr id="a51720e4-6f49-832b-a2e7-81b067c6497e" dir="auto"/><h3 id="040720e4-6f49-83f1-84c3-818437832522" class="" dir="auto">&gt;&gt; 확인 포인트</h3><ul id="160720e4-6f49-8337-a924-81956a131344" class="bulleted-list" dir="auto"><li style="list-style-type:disc">지정 시간 이후 자동 삭제</li></ul><ul id="c30720e4-6f49-825c-990e-01b01f25b7ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 / 세션 데이터에 유용</li></ul><hr id="c78720e4-6f49-825b-b170-01d60c60202b" dir="auto"/><h2 id="ee6720e4-6f49-8243-89c8-818646d173ae" class="" dir="auto">실습 9. 테이블 삭제 (정리)</h2><ol type="1" id="7ef720e4-6f49-836b-836b-010fdd608f5a" class="numbered-list" start="1" dir="auto"><li>DynamoDB → Tables</li></ol><ol type="1" id="25e720e4-6f49-8332-b503-013e08e64fb8" class="numbered-list" start="2" dir="auto"><li><code>Orders</code> 선택</li></ol><ol type="1" id="c22720e4-6f49-8282-b47a-811b9c14e5d5" class="numbered-list" start="3" dir="auto"><li>Delete table</li></ol><hr id="04c720e4-6f49-83f3-aba8-81776a669124" dir="auto"/><h2 id="b49720e4-6f49-8260-bc9d-016012ddf9f9" class="" dir="auto">실습 마무리 정리</h2><h3 id="925720e4-6f49-8247-9b50-01fa2e017ee3" class="" dir="auto">&gt;&gt; 핵심 정리</h3><ul id="416720e4-6f49-836e-8546-01eacc5e60cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB는 <strong>키 설계가 성능</strong></li></ul><ul id="29c720e4-6f49-8251-ac12-81cbdcdd3c07" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Query &gt; Scan</li></ul><ul id="037720e4-6f49-8371-937d-810dd79ef750" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GSI는 조회 패턴 확장 수단</li></ul><ul id="729720e4-6f49-82fc-8479-8170ccca5e8a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">On-Demand는 실습 &amp; 초기 서비스에 적합</li></ul><hr id="bd5720e4-6f49-820f-940e-01c89b7d4915" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

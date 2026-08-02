@@ -1,0 +1,840 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>AWS Route53 DNS 및 Routing Policy</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="ae7720e4-6f49-82ea-8ca5-81d11a4cd01a" class="page sans"><header><h1 class="page-title" dir="auto">AWS Route53 DNS 및 Routing Policy</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="b54720e4-6f49-8353-8f95-01fb1825243b" dir="auto"/><h1 id="bdf720e4-6f49-82cc-b3a8-81c5f6784073" class="" dir="auto">1. DNS 개념</h1><p id="1ed720e4-6f49-83fb-a7df-01a6a9fa7fa4" class="" dir="auto">DNS는 <strong>도메인 이름을 IP 주소로 변환하는 시스템</strong>이다.</p><p id="b35720e4-6f49-830a-ac84-01d1cebc8ea6" class="" dir="auto">예</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="85b720e4-6f49-821e-9edc-01831b9aa959" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.example.com → 54.180.10.20</code></pre><p id="c4b720e4-6f49-8231-8f1d-0189f50877d7" class="" dir="auto">사용자가 웹 브라우저에 도메인을 입력하면 다음 순서로 DNS 조회가 진행된다.</p><pre id="120720e4-6f49-830b-b2ca-01ce63050b3f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">사용자 PC
+   │
+   ▼
+Local DNS Resolver
+   │
+   ▼
+Root DNS
+   │
+   ▼
+TLD DNS (.com)
+   │
+   ▼
+Authoritative DNS
+(Route53)
+   │
+   ▼
+IP 반환</code></pre><p id="3c8720e4-6f49-830b-ae0b-01b8b56783c3" class="" dir="auto">Route53은 <strong>Authoritative DNS 서버 역할</strong>을 한다.</p><hr id="539720e4-6f49-8368-bf52-810a6c033226" dir="auto"/><h1 id="430720e4-6f49-83f7-9bed-016d68b30dcc" class="" dir="auto">2. Route53 서비스 개념</h1><p id="1b3720e4-6f49-828c-9c44-01f71759c562" class="" dir="auto">Route53은 AWS에서 제공하는 <strong>Managed DNS 서비스</strong>이다.</p><p id="257720e4-6f49-83e1-a6c2-0171ae48c651" class="" dir="auto">주요 기능</p><table id="74d720e4-6f49-83f5-84b8-816cf6583155" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="e60720e4-6f49-8217-a685-011517b89bd8" dir="ltr"><th id="dSWS" class="simple-table-header-color simple-table-header">기능</th><th id="=MOi" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="d1d720e4-6f49-8325-afb4-813801e513ff" dir="ltr"><td id="dSWS" class="">Domain Registration</td><td id="=MOi" class="">도메인 구매</td></tr><tr id="35c720e4-6f49-8290-bff5-81be9439c3e8" dir="ltr"><td id="dSWS" class="">Hosted Zone</td><td id="=MOi" class="">DNS 영역 관리</td></tr><tr id="6b8720e4-6f49-8395-8e5a-01597e492668" dir="ltr"><td id="dSWS" class="">Record</td><td id="=MOi" class="">DNS 레코드 설정</td></tr><tr id="1a8720e4-6f49-831e-87f6-8153f8d615bd" dir="ltr"><td id="dSWS" class="">Health Check</td><td id="=MOi" class="">서비스 상태 확인</td></tr><tr id="396720e4-6f49-8386-b6ef-8144eceba0fa" dir="ltr"><td id="dSWS" class="">Routing Policy</td><td id="=MOi" class="">트래픽 제어</td></tr></tbody></table><p id="27a720e4-6f49-8303-ba1f-018866f73da4" class="" dir="auto">이번 실습에서 사용할 기능</p><pre id="1d5720e4-6f49-83c8-98e3-01a535f582ea" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Hosted Zone
+DNS Record
+Routing Policy</code></pre><hr id="c6b720e4-6f49-8389-ac2c-017fbbf93d2e" dir="auto"/><h1 id="281720e4-6f49-8378-b5c9-01b8dc6b9812" class="" dir="auto">3. 실습 전체 아키텍처</h1><p id="867720e4-6f49-82a5-a9bb-0141ee5a2cc9" class="" dir="auto">교육 환경 구조</p><pre id="251720e4-6f49-83c9-9d5b-81c310dbdebd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">                 Internet
+                     │
+                     │
+               example.com
+                     │
+              Route53 Hosted Zone
+                     │
+       ┌─────────────┼─────────────┐
+       │             │             │
+student1.example.com
+student2.example.com
+student3.example.com
+       │
+       │
+       EC2</code></pre><p id="f79720e4-6f49-8301-9bf1-01ae52e8e8c5" class="" dir="auto"> <strong>자신의 서브도메인을 생성하여 서버를 연결</strong>한다.</p><hr id="a8e720e4-6f49-834b-8f7e-81720622a7a0" dir="auto"/><h1 id="086720e4-6f49-831a-aaaa-81cd7dc7ca72" class="" dir="auto">4. 실습 준비</h1><h3 id="9e1720e4-6f49-8375-81bf-01c5a7256f24" class="" dir="auto">1. 외부 도메인 구매</h3><p id="475720e4-6f49-822b-b05c-8170ac85c96f" class="" dir="auto">예</p><pre id="e49720e4-6f49-8210-8ca6-012ae3e464d4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cloudai.store</code></pre><p id="e5f720e4-6f49-83f6-abe0-01cb62ffef15" class="" dir="auto">구매 가능 사이트</p><pre id="b6a720e4-6f49-8396-b47d-01bf025d91cd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">가비아
+Namecheap
+GoDaddy
+Cloudflare</code></pre><hr id="2f1720e4-6f49-83eb-ae9c-01ce5b4afee3" dir="auto"/><h1 id="d76720e4-6f49-8263-9005-01649c0fa34b" class="" dir="auto">5. Route53 Hosted Zone 생성</h1><h2 id="352720e4-6f49-8340-b194-01348323a2db" class="" dir="auto">5.1 Route53 접속</h2><p id="526720e4-6f49-8393-a3a6-81e221c91f30" class="" dir="auto">AWS Console</p><pre id="7ff720e4-6f49-83ea-abc8-81d227334260" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Route53</code></pre><p id="264720e4-6f49-8370-be95-01feebc63007" class="" dir="auto">메뉴</p><pre id="e22720e4-6f49-82c1-9c30-811c0ea02566" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Hosted zones</code></pre><hr id="c99720e4-6f49-8228-bc8a-81dfb2b73b35" dir="auto"/><h2 id="b37720e4-6f49-82f7-8f65-81fcd737ce7c" class="" dir="auto">5.2 Hosted Zone 생성</h2><p id="71f720e4-6f49-822c-8d34-0192c9ddb819" class="" dir="auto">클릭</p><pre id="50f720e4-6f49-82d4-a212-810bb079f9a7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Create hosted zone</code></pre><p id="f6a720e4-6f49-8328-bfb4-0176175213d8" class="" dir="auto">설정</p><pre id="226720e4-6f49-8387-bf81-0185f07efca1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Domain name
+
+cloudai.store</code></pre><p id="bb5720e4-6f49-822b-b9d6-813ef091485d" class="" dir="auto">Type</p><pre id="803720e4-6f49-83a0-a9f1-818a0ff66f76" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Public Hosted Zone</code></pre><p id="ace720e4-6f49-83eb-a29d-018bd80be1ff" class="" dir="auto">생성</p><pre id="6b3720e4-6f49-83ee-8a9a-8106e66c8666" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Create hosted zone</code></pre><hr id="951720e4-6f49-82a4-a632-81c88b1843f7" dir="auto"/><h2 id="c4e720e4-6f49-8333-b885-01881873d76d" class="" dir="auto">5.3 생성 결과</h2><p id="bc8720e4-6f49-8218-8473-01691c281f9a" class="" dir="auto">Route53이 자동으로 NS 레코드를 생성한다.</p><p id="ce5720e4-6f49-82ca-a9ff-815932eddc3d" class="" dir="auto">예</p><pre id="252720e4-6f49-83db-8e26-811d3da82d23" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ns-123.awsdns-12.com
+ns-234.awsdns-34.net
+ns-345.awsdns-56.org
+ns-456.awsdns-78.co.uk</code></pre><p id="567720e4-6f49-83ac-a9d8-018a16e6db78" class="" dir="auto">이 값은 <strong>외부 도메인 DNS 설정에 등록해야 한다.</strong></p><hr id="d9e720e4-6f49-82bc-934e-81ec9b762fac" dir="auto"/><h1 id="3a4720e4-6f49-8289-896c-811a97346ee9" class="" dir="auto">6. 외부 도메인 NS 변경</h1><p id="235720e4-6f49-83af-bf81-819958ad9025" class="" dir="auto">도메인 구매 사이트에서</p><pre id="b3d720e4-6f49-82c0-9d6e-01c5325dbb67" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">cloudai.store</code></pre><p id="85b720e4-6f49-82c3-974d-817781053b10" class="" dir="auto">DNS 설정 변경</p><p id="3ee720e4-6f49-83ee-9d99-813ad52382d9" class="" dir="auto">기존</p><pre id="241720e4-6f49-820e-92a5-01a301147b88" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ns1.provider.com
+ns2.provider.com</code></pre><p id="723720e4-6f49-838a-bf1e-01f87b69e7bc" class="" dir="auto">삭제</p><p id="ac0720e4-6f49-8225-83b3-8171436562e6" class="" dir="auto">Route53 NS 등록</p><pre id="aec720e4-6f49-839e-91dd-01c6cf575900" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ns-123.awsdns-12.com
+ns-234.awsdns-34.net
+ns-345.awsdns-56.org
+ns-456.awsdns-78.co.uk</code></pre><hr id="78b720e4-6f49-8273-abe2-8176b0d75b7f" dir="auto"/><h1 id="028720e4-6f49-828d-8731-814d7c85cb13" class="" dir="auto">7. DNS 전파 확인</h1><p id="ccf720e4-6f49-83f0-b9c5-01850d1dd5cf" class="" dir="auto">명령어</p><pre id="086720e4-6f49-830d-a12f-0110a147bd4d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">dig NS cloudai.store</code></pre><p id="bb1720e4-6f49-83bd-b5fb-818a7d4894ad" class="" dir="auto">또는</p><pre id="484720e4-6f49-833f-85b6-81c9566850ee" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">nslookup cloudai.store</code></pre><p id="629720e4-6f49-831a-a3c4-817ab28c07aa" class="" dir="auto">DNS 전파 시간</p><pre id="db8720e4-6f49-822e-9347-018c876cfce6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">5~30분</code></pre><hr id="ff8720e4-6f49-82d6-a0b9-818ab74d39ee" dir="auto"/><h1 id="199720e4-6f49-82d4-b0d7-01017f57f83e" class="" dir="auto">8. 서브도메인 생성</h1><p id="376720e4-6f49-835a-8853-012263eb02c8" class="" dir="auto">자신의 서브도메인을 생성한다.</p><p id="02c720e4-6f49-8293-81c9-015c10bb4588" class="" dir="auto">예</p><pre id="42e720e4-6f49-839a-906a-817ba56b1698" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜.cloudai.store
+st2.cloudai.store
+st3.cloudai.store</code></pre><p id="731720e4-6f49-82c1-b947-01e1c6ff4f12" class="" dir="auto">서브도메인을 호스팅 영역에 등록하고,  생성된 NS 정보를 메인 도메인에 NS레코드로 생성한다.</p><hr id="7dd720e4-6f49-836c-8ed2-01bc70571fd6" dir="auto"/><h1 id="8b3720e4-6f49-8320-89a2-0136756133ad" class="" dir="auto">9. EC2 웹서버 생성</h1><p id="4f8720e4-6f49-82e4-b2f6-81a187be5299" class="" dir="auto">EC2 생성</p><p id="2d5720e4-6f49-8263-941e-81fdb1423ad6" class="" dir="auto">이름</p><pre id="aea720e4-6f49-8210-bbd4-81ec685ed532" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">이니셜-web</code></pre><p id="ce3720e4-6f49-832e-9dab-01fefd2cf2f6" class="" dir="auto">보안그룹</p><pre id="c60720e4-6f49-834c-9115-01e817268fef" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">SSH 22
+HTTP 80</code></pre><hr id="fa8720e4-6f49-82ad-84bb-81208f09c51e" dir="auto"/><h1 id="958720e4-6f49-83e1-8330-0131a0046c92" class="" dir="auto">10. 웹서버 설치</h1><p id="5eb720e4-6f49-83be-8a32-0135b0f4e62f" class="" dir="auto">EC2 접속</p><pre id="388720e4-6f49-830f-b79f-819244c5acc2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ssh ec2-user@EC2-IP</code></pre><p id="ced720e4-6f49-83e1-bdc7-81865357dd02" class="" dir="auto">웹서버 설치</p><pre id="f55720e4-6f49-8227-97a4-01a5342e12d1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo yum install httpd -y</code></pre><p id="f94720e4-6f49-828c-9e52-817c01068fa8" class="" dir="auto">서비스 시작</p><pre id="6e9720e4-6f49-8240-affb-01be05874686" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl start httpd</code></pre><p id="c4b720e4-6f49-822f-94ef-010418780e41" class="" dir="auto">자동 시작</p><pre id="71e720e4-6f49-8269-b61e-8170ff77fbd0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl enable httpd</code></pre><hr id="bbd720e4-6f49-837a-a63b-81f62fbdeb83" dir="auto"/><h1 id="c84720e4-6f49-8204-ae6c-81f20606c231" class="" dir="auto">11. 웹페이지 생성</h1><pre id="44c720e4-6f49-83a6-8542-8142d6b663f0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo vi /var/www/html/index.html</code></pre><p id="6d3720e4-6f49-83b7-a246-014f7df0d7fe" class="" dir="auto">내용</p><pre id="77f720e4-6f49-83d6-8483-01e4b55ddf9e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&lt;h1&gt;이니셜 web server&lt;/h1&gt;</code></pre><hr id="acd720e4-6f49-82ca-bfa7-81ec6a54a2a7" dir="auto"/><h1 id="bd3720e4-6f49-83a9-84e8-81b46ca442c9" class="" dir="auto">12. Route53 DNS 레코드 생성</h1><p id="1f9720e4-6f49-8352-9815-815596f6e8b4" class="" dir="auto">Route53</p><pre id="8fd720e4-6f49-8208-ac5f-0151e67ad737" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Hosted zones</code></pre><p id="f05720e4-6f49-8341-8c2b-012168b271cd" class="" dir="auto">이동</p><pre id="1c7720e4-6f49-8277-be06-81163f3bc09d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">example.com</code></pre><hr id="98d720e4-6f49-82a6-974e-81d4add85395" dir="auto"/><h2 id="04c720e4-6f49-83c1-9391-81ca58230940" class="" dir="auto">레코드 생성</h2><p id="7e6720e4-6f49-82df-91b0-01cef6a153db" class="" dir="auto">클릭</p><pre id="b62720e4-6f49-82b3-ab04-8105e61c3f6d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Create record</code></pre><p id="bb6720e4-6f49-836f-bbb6-81067f04e310" class="" dir="auto">설정</p><pre id="fae720e4-6f49-8225-a9cb-0139b7ebbe17" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Record name
+
+student1</code></pre><p id="baf720e4-6f49-8249-acce-01f4f817ba7f" class="" dir="auto">Type</p><pre id="b96720e4-6f49-83a1-af92-01cf734276c9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">A Record</code></pre><p id="880720e4-6f49-8256-a73e-8131de4ceb6f" class="" dir="auto">Value</p><pre id="3f9720e4-6f49-8238-86ee-0172e21352ee" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 Public IP</code></pre><p id="90d720e4-6f49-82a0-8c6a-018ab2b799b6" class="" dir="auto">예</p><pre id="72a720e4-6f49-8274-8efa-018f571174d2" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">54.180.20.10</code></pre><hr id="5b4720e4-6f49-83f7-ab99-0131dd659bd9" dir="auto"/><h1 id="a4b720e4-6f49-8313-8eac-81c83f7fe302" class="" dir="auto">13. DNS 테스트</h1><pre id="488720e4-6f49-8355-9c29-015b34b2478a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">nslookup 이니셜.cloudai.store</code></pre><p id="ec0720e4-6f49-83b6-9a58-8102fa5b7cc3" class="" dir="auto">또는</p><pre id="010720e4-6f49-8367-b7d8-0105bcd9b45d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">dig 이니셜.cloudai.store</code></pre><p id="b58720e4-6f49-836a-958c-81ff119525a3" class="" dir="auto">브라우저 접속</p><pre id="520720e4-6f49-8344-afd4-01f63ed0e1dc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://이니셜.cloudai.store</code></pre><hr id="d21720e4-6f49-8208-8785-01477357652d" dir="auto"/><h1 id="011720e4-6f49-8317-9219-81001a99d6dc" class="" dir="auto">14. Route53 Routing Policy</h1><p id="8e1720e4-6f49-8332-9d1b-01f142eaceef" class="" dir="auto">Routing Policy는 <strong>DNS 트래픽을 제어하는 방식</strong>이다.</p><p id="036720e4-6f49-8332-a55a-81c552c045ee" class="" dir="auto">주요 정책</p><table id="6d7720e4-6f49-83ff-ab93-81fa60581f47" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="e2a720e4-6f49-8299-82dd-010579aba1ac" dir="ltr"><th id="~Kqw" class="simple-table-header-color simple-table-header">Routing Policy</th><th id="{oDT" class="simple-table-header-color simple-table-header">설명</th></tr></thead><tbody><tr id="db0720e4-6f49-8334-a93c-81c1cee68527" dir="ltr"><td id="~Kqw" class="">Simple</td><td id="{oDT" class="">기본 DNS</td></tr><tr id="d42720e4-6f49-82de-89bc-01e3cc73b574" dir="ltr"><td id="~Kqw" class="">Weighted</td><td id="{oDT" class="">트래픽 비율 분산</td></tr><tr id="97d720e4-6f49-83a1-b746-013be79fc494" dir="ltr"><td id="~Kqw" class="">Latency</td><td id="{oDT" class="">사용자 위치 기준</td></tr><tr id="b3d720e4-6f49-8267-87a8-018138064361" dir="ltr"><td id="~Kqw" class="">Failover</td><td id="{oDT" class="">장애 시 서버 변경</td></tr><tr id="084720e4-6f49-82c1-a1ad-815f43630b7c" dir="ltr"><td id="~Kqw" class="">Geolocation</td><td id="{oDT" class="">국가 기준 라우팅</td></tr><tr id="31e720e4-6f49-8337-9b78-019a2d84b5d4" dir="ltr"><td id="~Kqw" class="">Multi-value</td><td id="{oDT" class="">여러 IP 반환</td></tr></tbody></table><hr id="4b2720e4-6f49-8333-a0ca-818137762dc8" dir="auto"/><h1 id="040720e4-6f49-820c-917f-81e7aa7be44a" class="" dir="auto">15. Weighted Routing 실습</h1><p id="d2b720e4-6f49-8388-9319-816412d962f9" class="" dir="auto">Weighted Routing은 <strong>트래픽을 비율로 분산</strong>한다.</p><p id="e88720e4-6f49-82ac-bdc8-81e8020ed5c9" class="" dir="auto">예</p><pre id="b21720e4-6f49-83fa-9bcb-0117b33943a9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.이니셜.cloudai.store
+     │
+ ┌───┴────┐
+ │        │
+EC2-A   EC2-B
+ 80%     20%</code></pre><hr id="39b720e4-6f49-839e-adee-81ad594a74d1" dir="auto"/><h2 id="460720e4-6f49-8248-a30f-8180543ec22c" class="" dir="auto">EC2 서버 2개 생성</h2><pre id="482720e4-6f49-82c6-b889-015ccfd28119" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">web-a
+web-b</code></pre><p id="5f2720e4-6f49-82fe-b584-811564aa69dd" class="" dir="auto">웹페이지 생성</p><p id="aab720e4-6f49-828e-a7b4-817c9f03e099" class="" dir="auto">서버 A</p><pre id="34c720e4-6f49-8349-94dd-817aaa0cb8d0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&lt;h1&gt;server A&lt;/h1&gt;</code></pre><p id="605720e4-6f49-83af-9ba2-81776536ea72" class="" dir="auto">서버 B</p><pre id="91e720e4-6f49-8338-97f5-01be83a63fec" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">&lt;h1&gt;server B&lt;/h1&gt;</code></pre><hr id="29a720e4-6f49-8365-868c-0100e1ab8864" dir="auto"/><h2 id="48e720e4-6f49-823a-b7a4-01744da84458" class="" dir="auto">Route53 레코드 생성</h2><p id="175720e4-6f49-8220-a592-819a28098e01" class="" dir="auto">Record name</p><pre id="17c720e4-6f49-83a5-bbaa-0106cbee5b1d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">www.이니셜.cloudai.store</code></pre><p id="de1720e4-6f49-8240-af3d-013112fa4ac2" class="" dir="auto">Routing Policy</p><pre id="016720e4-6f49-8283-8eb6-8163014f9373" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Weighted</code></pre><hr id="1ae720e4-6f49-8235-938a-01c3b53e2bc6" dir="auto"/><h3 id="552720e4-6f49-8376-ad66-8138134ba859" class="" dir="auto">레코드1</h3><pre id="494720e4-6f49-83e9-bca4-81b78456ab52" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Value
+
+EC2-A-IP</code></pre><p id="b27720e4-6f49-8202-9a49-81a6cbe91bf6" class="" dir="auto">Weight</p><pre id="fec720e4-6f49-8302-8598-81b48d24460e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">80</code></pre><hr id="5a0720e4-6f49-832e-ab58-015cc6b10bfb" dir="auto"/><h3 id="d21720e4-6f49-83c8-9af7-0151b8dadec2" class="" dir="auto">레코드2</h3><pre id="9ed720e4-6f49-83cf-8a61-01fa1a2cabd7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Value
+
+EC2-B-IP</code></pre><p id="15e720e4-6f49-8239-bbcb-012eef138d97" class="" dir="auto">Weight</p><pre id="59d720e4-6f49-8288-a6d4-018976b00deb" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">20</code></pre><hr id="c21720e4-6f49-825a-8cde-01415f75dba5" dir="auto"/><h2 id="86d720e4-6f49-8212-af80-81f45043165b" class="" dir="auto">테스트</h2><p id="be1720e4-6f49-837f-9d5d-8189cffa5b55" class="" dir="auto">브라우저 새로고침 반복</p><pre id="e39720e4-6f49-82f3-b16d-814c348f2757" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://www.이니셜.cloudai.store</code></pre><p id="e72720e4-6f49-82b1-b7c2-01475f029f3c" class="" dir="auto">서버 A가 더 많이 나타난다.</p><hr id="b6e720e4-6f49-8306-9f70-81b43c0452c2" dir="auto"/><h1 id="8f5720e4-6f49-8273-bb65-01eec1b75f9a" class="" dir="auto">16. Failover Routing 실습</h1><p id="f20720e4-6f49-836b-ae22-81b80be74dc4" class="" dir="auto">Failover는 <strong>장애 발생 시 서버를 변경</strong>한다.</p><p id="231720e4-6f49-82c4-8b6c-0184588b9e01" class="" dir="auto">구조</p><pre id="923720e4-6f49-83c1-9b1c-813874e72dc4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Primary Server
+      │
+      │ 장애 발생
+      ▼
+Secondary Server</code></pre><hr id="ccc720e4-6f49-8213-8dd3-812c4ef618e1" dir="auto"/><h2 id="030720e4-6f49-8262-971e-81d9edde52f0" class="" dir="auto">서버 2개 준비</h2><pre id="4f9720e4-6f49-826b-93a2-81f12ff9c3fa" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">web-primary
+web-backup</code></pre><hr id="5fa720e4-6f49-82d0-b9ae-8188ebb3db83" dir="auto"/><h2 id="d8e720e4-6f49-82e4-92bb-81625e7efc7c" class="" dir="auto">Health Check 생성</h2><p id="885720e4-6f49-8308-a1ba-013cc2979a96" class="" dir="auto">Route53</p><pre id="390720e4-6f49-83db-82fb-01cc0bebc908" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Health Checks</code></pre><p id="e27720e4-6f49-83b8-aee2-81d738e9bac7" class="" dir="auto">생성</p><p id="a95720e4-6f49-82ac-94d7-0136f9f666c6" class="" dir="auto">설정</p><pre id="434720e4-6f49-8340-a20e-81ff34490f73" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Protocol
+
+HTTP</code></pre><p id="03d720e4-6f49-823b-b08e-81c03bf59dda" class="" dir="auto">Endpoint</p><pre id="1eb720e4-6f49-82e5-8597-017855852d3e" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Primary server IP</code></pre><hr id="ea2720e4-6f49-8355-ae62-0135fe3d2ac5" dir="auto"/><h2 id="a4b720e4-6f49-83e9-b134-81846f205c51" class="" dir="auto">DNS 설정</h2><p id="e8d720e4-6f49-826a-81e6-817c3526590b" class="" dir="auto">Record name</p><pre id="c49720e4-6f49-8278-b92d-81f087139ca3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">fail.example.com</code></pre><p id="083720e4-6f49-83c1-90e5-81786cd48bf9" class="" dir="auto">Routing policy</p><pre id="331720e4-6f49-83ff-8cc5-816aa6582c38" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Failover</code></pre><hr id="6c2720e4-6f49-8325-a331-01380f599640" dir="auto"/><p id="777720e4-6f49-83f2-b95c-81dcea53701f" class="" dir="auto">Primary record</p><pre id="a44720e4-6f49-829f-b357-81462e95c66a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Primary server IP</code></pre><p id="c9f720e4-6f49-82c1-af3f-814388ed75a8" class="" dir="auto">Health Check 연결</p><p id="6df720e4-6f49-83b1-9695-817cb39fdde8" class="" dir="auto">레코드ID 입력 : Main</p><hr id="246720e4-6f49-832d-a021-81fade187e2a" dir="auto"/><p id="c03720e4-6f49-8288-8f9d-8114e9de58f5" class="" dir="auto">Secondary record</p><pre id="ebd720e4-6f49-82ec-9a02-81f8736abbd1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Backup server IP</code></pre><p id="31e720e4-6f49-820b-9554-017c975c87c0" class="" dir="auto">Failover type</p><pre id="61e720e4-6f49-833e-8fb7-818b2b4d17dc" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Secondary</code></pre><p id="23d720e4-6f49-839b-9904-81aa077bcd53" class="" dir="auto">레코드ID 입력 : Backup</p><hr id="63a720e4-6f49-820c-bab2-8141f423ac33" dir="auto"/><h2 id="fb6720e4-6f49-8354-aca3-81c3c59c8261" class="" dir="auto">테스트</h2><p id="bb9720e4-6f49-838f-8532-81fc687bd91e" class="" dir="auto">Primary 서버 중지</p><pre id="c55720e4-6f49-835a-972e-019cc96c86fd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl stop httpd</code></pre><p id="bca720e4-6f49-8226-a959-81977f231bdb" class="" dir="auto">DNS 자동 변경 확인</p><pre id="705720e4-6f49-8381-bd43-013513d7d3ab" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">fail.이니셜.cloudai.store</code></pre><p id="07d720e4-6f49-8396-a231-01a9086785fd" class="" dir="auto">Backup 서버로 접속된다.</p><hr id="825720e4-6f49-836d-8d53-0166a71eece8" dir="auto"/><h1 id="f72720e4-6f49-8306-98f8-01986866bbca" class="" dir="auto">17. Latency Routing 실습</h1><p id="b6e720e4-6f49-82e1-9f7b-81c40b87ddd3" class="" dir="auto">Latency Routing은 <strong>사용자와 가장 가까운 리전에 연결</strong>한다.</p><p id="182720e4-6f49-823b-82b4-01f2eaf01afa" class="" dir="auto">구조</p><pre id="fb2720e4-6f49-834b-ada0-013db61f0cbf" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+ │
+ │
+ ├─ Asia → ap-northeast-2
+ │
+ └─ US → us-east-1</code></pre><hr id="d1f720e4-6f49-8249-a2b8-0141b6af7163" dir="auto"/><h2 id="e0b720e4-6f49-8334-841c-0118fbcfce87" class="" dir="auto">서버 생성</h2><pre id="3b4720e4-6f49-83e4-bd1d-81b38884a775" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Seoul EC2
+Virginia EC2</code></pre><hr id="fca720e4-6f49-8233-854f-8195566f41db" dir="auto"/><h2 id="8b1720e4-6f49-82e9-bf85-8108a3ad9d91" class="" dir="auto">Route53 설정</h2><p id="607720e4-6f49-8354-9523-01b178a1db73" class="" dir="auto">Record name</p><pre id="960720e4-6f49-8329-a8e1-019f9b0e42d9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">latency.이니셜.cloudai.store</code></pre><p id="ff4720e4-6f49-8314-a49d-01d0eac386c5" class="" dir="auto">Routing policy</p><pre id="fd6720e4-6f49-83a5-a9a9-8139e744a6c0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Latency</code></pre><p id="571720e4-6f49-830d-ba73-81dc5141575d" class="" dir="auto">Region 지정</p><pre id="ecc720e4-6f49-822d-9b63-014a42610ced" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">ap-northeast-2
+us-east-1</code></pre><hr id="34f720e4-6f49-8311-abd5-0179bdd47837" dir="auto"/><h1 id="300720e4-6f49-8319-9d35-8135c57b6ffb" class="" dir="auto">18. 다중값 응답 (Multivalue Answer) 실습</h1><p id="e33720e4-6f49-828a-b765-818aefa5f12b" class="" dir="auto">다중값 응답 라우팅은 단순 라운드로빈과 비슷해 보이지만, <strong>Health Check와 연동 가능</strong>하다는 점이 중요하다.</p><p id="67c720e4-6f49-82ba-a46a-01a589261ff7" class="" dir="auto">상태 확인이 정상인 레코드만 DNS 응답에 포함되며, 최대 8개의 정상 레코드를 무작위로 반환한다.</p><p id="a98720e4-6f49-8232-b7dc-017928c6e955" class="" dir="auto">즉, 다음과 같은 상황에서 유용하다.</p><ul id="045720e4-6f49-8236-8152-818fe551789d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 서버에 트래픽을 분산하고 싶을 때</li></ul><ul id="fc2720e4-6f49-82ce-8513-81c0b2b73bfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 서버 장애 시 DNS 응답에서 자동 제외시키고 싶을 때</li></ul><ul id="767720e4-6f49-8293-a451-01f9c540241c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로드밸런서 없이 간단한 가용성 분산 효과를 확인하고 싶을 때</li></ul><h2 id="f0f720e4-6f49-832e-acef-81b7f709a7b2" class="" dir="auto">실습 구성</h2><ol type="1" id="c07720e4-6f49-8280-bd3f-01854797ed2e" class="numbered-list" start="1" dir="auto"><li>동일한 이름으로 A 레코드 2개를 생성한다.</li></ol><ol type="1" id="3a2720e4-6f49-82e7-9cc9-81e9ad986096" class="numbered-list" start="2" dir="auto"><li>두 레코드 모두 라우팅 정책을 <strong>다중값 응답</strong>으로 설정한다.</li></ol><ol type="1" id="568720e4-6f49-8391-ba3e-81e2a1cb6762" class="numbered-list" start="3" dir="auto"><li>각 레코드에 서로 다른 IP를 입력한다.</li></ol><ol type="1" id="ea0720e4-6f49-8322-a4e2-81d3b241d147" class="numbered-list" start="4" dir="auto"><li>필요 시 각 레코드에 <strong>Health Check</strong>를 연결한다.</li></ol><ol type="1" id="4ee720e4-6f49-823d-a6f1-012426e4fec9" class="numbered-list" start="5" dir="auto"><li>한쪽 서버를 중지하거나 웹 서비스 응답을 끊어서 DNS 응답에서 해당 IP가 사라지는지 확인한다.</li></ol><h2 id="be3720e4-6f49-82d0-82f4-0166e660924c" class="" dir="auto">실습 절차</h2><h3 id="d60720e4-6f49-8266-baea-01821840b626" class="" dir="auto">1) 레코드 생성</h3><p id="3c3720e4-6f49-8236-aea7-8191e906e986" class="" dir="auto">Route 53 Hosted Zone으로 이동한 뒤, 동일한 이름의 A 레코드를 2개 만든다.</p><p id="47b720e4-6f49-8349-9b23-819c546363f5" class="" dir="auto">예시</p><ul id="9c4720e4-6f49-8227-9647-8199fe00024e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 이름: <code>api.example.com</code></li></ul><ul id="183720e4-6f49-827a-b6a6-8155d52acbe9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 유형: <code>A</code></li></ul><h3 id="81c720e4-6f49-828d-bbda-0111c075783e" class="" dir="auto">레코드 1</h3><ul id="24c720e4-6f49-8338-9163-817912af474f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">값: 서버 1의 공인 IP</li></ul><ul id="8a4720e4-6f49-8255-9768-01b60c3bf4c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅 정책: <code>다중값 응답</code></li></ul><ul id="2f3720e4-6f49-83b4-bf04-0171646d6993" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 ID: <code>server-01</code></li></ul><h3 id="fa4720e4-6f49-8234-8119-0136bc5aa085" class="" dir="auto">레코드 2</h3><ul id="0a0720e4-6f49-8213-85ba-015f23a4cf61" class="bulleted-list" dir="auto"><li style="list-style-type:disc">값: 서버 2의 공인 IP</li></ul><ul id="f45720e4-6f49-8357-bffc-01b6dba90d4f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">라우팅 정책: <code>다중값 응답</code></li></ul><ul id="85d720e4-6f49-832d-a75d-011d4537ebb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 ID: <code>server-02</code></li></ul><h2 id="614720e4-6f49-8308-b4d1-0199137dca99" class="" dir="auto">Health Check 연결</h2><p id="842720e4-6f49-838f-8ec3-01260e603cd7" class="" dir="auto">각 레코드에 개별적으로 Health Check를 연결할 수 있다.</p><p id="2bb720e4-6f49-83fb-8a37-012110290e77" class="" dir="auto">예를 들어 다음처럼 구성한다.</p><ul id="ce5720e4-6f49-82ea-821a-81012fd668a5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>server-01</code> → EC2-1의 HTTP 상태 확인</li></ul><ul id="ac3720e4-6f49-828c-b0dd-81a3ca2b376d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>server-02</code> → EC2-2의 HTTP 상태 확인</li></ul><p id="43b720e4-6f49-82d5-a09a-015788a84649" class="" dir="auto">Health Check를 연결하면, 특정 서버가 비정상 상태가 되었을 때 해당 IP는 DNS 응답에서 제외된다.</p><h2 id="b88720e4-6f49-82bb-a777-8157631febd2" class="" dir="auto">검증 방법</h2><h3 id="43d720e4-6f49-82d9-ba3c-01cff7c66281" class="" dir="auto">Linux / macOS</h3><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="245720e4-6f49-82b7-b213-8115afd3dcb4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">dig api.example.com</code></pre><p id="fec720e4-6f49-826f-8d12-811c7bb03473" class="" dir="auto">여러 번 반복 실행</p><pre id="c20720e4-6f49-82e5-ab89-81a3897f1b50" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">for i in {1..10}; do dig +short api.example.com; done</code></pre><h3 id="f02720e4-6f49-8305-a870-01a30532e5f3" class="" dir="auto">Windows</h3><pre id="616720e4-6f49-8271-98f6-81a746b42195" class="code code-wrap" data-notion-code-syntax="powershell"><code class="language-powershell" style="white-space:pre-wrap;word-break:break-all">nslookup api.example.com</code></pre><h2 id="79b720e4-6f49-83b3-9c82-81ace995ad43" class="" dir="auto">확인 포인트</h2><ul id="e6d720e4-6f49-8348-9b8b-818406e60ef7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">두 서버가 모두 정상일 때는 두 IP가 번갈아 또는 함께 조회될 수 있음</li></ul><ul id="489720e4-6f49-8215-84c5-81228c5516f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한 서버를 중지하거나 Health Check 실패 상태로 만들면, 해당 IP가 응답에서 제외됨</li></ul><ul id="270720e4-6f49-83b9-a2b0-01d95aa51d0c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일반 단순 라우팅보다 가용성 측면에서 더 유리함</li></ul><h1 id="617720e4-6f49-83c3-8ba9-81d0a3d56e6a" class="" dir="auto">19. IP 기반 (IP-based) 라우팅 실습</h1><h2 id="4f7720e4-6f49-82a0-8fb2-01508eba4f3b" class="" dir="auto">실습 목적</h2><p id="d29720e4-6f49-8314-84ea-811498e2e789" class="" dir="auto">클라이언트의 <strong>소스 IP 주소 대역(CIDR)</strong> 에 따라 서로 다른 엔드포인트로 라우팅되는 동작을 확인한다.</p><h2 id="c15720e4-6f49-824b-8103-0166db14994d" class="" dir="auto">핵심 개념</h2><p id="187720e4-6f49-826f-8e0a-81ab678df477" class="" dir="auto">IP 기반 라우팅은 사용자가 어디에 있는지가 아니라, <strong>어떤 IP 대역에서 접속했는가</strong>를 기준으로 응답을 다르게 준다.</p><p id="284720e4-6f49-823f-9be1-8152f613c9a3" class="" dir="auto">이 방식은 다음과 같은 경우에 적합하다.</p><ul id="76a720e4-6f49-8397-9f6b-017cb5171bd2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 기업망 사용자만 내부 서비스로 연결하고 싶을 때</li></ul><ul id="15e720e4-6f49-83d9-a718-81cb2f6fbee0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사무실 네트워크와 외부 사용자를 다르게 분기하고 싶을 때</li></ul><ul id="4a8720e4-6f49-83c4-8995-81a8ccb5d50c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 ISP 또는 특정 NAT 대역에 대해 별도 응답을 주고 싶을 때</li></ul><h2 id="6d4720e4-6f49-8394-8768-81625d62af72" class="" dir="auto">실습 구성</h2><ol type="1" id="f15720e4-6f49-838e-85cb-81af7bd4d765" class="numbered-list" start="1" dir="auto"><li>Route 53에서 <strong>CIDR 컬렉션(IP 집합)</strong> 을 생성한다.</li></ol><ol type="1" id="f6f720e4-6f49-829f-b17d-0197e9e734e9" class="numbered-list" start="2" dir="auto"><li>특정 CIDR 대역에 대해 서버 A로 응답하도록 설정한다.</li></ol><ol type="1" id="7d5720e4-6f49-82d7-b8d8-81f8e71cb60f" class="numbered-list" start="3" dir="auto"><li>나머지 요청은 기본값(Default)으로 서버 B에 연결되도록 설정한다.</li></ol><ol type="1" id="51d720e4-6f49-8230-8b71-01214ac3452a" class="numbered-list" start="4" dir="auto"><li>서로 다른 네트워크에서 질의하여 결과가 달라지는지 확인한다.</li></ol><h2 id="92a720e4-6f49-82bf-8e21-015403c5373a" class="" dir="auto">실습 절차</h2><h3 id="eca720e4-6f49-83b1-b885-011339d96e1f" class="" dir="auto">1) CIDR 컬렉션 생성</h3><p id="c22720e4-6f49-83b9-b369-01c089ef2668" class="" dir="auto">Route 53 메뉴에서 <strong>IP 집합(CIDR Collections)</strong> 을 생성한다.</p><p id="1c3720e4-6f49-8269-abb9-81d87c7f5f82" class="" dir="auto">예시</p><ul id="0d0720e4-6f49-836a-b4e0-01463400678b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름: <code>MyOfficeNetwork</code></li></ul><ul id="371720e4-6f49-821f-9224-0139ff359070" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CIDR 범위: <code>현재 사무실 공인 IP/32</code></li></ul><p id="90c720e4-6f49-82a0-a975-013217876b86" class="" dir="auto">예</p><pre id="6b0720e4-6f49-8254-8e52-81b70c3d2113" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">203.0.113.10/32</code></pre><p id="f58720e4-6f49-8355-b305-81be7be1feb3" class="" dir="auto">단일 공인 IP만 테스트할 경우 <code>/32</code>를 사용하면 된다.</p><p id="6aa720e4-6f49-8394-9fa9-01485f7b1c79" class="" dir="auto">여러 대역을 포함하려면 <code>/24</code>, <code>/16</code>처럼 더 넓은 범위를 사용할 수 있다.</p><h3 id="42a720e4-6f49-828a-bd24-81a508e7c1a5" class="" dir="auto">2) 레코드 생성</h3><p id="5ab720e4-6f49-8297-aee1-0110429d9881" class="" dir="auto">동일한 도메인 이름으로 A 레코드를 생성한다.</p><p id="cda720e4-6f49-82f9-a31f-010e009f0735" class="" dir="auto">예시</p><ul id="60f720e4-6f49-82d8-ac1d-01896b97294d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 이름: <code>app.example.com</code></li></ul><ul id="7b1720e4-6f49-83db-a884-0119bdc0e6a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 유형: <code>A</code></li></ul><h3 id="c7b720e4-6f49-8264-a8bd-812ee9697ff5" class="" dir="auto">3) 라우팅 정책 선택</h3><p id="4d6720e4-6f49-8330-b2b8-817019fa7154" class="" dir="auto">라우팅 정책을 <strong>IP 기반</strong>으로 설정한다.</p><h3 id="949720e4-6f49-8270-a248-01c1120ab338" class="" dir="auto">4) 매핑 설정</h3><p id="b7b720e4-6f49-8201-9665-818e2d40ebda" class="" dir="auto">예시 구성</p><ul id="9a2720e4-6f49-8329-9310-81692cb2fda2" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>MyOfficeNetwork</code>에 매칭되면 → 서버 A의 IP 반환</li></ul><ul id="b53720e4-6f49-83db-ad65-81c43e0b5543" class="bulleted-list" dir="auto"><li style="list-style-type:disc">매칭되지 않으면(Default) → 서버 B의 IP 반환</li></ul><p id="730720e4-6f49-825f-8578-81a21d343ae8" class="" dir="auto">예시 시나리오</p><ul id="1f9720e4-6f49-8331-b877-8172f059468d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사무실 네트워크 사용자 → <code>10.10.10.10</code></li></ul><ul id="0dc720e4-6f49-8325-971c-81ad64e01137" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 사용자 → <code>20.20.20.20</code></li></ul><h2 id="7a7720e4-6f49-827f-aead-01c8d31d5aab" class="" dir="auto">검증 방법</h2><p id="21f720e4-6f49-83ff-9636-81b03af2f36d" class="" dir="auto">서로 다른 네트워크에서 동일한 도메인에 대해 조회한다.</p><h3 id="342720e4-6f49-8387-98b4-014517642c66" class="" dir="auto">Linux / macOS</h3><pre id="014720e4-6f49-83f5-b237-8186edf40ad0" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">dig app.example.com</code></pre><h3 id="06a720e4-6f49-82a8-92e6-81c78794a2de" class="" dir="auto">Windows</h3><pre id="1ee720e4-6f49-83cb-8045-81de91d9b816" class="code code-wrap" data-notion-code-syntax="powershell"><code class="language-powershell" style="white-space:pre-wrap;word-break:break-all">nslookup app.example.com</code></pre><h2 id="081720e4-6f49-82e7-aafc-01f193f26efb" class="" dir="auto">확인 포인트</h2><ul id="e5b720e4-6f49-823b-baa6-81676ceb219c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사무실 IP 대역에서 조회하면 서버 A로 연결됨</li></ul><ul id="ad3720e4-6f49-8206-be08-8162d03701b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다른 네트워크에서 조회하면 기본값인 서버 B로 연결됨</li></ul><ul id="b57720e4-6f49-83e4-9afa-01639e1cd333" class="bulleted-list" dir="auto"><li style="list-style-type:disc">위치 기반 라우팅과 달리, 지리적 위치가 아니라 <strong>소스 IP 대역</strong> 자체가 기준임</li></ul><h2 id="a7d720e4-6f49-8288-acd3-01fdf0a8f32c" class="" dir="auto">정리</h2><p id="bf7720e4-6f49-8237-a6ea-817c8f6e9bb3" class="" dir="auto">IP 기반 라우팅은 사용자 그룹을 네트워크 기준으로 구분할 때 매우 직관적이다.</p><p id="9e1720e4-6f49-82d9-bd6e-01c51a0dea7e" class="" dir="auto">기업망, 협력사망, 관리자망처럼 <strong>명확한 CIDR 대역이 있는 환경</strong>에서 특히 유용하다.</p><hr id="b81720e4-6f49-8282-9dca-01ac6d4d23a5" dir="auto"/><h1 id="2d0720e4-6f49-829c-a9e9-8126d2725874" class="" dir="auto">20. 지리 근접성 (Geoproximity) 라우팅 실습</h1><h2 id="b90720e4-6f49-824b-ac75-01235f904a5e" class="" dir="auto">실습 목적</h2><p id="95b720e4-6f49-83da-8a17-016326b343a5" class="" dir="auto">리소스가 배치된 지리적 위치를 기준으로 사용자를 가장 가까운 엔드포인트로 유도하고, <strong>Bias(편향값)</strong> 설정에 따라 특정 리전의 커버리지를 넓히거나 줄이는 동작을 확인한다.</p><h2 id="2b4720e4-6f49-82b4-b85a-01bd2f881ce8" class="" dir="auto">핵심 개념</h2><p id="14d720e4-6f49-82de-b0be-815f1f877e8c" class="" dir="auto">지리 근접성 라우팅은 사용자의 위치와 리소스의 위치를 비교해 더 가까운 쪽으로 응답한다.</p><p id="3c9720e4-6f49-8309-bcad-011114bbb20f" class="" dir="auto">여기에 <strong>Bias</strong> 값을 적용하면 특정 리전이 담당하는 영역을 의도적으로 확장하거나 축소할 수 있다.</p><p id="041720e4-6f49-83e1-bbcb-01ac5099d2ca" class="" dir="auto">즉, 단순히 가까운 리전으로 보내는 것에서 끝나는 것이 아니라, 운영자가 정책적으로 트래픽 범위를 조정할 수 있다.</p><h2 id="cf9720e4-6f49-8304-a083-012c5e7e0bee" class="" dir="auto">준비물</h2><ul id="96b720e4-6f49-82f9-a1fa-8184386ca8a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서로 다른 리전에 배치된 엔드포인트 2개<ul id="eac720e4-6f49-8384-897a-81ae378eb217" class="bulleted-list" dir="auto"><li style="list-style-type:circle">예: 서울 리전 ALB</li></ul><ul id="a45720e4-6f49-8253-9354-815eca9a509a" class="bulleted-list" dir="auto"><li style="list-style-type:circle">예: 버지니아 리전 ALB</li></ul></li></ul><ul id="a2d720e4-6f49-8324-820e-81be263de129" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Route 53 Hosted Zone</li></ul><ul id="50a720e4-6f49-828c-ae76-81edb0e853c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">가능하다면 위치 변경 테스트를 위한 VPN 또는 해외 테스트 환경</li></ul><h2 id="8de720e4-6f49-82d6-a6b0-0137a69bcee7" class="" dir="auto">실습 구성</h2><ol type="1" id="9e1720e4-6f49-830b-aae0-81d5aa96adfd" class="numbered-list" start="1" dir="auto"><li>동일 도메인에 대해 지리 근접성 라우팅 레코드를 2개 만든다.</li></ol><ol type="1" id="b63720e4-6f49-82a6-8c47-01b818d9f0ab" class="numbered-list" start="2" dir="auto"><li>서울 리전 엔드포인트와 버지니아 리전 엔드포인트를 각각 연결한다.</li></ol><ol type="1" id="d86720e4-6f49-83ee-8f3a-818260e5a2b0" class="numbered-list" start="3" dir="auto"><li>Bias 값을 조정해 서울 리전의 영향 범위를 확대하거나 축소한다.</li></ol><ol type="1" id="9b6720e4-6f49-83cc-abbc-0174beab75a7" class="numbered-list" start="4" dir="auto"><li>접속 위치에 따라 어느 리전으로 응답되는지 확인한다.</li></ol><h2 id="6c5720e4-6f49-83e8-a480-0110b0f82585" class="" dir="auto">실습 절차</h2><h3 id="038720e4-6f49-8296-a052-01417f534359" class="" dir="auto">1) 레코드 생성</h3><p id="958720e4-6f49-82b3-9ca0-814a7f311714" class="" dir="auto">동일한 도메인 이름으로 2개의 레코드를 생성한다.</p><p id="e78720e4-6f49-8389-8e7a-811ace75059b" class="" dir="auto">예시</p><ul id="a8d720e4-6f49-83e5-a21b-815d062c1584" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 이름: <code>service.example.com</code></li></ul><ul id="141720e4-6f49-8328-9319-013a76a01be5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 유형: <code>A</code> 또는 <code>Alias</code></li></ul><h3 id="c20720e4-6f49-824f-8e24-8160b1796810" class="" dir="auto">2) 라우팅 정책 선택</h3><p id="91d720e4-6f49-83b9-a58b-8143493657b5" class="" dir="auto">각 레코드의 라우팅 정책을 <strong>지리 근접성</strong>으로 설정한다.</p><h3 id="239720e4-6f49-8279-aa61-8168a247df88" class="" dir="auto">3) 엔드포인트 설정</h3><h3 id="fcb720e4-6f49-8293-b35a-81f4066ef95f" class="" dir="auto">레코드 1</h3><ul id="8b8720e4-6f49-82e8-9b37-81c4a3040362" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전: <code>ap-northeast-2</code> (서울)</li></ul><ul id="d75720e4-6f49-834b-8eef-81d11067bcb4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 ID: <code>Seoul-Endpoint</code></li></ul><h3 id="247720e4-6f49-8293-97fe-019036ddc441" class="" dir="auto">레코드 2</h3><ul id="944720e4-6f49-8294-b1ce-01439934e9f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리전: <code>us-east-1</code> (버지니아)</li></ul><ul id="514720e4-6f49-824c-a18a-01fd3a4145a1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레코드 ID: <code>US-Endpoint</code></li></ul><h3 id="fa6720e4-6f49-8337-aaf2-0153d68bef7a" class="" dir="auto">4) Bias 설정</h3><p id="d0f720e4-6f49-820b-a56d-01e4cf4616ff" class="" dir="auto">서울 리전 레코드의 Bias 값을 <code>+25</code>로 설정해본다.</p><p id="367720e4-6f49-824d-bca1-012141b7002e" class="" dir="auto">Bias를 양수로 높이면 서울 리전이 담당하는 범위가 넓어진다.</p><p id="5b9720e4-6f49-82b4-b5b5-81a5ed6db172" class="" dir="auto">반대로 음수로 설정하면 서울 리전의 영향 범위가 줄어든다.</p><p id="cf3720e4-6f49-8354-b8b4-01e2e1667d78" class="" dir="auto">예를 들어 원래는 다른 리전이 더 가까운 사용자라도, Bias 값 때문에 서울 리전으로 유도될 수 있다.</p><h2 id="bfa720e4-6f49-839f-8342-014292f91b98" class="" dir="auto">검증 방법</h2><ul id="21e720e4-6f49-8351-98cc-01c5657d69d3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">한국 또는 일본에서 접속 시 어느 리전으로 연결되는지 확인</li></ul><ul id="642720e4-6f49-8290-a819-81c6bb69c774" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN을 통해 미국 또는 동남아 위치로 테스트</li></ul><ul id="3a2720e4-6f49-8217-b395-011c5da337d8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bias 조정 전후 결과 비교</li></ul><h3 id="418720e4-6f49-8366-84de-81e524b0ddc3" class="" dir="auto">확인용 명령 예시</h3><pre id="279720e4-6f49-82ce-9c09-017f6de0768c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">dig service.example.com</code></pre><p id="3b0720e4-6f49-8222-8b8a-01ea8cf4fce1" class="" dir="auto">또는 실제 웹 요청 확인</p><pre id="b34720e4-6f49-826b-b7e9-01e5e7ab3578" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">curl http://service.example.com</code></pre><p id="9f2720e4-6f49-82d9-94cb-818242e333df" class="" dir="auto">서버별로 서로 다른 식별 문자열을 반환하도록 구성하면 확인이 쉽다.</p><p id="fad720e4-6f49-827c-a8e0-813cae7a7b9a" class="" dir="auto">예</p><ul id="96d720e4-6f49-8288-85ab-8190fcec308b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서울 서버 응답: <code>Connected to Seoul</code></li></ul><ul id="0fb720e4-6f49-83ff-9e42-815066b7ba9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버지니아 서버 응답: <code>Connected to Virginia</code></li></ul><h2 id="0ae720e4-6f49-82f1-8277-81c95fa829a5" class="" dir="auto">확인 포인트</h2><ul id="6e5720e4-6f49-83d0-a31b-817822a3e915" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본적으로 사용자는 더 가까운 리전으로 유도됨</li></ul><ul id="270720e4-6f49-8378-a828-81fb0c504d50" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Bias 값 조정 시 특정 리전의 서비스 범위가 달라짐</li></ul><ul id="427720e4-6f49-8309-a674-815ae2ceedce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">지리 위치 기반 분산이지만, 운영 목적에 따라 인위적 조정이 가능함</li></ul><h2 id="7d8720e4-6f49-8327-b74e-010c714ff413" class="" dir="auto">정리</h2><p id="3e5720e4-6f49-8380-af27-01acca3d6ead" class="" dir="auto">지리 근접성 라우팅은 단순 지연시간 최소화 목적뿐 아니라, 특정 리전에 트래픽을 더 많이 유도하거나 줄이기 위한 정책 제어에도 활용할 수 있다.</p><p id="5a4720e4-6f49-8372-ba9b-01b14cb39a76" class="" dir="auto">글로벌 서비스 운영 시 트래픽 분산 전략을 실험하기에 좋은 방식이다.</p><hr id="c2c720e4-6f49-82fb-bef4-819fe0d9b12f" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

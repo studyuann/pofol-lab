@@ -1,0 +1,772 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>실습. Cloud SQL : private IP로 사용하기</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="e9e720e4-6f49-83ef-9579-014bf88737a6" class="page sans"><header><h1 class="page-title" dir="auto">실습. Cloud SQL : private IP로 사용하기</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><hr id="cfd720e4-6f49-826e-a683-817693a03ef5" dir="auto"/><h1 id="3d5720e4-6f49-8261-ac3e-01e604fead0e" class="" dir="auto">1. 학습 목표</h1><ul id="005720e4-6f49-8283-9bb2-81b87f03d55d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud SQL 인스턴스를 생성하고 관리형 데이터베이스 서비스의 특징을 이해한다.</li></ul><ul id="c3c720e4-6f49-82d7-99cf-01abb5d9c500" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Private Service Access</strong>를 구성하여 Cloud SQL에 <strong>비공개 IP</strong>를 할당하는 방법을 익힌다.</li></ul><ul id="b6a720e4-6f49-8275-89e4-81383926f196" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Cloud SQL Auth Proxy</strong>의 역할과 동작 방식을 이해한다.</li></ul><ul id="39e720e4-6f49-8298-bed4-81a889cb7845" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud SQL이 <strong>비공개 IP만 사용하는 경우</strong>, 어떤 환경에서 Proxy 접속이 가능한지 이해한다.</li></ul><hr id="3b7720e4-6f49-8349-a9f3-01eb0b5fff90" dir="auto"/><h1 id="0a5720e4-6f49-83bd-9b6a-01aefc0e25ae" class="" dir="auto">2. 실습 환경 구성도</h1><p id="2b8720e4-6f49-82e1-9f49-0122dd13fd60" class="" dir="auto">이 실습은 다음과 같은 구조를 전제로 한다.</p><ul id="3d1720e4-6f49-830b-a755-8139a4f2b408" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 VPC</li></ul><ul id="d2a720e4-6f49-82c7-b464-014c1103a42a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Service Access로 Google 관리형 서비스 네트워크와 연결</li></ul><ul id="003720e4-6f49-83d0-84db-01c870a18392" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비공개 IP만 가진 Cloud SQL 인스턴스</li></ul><ul id="bdd720e4-6f49-825a-ae9f-81d37e5c4cfb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 VPC 내부의 VM 또는 해당 VPC에 연결된 환경에서 Cloud SQL Auth Proxy 실행</li></ul><p id="0ef720e4-6f49-82cc-a094-81c6b87c68a6" class="" dir="auto"><strong>중요</strong></p><p id="33c720e4-6f49-839e-8ef8-011be4e4b97f" class="" dir="auto">Cloud SQL 인스턴스를 <strong>비공개 IP 전용</strong>으로 만들었다면, <strong>Cloud SQL Auth Proxy도 해당 VPC에 접근 가능한 환경에서 실행해야 한다.</strong></p><p id="b16720e4-6f49-82a2-a1e6-0111d7f94787" class="" dir="auto">예를 들어 다음 환경에서는 가능하다.</p><ul id="9cf720e4-6f49-835d-a0c6-810b8c4b438c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 VPC 안의 Compute Engine VM</li></ul><ul id="d6b720e4-6f49-820e-980e-011d98d9b58b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">해당 VPC와 VPN 또는 Interconnect로 연결된 온프레미스 환경</li></ul><ul id="280720e4-6f49-8308-977b-816987a4e79a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PSC 등 별도 네트워크 구성이 완료된 환경</li></ul><p id="9b1720e4-6f49-8311-8720-01ad6322dc32" class="" dir="auto">반대로, <strong>일반 로컬 PC에서 단순 인터넷 연결만으로는 비공개 IP 전용 Cloud SQL에 직접 Proxy 연결할 수 없음</strong>. </p><hr id="cf1720e4-6f49-83a9-acb5-81b318c4d2e8" dir="auto"/><h1 id="41f720e4-6f49-837b-b03f-01b33f57cb45" class="" dir="auto">3. 주요 실습 단계</h1><h2 id="407720e4-6f49-82fe-99aa-01851107f916" class="" dir="auto">[Step 1] Private Service Access 설정</h2><p id="096720e4-6f49-827e-8080-0132a201cbea" class="" dir="auto">Cloud SQL을 <strong>비공개 IP</strong>로 사용하려면, 먼저 내 VPC와 Google 관리형 서비스 네트워크 사이에 <strong>Private Service Access</strong> 연결을 만들어야 한다.</p><p id="d63720e4-6f49-82b2-a4cb-01a7fb9e4c4f" class="" dir="auto">이 과정은 내부적으로 <strong>예약 IP 범위 할당 + private connection 생성</strong>으로 이루어진다. </p><h3 id="89f720e4-6f49-837d-ad0a-810901374ce5" class="" dir="auto">1-1. 내부 IP 범위 예약</h3><ol type="1" id="4de720e4-6f49-8316-bcb9-812b8e4dc510" class="numbered-list" start="1" dir="auto"><li><strong>VPC 네트워크</strong> 메뉴로 이동한다.</li></ol><ol type="1" id="46b720e4-6f49-8258-85ea-81c9a79bbc53" class="numbered-list" start="2" dir="auto"><li>VPC네트워크 선택</li></ol><ol type="1" id="d41720e4-6f49-82ab-b6b6-01abf96b8b96" class="numbered-list" start="3" dir="auto"><li><strong>비공개 서비스 액세스</strong> 탭으로 이동한다.</li></ol><ol type="1" id="f08720e4-6f49-8288-a6eb-0159fa0ff327" class="numbered-list" start="4" dir="auto"><li><strong>IP 범위 할당</strong>을 생성한다.</li></ol><p id="32d720e4-6f49-83e8-b2fd-81ed542b3f88" class="" dir="auto">예시 값</p><ul id="b88720e4-6f49-83d2-82f3-818e1d859c3a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름: <code>google-managed-services-&lt;vpc-name&gt;</code></li></ul><ul id="e1a720e4-6f49-8236-8167-01d29d22bdf5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IP 범위: <code>10.10.0.0/24</code> 또는 실습 환경에서 겹치지 않는 대역</li></ul><h3 id="fd1720e4-6f49-83f0-b115-01f457b2cd03" class="" dir="auto">1-2. Private connection 생성</h3><ol type="1" id="f48720e4-6f49-8377-a50b-81eb3a31b2b0" class="numbered-list" start="1" dir="auto"><li><strong>서비스에 대한 비공개 연결</strong> 탭으로 이동한다.</li></ol><ol type="1" id="aae720e4-6f49-835a-906d-81de92c322e7" class="numbered-list" start="2" dir="auto"><li>연결만들기를 선택한다.</li></ol><ol type="1" id="79a720e4-6f49-8328-a584-81a58b5852b6" class="numbered-list" start="3" dir="auto"><li>방금 예약한 내부 IP 범위를 선택한다.</li></ol><ol type="1" id="b10720e4-6f49-82d8-922c-01e9c39a65eb" class="numbered-list" start="4" dir="auto"><li>연결을 클릭한다.</li></ol><p id="ed6720e4-6f49-8315-97ef-012dff501cbb" class="" dir="auto"><strong>설명</strong></p><p id="cbf720e4-6f49-83c1-8cc5-01083f772c73" class="" dir="auto">이 단계는 <strong>Google 관리형 서비스 전용 연결을 구성하는 절차</strong>라고 이해하는 것이 정확하다. Cloud SQL의 private IP는 이 연결을 기반으로 할당된다. </p><hr id="da3720e4-6f49-8311-8de6-81ba5182ded0" dir="auto"/><h2 id="b31720e4-6f49-83b9-9160-0197366b2aa0" class="" dir="auto">[Step 2] Cloud SQL for MySQL 인스턴스 생성</h2><p id="0a5720e4-6f49-83b9-9f8a-01d1dbeb1e17" class="" dir="auto">이제 Cloud SQL 인스턴스를 생성한다.</p><ol type="1" id="148720e4-6f49-8324-8e9f-81d4c3d7055b" class="numbered-list" start="1" dir="auto"><li><strong>SQL</strong> 메뉴로 이동한다.</li></ol><ol type="1" id="6fd720e4-6f49-8246-9e21-01fab323f6af" class="numbered-list" start="2" dir="auto"><li><strong>[인스턴스 만들기]</strong> 클릭</li></ol><ol type="1" id="013720e4-6f49-82c6-99d2-0186adbc5ae4" class="numbered-list" start="3" dir="auto"><li>데이터베이스 엔진으로 <strong>MySQL</strong> 선택</li></ol><h3 id="073720e4-6f49-8236-878b-8159e31e8836" class="" dir="auto">2-1. 기본 설정</h3><p id="f95720e4-6f49-83a1-b5a6-019cd3318695" class="" dir="auto">예시</p><ul id="3b5720e4-6f49-83d5-9e36-01abbffcf87a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인스턴스 ID: <code>my-db-instance</code></li></ul><ul id="dcf720e4-6f49-830d-af7d-01b2d135d503" class="bulleted-list" dir="auto"><li style="list-style-type:disc">root 비밀번호: 직접 설정</li></ul><ul id="ea6720e4-6f49-8361-aaca-81b82d1d0427" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터베이스 버전: <code>MySQL 8.0</code></li></ul><h3 id="90b720e4-6f49-835d-a46a-015af5e1d559" class="" dir="auto">2-2. 연결 설정</h3><p id="615720e4-6f49-83ce-9759-81df51bd1826" class="" dir="auto">가장 중요한 단계다.</p><ul id="563720e4-6f49-8370-8303-012b1fa461c3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>공개 IP 할당 해제</strong></li></ul><ul id="543720e4-6f49-8308-97f1-015e16e5fcd0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>비공개 IP 사용 체크</strong></li></ul><ul id="363720e4-6f49-83bc-9798-01534292e0c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">연결할 <strong>VPC 네트워크 선택</strong></li></ul><p id="579720e4-6f49-833f-9ef3-01b7915134ca" class="" dir="auto">Cloud SQL에서 private IP를 사용하려면, 앞 단계의 <strong>Private Service Access가 이미 준비되어 있어야 한다.</strong> </p><h3 id="1fe720e4-6f49-82d2-a3de-8162365ac19a" class="" dir="auto">2-3. 머신 및 스토리지 설정</h3><p id="02b720e4-6f49-82c2-ad49-81d9c4be950b" class="" dir="auto">실습용으로는 비용을 줄이기 위해 작은 사양을 선택한다.</p><p id="047720e4-6f49-823e-a74c-81c984e9fea5" class="" dir="auto">예시 방향</p><ul id="34f720e4-6f49-82b4-a56b-811e60a3b588" class="bulleted-list" dir="auto"><li style="list-style-type:disc">에디션: <code>Enterprise</code></li></ul><ul id="1bb720e4-6f49-83cc-aaa5-8104f4248c6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">머신 유형: <strong>shared core 계열의 최소 사양</strong></li></ul><ul id="245720e4-6f49-83a1-abbb-019b5e949efd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스토리지: <code>HDD</code></li></ul><ul id="efa720e4-6f49-829f-ba00-01bd987ea02d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">용량: <code>10GB</code></li></ul><p id="ea5720e4-6f49-82a9-9e0c-8148c17ec3c0" class="" dir="auto"><strong>주의</strong></p><hr id="371720e4-6f49-83d9-8542-013fcee99170" dir="auto"/><h2 id="b12720e4-6f49-8397-bde5-0178c27a86af" class="" dir="auto">[Step 3] 서비스 계정 및 IAM 권한 설정</h2><p id="314720e4-6f49-82eb-abbd-01e433ceafe1" class="" dir="auto">Cloud SQL Auth Proxy는 접속 시 <strong>Cloud SQL 인스턴스에 대한 IAM 권한</strong>을 검사한다.</p><p id="d8c720e4-6f49-8289-866d-81b1302c9386" class="" dir="auto">따라서 Proxy 실행 주체에는 최소한 <strong>Cloud SQL Client</strong> 권한이 필요하다.</p><h3 id="def720e4-6f49-821f-b26b-01767fe831cf" class="" dir="auto">3-1. 서비스 계정 생성</h3><ol type="1" id="993720e4-6f49-8245-90af-017b30210b01" class="numbered-list" start="1" dir="auto"><li><strong>IAM 및 관리 &gt; 서비스 계정</strong> 메뉴로 이동한다.</li></ol><ol type="1" id="3aa720e4-6f49-8267-986d-01d39ee920d1" class="numbered-list" start="2" dir="auto"><li>서비스 계정 생성<ul id="438720e4-6f49-822c-93d4-81e387add79d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이름 예시: <code>sql-proxy-sa</code></li></ul></li></ol><h3 id="766720e4-6f49-8344-9198-013be8f6e0ff" class="" dir="auto">3-2. 역할 부여</h3><p id="205720e4-6f49-82df-8c42-81e289e3fbbe" class="" dir="auto">다음 역할을 부여한다.</p><ul id="147720e4-6f49-835b-9344-817df213e93a" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Cloud SQL Client</code><p id="c0b720e4-6f49-8326-871a-817a14ebede0" class="" dir="auto">(<code>roles/cloudsql.client</code>)</p></li></ul><h3 id="d1f720e4-6f49-837b-ac5f-01d77189d5af" class="" dir="auto">3-3. 인증 방식</h3><p id="757720e4-6f49-8283-baf9-011510e09f69" class="" dir="auto">실습 환경에 따라 인증 방식이 달라진다.</p><h3 id="a13720e4-6f49-83f8-b245-810c4fbc7244" class="" dir="auto">방법 A. GCE VM에서 실행</h3><ul id="f0a720e4-6f49-82cb-846e-016df3eda0f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VM에 이 서비스 계정을 연결</li></ul><ul id="da3720e4-6f49-82f5-be00-81cb8ebc262b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">별도 JSON 키 없이 <strong>ADC(Application Default Credentials)</strong> 방식 사용 가능</li></ul><h3 id="283720e4-6f49-83d6-98e7-0199772fa9ac" class="" dir="auto">방법 B. 로컬 또는 별도 환경에서 실행</h3><ul id="e2b720e4-6f49-82ee-b0ef-0119d63ff5f6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 계정 키(JSON)를 발급해서 사용</li></ul><p id="d3e720e4-6f49-83c0-a7d8-8169ca852d58" class="" dir="auto"><strong>주의</strong></p><p id="467720e4-6f49-8273-b765-012649cdd691" class="" dir="auto">실무에서는 가능하면 <strong>서비스 계정 키 파일 남발을 피하는 것</strong>이 좋다.</p><p id="e16720e4-6f49-836e-91e1-81775633b866" class="" dir="auto">하지만 교육용 로컬 실습에서는 JSON 키를 이용하면 동작 원리를 보여주기 쉽다.</p><hr id="c69720e4-6f49-83eb-812a-01bb08675c7b" dir="auto"/><h2 id="8da720e4-6f49-83d5-8c9b-81dfb4c3e5be" class="" dir="auto">[Step 4] Cloud SQL Auth Proxy 실행</h2><p id="330720e4-6f49-8238-8b71-811ff388cd8e" class="" dir="auto">여기서 가장 중요한 점은 다음이다.</p><h3 id="30d720e4-6f49-83f5-862a-8164a513e562" class="" dir="auto">핵심 조건</h3><ul id="84a720e4-6f49-835e-accb-019abb937f94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud SQL 인스턴스가 <strong>공개 IP</strong>를 쓰면, 로컬 PC에서도 Proxy 사용이 비교적 단순하다.</li></ul><ul id="c6e720e4-6f49-83ab-92d7-01b3b81c14de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cloud SQL 인스턴스가 <strong>비공개 IP만</strong> 쓰면, Proxy가 실행되는 장비도 <strong>그 VPC에 네트워크적으로 접근 가능해야 한다.</strong> </li></ul><p id="d7e720e4-6f49-8331-9a98-0174b84597b4" class="" dir="auto">즉, 이번 실습처럼 <strong>비공개 IP 기반 보안 구성을 강조</strong>하려면, Proxy는 보통 다음 중 하나에서 실행한다.</p><ul id="3c3720e4-6f49-83b0-8b04-01ec84ce97d4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">같은 VPC 안의 Compute Engine VM</li></ul><ul id="07e720e4-6f49-830e-9987-81f6b817b3a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPN으로 해당 VPC에 접속된 PC</li></ul><ul id="003720e4-6f49-8291-894e-81400ef91136" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하이브리드 연결이 구성된 내부망 서버</li></ul><hr id="7fe720e4-6f49-8204-8aa7-81ef37851a1b" dir="auto"/><h2 id="951720e4-6f49-83e5-8e60-016625669c7e" class="" dir="auto">[Step 5] Proxy 실행 예시</h2><h3 id="a3b720e4-6f49-8349-b720-81111ce38fbe" class="" dir="auto">5-1. 인스턴스 연결 이름 확인</h3><p id="fef720e4-6f49-8346-8df1-0161eefeafe1" class="" dir="auto">형식은 다음과 같다.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="8f7720e4-6f49-8200-a540-81f2a746fa6d" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">PROJECT_ID:REGION:INSTANCE_ID</code></pre><p id="39e720e4-6f49-838c-bbf7-0143774da3d7" class="" dir="auto">예시</p><pre id="898720e4-6f49-83a4-aaa8-81fd6bb5ad92" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">my-project:asia-northeast3:my-db-instance</code></pre><h3 id="6d2720e4-6f49-833e-a34b-012ecf428490" class="" dir="auto">5-2. Proxy 실행 명령</h3><h3 id="203720e4-6f49-8262-95b9-819f8a66c6fe" class="" dir="auto">VM의 서비스 계정 권한을 사용하는 경우</h3><p id="ee3720e4-6f49-82b1-b3cd-811f40dc8d56" class="" dir="auto">이 경우 VM에 연결된 서비스 계정이 <code>Cloud SQL Client</code> 권한을 가지고 있어야 한다.</p><p id="b37720e4-6f49-8283-b710-81e6c530f40c" class="" dir="auto">vm에서 browser를 띄울 수 없으므로 아래 명령으로 생성된 url을 로컬PC의 브라우저에 붙여넣고 google cloud에 로그인하여 인증한다.   인증 후 생성된 키값을 vm에  붙여 넣는다.</p><pre id="92a720e4-6f49-8209-93cc-019a0a96fb3c" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">gcloud auth application-default login --no-launch-browser</code></pre><pre id="8d1720e4-6f49-83b7-a73e-8108f9601e52" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">./cloud-sql-proxy \
+  --private-ip \
+  my-project:asia-northeast3:my-db-instance</code></pre><p id="1de720e4-6f49-83b0-a835-81cbf6469b05" class="" dir="auto">또는 포트를 명시하려면</p><pre id="287720e4-6f49-820c-9def-01a732d1409a" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">./cloud-sql-proxy \
+  --private-ip \
+  --port=3306 \
+  my-project:asia-northeast3:my-db-instance</code></pre><p id="066720e4-6f49-8279-b6b6-81bc17b67005" class="" dir="auto"><strong>설명</strong></p><ul id="678720e4-6f49-825c-81e4-013e93becf2c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--private-ip</code><p id="68d720e4-6f49-8313-9487-81f55d8375ab" class="" dir="auto">Proxy가 Cloud SQL의 <strong>비공개 IP</strong>로 연결하도록 지시한다. 기본적으로는 public IP를 시도할 수 있으므로, private IP 인스턴스 실습에서는 이 옵션을 명시하는 편이 명확하다. </p></li></ul><ul id="749720e4-6f49-83bf-b5e9-81e2273bed08" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>--port=3306</code><p id="f98720e4-6f49-82f0-b4d7-81a9e3530939" class="" dir="auto">로컬에서 열어둘 포트다. MySQL 기본 포트이므로 생략 가능하지만 명시하면 이해하기 쉽다.</p></li></ul><hr id="273720e4-6f49-82a4-a7ca-01632d6e58f1" dir="auto"/><h2 id="17d720e4-6f49-82a9-958f-81b65f99c524" class="" dir="auto">[Step 6] DB 클라이언트로 접속</h2><p id="496720e4-6f49-8301-98c4-016b7ced7b27" class="" dir="auto">Proxy가 정상 실행되면, 로컬 또는 실행 중인 장비에서는 다음 정보로 접속한다.</p><ul id="a1b720e4-6f49-8397-ae64-818f28de544a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Host: <code>127.0.0.1</code></li></ul><ul id="674720e4-6f49-8252-9547-81a85a3067db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Port: <code>3306</code></li></ul><ul id="4b5720e4-6f49-82e4-9e17-814042917490" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Username: MySQL 사용자 계정</li></ul><ul id="d17720e4-6f49-82ae-a568-01e60ab26018" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Password: MySQL 비밀번호</li></ul><p id="0b3720e4-6f49-8321-96a2-01b4c0ee1e0e" class="" dir="auto">예시</p><pre id="562720e4-6f49-82ae-ae3e-0150b4bb83c4" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">mysql -h 127.0.0.1 -P 3306 -u root -p</code></pre><p id="c57720e4-6f49-8299-bed7-816afa676845" class="" dir="auto"><strong>중요</strong></p><p id="e32720e4-6f49-82fb-ab86-81ebdd02c2a0" class="" dir="auto">Cloud SQL Auth Proxy는 <strong>네트워크 경로와 인증을 안전하게 중개</strong>해 주는 도구다.</p><p id="d01720e4-6f49-839e-a5be-01a5a862ff0b" class="" dir="auto">하지만 실제 데이터베이스 로그인은 여전히 <strong>MySQL 계정</strong>으로 수행한다. 즉, Proxy 권한과 DB 계정은 서로 다른 개념이다. </p><hr id="8fa720e4-6f49-82ca-a143-813295223f5b" dir="auto"/><h1 id="63f720e4-6f49-831a-ba76-01aa29634135" class="" dir="auto">6. 정리</h1><ul id="9e1720e4-6f49-82db-944a-81921931646e" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Private Service Access</strong>는 Cloud SQL private IP 사용을 위한 선행 작업이다. </li></ul><ul id="cdc720e4-6f49-8253-8cef-81866028344b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Cloud SQL Auth Proxy</strong>는 IAM 기반 인증과 TLS 보호를 제공하는 접속 도구다. </li></ul><ul id="9fd720e4-6f49-8383-aec4-018d47018e70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하지만 <strong>Cloud SQL이 private IP 전용이면, Proxy도 그 VPC에 접근 가능한 위치에서 실행해야 한다.</strong> 이 부분이 가장 중요하다. </li></ul></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

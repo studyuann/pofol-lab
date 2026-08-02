@@ -1,0 +1,793 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>3장. Jenkins 개요와 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="7c7720e4-6f49-834e-be03-818cd7e6e0f5" class="page sans"><header><h1 class="page-title" dir="auto">3장. Jenkins 개요와 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="e32720e4-6f49-820a-b836-816167958f55" class="" dir="auto">1. Jenkins란 무엇인가</h2><h3 id="a12720e4-6f49-8377-93ee-012122040214" class="" dir="auto">1.1 Jenkins의 정의</h3><p id="f37720e4-6f49-83fc-82d0-0109f6b366a7" class="" dir="auto">Jenkins는 소프트웨어 개발 과정에서 반복적으로 수행되는 작업을 자동화하기 위한 오픈소스 자동화 서버다.</p><p id="d29720e4-6f49-82d7-bc50-818d17fa5bb8" class="" dir="auto">가장 대표적으로는 다음 작업을 자동화하는 데 사용됨.</p><ul id="7c7720e4-6f49-8365-91c0-01669448c67c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소스코드 가져오기</li></ul><ul id="f07720e4-6f49-83d0-aac5-810b1d234cd8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 수행</li></ul><ul id="e50720e4-6f49-8252-98ff-01cdc2de692a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 실행</li></ul><ul id="03b720e4-6f49-821c-bcd2-0112797bfcc5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">아티팩트 생성</li></ul><ul id="5bb720e4-6f49-82ef-859d-81bba99888df" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 스크립트 실행</li></ul><ul id="41c720e4-6f49-822d-ba4a-8150ba85860e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파이프라인 상태 확인</li></ul><ul id="2f3720e4-6f49-82c6-8bf7-81878f0b6086" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과 알림</li></ul><p id="f53720e4-6f49-82be-a7dc-812175ac8c1d" class="" dir="auto">즉, Jenkins는 단순히 코드를 컴파일하는 도구가 아니라,</p><p id="c04720e4-6f49-8227-a390-016f1971304f" class="" dir="auto"><strong>소스 변경부터 배포 전후 작업까지 연결하는 자동화 플랫폼</strong>으로 이해하는 것이 맞음.</p><hr id="d9d720e4-6f49-83bd-a394-01a31f33b1cc" dir="auto"/><h3 id="a8e720e4-6f49-8239-80e2-01cd53e96895" class="" dir="auto">1.2 Jenkins가 필요한 이유</h3><p id="df0720e4-6f49-82ac-9a4d-817280e410e2" class="" dir="auto">초기 개발 환경에서는 개발자가 직접 다음 작업을 수행하는 경우가 많았음.</p><ul id="3c3720e4-6f49-821e-b602-8102d862f210" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git 저장소에서 코드 내려받기</li></ul><ul id="c8b720e4-6f49-8394-b089-81677dd20025" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 명령 실행</li></ul><ul id="d6c720e4-6f49-8349-a989-81af6e7dfe52" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 실행</li></ul><ul id="39f720e4-6f49-838c-bf66-8128f4414d60" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과 파일 생성</li></ul><ul id="3a9720e4-6f49-83ce-bc4e-81e84a37688f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버에 복사해서 실행</li></ul><p id="2c0720e4-6f49-835f-bef8-01565505cfc1" class="" dir="auto">이 방식은 규모가 작을 때는 가능하지만, 협업 인원이 늘고 변경이 많아질수록 한계가 분명해짐.</p><p id="d3e720e4-6f49-8264-a51c-81f2be11a56b" class="" dir="auto">대표적인 문제는 다음과 같음.</p><ul id="07a720e4-6f49-8297-aeb7-019109dee03f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누가 언제 어떤 버전을 빌드했는지 기록이 흐려짐</li></ul><ul id="f6f720e4-6f49-8220-9b2f-816d20823442" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사람마다 다른 명령어를 실행할 수 있음</li></ul><ul id="770720e4-6f49-8251-a4a7-8155e75d18c4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트를 누락할 수 있음</li></ul><ul id="a5b720e4-6f49-82dc-8423-815249cf2e62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 PC에서만 되는 빌드가 생길 수 있음</li></ul><ul id="482720e4-6f49-8356-8088-814d7195186f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">반복 작업이 많아져 생산성이 떨어짐</li></ul><p id="559720e4-6f49-8391-94ed-01c2d695d375" class="" dir="auto">Jenkins는 이런 문제를 해결하기 위해 <strong>정해진 절차를 서버에서 일관되게 자동 실행</strong>하도록 만들어줌.</p><hr id="94a720e4-6f49-83db-bee7-01fc6749d264" dir="auto"/><h2 id="c3c720e4-6f49-829f-aa4b-819ef7145b33" class="" dir="auto">2. Jenkins의 역할</h2><p id="793720e4-6f49-8378-a7a4-01741626bf47" class="" dir="auto">Jenkins는 CI/CD 파이프라인 전체에서 여러 역할을 수행할 수 있음.</p><p id="040720e4-6f49-823c-a7d6-8133561e0635" class="" dir="auto">조직마다 활용 범위는 다르지만, 보통 다음 역할로 설명할 수 있음.</p><hr id="fa8720e4-6f49-834a-8e2e-017f76db633b" dir="auto"/><h3 id="707720e4-6f49-8334-8534-01358d537161" class="" dir="auto">2.1 CI 실행 엔진</h3><p id="013720e4-6f49-8396-9750-81e055603ef4" class="" dir="auto">가장 기본적인 역할은 CI 자동화다.</p><p id="403720e4-6f49-8208-97b7-8160e2586309" class="" dir="auto">예를 들면 다음과 같은 흐름이다.</p><ol type="1" id="9a9720e4-6f49-8265-a39d-01f9db146510" class="numbered-list" start="1" dir="auto"><li>개발자가 GitHub에 코드를 push함</li></ol><ol type="1" id="edb720e4-6f49-8278-af27-81d0d0959748" class="numbered-list" start="2" dir="auto"><li>Jenkins가 변경을 감지함</li></ol><ol type="1" id="fac720e4-6f49-8287-bbcb-01ef1637aa96" class="numbered-list" start="3" dir="auto"><li>저장소에서 코드를 가져옴</li></ol><ol type="1" id="93d720e4-6f49-8211-81fc-81aff2843141" class="numbered-list" start="4" dir="auto"><li>빌드 수행</li></ol><ol type="1" id="c1c720e4-6f49-8328-b6b8-817dcfd9a90b" class="numbered-list" start="5" dir="auto"><li>테스트 수행</li></ol><ol type="1" id="14d720e4-6f49-8314-9453-819f7c747d36" class="numbered-list" start="6" dir="auto"><li>결과를 저장하고 성공/실패를 표시함</li></ol><p id="c3d720e4-6f49-824b-bce4-01dda604b826" class="" dir="auto">이 구조에서 Jenkins는 CI 파이프라인의 실행 주체가 된다.</p><hr id="db4720e4-6f49-8307-ada9-014f165a2206" dir="auto"/><h3 id="4eb720e4-6f49-8223-b9b5-01a874a127a5" class="" dir="auto">2.2 CD 파이프라인 제어 도구</h3><p id="909720e4-6f49-8272-bc39-0181284c844f" class="" dir="auto">Jenkins는 빌드까지만 하는 것이 아니라, 배포 단계까지 연결할 수 있음.</p><p id="bbf720e4-6f49-82ac-81ee-816e6a027cac" class="" dir="auto">예:</p><ul id="abc720e4-6f49-8388-9c88-81eb12556008" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 이미지 생성</li></ul><ul id="f27720e4-6f49-82b8-9250-814a4461d89c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">레지스트리 업로드</li></ul><ul id="3fa720e4-6f49-82fd-822c-81273e31325a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">원격 서버에 배포 스크립트 실행</li></ul><ul id="c82720e4-6f49-82de-97d0-01787358b6c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes 배포 명령 실행</li></ul><ul id="729720e4-6f49-83d5-a199-0117f644f333" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Helm 배포 수행</li></ul><p id="b71720e4-6f49-82c6-9509-014ed98294e6" class="" dir="auto">즉, Jenkins는 CI뿐 아니라 CD까지 이어지는 자동화 흐름을 제어하는 중심 도구가 될 수 있음.</p><hr id="0f4720e4-6f49-8293-a47e-01a7d57e99cc" dir="auto"/><h3 id="eca720e4-6f49-82e0-aaa2-8117e06dab05" class="" dir="auto">2.3 오케스트레이션 서버</h3><p id="a99720e4-6f49-8306-8096-0188c0c531e4" class="" dir="auto">Jenkins는 하나의 명령만 실행하는 도구가 아니라, 여러 단계를 순서대로 실행하고 조건에 따라 분기하는 오케스트레이션 역할도 한다.</p><p id="cbd720e4-6f49-8208-b501-81a9e0f1f9ce" class="" dir="auto">예를 들면 다음처럼 구성할 수 있음.</p><ul id="9eb720e4-6f49-83e7-8616-013384081ad9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build 성공 시에만 Test 실행</li></ul><ul id="3eb720e4-6f49-8293-a26a-817e38dd36b9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Test 성공 시에만 Docker Build 실행</li></ul><ul id="b70720e4-6f49-82bb-9154-81b5414819f4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치일 때만 Release Job 실행</li></ul><ul id="5df720e4-6f49-8301-ae79-01d6747bb063" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 배포 전 승인 단계 대기</li></ul><p id="8eb720e4-6f49-832e-9f67-011f9766d899" class="" dir="auto">즉, Jenkins는 단순 명령 실행기가 아니라 <strong>절차를 정의하고 제어하는 엔진</strong>이다.</p><hr id="68b720e4-6f49-83b6-ab64-81d6d9b81baa" dir="auto"/><h2 id="bf7720e4-6f49-835a-a000-81c8e0c4ee17" class="" dir="auto">3. Jenkins의 주요 특징</h2><p id="a14720e4-6f49-83a9-83cf-81ce15b29fd0" class="" dir="auto">Jenkins가 오랫동안 널리 사용된 이유는 몇 가지 특징 때문임.</p><hr id="96e720e4-6f49-8279-9f02-015dd9a8444f" dir="auto"/><h3 id="f7f720e4-6f49-8331-a5ef-013c4ca48a4f" class="" dir="auto">3.1 오픈소스 기반</h3><p id="131720e4-6f49-83f6-99ff-010fa1cf0756" class="" dir="auto">Jenkins는 오픈소스 프로젝트라서 자유롭게 설치하고 확장할 수 있음.</p><p id="223720e4-6f49-82ee-9219-81057b79b7c1" class="" dir="auto">특정 벤더 종속성이 낮고, 자체 인프라 환경에서도 운영이 가능함.</p><p id="040720e4-6f49-8388-9fb3-012ba20f4ddd" class="" dir="auto">이 특징 때문에 다음 환경에서 특히 많이 사용됐음.</p><ul id="5ca720e4-6f49-8261-b644-0135a4dddf32" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사내망 중심 환경</li></ul><ul id="e48720e4-6f49-8292-8ce3-01ab503f30ad" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인터넷 연결이 제한된 환경</li></ul><ul id="a34720e4-6f49-834b-891f-016c60cfb95d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">자체 빌드 서버가 필요한 환경</li></ul><ul id="8c4720e4-6f49-839f-ad26-81e5d2de34e2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복잡한 커스텀 파이프라인이 필요한 환경</li></ul><hr id="8b6720e4-6f49-8358-9f7d-81375b3b050a" dir="auto"/><h3 id="99d720e4-6f49-827d-8354-016aa1586328" class="" dir="auto">3.2 Plugin 기반 확장성</h3><p id="40f720e4-6f49-8363-bf96-014018e1d345" class="" dir="auto">Jenkins의 가장 큰 특징 중 하나는 Plugin 구조다.</p><p id="cee720e4-6f49-83ab-8ac4-01aabe95722b" class="" dir="auto">기본 기능만으로도 파이프라인을 만들 수 있지만, 다양한 플러그인을 추가해서 기능을 넓힐 수 있음.</p><p id="10a720e4-6f49-838c-bf46-01edc01400ff" class="" dir="auto">예를 들면 다음과 같은 확장이 가능함.</p><ul id="5a4720e4-6f49-8388-84c2-81c4951adce5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">GitHub 연동</li></ul><ul id="966720e4-6f49-828b-a600-01ff58cb2985" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 연동</li></ul><ul id="8bc720e4-6f49-8285-8973-81eddd15a521" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes 연동</li></ul><ul id="fbb720e4-6f49-8358-b9b2-01c46dfcefb3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Slack 알림</li></ul><ul id="9be720e4-6f49-836e-b02d-01b7b4beb72f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maven / Gradle 지원</li></ul><ul id="abf720e4-6f49-8354-a224-81c8cca0eb83" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 리포트 표시</li></ul><ul id="a3a720e4-6f49-8205-9ba6-81633554a1dd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증 연동</li></ul><ul id="499720e4-6f49-8286-839a-01c9a9cead3b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 스캔 연동</li></ul><p id="559720e4-6f49-8392-9b36-01ac62a2c62c" class="" dir="auto">즉, Jenkins는 기본 엔진 위에 여러 기능을 붙여서 조직 환경에 맞게 확장하는 방식이 강함.</p><hr id="bb0720e4-6f49-8352-ba06-015f2f2e95fb" dir="auto"/><h3 id="4ed720e4-6f49-82b5-9c0a-81100c0f0843" class="" dir="auto">3.3 파이프라인 코드화(Pipeline as Code)</h3><p id="7bd720e4-6f49-8362-b218-016d98dd43f8" class="" dir="auto">예전에는 Jenkins Job 설정을 웹 UI에서 일일이 입력하는 방식이 많았음.</p><p id="1b1720e4-6f49-835f-9186-8191d141f4d4" class="" dir="auto">하지만 현재는 <code>Jenkinsfile</code>을 저장소에 함께 두고, 파이프라인 자체를 코드처럼 관리하는 방식이 중요함.</p><p id="609720e4-6f49-839a-aa46-81cc2875312e" class="" dir="auto">이 접근 방식의 장점은 다음과 같음.</p><ul id="163720e4-6f49-8318-ac55-014c76f47eaa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파이프라인 변경 이력이 Git에 남음</li></ul><ul id="fc2720e4-6f49-82e9-b9a9-81fa22890c85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드와 파이프라인 정의를 함께 관리할 수 있음</li></ul><ul id="126720e4-6f49-825a-9a71-8102ec73abfc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리뷰와 버전 관리가 쉬움</li></ul><ul id="896720e4-6f49-821b-86e4-019a3873f6ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경 재현성이 높아짐</li></ul><p id="a50720e4-6f49-82f9-85cd-8128a863cdf5" class="" dir="auto">즉, Jenkins는 단순 UI 설정형 도구를 넘어서 <strong>파이프라인 정의 자체를 코드로 다루는 방식</strong>으로 발전했음.</p><hr id="c5a720e4-6f49-8331-a710-81c72eb1c734" dir="auto"/><h3 id="61a720e4-6f49-835c-9234-011bae1131b5" class="" dir="auto">3.4 분산 실행 가능</h3><p id="062720e4-6f49-834c-8a03-01d3019962b7" class="" dir="auto">Jenkins는 모든 작업을 한 서버에서만 수행해야 하는 구조가 아님.</p><p id="0e4720e4-6f49-83f5-8fd2-0163c4df123f" class="" dir="auto">필요하면 여러 노드에 작업을 분산해서 실행할 수 있음.</p><p id="f9b720e4-6f49-83b8-b54f-81a6e9af605d" class="" dir="auto">예:</p><ul id="61b720e4-6f49-8369-a57d-81430f77e5cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Linux 빌드는 Linux Agent에서 실행</li></ul><ul id="aaf720e4-6f49-823f-931e-011201542e43" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Windows 빌드는 Windows Agent에서 실행</li></ul><ul id="b01720e4-6f49-83e3-9e8a-81aeda289fec" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 빌드는 별도 빌드 노드에서 실행</li></ul><ul id="87d720e4-6f49-83cd-817a-01784ca250c7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">병렬 테스트를 여러 Agent에서 나눠 실행</li></ul><p id="26d720e4-6f49-8300-a2d2-011d40675815" class="" dir="auto">이 구조 덕분에 빌드 부하를 분산하고, 다양한 실행 환경을 다룰 수 있음.</p><hr id="524720e4-6f49-82e7-b2ba-817ac82613a0" dir="auto"/><h2 id="070720e4-6f49-83b8-863a-0144a3c1f778" class="" dir="auto">4. Jenkins 아키텍처 개요</h2><p id="610720e4-6f49-83e1-a831-013992965427" class="" dir="auto">Jenkins는 보통 <strong>Controller / Agent 구조</strong>로 설명함.</p><p id="349720e4-6f49-8290-aae5-01b4b1650f0c" class="" dir="auto">예전에는 Master / Slave 용어를 많이 썼지만, 현재는 보통 Controller / Agent라고 표현함.</p><hr id="4dc720e4-6f49-83b6-aa4f-816dd3d3b545" dir="auto"/><h3 id="c98720e4-6f49-8335-a0b7-8108cb9cf7bb" class="" dir="auto">4.1 Controller의 역할</h3><p id="09c720e4-6f49-8268-8c3b-81dfce5fbd77" class="" dir="auto">Controller는 Jenkins의 중심 서버다.</p><p id="492720e4-6f49-836a-9d6e-81e30f322235" class="" dir="auto">주요 역할은 다음과 같음.</p><ul id="45c720e4-6f49-8374-93bc-81490b27a714" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 웹 UI 제공</li></ul><ul id="6ab720e4-6f49-83c7-a9d9-811be7a1fd48" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Job / Pipeline 설정 저장</li></ul><ul id="fa0720e4-6f49-83c2-a7d7-81c29c83986b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 요청 수신</li></ul><ul id="87f720e4-6f49-827a-93d6-81d9d7269c18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실행 스케줄 관리</li></ul><ul id="abf720e4-6f49-82c5-840f-810008c38b85" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Agent에 작업 할당</li></ul><ul id="951720e4-6f49-831a-bef1-01c5eac45aab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">플러그인 관리</li></ul><ul id="e1e720e4-6f49-825d-8095-81466bf261ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 및 권한 관리</li></ul><ul id="b33720e4-6f49-82e2-8035-016c7a01833d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 결과 기록</li></ul><p id="f79720e4-6f49-835f-981e-01038571dcd3" class="" dir="auto">즉, Controller는 Jenkins의 <strong>제어 두뇌</strong> 역할을 한다.</p><hr id="110720e4-6f49-83ac-aaa0-8149415dfbde" dir="auto"/><h3 id="c99720e4-6f49-8266-856d-01ddb579ecef" class="" dir="auto">4.2 Agent의 역할</h3><p id="606720e4-6f49-823b-aee7-81ffcf00f973" class="" dir="auto">Agent는 실제 작업을 수행하는 실행 노드다.</p><p id="d3d720e4-6f49-8236-847f-01c33331c6e5" class="" dir="auto">예를 들어 다음과 같은 작업을 Agent가 수행할 수 있음.</p><ul id="b4a720e4-6f49-8200-b8e5-0193d496af80" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git clone</li></ul><ul id="4c2720e4-6f49-82c1-95df-01c58a6747ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Maven build</li></ul><ul id="0bd720e4-6f49-83ff-895f-0184ac860271" class="bulleted-list" dir="auto"><li style="list-style-type:disc">npm install</li></ul><ul id="691720e4-6f49-834b-920b-812b030ffd88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker build</li></ul><ul id="6eb720e4-6f49-83ca-adbe-0152b7413362" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Test 실행</li></ul><ul id="91c720e4-6f49-83c7-a2f2-014eb6c34e77" class="bulleted-list" dir="auto"><li style="list-style-type:disc">스크립트 실행</li></ul><p id="763720e4-6f49-8293-9cc3-016dd3e12d14" class="" dir="auto">Controller가 계획을 세우고 지시하면, Agent가 실제 명령을 실행하는 구조다.</p><hr id="cc4720e4-6f49-8281-bd3f-0104b100797f" dir="auto"/><h3 id="708720e4-6f49-83e3-97af-81c8491c9158" class="" dir="auto">4.3 왜 Controller와 Agent를 분리하는가</h3><p id="496720e4-6f49-8208-89d4-81b3478bfc92" class="" dir="auto">모든 작업을 Controller 한 대에서 수행할 수도 있음.</p><p id="056720e4-6f49-8216-a0c3-01f399fda105" class="" dir="auto">하지만 규모가 커질수록 분리가 필요해짐.</p><p id="431720e4-6f49-82ca-93ea-011132478f2b" class="" dir="auto">분리 이유는 다음과 같음.</p><h3 id="2a4720e4-6f49-83cc-adcf-01bd3387ebd0" class="" dir="auto">1) 부하 분산</h3><p id="21b720e4-6f49-824b-9ecc-0176369515d3" class="" dir="auto">빌드와 테스트는 CPU, Memory, Disk I/O를 많이 사용할 수 있음.</p><p id="48c720e4-6f49-83d2-86b0-81ac0c6c0b35" class="" dir="auto">이 작업을 전부 Controller에서 수행하면 Jenkins 자체가 느려질 수 있음.</p><h3 id="484720e4-6f49-82e1-83d8-81daa6e65fe6" class="" dir="auto">2) 실행 환경 분리</h3><p id="251720e4-6f49-828a-a2a9-815dae5c799c" class="" dir="auto">어떤 프로젝트는 Linux에서 빌드하고, 어떤 프로젝트는 Windows에서 빌드해야 할 수 있음.</p><p id="add720e4-6f49-8374-a045-814738033259" class="" dir="auto">Controller와 별도 Agent를 두면 프로젝트 특성에 맞는 실행 환경을 사용할 수 있음.</p><h3 id="bec720e4-6f49-83c3-bbc4-018505052317" class="" dir="auto">3) 보안 분리</h3><p id="8c0720e4-6f49-83f1-aee3-8163db3e5123" class="" dir="auto">모든 권한과 실행을 한 서버에 몰아두면 리스크가 커짐.</p><p id="3c7720e4-6f49-83cd-8b15-81b965941955" class="" dir="auto">빌드 실행 노드를 분리하면 격리 효과를 기대할 수 있음.</p><h3 id="dc2720e4-6f49-837b-9afb-81aaedc58962" class="" dir="auto">4) 확장성</h3><p id="fdb720e4-6f49-829c-81e7-81c892afd1c2" class="" dir="auto">빌드 양이 많아질수록 Agent를 늘려서 확장할 수 있음.</p><hr id="21b720e4-6f49-8276-a150-81904916df8f" dir="auto"/><h2 id="2a1720e4-6f49-8237-abe0-01d1771badfe" class="" dir="auto">5. Controller / Agent 구조 상세 이해</h2><h3 id="58d720e4-6f49-82b9-aecf-81bce287152d" class="" dir="auto">5.1 동작 흐름</h3><p id="ba3720e4-6f49-82d7-a80a-819233559318" class="" dir="auto">Jenkins 파이프라인 실행 흐름을 단순화하면 다음과 같음.</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="23d720e4-6f49-83d9-a19a-81afe89e11f7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">개발자 코드 변경
+   ↓
+Git 저장소 이벤트 발생
+   ↓
+Jenkins Controller가 Job 트리거
+   ↓
+Controller가 실행 가능한 Agent 선택
+   ↓
+Agent가 작업 디렉터리 생성 후 소스코드 다운로드
+   ↓
+빌드 / 테스트 / 배포 명령 수행
+   ↓
+실행 결과를 Controller에 전달
+   ↓
+Controller가 UI와 로그에 결과 표시</code></pre><hr id="157720e4-6f49-83fa-8625-01cb8ff5ca65" dir="auto"/><h3 id="765720e4-6f49-82be-865f-81b11be4940b" class="" dir="auto">5.2 Workspace 개념</h3><p id="827720e4-6f49-82fe-a17a-01411b0b86ba" class="" dir="auto">Jenkins가 작업을 실행할 때는 보통 특정 디렉터리에서 작업을 수행함.</p><p id="b85720e4-6f49-835e-9207-813ad7eeffca" class="" dir="auto">이 작업 디렉터리를 <strong>Workspace</strong>라고 부른다.</p><p id="a18720e4-6f49-8288-a9de-813032d23a3d" class="" dir="auto">Workspace에서는 보통 다음 작업이 일어남.</p><ul id="02d720e4-6f49-8235-a437-81ba3a38cb8b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">소스코드 다운로드</li></ul><ul id="1ca720e4-6f49-83a5-bc96-01c62c86fcba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">의존성 설치</li></ul><ul id="84b720e4-6f49-83af-be39-0131ed185722" class="bulleted-list" dir="auto"><li style="list-style-type:disc">빌드 산출물 생성</li></ul><ul id="94c720e4-6f49-82e9-87ec-01d0bfe2d4a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 결과 파일 생성</li></ul><p id="dd7720e4-6f49-826d-a210-01de72941d2d" class="" dir="auto">즉, Workspace는 파이프라인이 실제로 실행되는 작업 공간이다.</p><p id="53f720e4-6f49-82b1-9cbc-819f77013bc3" class="" dir="auto">실무에서는 Workspace가 오염되지 않도록 관리하는 것이 중요함.</p><p id="039720e4-6f49-82b8-a615-01031d6011dd" class="" dir="auto">이전 빌드 결과가 남아 있으면 다음 빌드에 영향을 줄 수 있기 때문임.</p><hr id="cd0720e4-6f49-82c0-ae4a-01f0c15502ea" dir="auto"/><h3 id="134720e4-6f49-8260-b95b-014382fcfb06" class="" dir="auto">5.3 Executor 개념</h3><p id="d53720e4-6f49-833c-916b-8147c3cd410f" class="" dir="auto">Jenkins Agent는 동시에 여러 작업을 수행할 수 있도록 설정할 수 있음.</p><p id="656720e4-6f49-8205-baff-81cf2adc308e" class="" dir="auto">이때 동시 실행 단위를 흔히 <strong>Executor</strong>라고 본다.</p><p id="cbf720e4-6f49-8326-b5ad-017e0ceb821c" class="" dir="auto">예를 들어 Agent 하나에 Executor가 2개면 동시에 두 개 Job을 돌릴 수 있음.</p><p id="e2c720e4-6f49-83fd-820c-811080e9a730" class="" dir="auto">하지만 무조건 많이 주는 것이 좋은 것은 아님.</p><p id="ecc720e4-6f49-8321-a115-014aed2988e6" class="" dir="auto">이유는 다음과 같음.</p><ul id="b63720e4-6f49-820e-be86-014d1d53762c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CPU 부족</li></ul><ul id="884720e4-6f49-8371-9e81-0162b444d166" class="bulleted-list" dir="auto"><li style="list-style-type:disc">메모리 부족</li></ul><ul id="b0d720e4-6f49-820b-8c0d-81362bfdc5f9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">디스크 I/O 경쟁</li></ul><ul id="199720e4-6f49-8372-8db5-81348e0e181b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker build 충돌</li></ul><ul id="618720e4-6f49-8316-9498-018c3c1ebf9b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트 포트 충돌</li></ul><p id="2db720e4-6f49-82c8-a80f-012963f35916" class="" dir="auto">즉, Jenkins는 병렬성이 중요하지만, 동시에 실행 가능한 범위는 인프라 자원과 작업 성격을 함께 고려해야 함.</p><hr id="a5b720e4-6f49-8259-b549-81829f672533" dir="auto"/><h2 id="796720e4-6f49-8285-8fdf-0112f2f68c4e" class="" dir="auto">6. Jenkins의 주요 구성요소</h2><p id="ca6720e4-6f49-8310-b041-819812a45e6c" class="" dir="auto">Jenkins를 제대로 이해하려면 자주 등장하는 용어를 먼저 정리해야 함.</p><hr id="ac0720e4-6f49-83e8-b348-81c65d546d01" dir="auto"/><h3 id="58d720e4-6f49-83ea-b589-8126090de7a3" class="" dir="auto">6.1 Job</h3><p id="299720e4-6f49-8398-af76-816860568b55" class="" dir="auto">Job은 Jenkins에서 실행 가능한 작업 단위다.</p><p id="1d4720e4-6f49-82dc-ab18-010f9ee85f0c" class="" dir="auto">가장 기본적인 자동화 단위라고 보면 됨.</p><p id="cf7720e4-6f49-8380-a9bb-819399419f59" class="" dir="auto">예:</p><ul id="519720e4-6f49-83c1-bdb9-01b68957b155" class="bulleted-list" dir="auto"><li style="list-style-type:disc">저장소 코드를 받아 빌드하는 Job</li></ul><ul id="fbf720e4-6f49-835e-b9d6-0122146b071c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트만 수행하는 Job</li></ul><ul id="01e720e4-6f49-8279-b9f2-01f225b1b8bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 이미지를 생성하는 Job</li></ul><ul id="5ae720e4-6f49-83a4-a820-016343cd416b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배포 스크립트를 실행하는 Job</li></ul><p id="d7c720e4-6f49-82cd-8bef-0150db289402" class="" dir="auto">즉, Job은 Jenkins가 실행하는 &quot;업무 단위&quot;다.</p><hr id="0da720e4-6f49-8292-bb01-8184dd19c639" dir="auto"/><h3 id="cd6720e4-6f49-8337-81ac-01f476d96faf" class="" dir="auto">6.2 Project</h3><p id="fd8720e4-6f49-82fc-aec7-01e97f9ae490" class="" dir="auto">Jenkins UI에서는 Job을 프로젝트 형태로 관리하는 경우가 많음.</p><p id="31b720e4-6f49-8353-a8c2-81350b677ec3" class="" dir="auto">Freestyle Project, Pipeline Project, Multibranch Pipeline 등이 이에 해당함.</p><p id="ae9720e4-6f49-8387-bcf5-01833ad124a3" class="" dir="auto">즉, &quot;Project&quot;는 UI 상의 관리 단위이고, 실제 자동화 관점에서는 Job 또는 Pipeline 실행 단위로 이해하면 됨.</p><hr id="a25720e4-6f49-8204-acf7-011f647cdf4f" dir="auto"/><h3 id="87f720e4-6f49-8315-8d48-01a2a0aee36a" class="" dir="auto">6.3 Build</h3><p id="be5720e4-6f49-8382-a282-01e4e12420e9" class="" dir="auto">Build는 Job이 한 번 실행된 결과다.</p><p id="043720e4-6f49-826d-9865-813ee63ec765" class="" dir="auto">보통 실행 기록이 순번으로 남음.</p><p id="080720e4-6f49-82c6-b762-81c44328b481" class="" dir="auto">예:</p><ul id="760720e4-6f49-82ad-9a14-813326a5e3a9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build #15 성공</li></ul><ul id="c4b720e4-6f49-83d6-95a7-0115d7ee38cd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build #16 실패</li></ul><ul id="492720e4-6f49-83e2-8e98-812ab4438273" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Build #17 중단</li></ul><p id="33d720e4-6f49-83f3-9ef3-01065369627a" class="" dir="auto">이 기록을 통해 다음을 확인할 수 있음.</p><ul id="6d4720e4-6f49-82bc-9248-01e6de81d1c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">언제 실행됐는가</li></ul><ul id="8fb720e4-6f49-8317-ac3d-81c21220bcfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누가 트리거했는가</li></ul><ul id="b20720e4-6f49-83d7-8b43-8189fd937a98" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어느 커밋 기준인가</li></ul><ul id="a8b720e4-6f49-835b-9a73-81d049b3064d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 로그가 출력됐는가</li></ul><ul id="0dd720e4-6f49-830b-80a8-819407f4c5ba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">결과가 성공/실패/중단 중 무엇인가</li></ul><p id="2c8720e4-6f49-83bc-acce-8187014cb4ef" class="" dir="auto">즉, Build는 단순 컴파일 결과가 아니라 <strong>Job 실행 이력 단위</strong>다.</p><hr id="4ce720e4-6f49-82f9-b255-81fb1348ffc0" dir="auto"/><h3 id="c6d720e4-6f49-8323-aeca-81a431eabf08" class="" dir="auto">6.4 Node</h3><p id="b72720e4-6f49-83fc-bf05-01a82ec7b575" class="" dir="auto">Node는 Jenkins가 작업을 수행할 수 있는 실행 대상이다.</p><p id="79d720e4-6f49-825c-8bd9-81849b8584b9" class="" dir="auto">Controller 자체도 Node가 될 수 있고, 별도 Agent도 Node가 될 수 있음.</p><p id="ab6720e4-6f49-82ed-bce5-8134f6710dc9" class="" dir="auto">Pipeline 코드에서 특정 Node를 지정하면 그 환경에서 작업을 실행하게 됨.</p><hr id="45d720e4-6f49-82da-aa40-0129312ef821" dir="auto"/><h3 id="273720e4-6f49-8319-b72b-81972a2a5a26" class="" dir="auto">6.5 Label</h3><p id="7fd720e4-6f49-82dc-abdf-8185fb728a53" class="" dir="auto">Label은 특정 Agent를 분류하는 태그 개념이다.</p><p id="aef720e4-6f49-8360-8da9-013b011af2b3" class="" dir="auto">예를 들어 다음처럼 구분할 수 있음.</p><ul id="c4d720e4-6f49-82f1-b1e2-017797f37b4c" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>linux</code></li></ul><ul id="a6b720e4-6f49-8375-b25a-01ef3f4db5c1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>windows</code></li></ul><ul id="96f720e4-6f49-8295-af3d-812ea15605be" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>docker</code></li></ul><ul id="f79720e4-6f49-83f2-9ff4-8125b6051eba" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>maven</code></li></ul><ul id="8b6720e4-6f49-83f1-82ac-8100adbf5524" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>gpu</code></li></ul><p id="fe3720e4-6f49-829d-9893-014954d11a19" class="" dir="auto">파이프라인에서 특정 Label을 요구하면, 해당 Label을 가진 Agent에서 작업이 수행됨.</p><p id="7fc720e4-6f49-82d4-9da6-812d96ab489e" class="" dir="auto">이 구조는 실무에서 매우 중요함.</p><p id="c07720e4-6f49-8393-91a8-0150bac66958" class="" dir="auto">프로젝트마다 필요한 실행 환경이 다르기 때문임.</p><hr id="1c0720e4-6f49-8323-89f8-81361954feb3" dir="auto"/><h2 id="77f720e4-6f49-8364-bfdf-019b55f3407a" class="" dir="auto">7. Jenkins Job 유형</h2><p id="a51720e4-6f49-82bc-a979-81ff1153d755" class="" dir="auto">Jenkins에는 여러 Job 유형이 있지만, 강의 초반에는 대표 유형만 정확히 구분하면 충분함.</p><hr id="e81720e4-6f49-8392-9e5e-01f88332db7e" dir="auto"/><h3 id="bfc720e4-6f49-8358-a861-01edb8a59ea6" class="" dir="auto">7.1 Freestyle Project</h3><p id="acf720e4-6f49-8235-8035-01cdae65d5db" class="" dir="auto">가장 전통적인 방식이다.</p><p id="da5720e4-6f49-83a2-8ee1-81b58a076efe" class="" dir="auto">웹 UI에서 빌드 명령, 트리거, 후처리 작업을 설정할 수 있음.</p><h3 id="a51720e4-6f49-8292-ae55-0103f8485df2" class="" dir="auto">특징</h3><ul id="a7d720e4-6f49-8256-b8a9-8179a75bd437" class="bulleted-list" dir="auto"><li style="list-style-type:disc">입문이 쉬움</li></ul><ul id="fd2720e4-6f49-8268-b46a-014374ba3fc4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">간단한 작업 구성에 적합함</li></ul><ul id="1e2720e4-6f49-8235-b987-0192a2ef5945" class="bulleted-list" dir="auto"><li style="list-style-type:disc">UI 기반이라 빠르게 만들 수 있음</li></ul><h3 id="e62720e4-6f49-82c6-ae22-013e8e41b36c" class="" dir="auto">한계</h3><ul id="bde720e4-6f49-82e2-91dc-01ec9363ce7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">설정 이력 관리가 어려움</li></ul><ul id="a5b720e4-6f49-837b-ada5-01d774629eef" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복잡한 흐름 표현이 불편함</li></ul><ul id="cc1720e4-6f49-8372-85d9-0166afd9537c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재사용성과 코드 리뷰가 약함</li></ul><p id="aec720e4-6f49-83c0-a050-01423cf9b7cc" class="" dir="auto">즉, Freestyle은 개념 학습용으로는 좋지만, 복잡한 실무 파이프라인에는 한계가 있음.</p><hr id="45f720e4-6f49-82b8-87b2-018ac015a731" dir="auto"/><h3 id="028720e4-6f49-825a-aad9-81457544afc2" class="" dir="auto">7.2 Pipeline</h3><p id="119720e4-6f49-830b-b6cf-01452a5d0feb" class="" dir="auto">Pipeline은 Jenkinsfile을 사용해서 단계별 흐름을 코드로 정의하는 방식이다.</p><h3 id="ae5720e4-6f49-8212-9dec-01fb6ad899a1" class="" dir="auto">특징</h3><ul id="5ad720e4-6f49-822f-9fbc-810f07a8c354" class="bulleted-list" dir="auto"><li style="list-style-type:disc">버전 관리 가능</li></ul><ul id="576720e4-6f49-82be-a2ca-8192b3eb4c92" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복잡한 절차 표현 가능</li></ul><ul id="af2720e4-6f49-83bf-a957-01fbaf609328" class="bulleted-list" dir="auto"><li style="list-style-type:disc">조건 분기, 병렬 처리 가능</li></ul><ul id="d1b720e4-6f49-827d-ac6b-010ad04f7f55" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 리뷰 가능</li></ul><ul id="db8720e4-6f49-82de-8791-016635bf4e6d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재현성 높음</li></ul><p id="c8a720e4-6f49-824d-bc5f-01ab965e7016" class="" dir="auto">즉, 현재 Jenkins를 이야기할 때 핵심은 대부분 Pipeline이다.</p><hr id="cd9720e4-6f49-833c-b831-013f5600a989" dir="auto"/><h3 id="156720e4-6f49-82a4-a202-819ca5a07d75" class="" dir="auto">7.3 Multibranch Pipeline</h3><p id="b14720e4-6f49-831e-b0a4-01857dd9f18a" class="" dir="auto">멀티브랜치 파이프라인은 저장소의 여러 브랜치를 자동으로 인식하고, 각 브랜치의 Jenkinsfile을 기준으로 파이프라인을 실행하는 구조다.</p><h3 id="8a2720e4-6f49-83d7-b533-01b642547390" class="" dir="auto">장점</h3><ul id="a65720e4-6f49-83e2-ab9a-814703daa4dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브랜치별 자동 파이프라인</li></ul><ul id="e04720e4-6f49-83e9-a4b1-01994adb48fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">PR 기반 흐름과 잘 맞음</li></ul><ul id="0b3720e4-6f49-8246-9043-81d974b60f56" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git 중심 운영에 유리함</li></ul><p id="149720e4-6f49-834f-bc99-819bb95b99fc" class="" dir="auto">즉, Git 기반 현대적 개발 방식과 잘 연결되는 Jenkins 구조라고 볼 수 있음.</p><hr id="6c5720e4-6f49-83cb-aa10-018f300c4b3a" dir="auto"/><h2 id="ffe720e4-6f49-82d8-b35c-017e2c228b6f" class="" dir="auto">8. Jenkins Pipeline의 중요성</h2><p id="673720e4-6f49-82ee-b22c-014844d5d629" class="" dir="auto">Jenkins를 오래 사용한 조직도 요즘은 대부분 Pipeline 중심으로 운영함.</p><p id="efa720e4-6f49-8310-be11-816b20945a8e" class="" dir="auto">그 이유는 명확함.</p><hr id="98f720e4-6f49-83e8-affb-81a2f35bb251" dir="auto"/><h3 id="232720e4-6f49-8338-b73b-017d2fb4eee9" class="" dir="auto">8.1 UI 설정보다 코드 관리가 유리함</h3><p id="f22720e4-6f49-83d9-9130-8129b9df8413" class="" dir="auto">UI에서 클릭으로 구성한 Job은 다음 문제가 생기기 쉬움.</p><ul id="f6b720e4-6f49-82c5-b743-812f052f450a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누가 무엇을 바꿨는지 추적이 어려움</li></ul><ul id="326720e4-6f49-8297-a2bd-01bd5306e253" class="bulleted-list" dir="auto"><li style="list-style-type:disc">환경 복제가 어려움</li></ul><ul id="b58720e4-6f49-82df-abe8-819a4cae7d6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업과 재구성이 번거로움</li></ul><ul id="c75720e4-6f49-825c-b8af-81d2aa80a456" class="bulleted-list" dir="auto"><li style="list-style-type:disc">리뷰 없이 설정이 바뀔 수 있음</li></ul><p id="3cf720e4-6f49-835a-95d9-8194d9f02530" class="" dir="auto">반면 Jenkinsfile은 Git에 저장되므로 다음이 가능함.</p><ul id="cbd720e4-6f49-8228-ab14-815121672404" class="bulleted-list" dir="auto"><li style="list-style-type:disc">변경 이력 추적</li></ul><ul id="901720e4-6f49-825c-b71e-0146520e29b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 리뷰</li></ul><ul id="7aa720e4-6f49-835e-a2df-816ac0a21cd7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">브랜치별 분리</li></ul><ul id="e4d720e4-6f49-8300-a349-81d2dd537933" class="bulleted-list" dir="auto"><li style="list-style-type:disc">프로젝트와 함께 관리</li></ul><p id="0b4720e4-6f49-8352-bf3a-01d51d01a3af" class="" dir="auto">즉, 파이프라인을 코드화하면 DevOps의 핵심 원칙 중 하나인 <strong>변경의 추적 가능성</strong>이 높아짐.</p><hr id="ef1720e4-6f49-838d-a9bb-81f4606e8689" dir="auto"/><h3 id="a96720e4-6f49-8217-86a1-01962143174e" class="" dir="auto">8.2 복잡한 흐름 표현이 쉬움</h3><p id="ada720e4-6f49-8255-a679-0184daff3b1e" class="" dir="auto">실무 파이프라인은 단순하지 않음.</p><p id="3f0720e4-6f49-83d8-8946-81deba45f8e5" class="" dir="auto">예를 들면 다음 흐름이 필요할 수 있음.</p><ul id="c65720e4-6f49-83f5-8c33-81ca628df9ca" class="bulleted-list" dir="auto"><li style="list-style-type:disc">feature 브랜치는 테스트까지만</li></ul><ul id="bea720e4-6f49-83f2-a06b-811e9799d0fa" class="bulleted-list" dir="auto"><li style="list-style-type:disc">main 브랜치는 릴리스까지</li></ul><ul id="b91720e4-6f49-8357-adab-8181b582c4a7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그가 붙으면 운영 배포 후보 생성</li></ul><ul id="333720e4-6f49-8244-b7dc-011c0940a3ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 점검 실패 시 중단</li></ul><ul id="d8f720e4-6f49-8272-a511-81a5f8542830" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테스트는 병렬 수행</li></ul><ul id="c24720e4-6f49-82e0-ad8d-01c1fa8f8ebc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 배포 전 승인 단계 추가</li></ul><p id="991720e4-6f49-83c6-89c4-81eff305d096" class="" dir="auto">이런 구조는 Pipeline 코드 방식이 훨씬 잘 맞음.</p><hr id="f98720e4-6f49-83ef-9aaf-81b8e594d761" dir="auto"/><h2 id="c14720e4-6f49-8255-a9f5-01cb09675c39" class="" dir="auto">9. Plugin 구조의 장점과 주의점</h2><h3 id="912720e4-6f49-8344-90c8-01675d049a7a" class="" dir="auto">9.1 Plugin이 주는 장점</h3><p id="490720e4-6f49-82e2-b4a5-012ff523289f" class="" dir="auto">Jenkins는 플러그인을 통해 기능을 폭넓게 확장할 수 있음.</p><p id="c8b720e4-6f49-8314-8fcb-01a08bd091ab" class="" dir="auto">예:</p><ul id="fee720e4-6f49-8264-b7ee-0143e62cd9ff" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Git 플러그인</li></ul><ul id="1ef720e4-6f49-833f-958e-81cfa64ae9d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Pipeline 플러그인</li></ul><ul id="20b720e4-6f49-830f-af12-01cf06a2d6d9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Docker 플러그인</li></ul><ul id="8c4720e4-6f49-83ff-9899-01d02b368da8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Kubernetes 플러그인</li></ul><ul id="c7b720e4-6f49-8319-aa4e-01fe05af920e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Slack Notification 플러그인</li></ul><ul id="9b9720e4-6f49-82a7-a0a8-011fc4c38ac0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Credentials Binding 플러그인</li></ul><p id="c50720e4-6f49-82db-9b5e-011c431cec73" class="" dir="auto">즉, Jenkins는 기본 엔진이 있고, 필요한 기능을 플러그인으로 추가하는 구조임.</p><hr id="6ce720e4-6f49-82bf-bab9-0161e1638beb" dir="auto"/><h3 id="48c720e4-6f49-834a-8dde-01dd207d1b70" class="" dir="auto">9.2 Plugin 구조의 한계</h3><p id="b21720e4-6f49-8396-a7a4-016e1426ad40" class="" dir="auto">플러그인이 많다는 것은 강점이지만 동시에 관리 포인트도 많다는 뜻임.</p><p id="84c720e4-6f49-82c8-a664-8199756e2df2" class="" dir="auto">주의할 점은 다음과 같음.</p><ul id="1df720e4-6f49-8325-b659-8161839ef15c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">플러그인 버전 충돌 가능성</li></ul><ul id="f48720e4-6f49-82b3-9714-010f49047c06" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins 업그레이드 시 호환성 문제</li></ul><ul id="627720e4-6f49-8310-a8ef-015d6aea556f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보안 취약점 관리 필요</li></ul><ul id="1f0720e4-6f49-829a-a775-818b1ee6b296" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오래된 플러그인의 유지보수 중단 가능성</li></ul><p id="a8c720e4-6f49-8360-9795-81d896090197" class="" dir="auto">즉, Jenkins를 운영할 때는 단순 설치보다 <strong>플러그인 생태계 관리</strong>가 중요한 과제가 됨.</p><hr id="6a4720e4-6f49-83e3-9767-01fac62b9306" dir="auto"/><h2 id="e1f720e4-6f49-836d-a44e-01bbafabf864" class="" dir="auto">10. Jenkins가 잘 맞는 환경</h2><p id="d5f720e4-6f49-82ab-a13f-81a032ade1c9" class="" dir="auto">Jenkins는 모든 조직에서 무조건 최선은 아니지만, 다음 환경에는 특히 잘 맞는 편임.</p><h3 id="2b3720e4-6f49-82f8-a2f8-81450e85963d" class="" dir="auto">10.1 자체 인프라 중심 환경</h3><p id="b56720e4-6f49-820d-ad2a-8111383609da" class="" dir="auto">사내망, 폐쇄망, 자체 서버 운영 환경에서는 Jenkins의 통제력이 강점이 됨.</p><h3 id="1f5720e4-6f49-83fc-a659-818d22e1db7e" class="" dir="auto">10.2 복잡한 커스텀 파이프라인</h3><p id="3c4720e4-6f49-82c8-81ee-81d99d83755e" class="" dir="auto">단순 SaaS 워크플로우보다 복잡한 절차와 레거시 시스템 연동이 필요한 경우 Jenkins가 유리할 수 있음.</p><h3 id="0a6720e4-6f49-8348-a958-81312702d88b" class="" dir="auto">10.3 다양한 실행 환경이 필요한 경우</h3><p id="bd9720e4-6f49-8242-a1d9-01f4b493b103" class="" dir="auto">Linux, Windows, Docker, 특정 사내 도구 등 여러 환경을 혼합해야 할 때 Agent 구조가 유용함.</p><h3 id="210720e4-6f49-83d7-afb8-81d2a18f6d5a" class="" dir="auto">10.4 기존 레거시 자동화 자산이 많은 경우</h3><p id="318720e4-6f49-82e4-931e-01aec9cee5b6" class="" dir="auto">이미 수많은 Jenkins Job과 Script가 있는 조직에서는 Jenkins가 여전히 핵심 플랫폼일 수 있음.</p><hr id="8e3720e4-6f49-83a9-858e-81b5314ab359" dir="auto"/><h2 id="3bd720e4-6f49-8273-af03-014df799ed89" class="" dir="auto">11. Jenkins의 한계와 운영상 고려사항</h2><p id="91a720e4-6f49-8351-a222-81bb632561f6" class="" dir="auto">Jenkins는 강력하지만, 운영 난이도도 함께 고려해야 함.</p><h3 id="571720e4-6f49-827c-8586-8120107f7f67" class="" dir="auto">11.1 직접 운영 부담</h3><p id="d82720e4-6f49-8243-8543-81d462981cbb" class="" dir="auto">Jenkins는 설치형 도구라서 서버 운영, 백업, 업그레이드, 보안 패치 등을 직접 관리해야 함.</p><h3 id="307720e4-6f49-82d0-8727-0126323d5089" class="" dir="auto">11.2 플러그인 의존성</h3><p id="b89720e4-6f49-82f4-800c-013ca12c3d84" class="" dir="auto">확장성은 좋지만 관리 복잡도도 커짐.</p><h3 id="a59720e4-6f49-8304-a8f8-814d3ed13eeb" class="" dir="auto">11.3 UI 중심 운영의 위험</h3><p id="5f8720e4-6f49-8232-9377-019cddfef527" class="" dir="auto">Pipeline as Code를 쓰지 않으면 설정이 산발적으로 흩어질 수 있음.</p><h3 id="4c3720e4-6f49-828e-bac8-8158ea318e6e" class="" dir="auto">11.4 Controller 과부하 가능성</h3><p id="8ed720e4-6f49-82b9-8f96-810e78d8a86d" class="" dir="auto">잘못 설계하면 모든 작업이 Controller에 몰려 성능 문제가 생길 수 있음.</p><h3 id="364720e4-6f49-826c-bfc7-813d7a54eb0a" class="" dir="auto">11.5 보안 관리 중요</h3><p id="c54720e4-6f49-83c6-8f73-0151c642d5f3" class="" dir="auto">Credential 관리, 권한 분리, 에이전트 격리, 외부 연동 보안 등을 신경 써야 함.</p><p id="310720e4-6f49-83ee-8c3e-819270e5ecf5" class="" dir="auto">즉, Jenkins는 강력한 만큼 &quot;운영형 도구&quot;라는 점을 반드시 기억해야 함.</p><hr id="57c720e4-6f49-82cc-88c9-81c589ad6e33" dir="auto"/><h2 id="ceb720e4-6f49-82f4-8b39-81cf049bbc71" class="" dir="auto">12. 아키텍처 관점에서 본 Jenkins의 위치</h2><p id="99b720e4-6f49-8388-975f-81325a303904" class="" dir="auto">CI/CD 전체 구조에서 Jenkins는 보통 다음 위치에 놓임.</p><pre id="fa8720e4-6f49-822c-bb05-815c2c898f62" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Developer
+   ↓
+Git Repository
+   ↓
+Jenkins Controller
+   ↓
+Jenkins Agent
+   ↓
+Build / Test / Package
+   ↓
+Artifact Repository / Container Registry
+   ↓
+Deployment Target</code></pre><p id="142720e4-6f49-83b3-b16b-01f7c193d88b" class="" dir="auto">이 구조에서 Jenkins는 <strong>트리거를 받고 파이프라인을 실행하며 결과를 다음 단계로 넘기는 중심 허브</strong> 역할을 한다.</p><p id="035720e4-6f49-83c7-b29b-81633a54f3e1" class="" dir="auto">즉, Jenkins는 코드 저장소와 실행 환경 사이를 연결하는 자동화 오케스트레이터라고 볼 수 있음.</p><hr id="78f720e4-6f49-837c-9317-013a4aa5b382" dir="auto"/><h2 id="831720e4-6f49-82aa-b33a-817e06503911" class="" dir="auto">요약</h2><ul id="664720e4-6f49-8383-afd7-816c13a09c7b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins는 CI/CD 자동화를 위한 오픈소스 자동화 서버임</li></ul><ul id="76c720e4-6f49-8226-b302-81395bff341c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">단순 빌드 도구가 아니라 파이프라인 실행과 흐름 제어를 담당하는 플랫폼임</li></ul><ul id="279720e4-6f49-83b2-a0e3-8148b7c61571" class="bulleted-list" dir="auto"><li style="list-style-type:disc">기본 구조는 Controller / Agent 아키텍처로 설명할 수 있음</li></ul><ul id="055720e4-6f49-820e-b702-0130ef4a18cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Job, Build, Node, Label, Workspace 같은 기본 개념을 이해해야 함</li></ul><ul id="80b720e4-6f49-83cd-944e-01949d0de316" class="bulleted-list" dir="auto"><li style="list-style-type:disc">현대적인 Jenkins 활용의 핵심은 Pipeline as Code와 Jenkinsfile임</li></ul><ul id="bac720e4-6f49-8334-9944-01705cc6a9c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">플러그인 확장성은 강점이지만 동시에 운영 관리 포인트이기도 함</li></ul><ul id="a15720e4-6f49-8209-be3b-81dad055d6e6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Jenkins는 특히 자체 인프라와 복잡한 자동화 흐름이 필요한 환경에서 강점을 가짐</li></ul><hr id="8d6720e4-6f49-821e-a218-81a7720bae7c" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

@@ -1,0 +1,1149 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>SQS를 활용한  아키텍처 설계 실습</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="dae720e4-6f49-8372-ab2c-81e21156f36d" class="page sans"><header><h1 class="page-title" dir="auto">SQS를 활용한  아키텍처 설계 실습</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h1 id="534720e4-6f49-82e0-86c0-815c5a46018f" class="" dir="auto">1. 실습 개요</h1><h2 id="c93720e4-6f49-82f4-804f-0145a5d4f0bb" class="" dir="auto">1.1 실습 주제</h2><p id="3c3720e4-6f49-82a4-a279-014f2fd98c82" class="" dir="auto">사용자가 웹 애플리케이션에 요청을 보내면</p><p id="a54720e4-6f49-825f-ada2-011b2d9c7d4a" class="" dir="auto">애플리케이션이 요청을 즉시 모두 처리하지 않고</p><p id="8cd720e4-6f49-83ba-b09d-01d40a1099e6" class="" dir="auto"><strong>Amazon SQS에 작업 메시지를 적재</strong>한 뒤</p><p id="155720e4-6f49-83dc-9ad2-81b2ba009861" class="" dir="auto">별도의 <strong>Worker 서버가 메시지를 가져가서 처리</strong>하는 구조를 구현한다.</p><p id="4a8720e4-6f49-82b7-9a67-01282d9a159c" class="" dir="auto">이 구조는 AWS 아키텍처 모범사례에서 자주 사용하는 방식이다.</p><p id="94b720e4-6f49-8368-bd93-81d22f9b282f" class="" dir="auto">예를 들면 다음과 같은 업무에 적합하다.</p><ul id="fc1720e4-6f49-821c-a251-81ce513da11e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 변환</li></ul><ul id="a67720e4-6f49-830a-8a35-81b2d1ef297d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이메일 발송</li></ul><ul id="31f720e4-6f49-83be-bb36-01317cd105cb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주문 처리</li></ul><ul id="9fa720e4-6f49-837b-b752-813b56b06a6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">로그 후처리</li></ul><ul id="013720e4-6f49-8313-9901-0196edf3360f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">배치성 작업</li></ul><ul id="27e720e4-6f49-82b9-a994-018f329e1f99" class="bulleted-list" dir="auto"><li style="list-style-type:disc">외부 API 호출</li></ul><ul id="3ae720e4-6f49-8317-ba8f-0185062cb6dc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보고서 생성</li></ul><hr id="3e1720e4-6f49-83b2-a099-017e4cebd5ac" dir="auto"/><h2 id="8b6720e4-6f49-82bd-8835-8168fad20bec" class="" dir="auto">1.2 실습 목표</h2><p id="f30720e4-6f49-820c-9c3f-019736bcd01b" class="" dir="auto">본 실습을 통해 다음을 이해한다.</p><ul id="af3720e4-6f49-8299-8fa0-019b5a1f5949" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQS를 이용한 비동기 아키텍처 구성</li></ul><ul id="baf720e4-6f49-839e-8664-815289cb4345" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버와 작업 처리 서버의 역할 분리</li></ul><ul id="ca7720e4-6f49-8204-8aba-0182ecac7bb6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling 환경에서의 웹 계층 설계</li></ul><ul id="5a8720e4-6f49-8302-a498-81d1773b1531" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker 계층의 메시지 Polling 구조</li></ul><ul id="68e720e4-6f49-82cf-8f6a-812c0974d444" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQS Visibility Timeout 개념</li></ul><ul id="1bc720e4-6f49-82a0-b5f5-819ec07a58e3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Dead Letter Queue 구성</li></ul><ul id="203720e4-6f49-83eb-8802-8182fc36c802" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 시 메시지 유실 방지 구조</li></ul><ul id="5fd720e4-6f49-8202-bda0-819fdb88ce01" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch를 통한 큐 모니터링</li></ul><hr id="9f2720e4-6f49-82fe-8392-81da16dc6b06" dir="auto"/><h2 id="852720e4-6f49-8313-ba03-01edf645bedd" class="" dir="auto">1.3 실습 아키텍처</h2><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="ca4720e4-6f49-8243-a2bd-813a4b31de6d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+  ↓
+ALB
+  ↓
+Web EC2 (Auto Scaling Group)
+  ↓
+Amazon SQS (Main Queue)
+  ↓
+Worker EC2
+  ↓
+처리 결과 로그 / DB 저장 / 파일 저장</code></pre><p id="302720e4-6f49-8304-94af-01302de87429" class="" dir="auto">확장 구조는 다음과 같이 볼 수 있다.</p><pre id="7a4720e4-6f49-832d-9b1b-012abe52e251" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">User
+  ↓
+Application Load Balancer
+  ↓
+Auto Scaling Group (Web Tier)
+  ↓
+SQS Standard Queue
+  ↓
+Worker Tier (1대 이상)
+  ↓
+RDS 또는 S3 또는 DynamoDB</code></pre><hr id="868720e4-6f49-8215-84e5-012536c52f18" dir="auto"/><h1 id="223720e4-6f49-83c2-94cc-813be1481121" class="" dir="auto">2. 왜 SQS를 사용하는가</h1><p id="521720e4-6f49-82ac-bb6f-010760b93507" class="" dir="auto">웹 서버가 모든 작업을 직접 처리하면 다음 문제가 발생한다.</p><ul id="c2e720e4-6f49-8286-89e9-017e8ba93303" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자 응답 시간이 길어짐</li></ul><ul id="502720e4-6f49-8215-8aa9-81d42a60e304" class="bulleted-list" dir="auto"><li style="list-style-type:disc">순간 트래픽 증가 시 웹 서버 부하 급증</li></ul><ul id="47c720e4-6f49-8286-a362-019e44d1f359" class="bulleted-list" dir="auto"><li style="list-style-type:disc">긴 작업 때문에 타임아웃 발생 가능</li></ul><ul id="ae5720e4-6f49-8312-b3b4-01473ad84c65" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일부 작업 실패 시 전체 요청 품질 저하</li></ul><ul id="15b720e4-6f49-824a-afe3-016b828d22a4" class="bulleted-list" dir="auto"><li style="list-style-type:disc">시스템 결합도 증가</li></ul><p id="30e720e4-6f49-827e-8cd1-01ff421be07e" class="" dir="auto">이때 SQS를 사용하면 다음 장점이 생긴다.</p><ul id="971720e4-6f49-839b-ae5f-8152195c6422" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 접수와 실제 처리 분리 가능</li></ul><ul id="244720e4-6f49-8360-a621-81dbfbded110" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 계층은 빠르게 응답 가능</li></ul><ul id="37b720e4-6f49-83a0-8ec7-81eeded2ec3c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker 수를 늘려 처리량 확장 가능</li></ul><ul id="73e720e4-6f49-822f-882d-81bfed289dfc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">메시지 기반 재처리 가능</li></ul><ul id="355720e4-6f49-838d-b2c5-81b5a3cfed59" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장애 격리 가능</li></ul><ul id="36e720e4-6f49-82d7-9e1a-81cae55dc2de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스 간 느슨한 결합 가능</li></ul><p id="f5c720e4-6f49-833d-86e4-81b0a28e95d5" class="" dir="auto">즉, SQS는 <strong>탄력성, 확장성, 내결함성</strong>을 높이는 핵심 구성요소다.</p><hr id="2a2720e4-6f49-839d-a995-01ee98b3d5de" dir="auto"/><h1 id="5fa720e4-6f49-826b-bd75-810ae59ba241" class="" dir="auto">3. 실습 시나리오</h1><p id="3ab720e4-6f49-82ed-8ebb-81d7e0b03c84" class="" dir="auto">이번 실습에서는 사용자가 웹 페이지에서 작업 요청을 등록하면</p><p id="656720e4-6f49-8338-975f-817beeacc7fe" class="" dir="auto">Web 서버가 이 작업을 SQS에 넣고</p><p id="289720e4-6f49-82ac-a553-019afdbee56a" class="" dir="auto">Worker 서버가 큐에서 메시지를 가져가 처리하는 구조를 만든다.</p><p id="3b4720e4-6f49-821a-943d-81360db8f3ab" class="" dir="auto">예시 업무는 다음처럼 가정한다.</p><ul id="5c5720e4-6f49-829d-bcfd-0109c1f4c6b2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자가 <code>/submit</code> 요청 전송</li></ul><ul id="896720e4-6f49-8323-b055-01339f5bb37a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">요청 내용: <code>report-001</code>, <code>image-task-001</code>, <code>order-1001</code></li></ul><ul id="19d720e4-6f49-82ef-92b4-015e84b31fdb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Web 서버는 요청을 SQS에 넣고 즉시 응답</li></ul><ul id="d9f720e4-6f49-8306-8890-01a1d6c27300" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker 서버는 SQS에서 메시지를 받아 10초 동안 처리하는 것으로 가정</li></ul><ul id="5ef720e4-6f49-82cc-a19f-01041a05e3b7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">처리 완료 후 로그 파일 기록</li></ul><hr id="bed720e4-6f49-826c-b905-81a089c804ab" dir="auto"/><h1 id="a24720e4-6f49-8208-904f-019aaebf646b" class="" dir="auto">4. 실습 구성 요소</h1><h2 id="c1b720e4-6f49-825e-8d2a-81a318be2248" class="" dir="auto">4.1 AWS 서비스</h2><ul id="076720e4-6f49-83e5-8fad-81c3bb4c8628" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VPC</li></ul><ul id="ed1720e4-6f49-8213-9861-0194542ccf51" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Public Subnet</li></ul><ul id="8fb720e4-6f49-826c-afe8-014e76cdae14" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Private Subnet</li></ul><ul id="13e720e4-6f49-82ac-8766-0190def52573" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Internet Gateway</li></ul><ul id="090720e4-6f49-8376-9126-81e11aac56ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAT Gateway 또는 실습 편의상 Public Worker</li></ul><ul id="ebc720e4-6f49-832e-8f20-81b5a8eb55bf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2</li></ul><ul id="269720e4-6f49-83da-bec7-817c7b9003a8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Auto Scaling Group</li></ul><ul id="53d720e4-6f49-83b0-a2b7-01307338664e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Application Load Balancer</li></ul><ul id="2f1720e4-6f49-83e3-8407-81ef9a120581" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon SQS</li></ul><ul id="308720e4-6f49-83f0-86df-01e7f091a958" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Role</li></ul><ul id="350720e4-6f49-83b7-bd28-016c0033f7f7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">CloudWatch</li></ul><hr id="57a720e4-6f49-830d-b2c7-013916b74972" dir="auto"/><h2 id="e41720e4-6f49-822e-9a5b-01c7e351aa8c" class="" dir="auto">4.2 인스턴스 역할</h2><table id="f46720e4-6f49-823b-8ab9-017cfeb23cd2" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="119720e4-6f49-8260-af06-01f0cbc26d67" dir="ltr"><th id="{Q&gt;Z" class="simple-table-header-color simple-table-header">구성 요소</th><th id="aAKM" class="simple-table-header-color simple-table-header">역할</th></tr></thead><tbody><tr id="ed3720e4-6f49-83b0-b239-0158aa8964ad" dir="ltr"><td id="{Q&gt;Z" class="">ALB</td><td id="aAKM" class="">사용자 요청 분산</td></tr><tr id="801720e4-6f49-821e-a9d5-01d2e0308f38" dir="ltr"><td id="{Q&gt;Z" class="">Web EC2</td><td id="aAKM" class="">사용자 요청 수신, SQS에 메시지 전송</td></tr><tr id="f64720e4-6f49-825c-846e-81cfd1fdd92f" dir="ltr"><td id="{Q&gt;Z" class="">Worker EC2</td><td id="aAKM" class="">SQS 메시지 수신 및 작업 처리</td></tr><tr id="cc5720e4-6f49-829b-96c1-01e135d21813" dir="ltr"><td id="{Q&gt;Z" class="">SQS Main Queue</td><td id="aAKM" class="">비동기 작업 적재</td></tr><tr id="ade720e4-6f49-83fd-9269-810ed639b586" dir="ltr"><td id="{Q&gt;Z" class="">SQS DLQ</td><td id="aAKM" class="">반복 실패 메시지 보관</td></tr></tbody></table><hr id="419720e4-6f49-82eb-a163-01efc6c55884" dir="auto"/><h1 id="6ad720e4-6f49-8399-aa0a-013c5a516f09" class="" dir="auto">5. 실습 전제</h1><h2 id="e02720e4-6f49-8243-8894-01c7b44b0fa9" class="" dir="auto">5.1 네트워크 구성</h2><p id="403720e4-6f49-8224-8cc0-8170a08ce57b" class="" dir="auto">실습 단순화를 위해 다음처럼 구성한다.</p><table id="078720e4-6f49-835d-8ff0-0155417f8798" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="511720e4-6f49-82fe-a97d-017e32ea0386" dir="ltr"><th id="PAqY" class="simple-table-header-color simple-table-header">자원</th><th id="&lt;fk\" class="simple-table-header-color simple-table-header">예시</th></tr></thead><tbody><tr id="73c720e4-6f49-82dd-be7e-81c57fb295b4" dir="ltr"><td id="PAqY" class="">VPC</td><td id="&lt;fk\" class="">10.0.0.0/16</td></tr><tr id="d80720e4-6f49-8380-9e69-01bb2f7ccf50" dir="ltr"><td id="PAqY" class="">Public Subnet A</td><td id="&lt;fk\" class="">10.0.1.0/24</td></tr><tr id="a6b720e4-6f49-8386-ad92-013f379df27b" dir="ltr"><td id="PAqY" class="">Public Subnet C</td><td id="&lt;fk\" class="">10.0.2.0/24</td></tr><tr id="82c720e4-6f49-828b-b6cd-01b7c102fd0e" dir="ltr"><td id="PAqY" class="">Private Subnet A</td><td id="&lt;fk\" class="">10.0.11.0/24</td></tr><tr id="1bc720e4-6f49-83ec-b8c5-8132f10d5595" dir="ltr"><td id="PAqY" class="">Private Subnet C</td><td id="&lt;fk\" class="">10.0.12.0/24</td></tr></tbody></table><p id="1c9720e4-6f49-833e-8292-01999b61c441" class="" dir="auto">권장 구성은 다음과 같다.</p><ul id="e4d720e4-6f49-8266-a4aa-81e9881cf511" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ALB: Public Subnet</li></ul><ul id="d08720e4-6f49-83ab-8999-01d2024ad653" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Web EC2: Private Subnet</li></ul><ul id="d59720e4-6f49-8274-9a3d-01f6cbde98e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker EC2: Private Subnet</li></ul><ul id="e50720e4-6f49-82a7-b612-015fcd229e20" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NAT Gateway: Public Subnet</li></ul><p id="f50720e4-6f49-822e-b8d7-81a3cd3363fa" class="" dir="auto">다만 실습 난이도를 낮추기 위해</p><p id="434720e4-6f49-83fe-9a18-81a9babba4bd" class="" dir="auto">Web과 Worker를 Public Subnet에 두고 시작해도 됨.</p><p id="b29720e4-6f49-82a9-a3b7-01d7b3870fcf" class="" dir="auto">최종적으로는 Private Subnet 배치가 모범사례에 더 적합하다.</p><hr id="91a720e4-6f49-83ba-88c9-81062464757f" dir="auto"/><h1 id="c50720e4-6f49-83bb-8be5-017786ffb85f" class="" dir="auto">6. 실습 전체 흐름</h1><ol type="1" id="708720e4-6f49-8348-81ee-01b452fd2469" class="numbered-list" start="1" dir="auto"><li>SQS Main Queue 생성</li></ol><ol type="1" id="900720e4-6f49-8398-b67d-81cd22a65bd4" class="numbered-list" start="2" dir="auto"><li>Dead Letter Queue 생성</li></ol><ol type="1" id="71a720e4-6f49-8269-a409-81d88064582e" class="numbered-list" start="3" dir="auto"><li>IAM Role 생성</li></ol><ol type="1" id="7ce720e4-6f49-8222-8190-81f35ef06540" class="numbered-list" start="4" dir="auto"><li>Web 서버 구축</li></ol><ol type="1" id="7b3720e4-6f49-837f-886b-81d81e532ec7" class="numbered-list" start="5" dir="auto"><li>Worker 서버 구축</li></ol><ol type="1" id="ff1720e4-6f49-8388-b59f-81a35c685e45" class="numbered-list" start="6" dir="auto"><li>ALB 구성</li></ol><ol type="1" id="ec5720e4-6f49-835e-8937-81ef3e4f825a" class="numbered-list" start="7" dir="auto"><li>Web 서버를 Auto Scaling Group으로 확장</li></ol><ol type="1" id="176720e4-6f49-820c-8edc-013138a8a1a7" class="numbered-list" start="8" dir="auto"><li>요청 전송</li></ol><ol type="1" id="c8f720e4-6f49-836d-ad1b-0175fb98b77d" class="numbered-list" start="9" dir="auto"><li>SQS 메시지 적재 확인</li></ol><ol type="1" id="3c5720e4-6f49-839c-8175-815ea17e7428" class="numbered-list numbered-list-digits-2" start="10" dir="auto"><li>Worker 처리 확인</li></ol><ol type="1" id="dd5720e4-6f49-8239-b5cd-01fafe755808" class="numbered-list numbered-list-digits-2" start="11" dir="auto"><li>DLQ 동작 확인</li></ol><ol type="1" id="5bc720e4-6f49-83cc-abde-81b9b852c1d2" class="numbered-list numbered-list-digits-2" start="12" dir="auto"><li>CloudWatch 모니터링 확인</li></ol><hr id="1ed720e4-6f49-8371-b74c-81dfd15e9c8c" dir="auto"/><h1 id="730720e4-6f49-8267-968f-81a3140c03e4" class="" dir="auto">7. SQS Queue 생성</h1><h1 id="3ca720e4-6f49-83af-8308-81a3b8d5e0bc" class="" dir="auto">7.1 Dead Letter Queue 생성</h1><p id="149720e4-6f49-833e-b9a0-012ddbda796e" class="" dir="auto">먼저 실패 메시지를 저장할 DLQ를 생성한다.</p><p id="72d720e4-6f49-8397-a6d9-812f6269ecaa" class="" dir="auto">AWS Console 기준</p><pre id="7f2720e4-6f49-82ba-be0b-814f256a8639" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Amazon SQS → Create queue</code></pre><p id="c17720e4-6f49-8227-943a-01ce56cc9701" class="" dir="auto">설정</p><pre id="6f5720e4-6f49-82c6-a0ff-81b30ba8a878" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Type: Standard
+Name: app-task-dlq</code></pre><p id="ec4720e4-6f49-833e-a862-01c7f9f94928" class="" dir="auto">생성 완료</p><hr id="9d5720e4-6f49-83f5-a420-81a4fecf6efd" dir="auto"/><h1 id="988720e4-6f49-82c0-a166-81f51cf7b87e" class="" dir="auto">7.2 Main Queue 생성</h1><p id="06e720e4-6f49-833a-ad86-81fdb0fda5b7" class="" dir="auto">다시 Queue 생성</p><p id="864720e4-6f49-83be-bc69-81b5b5994c9d" class="" dir="auto">설정</p><pre id="59c720e4-6f49-8293-99e1-016d355c2d5d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Type: Standard
+Name: app-task-queue
+Visibility timeout: 30 seconds
+Message retention period: 4 days
+Delivery delay: 0 seconds
+Receive message wait time: 10 seconds</code></pre><h3 id="34e720e4-6f49-8249-8e8a-0132f23dcd86" class="" dir="auto">Redrive policy 설정</h3><pre id="253720e4-6f49-821b-a460-01999add06b5" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Dead-letter queue: app-task-dlq
+Maximum receives: 3</code></pre><p id="d81720e4-6f49-82d4-ae57-0169eed1b047" class="" dir="auto">설명</p><ul id="0b2720e4-6f49-830c-8039-0141abc45e26" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Visibility timeout</strong>: Worker가 메시지를 가져간 뒤 일정 시간 동안 다른 소비자에게 보이지 않게 하는 시간</li></ul><ul id="9ee720e4-6f49-8390-a29e-01fddfa33a61" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Message retention</strong>: 메시지를 큐에 보관하는 최대 시간</li></ul><ul id="227720e4-6f49-82d4-879e-81db77b9b121" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Receive message wait time</strong>: Long Polling 시간</li></ul><ul id="5c3720e4-6f49-8288-bcda-81541bdeda0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Maximum receives</strong>: 처리 실패가 3번 누적되면 DLQ로 이동</li></ul><hr id="36b720e4-6f49-8398-937e-01e992cebf24" dir="auto"/><h1 id="3c1720e4-6f49-83be-b2f8-813ac179a7fb" class="" dir="auto">8. IAM Role 생성</h1><p id="fc1720e4-6f49-82fb-8922-01b3cff9cd9a" class="" dir="auto">SQS를 사용하려면 EC2가 SQS에 접근할 권한이 필요하다.</p><hr id="c3d720e4-6f49-83e5-b950-8193183e1980" dir="auto"/><h2 id="028720e4-6f49-83b4-b92d-813cdc406231" class="" dir="auto">8.1 Web 서버용 Role</h2><p id="132720e4-6f49-836f-a1dd-01695287b12f" class="" dir="auto">IAM → Roles → Create role</p><p id="f57720e4-6f49-8295-afb2-817c5126fe92" class="" dir="auto">신뢰할 엔터티</p><pre id="556720e4-6f49-8217-8d63-8108fc001620" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AWS service → EC2</code></pre><p id="f0a720e4-6f49-83a7-aa0e-01af1ade64bd" class="" dir="auto">권한 정책 예시 이름</p><pre id="26b720e4-6f49-829e-be14-01b440f27d5c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">WebServerSQSRole</code></pre><p id="ae5720e4-6f49-8275-946c-01413fb5392c" class="" dir="auto">인라인 정책 또는 커스텀 정책 추가</p><pre id="2f4720e4-6f49-822d-abef-812c60677cf3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;:&quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;:&quot;SendMessageToQueue&quot;,
+      &quot;Effect&quot;:&quot;Allow&quot;,
+      &quot;Action&quot;: [
+           &quot;sqs:SendMessage&quot;,
+           &quot;sqs:GetQueueUrl&quot;,
+           &quot;sqs:GetQueueAttributes&quot;
+      ],
+      &quot;Resource&quot;:&quot;arn:aws:sqs:ap-northeast-2:계정ID:app-task-queue&quot;
+    }
+  ]
+}</code></pre><hr id="518720e4-6f49-8323-9075-0161cf141153" dir="auto"/><h2 id="39a720e4-6f49-82d7-adb0-0137d66c9827" class="" dir="auto">8.2 Worker 서버용 Role</h2><p id="b1b720e4-6f49-82bf-81a1-819ada83ce10" class="" dir="auto">역할 이름 예시</p><pre id="299720e4-6f49-83c2-ba10-81516d3645e8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">WorkerSQSRole</code></pre><p id="616720e4-6f49-83f0-a8f0-01ba886818c1" class="" dir="auto">권한 정책</p><pre id="403720e4-6f49-8255-9d02-81a2d9a5f0d4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;Version&quot;:&quot;2012-10-17&quot;,
+  &quot;Statement&quot;: [
+    {
+      &quot;Sid&quot;:&quot;ConsumeMessagesFromQueue&quot;,
+      &quot;Effect&quot;:&quot;Allow&quot;,
+      &quot;Action&quot;: [
+         &quot;sqs:ReceiveMessage&quot;,
+         &quot;sqs:DeleteMessage&quot;,
+         &quot;sqs:ChangeMessageVisibility&quot;,
+         &quot;sqs:GetQueueUrl&quot;,
+         &quot;sqs:GetQueueAttributes&quot;
+      ],
+      &quot;Resource&quot;:&quot;arn:aws:sqs:ap-northeast-2:계정ID:app-task-queue&quot;
+    }
+  ]
+}</code></pre><hr id="643720e4-6f49-82af-b092-015025a160db" dir="auto"/><h1 id="1dc720e4-6f49-831a-adb9-812b096f24c8" class="" dir="auto">9. Security Group 구성</h1><h2 id="dbd720e4-6f49-8272-9e91-8168bc33a03b" class="" dir="auto">9.1 ALB Security Group</h2><p id="88e720e4-6f49-837f-8d28-8122f33d8d29" class="" dir="auto">인바운드</p><pre id="9e3720e4-6f49-82f2-8685-01df0833a2f8" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">TCP 80  0.0.0.0/0</code></pre><p id="cb9720e4-6f49-827b-9560-81858175fca1" class="" dir="auto">아웃바운드</p><pre id="0cb720e4-6f49-83e5-a427-81c71792b6cd" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">All traffic</code></pre><hr id="448720e4-6f49-831c-a18e-01a9e158448e" dir="auto"/><h2 id="0b2720e4-6f49-82be-87ac-81cb314b5411" class="" dir="auto">9.2 Web EC2 Security Group</h2><p id="01b720e4-6f49-83f0-b8b3-01d87fe2c988" class="" dir="auto">인바운드</p><pre id="dd5720e4-6f49-83a2-87cb-8173c1bbca2f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">TCP 80  ALB Security Group
+TCP 22  내 공인 IP</code></pre><p id="e96720e4-6f49-83d5-b8ad-014c4574612d" class="" dir="auto">아웃바운드</p><pre id="3bb720e4-6f49-82c8-b03b-017341c7ddf0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">All traffic</code></pre><hr id="859720e4-6f49-82a5-ba70-013138f349b3" dir="auto"/><h2 id="109720e4-6f49-82e8-b7fa-01211a30f78e" class="" dir="auto">9.3 Worker EC2 Security Group</h2><p id="256720e4-6f49-828a-9d61-81ab9f810a86" class="" dir="auto">인바운드</p><pre id="eb8720e4-6f49-8381-87ce-01e8c34a6da1" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">TCP 22  내 공인 IP</code></pre><p id="909720e4-6f49-8266-a1f5-01d8b628a2ff" class="" dir="auto">아웃바운드</p><pre id="a14720e4-6f49-83cc-a357-01decd31185d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">All traffic</code></pre><p id="8f8720e4-6f49-83e2-9b96-81664fe67885" class="" dir="auto">Worker는 일반적으로 외부에서 직접 접근받지 않으므로</p><p id="4e8720e4-6f49-836e-945a-812ada699820" class="" dir="auto">애플리케이션 포트 오픈이 필요하지 않음.</p><hr id="d91720e4-6f49-837c-9954-812334bf61fc" dir="auto"/><h1 id="5f9720e4-6f49-82e5-bb6e-81120bdecc87" class="" dir="auto">10. Web 서버 구축</h1><p id="827720e4-6f49-825f-a064-819a69756cc9" class="" dir="auto">이번 실습에서는 Python Flask 애플리케이션으로</p><p id="511720e4-6f49-8305-a144-0167d7958064" class="" dir="auto">사용자 요청을 받아 SQS에 메시지를 넣도록 구성한다.</p><hr id="535720e4-6f49-825d-8b88-01566ecdc1f5" dir="auto"/><h2 id="a42720e4-6f49-8210-bcf4-0128f0868699" class="" dir="auto">10.1 Web EC2 생성</h2><p id="462720e4-6f49-829f-a4f9-819f45557de7" class="" dir="auto">예시</p><pre id="e06720e4-6f49-838e-84cd-01f35a9d5ca7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AMI: Amazon Linux 2023
+Type: t3.micro
+IAM Role: WebServerSQSRole
+Security Group: Web EC2 SG</code></pre><hr id="6a4720e4-6f49-826a-a9e4-01a8f612f83a" dir="auto"/><h2 id="20c720e4-6f49-820e-b703-01c1c6a57d63" class="" dir="auto">10.2 패키지 설치</h2><p id="054720e4-6f49-833f-8f97-810df40536fe" class="" dir="auto">EC2 접속 후 실행</p><pre id="370720e4-6f49-8201-bf82-8197fe76380c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo dnf update -y
+sudo dnf install -y python3 python3-pip
+pip3 install flask boto3</code></pre><p id="e09720e4-6f49-8208-ba22-01f27e4cfcdf" class="" dir="auto">설명</p><ul id="886720e4-6f49-8206-927d-01463d325d32" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>python3</code>: 파이썬 런타임</li></ul><ul id="766720e4-6f49-830b-b0c0-017e6a23814d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>python3-pip</code>: 파이썬 패키지 관리자</li></ul><ul id="f98720e4-6f49-828e-bf1d-01736a3200f5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>flask</code>: 웹 애플리케이션 프레임워크</li></ul><ul id="db3720e4-6f49-8276-9be1-0108c1fd6ae0" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>boto3</code>: AWS SDK for Python</li></ul><hr id="585720e4-6f49-82ea-b792-8123d12dc661" dir="auto"/><h2 id="adc720e4-6f49-8365-a941-81f3a9af7047" class="" dir="auto">10.3 애플리케이션 파일 작성</h2><pre id="f01720e4-6f49-83fe-a7d1-0188226ea705" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">mkdir -p ~/sqs-web
+cd ~/sqs-web
+vi app.py</code></pre><p id="b10720e4-6f49-8280-95bc-8193864c8e7e" class="" dir="auto">다음 내용 입력</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js" integrity="sha512-AKaNmg8COK0zEbjTdMHJAPJ0z6VeNqvRvH4/d5M4sHJbQQUToMBtodq4HaV4fa+WV2UTfoperElm66c9/8cKmQ==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="344720e4-6f49-83ed-a6ff-81d97c9cd052" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">from flask import Flask, request, jsonify, render_template_string
+import boto3
+import json
+import os
+from datetime import datetime
+
+app = Flask(__name__)
+
+# --- 설정 (환경 변수 사용 권장) ---
+REGION = &quot;ap-northeast-2&quot;
+# AWS 콘솔에서 복사한 실제 URL로 교체하세요.
+QUEUE_URL = os.getenv(&quot;SQS_QUEUE_URL&quot;, &quot;https://sqs.ap-northeast-2.amazonaws.com/계정ID/app-task-queue&quot;)
+
+# Boto3 클라이언트 초기화
+# 로컬 테스트 시에는 AWS CLI 설정을 따르거나 액세스 키를 주입해야 합니다.
+sqs = boto3.client(&quot;sqs&quot;, region_name=REGION)
+
+@app.route(&quot;/&quot;)
+def index():
+    # 간단한 HTML 템플릿 (가독성을 위해 멀티라인 문자열 사용)
+    return render_template_string(&quot;&quot;&quot;
+        &lt;!DOCTYPE html&gt;
+        &lt;html&gt;
+        &lt;head&gt;&lt;title&gt;SQS Async Task Demo&lt;/title&gt;&lt;/head&gt;
+        &lt;body&gt;
+            &lt;h1&gt;SQS 비동기 작업 데모&lt;/h1&gt;
+            &lt;p&gt;메시지를 입력하면 SQS 큐로 전송됩니다.&lt;/p&gt;
+            &lt;form action=&quot;/submit&quot; method=&quot;post&quot;&gt;
+                &lt;input type=&quot;text&quot; name=&quot;task_name&quot; placeholder=&quot;작업명 입력&quot; required /&gt;
+                &lt;button type=&quot;submit&quot;&gt;큐로 전송&lt;/button&gt;
+            &lt;/form&gt;
+        &lt;/body&gt;
+        &lt;/html&gt;
+    &quot;&quot;&quot;)
+
+@app.route(&quot;/submit&quot;, methods=[&quot;POST&quot;])
+def submit():
+    # 1. 입력값 검증
+    task_name = request.form.get(&quot;task_name&quot;)
+    if not task_name:
+        return jsonify({&quot;error&quot;: &quot;task_name이 누락되었습니다.&quot;}), 400
+
+    # 2. 메시지 본문 생성
+    message_body = {
+        &quot;task_name&quot;: task_name,
+        &quot;requested_at&quot;: datetime.utcnow().isoformat() + &quot;Z&quot;, # UTC 명시
+        &quot;source&quot;: &quot;web-app&quot;
+    }
+
+    try:
+        # 3. SQS 메시지 전송
+        response = sqs.send_message(
+            QueueUrl=QUEUE_URL,
+            MessageBody=json.dumps(message_body)
+        )
+        
+        # 4. 결과 반환
+        return jsonify({
+            &quot;status&quot;: &quot;success&quot;,
+            &quot;message&quot;: &quot;메시지가 성공적으로 큐에 담겼습니다.&quot;,
+            &quot;details&quot;: {
+                &quot;task_name&quot;: task_name,
+                &quot;message_id&quot;: response.get(&quot;MessageId&quot;),
+                &quot;md5&quot;: response.get(&quot;MD5OfMessageBody&quot;)
+            }
+        }), 200
+
+    except Exception as e:
+        # AWS 연결 오류 또는 권한 오류 발생 시 처리
+        return jsonify({
+            &quot;status&quot;: &quot;error&quot;,
+            &quot;message&quot;: str(e)
+        }), 500
+
+if __name__ == &quot;__main__&quot;:
+    # 포트 80은 리눅스에서 root 권한이 필요할 수 있습니다. 
+    # 로컬 테스트라면 5000번 등을 권장합니다.
+    app.run(host=&quot;0.0.0.0&quot;, port=80, debug=True)</code></pre><hr id="a99720e4-6f49-83e8-b1ae-017b1e10861b" dir="auto"/><h2 id="c5b720e4-6f49-83e5-a7bb-81bc96b09675" class="" dir="auto">10.4 코드 설명</h2><h3 id="7b7720e4-6f49-82e2-879f-0151a9f799fc" class="" dir="auto"><code>boto3.client(&quot;sqs&quot;)</code></h3><p id="227720e4-6f49-82dc-9308-0100bb795def" class="" dir="auto">AWS SDK를 통해 SQS API를 호출하는 객체를 만든다.</p><h3 id="772720e4-6f49-8249-b193-81afa9351416" class="" dir="auto"><code>QUEUE_URL</code></h3><p id="6df720e4-6f49-82a8-96c4-01f6aa37cf1e" class="" dir="auto">메시지를 보낼 대상 큐 주소다.</p><p id="f70720e4-6f49-830c-ac14-01737a7c299c" class="" dir="auto">SQS에서 Queue 상세 화면에 들어가면 확인 가능하다.</p><h3 id="20c720e4-6f49-82cf-8d1a-01f7d2377abf" class="" dir="auto"><code>/submit</code></h3><p id="f9a720e4-6f49-835e-88de-01aaadf6999e" class="" dir="auto">사용자가 작업명을 입력하면</p><p id="cd5720e4-6f49-8376-91ca-81913358e18f" class="" dir="auto">이 값을 JSON 형태 메시지로 만들어 SQS에 넣는다.</p><h3 id="40e720e4-6f49-8296-97b1-81e294972146" class="" dir="auto"><code>send_message()</code></h3><p id="121720e4-6f49-821d-b03d-01723ea95eda" class="" dir="auto">SQS에 실제 메시지를 적재하는 핵심 함수다.</p><p id="678720e4-6f49-83af-bd5f-8128450ec331" class="" dir="auto">주요 인자</p><ul id="391720e4-6f49-8248-88fd-01cf2aa016ee" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>QueueUrl</code>: 대상 큐</li></ul><ul id="c7e720e4-6f49-828e-99fa-01e9d8df5664" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>MessageBody</code>: 보낼 메시지 본문</li></ul><hr id="6b9720e4-6f49-838e-a41a-81c31f0cfb3b" dir="auto"/><h2 id="8ca720e4-6f49-82ed-9306-010babc05543" class="" dir="auto">10.5 앱 실행</h2><pre id="6c5720e4-6f49-8345-aaa7-81609c71a984" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo python3 app.py</code></pre><p id="72e720e4-6f49-82ba-9ab8-012e18e92c0f" class="" dir="auto">브라우저에서 인스턴스 Public IP로 접속해도 되지만</p><p id="450720e4-6f49-82d0-9c1f-013868fa0894" class="" dir="auto">최종적으로는 ALB 뒤에 둘 것이므로 ALB 구성 후 확인하는 것이 좋다.</p><hr id="ec7720e4-6f49-83ef-ac8e-81a6c25a3eeb" dir="auto"/><h2 id="5ab720e4-6f49-828b-9f5e-0117f8d7db16" class="" dir="auto">10.6 systemd 서비스 등록</h2><p id="c11720e4-6f49-8327-8c7c-0192c10e90c7" class="" dir="auto">실습 중 재부팅 후 자동 실행되도록 서비스 등록한다.</p><pre id="eea720e4-6f49-826a-93fc-81e2c87e9ed6" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudovi /etc/systemd/system/sqs-web.service</code></pre><p id="e8c720e4-6f49-833e-a48f-0197ec25acf4" class="" dir="auto">내용 입력</p><pre id="91e720e4-6f49-82f6-b840-01c836f323d7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[Unit]
+Description=Flask SQS Web App
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=/home/ec2-user/sqs-web
+ExecStart=/usr/bin/python3 /home/ec2-user/sqs-web/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</code></pre><p id="8d6720e4-6f49-82a3-8751-812ebb83777d" class="" dir="auto">적용</p><pre id="c30720e4-6f49-83a2-b724-81b2f19c59c4" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl daemon-reload
+sudo systemctl enable sqs-web
+sudo systemctlstart sqs-web
+sudo systemctl status sqs-web</code></pre><hr id="5f9720e4-6f49-824f-9ac4-815bdf28590d" dir="auto"/><h1 id="c12720e4-6f49-8390-9b86-811cfef42be7" class="" dir="auto">11. Worker 서버 구축</h1><p id="311720e4-6f49-820f-8751-81e4fd7b44be" class="" dir="auto">Worker는 큐에서 메시지를 계속 Polling 하다가 메시지가 있으면 가져와 작업을 수행한 뒤</p><p id="396720e4-6f49-8371-b43d-81c62bff0185" class="" dir="auto">정상 처리되면 메시지를 삭제한다.</p><hr id="846720e4-6f49-8211-804b-814bbf5f0805" dir="auto"/><h2 id="a56720e4-6f49-8294-9866-019e3f390aca" class="" dir="auto">11.1 Worker EC2 생성</h2><p id="d59720e4-6f49-835d-8c96-810e5661a4fe" class="" dir="auto">예시</p><pre id="242720e4-6f49-837d-ab36-81b1086786a7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">AMI: Amazon Linux 2023
+Type: t3.micro
+IAM Role: WorkerSQSRole
+Security Group: Worker EC2 SG</code></pre><hr id="63b720e4-6f49-83e1-8e5d-81f6ebb4bf58" dir="auto"/><h2 id="023720e4-6f49-834e-9e19-0120e3733794" class="" dir="auto">11.2 패키지 설치</h2><pre id="df5720e4-6f49-82de-84aa-818e2b82cc12" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo dnf update -y
+sudo dnf install -y python3 python3-pip
+pip3 install boto3</code></pre><hr id="afd720e4-6f49-83a5-a189-813f628bc8d3" dir="auto"/><h2 id="466720e4-6f49-83a3-bc83-812762d078ec" class="" dir="auto">11.3 Worker 코드 작성</h2><pre id="ba8720e4-6f49-8343-980d-8143b8542395" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">mkdir-p ~/sqs-worker
+cd ~/sqs-worker
+vi worker.py</code></pre><p id="178720e4-6f49-8313-9db4-81f991b3f4c0" class="" dir="auto">다음 내용 입력</p><pre id="835720e4-6f49-83d4-b200-0149b41869f6" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">import boto3
+import json
+import time
+import os
+from datetime import datetime
+
+# --- 설정 ---
+REGION = &quot;ap-northeast-2&quot;
+# 환경 변수 사용을 권장하며, 없을 경우 기본값 사용
+QUEUE_URL = os.getenv(&quot;SQS_QUEUE_URL&quot;, &quot;https://sqs.ap-northeast-2.amazonaws.com/계정ID/app-task-queue&quot;)
+
+# SQS 클라이언트 생성
+sqs = boto3.client(&quot;sqs&quot;, region_name=REGION)
+
+def process_task(task_data):
+    &quot;&quot;&quot;
+    메시지를 실제 처리하는 로직 (비즈니스 로직)
+    &quot;&quot;&quot;
+    task_name = task_data.get(&quot;task_name&quot;, &quot;unknown&quot;)
+    print(f&quot;[{datetime.now()}] 🚀 작업 시작: {task_name}&quot;)
+    
+    # 작업 처리 시뮬레이션 (10초 소요)
+    # 이 시간이 Visibility Timeout(30초)보다 길어지면 메시지가 다시 큐에 보입니다.
+    time.sleep(10) 
+    
+    print(f&quot;[{datetime.now()}] ✅ 작업 완료: {task_name}&quot;)
+
+def start_worker():
+    print(f&quot;[{datetime.now()}] SQS 워커 시작... (Queue: {QUEUE_URL})&quot;)
+    
+    while True:
+        try:
+            # 1. 메시지 수신 (Long Polling 적용)
+            response = sqs.receive_message(
+                QueueUrl=QUEUE_URL,
+                MaxNumberOfMessages=1,
+                WaitTimeSeconds=20,     # 최대 20초까지 대기 (비용 절감 및 효율성)
+                VisibilityTimeout=30    # 처리 중 다른 곳에서 안 보이게 하는 시간
+            )
+
+            messages = response.get(&quot;Messages&quot;, [])
+
+            if not messages:
+                print(f&quot;[{datetime.now()}] 😴 새로운 메시지 없음. 다시 대기...&quot;)
+                continue
+
+            for message in messages:
+                receipt_handle = message[&quot;ReceiptHandle&quot;]
+                
+                try:
+                    # JSON 파싱 에러 대비
+                    body = json.loads(message[&quot;Body&quot;])
+                    
+                    # 2. 작업 처리
+                    process_task(body)
+
+                    # 3. 처리 완료 후 메시지 삭제 (중요: 삭제 안 하면 다시 나타남)
+                    sqs.delete_message(
+                        QueueUrl=QUEUE_URL,
+                        ReceiptHandle=receipt_handle
+                    )
+                    print(f&quot;[{datetime.now()}] 🗑️ 메시지 처리 및 삭제 완료&quot;)
+
+                except json.JSONDecodeError:
+                    print(f&quot;[{datetime.now()}] ❌ 잘못된 메시지 형식입니다.&quot;)
+                except Exception as e:
+                    print(f&quot;[{datetime.now()}] ⚠️ 처리 중 오류 발생: {str(e)}&quot;)
+                    # 여기서 에러가 나면 delete_message가 호출되지 않으므로,
+                    # VisibilityTimeout이 지나면 자동으로 다시 큐에 나타나거나 DLQ로 이동합니다.
+
+        except Exception as global_e:
+            print(f&quot;[{datetime.now()}] 🚨 네트워크 또는 시스템 오류: {str(global_e)}&quot;)
+            time.sleep(5)  # 오류 발생 시 잠시 쉬었다가 재시도
+
+if __name__ == &quot;__main__&quot;:
+    start_worker()</code></pre><hr id="d87720e4-6f49-8385-a329-016b27886678" dir="auto"/><h2 id="f30720e4-6f49-8312-968c-81d1d80a660d" class="" dir="auto">11.4 코드 설명</h2><h3 id="212720e4-6f49-830f-b407-81b7a59c2aae" class="" dir="auto"><code>receive_message()</code></h3><p id="132720e4-6f49-83c6-af87-81fe20c45445" class="" dir="auto">SQS에서 메시지를 가져오는 함수다.</p><p id="071720e4-6f49-82ad-a068-01c162ca0454" class="" dir="auto">주요 옵션 설명</p><ul id="56f720e4-6f49-829d-9ebf-8178a83627c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>MaxNumberOfMessages=1</code><ul id="2e4720e4-6f49-825b-881b-0152c30cf2d3" class="bulleted-list" dir="auto"><li style="list-style-type:circle">한 번에 1개 메시지만 가져옴</li></ul></li></ul><ul id="fad720e4-6f49-8301-a84f-8150915588e1" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>WaitTimeSeconds=10</code><ul id="a91720e4-6f49-8247-84ff-01ca55e9a81f" class="bulleted-list" dir="auto"><li style="list-style-type:circle">Long Polling 10초</li></ul><ul id="f68720e4-6f49-8288-b329-0195f925b7ef" class="bulleted-list" dir="auto"><li style="list-style-type:circle">메시지가 없으면 즉시 빈 응답하지 않고 최대 10초 기다림</li></ul></li></ul><ul id="b95720e4-6f49-83ea-b445-014379f15626" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>VisibilityTimeout=30</code><ul id="36b720e4-6f49-831b-b80f-815402a8d84c" class="bulleted-list" dir="auto"><li style="list-style-type:circle">이 Worker가 메시지를 가져간 후 30초간 다른 Worker에게 보이지 않음</li></ul></li></ul><h3 id="e6e720e4-6f49-82fc-ab76-812a374f9e17" class="" dir="auto"><code>ReceiptHandle</code></h3><p id="8e3720e4-6f49-82cb-8f22-81b67701d784" class="" dir="auto">메시지를 삭제할 때 필요한 식별값이다.</p><p id="4e5720e4-6f49-82af-8552-8170b7b284cf" class="" dir="auto">메시지 본문이 아니라 <strong>수신 시점의 고유 핸들</strong>을 사용한다.</p><h3 id="b12720e4-6f49-8266-8652-0100ee3b6f66" class="" dir="auto"><code>delete_message()</code></h3><p id="89a720e4-6f49-8311-a500-015ac4e74210" class="" dir="auto">작업이 정상 완료된 뒤 메시지를 큐에서 제거한다.</p><p id="33b720e4-6f49-83e9-a293-815a57a1efda" class="" dir="auto">이 삭제를 하지 않으면 Visibility Timeout이 끝난 뒤 메시지가 다시 나타난다.</p><hr id="276720e4-6f49-82dd-8c1a-81521e43cc00" dir="auto"/><h2 id="331720e4-6f49-8235-ad61-012df9b16416" class="" dir="auto">11.5 실행</h2><pre id="c51720e4-6f49-82fe-995c-01f41282eed9" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">python3 worker.py</code></pre><p id="375720e4-6f49-8211-97e7-812906ebc494" class="" dir="auto">정상이라면 메시지가 없을 때 다음과 비슷한 로그가 반복된다.</p><pre id="b14720e4-6f49-8223-aeec-01c83bc79c83" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[2026-04-06 10:10:00] No messages available</code></pre><hr id="98c720e4-6f49-829c-822b-0195a6cd7da2" dir="auto"/><h2 id="e6d720e4-6f49-83db-ba9d-0151cc3eb9d5" class="" dir="auto">11.6 systemd 등록</h2><pre id="c3b720e4-6f49-82b4-b2f4-0135cd5b7035" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudovi /etc/systemd/system/sqs-worker.service</code></pre><p id="402720e4-6f49-836c-8ca0-017d79c93f7b" class="" dir="auto">내용</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js" integrity="sha512-whYhDwtTmlC/NpZlCr6PSsAaLOrfjVg/iXAnC4H/dtiHawpShhT2SlIMbpIhT/IL/NrpdMm+Hq2C13+VKpHTYw==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><pre id="122720e4-6f49-82c4-ba05-018e8bed4cac" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">[Unit]
+Description=SQS Worker Service
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=/home/ec2-user/sqs-worker
+ExecStart=/usr/bin/python3 /home/ec2-user/sqs-worker/worker.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target</code></pre><p id="839720e4-6f49-82bc-9e53-010ba784ae28" class="" dir="auto">적용</p><pre id="c9b720e4-6f49-8309-94d6-0180859d1624" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl daemon-reload
+sudo systemctl enable sqs-worker
+sudo systemctlstart sqs-worker
+sudo systemctl status sqs-worker</code></pre><p id="1f7720e4-6f49-8212-b572-013995fdbc9a" class="" dir="auto">로그 확인</p><pre id="993720e4-6f49-8247-9027-018cace084d0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">journalctl-u sqs-worker-f</code></pre><hr id="f99720e4-6f49-83d1-8475-8123cc172da2" dir="auto"/><h1 id="93f720e4-6f49-83a5-b519-01d4a0186ef6" class="" dir="auto">12. ALB 구성</h1><h2 id="a6a720e4-6f49-82df-a7d9-81ab8388d453" class="" dir="auto">12.1 Target Group 생성</h2><pre id="2c5720e4-6f49-821f-814a-01f9603b5212" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 → Target Groups → Create target group</code></pre><p id="1c2720e4-6f49-83bd-84b6-012843dc4b3a" class="" dir="auto">설정</p><pre id="29a720e4-6f49-83dc-b7bf-010b4b3c81de" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Target type: Instances
+Protocol: HTTP
+Port: 80
+Health check path: /</code></pre><p id="dca720e4-6f49-8370-8b68-01c8a7d0c14d" class="" dir="auto">Web EC2 등록</p><hr id="52e720e4-6f49-824e-a464-81aa53bc957f" dir="auto"/><h2 id="045720e4-6f49-830c-aaa4-815c7b8a160f" class="" dir="auto">12.2 ALB 생성</h2><pre id="b00720e4-6f49-832a-ae60-810babaad30c" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 → Load Balancers → Create Application Load Balancer</code></pre><p id="aab720e4-6f49-8272-b8ce-01ef517dc3f1" class="" dir="auto">설정</p><pre id="ec1720e4-6f49-823b-83f3-81034d92627a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Scheme: Internet-facing
+Listener: HTTP 80
+Subnets: Public Subnet 2개 이상
+Security Group: ALB SG
+Target Group: 앞에서 생성한 Web TG</code></pre><p id="51b720e4-6f49-8304-bebf-0192a560f00e" class="" dir="auto">생성 후 ALB DNS 이름 확인</p><p id="5a7720e4-6f49-83ca-82d0-81ca1266b56a" class="" dir="auto">예</p><pre id="bb4720e4-6f49-82c6-987c-81a11d1bc198" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">myapp-alb-123456.ap-northeast-2.elb.amazonaws.com</code></pre><hr id="59e720e4-6f49-8284-89ca-01673a4cdf56" dir="auto"/><h1 id="4f6720e4-6f49-830e-a36a-01b66a01da9f" class="" dir="auto">13. Web 서버 Auto Scaling Group 구성</h1><hr id="41a720e4-6f49-8333-b8e4-81aaa6a1d681" dir="auto"/><h2 id="e78720e4-6f49-83c7-b6da-818f4fde2389" class="" dir="auto">13.1 Launch Template 생성</h2><pre id="49e720e4-6f49-8239-b8f5-014efbe3ff2d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">EC2 → Launch Templates → Create launch template</code></pre><p id="76f720e4-6f49-836b-9892-8115964f9547" class="" dir="auto">설정</p><ul id="2dc720e4-6f49-83d0-ad6d-815d042001a2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AMI: Web EC2와 동일</li></ul><ul id="39f720e4-6f49-827b-a94d-81c82956db09" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Instance type: t3.micro</li></ul><ul id="c0f720e4-6f49-83b3-9a90-81f052646c75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">IAM Role: WebServerSQSRole</li></ul><ul id="648720e4-6f49-821e-839c-01c255ae9eba" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Security Group: Web EC2 SG</li></ul><p id="3e1720e4-6f49-83f1-97a1-01b2af65a66e" class="" dir="auto">User Data에 애플리케이션 자동 설치 스크립트를 넣으면 더 좋다.</p><p id="760720e4-6f49-8207-96b7-811af7bf2ebf" class="" dir="auto">예시 User Data</p><pre id="117720e4-6f49-82e0-b9c3-81163a028dd2" class="code code-wrap" data-notion-code-syntax="bash"><code class="language-bash" style="white-space:pre-wrap;word-break:break-all">#!/bin/bash
+dnf update -y
+dnf install -y python3 python3-pip
+pip3 install flask boto3
+
+mkdir -p /home/ec2-user/sqs-web
+
+cat &gt; /home/ec2-user/sqs-web/app.py&lt;&lt; &#x27;EOF&#x27;
+from flask import Flask, request, jsonify, render_template_string
+import boto3
+import json
+import os
+from datetime import datetime
+
+app = Flask(__name__)
+
+# --- 설정 (환경 변수 사용 권장) ---
+REGION = &quot;ap-northeast-2&quot;
+# AWS 콘솔에서 복사한 실제 URL로 교체하세요.
+QUEUE_URL = os.getenv(&quot;SQS_QUEUE_URL&quot;, &quot;https://sqs.ap-northeast-2.amazonaws.com/계정ID/app-task-queue&quot;)
+
+# Boto3 클라이언트 초기화
+# 로컬 테스트 시에는 AWS CLI 설정을 따르거나 액세스 키를 주입해야 합니다.
+sqs = boto3.client(&quot;sqs&quot;, region_name=REGION)
+
+@app.route(&quot;/&quot;)
+def index():
+    # 간단한 HTML 템플릿 (가독성을 위해 멀티라인 문자열 사용)
+    return render_template_string(&quot;&quot;&quot;
+        &lt;!DOCTYPE html&gt;
+        &lt;html&gt;
+        &lt;head&gt;&lt;title&gt;SQS Async Task Demo&lt;/title&gt;&lt;/head&gt;
+        &lt;body&gt;
+            &lt;h1&gt;SQS 비동기 작업 데모&lt;/h1&gt;
+            &lt;p&gt;메시지를 입력하면 SQS 큐로 전송됩니다.&lt;/p&gt;
+            &lt;form action=&quot;/submit&quot; method=&quot;post&quot;&gt;
+                &lt;input type=&quot;text&quot; name=&quot;task_name&quot; placeholder=&quot;작업명 입력&quot; required /&gt;
+                &lt;button type=&quot;submit&quot;&gt;큐로 전송&lt;/button&gt;
+            &lt;/form&gt;
+        &lt;/body&gt;
+        &lt;/html&gt;
+    &quot;&quot;&quot;)
+
+@app.route(&quot;/submit&quot;, methods=[&quot;POST&quot;])
+def submit():
+    # 1. 입력값 검증
+    task_name = request.form.get(&quot;task_name&quot;)
+    if not task_name:
+        return jsonify({&quot;error&quot;: &quot;task_name이 누락되었습니다.&quot;}), 400
+
+    # 2. 메시지 본문 생성
+    message_body = {
+        &quot;task_name&quot;: task_name,
+        &quot;requested_at&quot;: datetime.utcnow().isoformat() + &quot;Z&quot;, # UTC 명시
+        &quot;source&quot;: &quot;web-app&quot;
+    }
+
+    try:
+        # 3. SQS 메시지 전송
+        response = sqs.send_message(
+            QueueUrl=QUEUE_URL,
+            MessageBody=json.dumps(message_body)
+        )
+        
+        # 4. 결과 반환
+        return jsonify({
+            &quot;status&quot;: &quot;success&quot;,
+            &quot;message&quot;: &quot;메시지가 성공적으로 큐에 담겼습니다.&quot;,
+            &quot;details&quot;: {
+                &quot;task_name&quot;: task_name,
+                &quot;message_id&quot;: response.get(&quot;MessageId&quot;),
+                &quot;md5&quot;: response.get(&quot;MD5OfMessageBody&quot;)
+            }
+        }), 200
+
+    except Exception as e:
+        # AWS 연결 오류 또는 권한 오류 발생 시 처리
+        return jsonify({
+            &quot;status&quot;: &quot;error&quot;,
+            &quot;message&quot;: str(e)
+        }), 500
+
+if __name__ == &quot;__main__&quot;:
+    # 포트 80은 리눅스에서 root 권한이 필요할 수 있습니다. 
+    # 로컬 테스트라면 5000번 등을 권장합니다.
+    app.run(host=&quot;0.0.0.0&quot;, port=80, debug=True)
+EOF
+
+cat &gt; /etc/systemd/system/sqs-web.service&lt;&lt; &#x27;EOF&#x27;
+[Unit]
+Description=Flask SQS Web App
+After=network.target
+
+[Service]
+User=ec2-user
+WorkingDirectory=/home/ec2-user/sqs-web
+ExecStart=/usr/bin/python3 /home/ec2-user/sqs-web/app.py
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable sqs-web
+systemctl start sqs-web</code></pre><hr id="c61720e4-6f49-8283-88e0-01ce4e5a769b" dir="auto"/><h2 id="234720e4-6f49-8296-a1fb-812b36374d74" class="" dir="auto">13.2 Auto Scaling Group 생성</h2><p id="c8b720e4-6f49-82d4-84a9-01c570589010" class="" dir="auto">설정 예시</p><pre id="e90720e4-6f49-82d8-a7e8-811d38a968f3" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Desired capacity: 2
+Minimum capacity: 2
+Maximum capacity: 4
+Subnets: Private 또는 Public 2개 AZ
+Attach to existing load balancer: Web Target Group 선택</code></pre><p id="fc8720e4-6f49-8324-8932-812bfa70c62b" class="" dir="auto">이 구성으로 웹 계층은 다중 AZ 기반으로 확장 가능해진다.</p><hr id="470720e4-6f49-82c9-9c7f-813faa86263b" dir="auto"/><h1 id="139720e4-6f49-83b6-a924-816b25fb9c78" class="" dir="auto">14. 동작 확인</h1><h2 id="fa0720e4-6f49-8256-9456-81c398e62913" class="" dir="auto">14.1 ALB 접속</h2><p id="02a720e4-6f49-83df-b264-8189ad8228cb" class="" dir="auto">브라우저에서 다음 접속</p><pre id="244720e4-6f49-823c-a583-01adcf7a129d" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">http://ALB-DNS</code></pre><p id="05e720e4-6f49-8277-8811-019fdd66986f" class="" dir="auto">입력창에 작업명 입력</p><p id="20d720e4-6f49-82af-912d-019835fd07d8" class="" dir="auto">예</p><pre id="460720e4-6f49-8243-b71c-01df4ebe01a0" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">order-1001</code></pre><p id="3c2720e4-6f49-8396-bbb1-01188381faf5" class="" dir="auto">전송 버튼 클릭</p><hr id="e6d720e4-6f49-8368-8e51-015f05631108" dir="auto"/><h2 id="5b0720e4-6f49-8320-99cf-0195de04c830" class="" dir="auto">14.2 응답 확인</h2><p id="40d720e4-6f49-8337-b186-0113d3720f31" class="" dir="auto">정상이라면 브라우저에서 JSON 응답 확인 가능</p><p id="291720e4-6f49-831e-869b-0105ec2ccda0" class="" dir="auto">예</p><pre id="fd4720e4-6f49-83e1-bf7e-81e5226f0e2f" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">{
+  &quot;message&quot;:&quot;Task submitted successfully&quot;,
+  &quot;message_id&quot;:&quot;xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx&quot;,
+  &quot;task_name&quot;:&quot;order-1001&quot;
+}</code></pre><p id="dd0720e4-6f49-827b-a5d1-014dfd6b2444" class="" dir="auto">중요한 점은</p><p id="6d2720e4-6f49-820e-8078-01694744c4d4" class="" dir="auto">이 시점에서 실제 작업이 끝난 것이 아니라 <strong>작업이 큐에 성공적으로 접수되었다는 것</strong>이다.</p><p id="9d0720e4-6f49-8329-aff2-817bc6295687" class="" dir="auto">즉, 사용자 응답 속도는 빨라지고 실제 무거운 작업은 뒤에서 처리하게 된다.</p><hr id="50a720e4-6f49-8378-9a17-01d8703e9ac1" dir="auto"/><h1 id="973720e4-6f49-836b-b1c5-01110d798bd5" class="" dir="auto">15. SQS 메시지 확인</h1><p id="325720e4-6f49-83a8-9dc3-01c9ea6d9dfe" class="" dir="auto">SQS 콘솔에서 <code>app-task-queue</code> 선택 후 확인한다.</p><p id="fea720e4-6f49-8355-8e06-816f945ce159" class="" dir="auto">볼 수 있는 항목</p><ul id="e15720e4-6f49-8395-a2f7-01cec7c9ba93" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Available messages</li></ul><ul id="f0a720e4-6f49-8210-a167-016ece578fbd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">In flight messages</li></ul><ul id="7bc720e4-6f49-8230-917f-817c7105a4b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Messages sent</li></ul><ul id="da5720e4-6f49-8265-895b-0173d187cb46" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Messages received</li></ul><ul id="cef720e4-6f49-8342-a466-014d4813573f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Messages deleted</li></ul><p id="3d6720e4-6f49-83cc-9407-81a37ae9a654" class="" dir="auto">설명</p><ul id="c88720e4-6f49-8360-a79c-8171b072b943" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Available</strong>: 아직 처리되지 않은 메시지</li></ul><ul id="1d8720e4-6f49-8245-ac5f-8140ea0311f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>In flight</strong>: Worker가 가져갔지만 아직 삭제되지 않은 메시지</li></ul><ul id="201720e4-6f49-82f7-af9d-8187ca3d622b" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>Deleted</strong>: 정상 처리 후 삭제된 메시지</li></ul><hr id="3a6720e4-6f49-8215-aa86-01f1d16b1852" dir="auto"/><h1 id="7d8720e4-6f49-8238-af2e-811f53227bc2" class="" dir="auto">16. Worker 로그 확인</h1><p id="31c720e4-6f49-83e3-9de0-81c383c9db56" class="" dir="auto">Worker EC2 접속 후</p><pre id="387720e4-6f49-8240-923c-011b6cf9e6a7" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">journalctl -u sqs-worker -f</code></pre><p id="c0f720e4-6f49-8330-932c-81c7a2af27b1" class="" dir="auto">정상 처리 시 예시 로그</p><pre id="a59720e4-6f49-82dd-98f2-01b99e563102" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">[2026-04-06 10:30:01] Processing task: order-1001
+[2026-04-06 10:30:11] Completed task: order-1001
+[2026-04-06 10:30:11] Message deleted successfully</code></pre><p id="12c720e4-6f49-839e-be33-01fc36b836db" class="" dir="auto">이 로그 흐름은 아주 중요하다.</p><ol type="1" id="bbc720e4-6f49-8341-bf5d-81e44c471827" class="numbered-list" start="1" dir="auto"><li>메시지 수신</li></ol><ol type="1" id="d98720e4-6f49-836b-a040-015efbefb641" class="numbered-list" start="2" dir="auto"><li>작업 처리</li></ol><ol type="1" id="de5720e4-6f49-82a5-9993-016787938ac8" class="numbered-list" start="3" dir="auto"><li>성공 시 삭제</li></ol><p id="8b2720e4-6f49-837a-95b1-814578a9a323" class="" dir="auto">이 3단계가 비동기 메시지 처리의 기본 패턴이다.</p><hr id="823720e4-6f49-8314-8061-01c40cf6e0b6" dir="auto"/><h1 id="1ea720e4-6f49-826e-bb0e-01fa209689f0" class="" dir="auto">17. 실패 시나리오 실습</h1><p id="520720e4-6f49-8317-9e0d-01e07dc01057" class="" dir="auto">이번에는 일부 메시지를 실패시키고 DLQ로 이동하는 것을 확인해본다.</p><hr id="a51720e4-6f49-83ed-b610-01088ed3425e" dir="auto"/><h2 id="2fd720e4-6f49-8233-a172-01f680f7db92" class="" dir="auto">17.1 Worker 코드 수정</h2><p id="b06720e4-6f49-8278-b387-010508915524" class="" dir="auto"><code>worker.py</code>의 <code>process_task()</code> 함수 수정</p><pre id="25f720e4-6f49-82a8-a4df-810d3e79b432" class="code code-wrap" data-notion-code-syntax="python"><code class="language-python" style="white-space:pre-wrap;word-break:break-all">def process_task(task_data):
+task_name=task_data.get(&quot;task_name&quot;,&quot;unknown&quot;)
+print(f&quot;[{datetime.now()}] Processing task:{task_name}&quot;)
+
+if &quot;fail&quot; intask_name:
+raiseException(&quot;Intentional failure for DLQ test&quot;)
+
+time.sleep(10)
+print(f&quot;[{datetime.now()}] Completed task:{task_name}&quot;)</code></pre><p id="25f720e4-6f49-83e3-955c-8189da1126c2" class="" dir="auto">서비스 재시작 </p><pre id="a0a720e4-6f49-825b-9e39-01b2b25e9b81" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">sudo systemctl restart sqs-worker</code></pre><hr id="aeb720e4-6f49-8207-b616-01d5f03cf934" dir="auto"/><h2 id="7b5720e4-6f49-8353-b5c0-0177ee436989" class="" dir="auto">17.2 실패 작업 전송</h2><p id="02d720e4-6f49-8309-b2a8-8189eb47ad1e" class="" dir="auto">브라우저에서 다음 입력</p><pre id="139720e4-6f49-8340-a4f8-01c3167e5a76" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">fail-task-001</code></pre><p id="4e6720e4-6f49-83f7-9d6d-01e12064d486" class="" dir="auto">전송</p><hr id="00a720e4-6f49-8275-a59a-810a5efbd417" dir="auto"/><h2 id="c9e720e4-6f49-833d-91bd-8158863d22a6" class="" dir="auto">17.3 동작 설명</h2><p id="89a720e4-6f49-830f-b4fd-81c3fb672844" class="" dir="auto">이 메시지는 Worker가 받을 때마다 예외 발생</p><p id="6bb720e4-6f49-82d7-90c1-819ac1db70a5" class="" dir="auto">따라서 다음 흐름으로 동작한다.</p><ol type="1" id="52f720e4-6f49-8299-b2c8-81a7b85588e9" class="numbered-list" start="1" dir="auto"><li>메시지 수신</li></ol><ol type="1" id="cd3720e4-6f49-833c-b29b-814246b70981" class="numbered-list" start="2" dir="auto"><li>처리 실패</li></ol><ol type="1" id="c7d720e4-6f49-826e-9448-81708fe84b64" class="numbered-list" start="3" dir="auto"><li>메시지 삭제 안 함</li></ol><ol type="1" id="a64720e4-6f49-8261-bf7a-01bd3ee89295" class="numbered-list" start="4" dir="auto"><li>Visibility Timeout 종료 후 다시 보임</li></ol><ol type="1" id="817720e4-6f49-824e-bf15-8199aca5ca35" class="numbered-list" start="5" dir="auto"><li>다시 수신 후 실패</li></ol><ol type="1" id="4de720e4-6f49-83bb-b1a5-01c1bd3c44fb" class="numbered-list" start="6" dir="auto"><li>최대 수신 횟수 초과 시 DLQ 이동</li></ol><p id="d39720e4-6f49-83d1-8bf7-01773869fbed" class="" dir="auto">즉, 메시지가 사라지는 것이 아니라</p><p id="23c720e4-6f49-8237-9df1-01b4383b3b61" class="" dir="auto">반복 실패 후 별도 보관소인 DLQ로 이동한다.</p><hr id="e9e720e4-6f49-8302-97d4-01e92793b950" dir="auto"/><h2 id="f05720e4-6f49-8381-9fee-81cba587c696" class="" dir="auto">17.4 DLQ 확인</h2><p id="e23720e4-6f49-8326-a2cb-01e8f648e37a" class="" dir="auto">SQS 콘솔에서 <code>app-task-dlq</code> 확인</p><p id="3f5720e4-6f49-8277-b3ba-01d26cd7ce4a" class="" dir="auto">실패 메시지가 이동한 것을 볼 수 있다.</p><p id="881720e4-6f49-82b7-ab58-011b95291d90" class="" dir="auto">이 구조는 운영 환경에서 아주 중요하다.</p><p id="aee720e4-6f49-8294-a182-81e76dc9997e" class="" dir="auto">왜냐하면 실패 메시지를 버리지 않고 보존하기 때문이다.</p><p id="e55720e4-6f49-83d7-9fd8-819eca49cd1f" class="" dir="auto">운영자는 DLQ를 보고</p><ul id="021720e4-6f49-83d6-8707-81c15fee427b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 데이터가 실패했는지</li></ul><ul id="aa7720e4-6f49-83ee-846a-81b28deff1c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">왜 실패했는지</li></ul><ul id="e3c720e4-6f49-8343-b614-014fcc6edda8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재처리가 필요한지</li></ul><p id="30e720e4-6f49-82ab-b61d-8171479d57c5" class="" dir="auto">를 판단할 수 있다.</p><hr id="49b720e4-6f49-82ea-a5f2-816d280734c5" dir="auto"/><h1 id="b64720e4-6f49-8368-9c3b-817d32df9e40" class="" dir="auto">18. CloudWatch 모니터링</h1><h2 id="702720e4-6f49-8273-9276-01f4677cf056" class="" dir="auto">18.1 SQS 기본 지표 확인</h2><p id="240720e4-6f49-82b9-a392-01d8ec26bd11" class="" dir="auto">SQS 큐 상세 화면 또는 CloudWatch에서 확인 가능</p><p id="267720e4-6f49-82b5-82ce-81f6b0d39b2a" class="" dir="auto">주요 지표</p><ul id="d5f720e4-6f49-825f-aef7-011f4b82af58" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ApproximateNumberOfMessagesVisible</li></ul><ul id="2f4720e4-6f49-8383-b065-81203c0cf5c8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">ApproximateNumberOfMessagesNotVisible</li></ul><ul id="afb720e4-6f49-8222-8fc0-011afefa48c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NumberOfMessagesSent</li></ul><ul id="18b720e4-6f49-8317-9597-01a4d717b1de" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NumberOfMessagesReceived</li></ul><ul id="b1c720e4-6f49-8287-925a-819d88e07bac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">NumberOfMessagesDeleted</li></ul><hr id="bda720e4-6f49-828c-ada8-81c3056f844c" dir="auto"/><h2 id="045720e4-6f49-83f3-9ad2-81af3ad49db4" class="" dir="auto">18.2 해석 포인트</h2><h3 id="329720e4-6f49-82c4-aecb-014002f55d0c" class="" dir="auto">Visible 메시지가 계속 증가한다</h3><p id="bd7720e4-6f49-82c2-a45e-01bca7fe9531" class="" dir="auto">의미</p><ul id="ef5720e4-6f49-831c-b7c0-8107c0ef5a40" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Web 서버는 계속 메시지를 넣고 있음</li></ul><ul id="16f720e4-6f49-83a8-88bc-81aa82ad13c5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker 처리 속도가 느리거나 Worker 수가 부족함</li></ul><p id="290720e4-6f49-838e-97f0-81fa59fdb1bc" class="" dir="auto">대응</p><ul id="7a4720e4-6f49-8326-b8c4-01ad57e9ae73" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker 인스턴스 수 증가</li></ul><ul id="a9f720e4-6f49-82ae-b2fa-010265bbfe94" class="bulleted-list" dir="auto"><li style="list-style-type:disc">처리 로직 최적화</li></ul><ul id="9b5720e4-6f49-8246-b6ee-012efe433839" class="bulleted-list" dir="auto"><li style="list-style-type:disc">메시지 크기 또는 처리 시간 점검</li></ul><h3 id="c75720e4-6f49-83ae-b6e3-01cc7f89fc82" class="" dir="auto">Not Visible 메시지가 계속 많다</h3><p id="3f2720e4-6f49-83e2-bae4-811c04b620d3" class="" dir="auto">의미</p><ul id="c07720e4-6f49-837c-927e-01b656034649" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker가 메시지를 가져갔지만 처리 중이거나 삭제하지 못하고 있음</li></ul><p id="37b720e4-6f49-8215-a991-8139353d57af" class="" dir="auto">대응</p><ul id="513720e4-6f49-831c-bae4-01cda74c8e5d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Visibility Timeout 적절성 검토</li></ul><ul id="646720e4-6f49-8327-8b4c-810b54f4d846" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker 장애 여부 확인</li></ul><ul id="6a9720e4-6f49-8287-a03d-81e847263f6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">코드 예외 처리 확인</li></ul><h3 id="895720e4-6f49-824b-a004-0113daac5be9" class="" dir="auto">DLQ 메시지가 증가한다</h3><p id="54b720e4-6f49-8205-aa23-81956e6aedd5" class="" dir="auto">의미</p><ul id="172720e4-6f49-8219-9ab7-81e61467e4fb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 유형 메시지가 반복 실패하고 있음</li></ul><p id="fd9720e4-6f49-82a2-8627-01ef1dd23ed1" class="" dir="auto">대응</p><ul id="343720e4-6f49-8260-aa85-8188e7ecc648" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실패 원인 분석</li></ul><ul id="36f720e4-6f49-839f-bd2c-01386fbed75d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">재처리 전략 수립</li></ul><ul id="51c720e4-6f49-825f-9fc9-81428ca764bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Poison Message 대응 로직 도입</li></ul><hr id="def720e4-6f49-82fc-9148-0151b1450511" dir="auto"/><h1 id="f11720e4-6f49-83c2-bf02-8171dcb77c46" class="" dir="auto">19. 아키텍처 모범사례 관점에서 정리</h1><h2 id="cb1720e4-6f49-8292-924b-01027a40bc19" class="" dir="auto">19.1 왜 이 구조가 좋은가</h2><h3 id="bb4720e4-6f49-83c6-86b5-81f0f341bf31" class="" dir="auto">1) 웹 계층과 작업 계층 분리</h3><p id="b97720e4-6f49-833a-8d0a-81c259d5f02d" class="" dir="auto">웹 서버는 빠른 응답에 집중</p><p id="353720e4-6f49-8201-aaa6-0175ce18adfb" class="" dir="auto">Worker는 무거운 작업 처리에 집중</p><p id="fe3720e4-6f49-82b0-a616-818d6abbf1c3" class="" dir="auto">역할 분리가 명확해짐</p><h3 id="a04720e4-6f49-823f-b428-01f339d532c5" class="" dir="auto">2) 확장성 향상</h3><p id="4b1720e4-6f49-83f9-976f-019a4f671bc1" class="" dir="auto">요청이 많아지면</p><ul id="54e720e4-6f49-820e-91b2-011d35a01df1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">웹 서버는 ALB + ASG로 확장</li></ul><ul id="676720e4-6f49-8382-b3df-016d563274e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker도 별도로 수평 확장 가능</li></ul><p id="0f3720e4-6f49-83ae-9965-81ee22ef3b57" class="" dir="auto">즉, 각 계층을 독립적으로 확장 가능</p><h3 id="2d8720e4-6f49-83d0-b8f7-81691ff7e822" class="" dir="auto">3) 장애 격리</h3><p id="88c720e4-6f49-83b1-b4c1-81e659b79d54" class="" dir="auto">Worker 장애가 나더라도</p><p id="b37720e4-6f49-8212-b945-01ebfd43908b" class="" dir="auto">웹 서버가 즉시 죽는 구조가 아님</p><p id="4a7720e4-6f49-8377-a2d3-81b90b37fd9b" class="" dir="auto">웹 서버는 일단 메시지를 큐에 넣고 응답 가능</p><h3 id="c6d720e4-6f49-822c-968b-01f07d6fc2d6" class="" dir="auto">4) 내구성 확보</h3><p id="cd9720e4-6f49-8376-ac82-81be2ebc6564" class="" dir="auto">SQS는 메시지를 안정적으로 저장하므로</p><p id="8ef720e4-6f49-834f-916f-8141b1fc6ab1" class="" dir="auto">일시적인 Worker 장애 시에도 메시지 유실 가능성이 낮다.</p><h3 id="94b720e4-6f49-820c-8612-01794019027d" class="" dir="auto">5) 운영 관측성 향상</h3><p id="666720e4-6f49-8271-ac51-81d98e9e6272" class="" dir="auto">CloudWatch, DLQ를 통해</p><p id="9b3720e4-6f49-8212-ae66-0147dd930a6c" class="" dir="auto">병목 구간과 실패 구간을 파악하기 쉬움</p><hr id="e69720e4-6f49-823f-8e8f-01fa979171c3" dir="auto"/><h1 id="d08720e4-6f49-8271-82b2-81926dd3b6f8" class="" dir="auto">20. 실습 후 확장 과제</h1><hr id="dcc720e4-6f49-83a6-ab4f-81c26c21a0bb" dir="auto"/><h2 id="b55720e4-6f49-82be-a7de-812fca7ac709" class="" dir="auto">20.1 Worker Auto Scaling 적용</h2><p id="3a4720e4-6f49-8231-91d0-0120bcac1aff" class="" dir="auto">CloudWatch 경보를 기반으로</p><p id="2c5720e4-6f49-8214-b79d-013f72937810" class="" dir="auto">큐 메시지 수가 많아지면 Worker 인스턴스를 자동으로 늘리도록 구성 가능</p><p id="83c720e4-6f49-836e-a083-810a54744307" class="" dir="auto">예</p><ul id="c81720e4-6f49-837c-9b4f-81365a05498a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">SQS Visible Messages &gt; 20</li></ul><ul id="716720e4-6f49-8282-869a-01ed1542ee8e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Worker ASG Scale Out</li></ul><p id="c1e720e4-6f49-82d6-8dd0-81cecfadbbb3" class="" dir="auto">이 구조는 실제 운영 환경에서 자주 사용된다.</p><hr id="313720e4-6f49-82d2-8975-814077d858a9" dir="auto"/><h2 id="8c2720e4-6f49-83ef-8dde-81aee85cd7a6" class="" dir="auto">20.2 결과 저장소 추가</h2><p id="ac4720e4-6f49-8263-8884-8136281ba28e" class="" dir="auto">Worker 처리 결과를 다음 중 하나에 저장하도록 확장 가능</p><ul id="de8720e4-6f49-820c-906b-01bf1ac24af6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Amazon RDS</li></ul><ul id="0af720e4-6f49-8394-a7c6-01c59d866c88" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB</li></ul><ul id="74f720e4-6f49-83d0-b061-0135d8813579" class="bulleted-list" dir="auto"><li style="list-style-type:disc">S3</li></ul><p id="c7f720e4-6f49-831a-a1df-8167c5c75357" class="" dir="auto">예시 시나리오</p><ul id="4a9720e4-6f49-834e-9911-810916e5fa6e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주문 처리 결과를 RDS 저장</li></ul><ul id="238720e4-6f49-82b4-bcd6-018497fa844c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이미지 처리 결과를 S3 저장</li></ul><ul id="e83720e4-6f49-8225-b3c1-812a8c82ae21" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 로그를 DynamoDB 저장</li></ul><hr id="1b4720e4-6f49-838c-a851-01fd0fcb0c64" dir="auto"/><h2 id="363720e4-6f49-8205-8746-01be27fe3327" class="" dir="auto">20.3 SNS 연계</h2><p id="c83720e4-6f49-83a5-ad2f-814854ca58fb" class="" dir="auto">작업 완료 후 SNS로 알림을 보내도록 확장 가능</p><p id="f3a720e4-6f49-8282-8459-019ae93b0c8e" class="" dir="auto">예</p><ul id="34d720e4-6f49-826b-8ac5-01f9549bc598" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이메일 발송</li></ul><ul id="a4e720e4-6f49-82a6-a90c-8199a11bdcfc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영자 알림</li></ul><ul id="ea1720e4-6f49-820a-a1a5-81318c866058" class="bulleted-list" dir="auto"><li style="list-style-type:disc">후속 시스템 이벤트 전달</li></ul><hr id="b44720e4-6f49-822c-ba77-816d27f1dbff" dir="auto"/><h2 id="350720e4-6f49-836e-a9cb-016fe239ffc7" class="" dir="auto">20.4 Lambda Consumer 구조로 변경</h2><p id="199720e4-6f49-8351-891d-0113c73988f5" class="" dir="auto">EC2 Worker 대신 Lambda가 SQS를 소비하게 만들 수도 있다.</p><p id="544720e4-6f49-8208-8a5a-018e6474f04c" class="" dir="auto">이 경우 장점</p><ul id="a2c720e4-6f49-83a2-9bf4-01bc92e97c7d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서버 운영 부담 감소</li></ul><ul id="d1c720e4-6f49-83f1-8319-81b80266b1ce" class="bulleted-list" dir="auto"><li style="list-style-type:disc">이벤트 기반 자동 확장</li></ul><ul id="820720e4-6f49-8337-ba78-0108e4180e7a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">관리 포인트 축소</li></ul><hr id="fdb720e4-6f49-83bb-8df3-81e5cf65bf70" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

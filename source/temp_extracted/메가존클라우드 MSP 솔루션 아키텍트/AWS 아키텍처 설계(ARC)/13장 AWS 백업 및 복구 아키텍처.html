@@ -1,0 +1,777 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>13장 AWS 백업 및 복구 아키텍처</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+/* For default-background callouts, render the border outline. */
+.callout.block-color-default_background {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+figure,
+aside,
+details {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding-inline: 0.125rem;
+	padding-block: 0.375rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+/*
+ * Render emoji icons using a ::before pseudo-element to keep the glyph
+ * out of the DOM textContent traversal. This avoids double-rendering icons
+ * in callouts and page titles.
+ * NOTE(slim/html-export-pseudo-icons): I can't tagref this because it will
+ * flag as a duplicate tag after codegen.
+ */
+.icon[data-emoji]::before {
+	content: attr(data-emoji);
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	margin-right: 0.4em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.tab {
+	margin: 1.25em 0;
+	padding-inline: 1rem;
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style><style>@import url('https://cdn.jsdelivr.net/npm/katex@0.16.25/dist/katex-swap.min.css')</style></head><body><article id="9b3720e4-6f49-8270-b7f1-011ae309c2d6" class="page sans"><header><h1 class="page-title" dir="auto">13장 AWS 백업 및 복구 아키텍처</h1><p class="page-description" dir="auto"></p></header><div class="page-body"><h2 id="c10720e4-6f49-8267-9625-81bb00e10dc3" class="" dir="auto">AWS Backup, Snapshot, 복구 전략</h2><hr id="61c720e4-6f49-83fd-9fd3-01ec5ed83498" dir="auto"/><h1 id="067720e4-6f49-8216-8a1c-81178602bdab" class="" dir="auto">13.1 백업과 복구의 필요성</h1><p id="d9d720e4-6f49-8317-92a7-8137b13591f6" class="" dir="auto">클라우드에서 인프라를 잘 설계했다고 해서 데이터 손실 위험이 사라지는 것은 아님.</p><p id="3cc720e4-6f49-8386-b283-016e2e2f8d22" class="" dir="auto">오히려 시스템이 커질수록 데이터 보호와 복구 전략의 중요성은 더 커짐.</p><p id="c9a720e4-6f49-83e9-8f88-01ab5af5ae76" class="" dir="auto">데이터 손실이나 복구가 필요한 대표 상황</p><ul id="849720e4-6f49-8316-9bcd-01a9f2a1be2f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">사용자의 실수로 데이터 삭제</li></ul><ul id="e7e720e4-6f49-8264-ab07-8174a4fdbd0e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션 오류로 잘못된 데이터 반영</li></ul><ul id="112720e4-6f49-8307-b3df-81c9ca3a8f70" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영자의 설정 실수</li></ul><ul id="1c3720e4-6f49-8397-af0a-81e402e85d9d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">랜섬웨어 또는 악성 행위</li></ul><ul id="00c720e4-6f49-8233-8452-01281a69ad34" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 리전 또는 계정 수준의 장애</li></ul><ul id="7af720e4-6f49-8397-af6d-81c21fe3e90a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">시스템 마이그레이션 실패</li></ul><ul id="963720e4-6f49-8343-a11a-810892a658ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기간 보관 데이터 복구 필요</li></ul><p id="528720e4-6f49-82e3-b3e0-81e0dcd2dece" class="" dir="auto">즉, 백업은 단순히 장애 대비용이 아니라</p><p id="a4c720e4-6f49-835d-9fa7-81b6103dc443" class="" dir="auto"><strong>실수, 보안 사고, 운영 오류, 재해 상황을 포함한 데이터 보호 전략 전체</strong>의 일부임.</p><hr id="953720e4-6f49-8277-a2f7-01232a4866a0" dir="auto"/><h1 id="e9f720e4-6f49-8309-8e45-0146c77e7e76" class="" dir="auto">13.2 가용성과 백업의 차이</h1><p id="63c720e4-6f49-838a-9ba9-01f36827d010" class="" dir="auto">학생들이 자주 혼동하는 부분이 <strong>고가용성</strong>과 <strong>백업</strong>을 같은 것으로 보는 점임.</p><p id="245720e4-6f49-8240-ba14-81694b45d252" class="" dir="auto">하지만 둘은 목적이 다름.</p><table id="243720e4-6f49-837f-8f14-017c53f5c34f" class="simple-table" dir="ltr"><thead class="simple-table-header"><tr id="82f720e4-6f49-82fd-9071-0199a6939249" dir="ltr"><th id="u^MI" class="simple-table-header-color simple-table-header">항목</th><th id="bmSZ" class="simple-table-header-color simple-table-header">고가용성</th><th id="OMp?" class="simple-table-header-color simple-table-header">백업</th></tr></thead><tbody><tr id="62e720e4-6f49-8217-b5ea-015f126dd237" dir="ltr"><td id="u^MI" class="">목적</td><td id="bmSZ" class="">서비스 중단 최소화</td><td id="OMp?" class="">데이터 복구 가능성 확보</td></tr><tr id="d0e720e4-6f49-83ad-a647-8135ed096353" dir="ltr"><td id="u^MI" class="">대표 수단</td><td id="bmSZ" class="">Multi-AZ, ELB, Auto Scaling</td><td id="OMp?" class="">Snapshot, Backup Vault, 보존 정책</td></tr><tr id="e18720e4-6f49-8326-8ff8-01fc8c682d3b" dir="ltr"><td id="u^MI" class="">대응 대상</td><td id="bmSZ" class="">인프라/서비스 장애</td><td id="OMp?" class="">데이터 손실, 삭제, 손상</td></tr><tr id="743720e4-6f49-833d-b0e2-81477f5ace5b" dir="ltr"><td id="u^MI" class="">시간 관점</td><td id="bmSZ" class="">실시간/즉시</td><td id="OMp?" class="">과거 시점 복구</td></tr></tbody></table><p id="1c3720e4-6f49-8232-9897-81e58c2a61cd" class="" dir="auto">예를 들어 RDS Multi-AZ는 장애 시 빠르게 서비스 지속성을 높여주지만,</p><p id="3ad720e4-6f49-83c0-b85b-0104b5062745" class="" dir="auto">어제 잘못 삭제한 데이터를 되돌리는 기능은 아님.</p><p id="718720e4-6f49-83f2-8609-8111addb416e" class="" dir="auto">즉,</p><script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js" integrity="sha512-7Z9J3l1+EYfeaPKcGXu3MS/7T+w19WtKQY/n+xzmw4hZhJ9tyYmcUS+4QqAlzhicE5LAfMQSF3iFTK9bQdTxXg==" crossorigin="anonymous" referrerPolicy="no-referrer"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism.min.css" integrity="sha512-tN7Ec6zAFaVSG3TpNAKtk4DOHNpSwKHxxrsiw4GHKESGPs5njn/0sMCUMl2svV4wo4BK/rCP7juYz+zx+l6oeQ==" crossorigin="anonymous" referrerPolicy="no-referrer"/><pre id="8f2720e4-6f49-8204-a165-01368c98299a" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">고가용성은 서비스를 계속 살아 있게 한다.
+백업은 과거 데이터를 다시 되살릴 수 있게 한다.</code></pre><p id="bc0720e4-6f49-82d3-a17a-0145bf841193" class="" dir="auto">이렇게 구분해서 이해해야 함.</p><hr id="5a0720e4-6f49-8229-a05c-819266757dae" dir="auto"/><h1 id="beb720e4-6f49-82ba-8b0d-01bffaf1dd14" class="" dir="auto">13.3 백업 전략이 중요한 이유</h1><p id="08d720e4-6f49-82c6-b5bb-01b67ab64162" class="" dir="auto">백업은 단순히 많이 만들면 되는 것이 아님.</p><p id="6b5720e4-6f49-8303-8952-81f0681b5743" class="" dir="auto">무엇을 얼마나 자주, 얼마나 오래, 어디에, 어떤 방식으로 저장할지 설계해야 함.</p><p id="a8e720e4-6f49-8324-886c-8158edc52f8e" class="" dir="auto">백업 전략에서 핵심 질문</p><ul id="23d720e4-6f49-825c-980b-018a508d6131" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 데이터를 보호해야 하는가</li></ul><ul id="e1b720e4-6f49-8288-869c-01038682677f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">얼마나 자주 백업해야 하는가</li></ul><ul id="11f720e4-6f49-83b4-9cab-011a55599778" class="bulleted-list" dir="auto"><li style="list-style-type:disc">얼마나 오래 보관해야 하는가</li></ul><ul id="57e720e4-6f49-8338-97fa-017eb8e5ce80" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어디에 저장해야 하는가</li></ul><ul id="df5720e4-6f49-83d2-9d2e-01d7da47d432" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복구는 얼마나 빨라야 하는가</li></ul><ul id="304720e4-6f49-8291-8b89-0195264118b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복구 시점은 어느 정도까지 허용되는가</li></ul><p id="81e720e4-6f49-824f-8348-81cec2489a67" class="" dir="auto">즉, 백업은 스토리지 문제이기도 하지만, 실제로는 <strong>비즈니스 연속성과 복구 목표를 설계하는 문제</strong>임.</p><hr id="1ff720e4-6f49-8262-b43b-819d6259b53b" dir="auto"/><h1 id="fda720e4-6f49-831c-a12c-81d236634848" class="" dir="auto">13.4 RPO와 RTO</h1><p id="692720e4-6f49-829b-9bb1-81d7f6edd3fe" class="" dir="auto">백업 및 복구를 설명할 때 가장 중요한 개념이 <strong>RPO</strong> 와 <strong>RTO</strong> 임.</p><hr id="f97720e4-6f49-8334-82eb-8133a00130b4" dir="auto"/><h2 id="c6d720e4-6f49-8320-9223-01a9a2ccf58d" class="" dir="auto">13.4.1 RPO (Recovery Point Objective)</h2><p id="281720e4-6f49-83e0-bbdd-81803376480b" class="" dir="auto">RPO는 “얼마나 최근 시점의 데이터까지 복구되어야 하는가”를 의미함.</p><p id="b69720e4-6f49-8382-8986-01cfcec6474c" class="" dir="auto">예를 들어 RPO가 1시간이면, 장애가 발생했을 때 최대 1시간 전 데이터까지만 잃는 것을 허용한다는 뜻임.</p><p id="c2d720e4-6f49-8298-be6c-01cbf3a01797" class="" dir="auto">즉, RPO는 <strong>데이터 손실 허용 범위</strong>와 관련됨.</p><hr id="955720e4-6f49-8251-8773-81bc2a54f6df" dir="auto"/><h2 id="abe720e4-6f49-83f1-87f7-819ba2081019" class="" dir="auto">13.4.2 RTO (Recovery Time Objective)</h2><p id="e5a720e4-6f49-828e-bf55-811de2ad88b0" class="" dir="auto">RTO는 “장애 발생 후 얼마 안에 서비스를 복구해야 하는가”를 의미함.</p><p id="761720e4-6f49-83cb-b5a4-815b787c7061" class="" dir="auto">예를 들어 RTO가 30분이면, 장애 후 30분 안에 복구가 완료되어야 함을 의미함.</p><p id="861720e4-6f49-8379-9197-0195c38ff389" class="" dir="auto">즉, RTO는 <strong>복구 시간 허용 범위</strong>와 관련됨.</p><hr id="324720e4-6f49-82d3-8d0b-0156b4424fe2" dir="auto"/><h2 id="8c3720e4-6f49-8255-8b2a-817e380bf06a" class="" dir="auto">13.4.3 RPO와 RTO의 의미</h2><p id="3c4720e4-6f49-8341-994a-812bbd10141a" class="" dir="auto">이 두 값이 작을수록 더 강한 복구 체계가 필요함.</p><p id="de8720e4-6f49-83f8-9f58-011bc231b69c" class="" dir="auto">예</p><ul id="712720e4-6f49-83f8-b6df-81a5914751c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RPO 24시간 / RTO 8시간 → 비교적 느슨한 복구 전략</li></ul><ul id="f4f720e4-6f49-82eb-aead-81d41e298f59" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RPO 5분 / RTO 15분 → 훨씬 강한 복제, 자동화, 다중 환경 필요</li></ul><p id="544720e4-6f49-8304-b9bf-010ae194a695" class="" dir="auto">즉, 백업 전략은 기술이 아니라 <strong>업무 중요도와 복구 목표에 따라 결정</strong>되어야 함.</p><hr id="b67720e4-6f49-82cc-8240-0177093eb391" dir="auto"/><h1 id="02f720e4-6f49-823f-9976-8126d37b99b9" class="" dir="auto">13.5 AWS에서 보호 대상이 되는 대표 리소스</h1><p id="3f9720e4-6f49-83e3-b7e9-818259ff3a97" class="" dir="auto">AWS에서 백업이 필요한 대표 자원</p><ul id="842720e4-6f49-8250-b4ac-81b6d9b3adea" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EBS 볼륨</li></ul><ul id="37d720e4-6f49-827d-acce-01ef304a0bab" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS 데이터베이스</li></ul><ul id="20d720e4-6f49-83c4-b1e3-8157bf5b5dac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DynamoDB 테이블</li></ul><ul id="2fe720e4-6f49-834a-b2d6-0175e36a087d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EFS 파일 시스템</li></ul><ul id="490720e4-6f49-8333-b11f-0180acce10f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">FSx 파일 시스템</li></ul><ul id="530720e4-6f49-835b-891d-012e038b0339" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EC2 관련 구성 일부</li></ul><ul id="996720e4-6f49-8271-87ce-812af25461f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">VMware 워크로드 등 일부 연계 자원</li></ul><p id="c36720e4-6f49-824a-a026-01839f45d4a2" class="" dir="auto">모든 AWS 리소스가 백업 대상인 것은 아니며,</p><p id="3aa720e4-6f49-835a-8cad-81b26c1ad851" class="" dir="auto">특히 <strong>상태 저장 데이터가 있는 리소스</strong>가 핵심 보호 대상임.</p><p id="d3a720e4-6f49-8280-ac64-81647e1004dd" class="" dir="auto">즉, 백업은 서버보다도 <strong>데이터 계층 중심으로 생각</strong>하는 것이 중요함.</p><hr id="76e720e4-6f49-82fe-aead-010ecbb3efca" dir="auto"/><h1 id="666720e4-6f49-830b-bfd6-0119cd275329" class="" dir="auto">13.6 AWS Backup 개요</h1><p id="dd7720e4-6f49-83f9-83b5-01d835a22870" class="" dir="auto">AWS Backup은 여러 AWS 서비스의 백업을 중앙에서 정책 기반으로 관리할 수 있게 해주는 관리형 백업 서비스임.</p><p id="60d720e4-6f49-8213-9671-0130caba105f" class="" dir="auto">즉, 각 서비스별로 개별 백업 기능을 따로 관리하는 대신,</p><p id="84b720e4-6f49-8339-aee2-8105fede2ff2" class="" dir="auto">중앙 정책과 보관소를 통해 일관되게 백업을 운영할 수 있게 해줌.</p><p id="675720e4-6f49-823d-ac2b-019b44ce6d11" class="" dir="auto">핵심 역할</p><ul id="097720e4-6f49-83fc-85c7-0100a7a8a176" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 정책 정의</li></ul><ul id="6a9720e4-6f49-8391-8d8f-019479a0ee32" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주기적 백업 자동화</li></ul><ul id="e59720e4-6f49-83f3-86dc-01d44ca48895" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보관 기간 관리</li></ul><ul id="df8720e4-6f49-8320-b9a6-01b77afc0d45" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 백업 보관</li></ul><ul id="4d6720e4-6f49-82ff-8af5-01ff414d12b0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복구 작업 수행</li></ul><ul id="e6c720e4-6f49-8316-bfe8-01421b72f558" class="bulleted-list" dir="auto"><li style="list-style-type:disc">여러 계정/여러 리전 백업 관리 지원</li></ul><p id="029720e4-6f49-8373-8e89-81660c66ddce" class="" dir="auto">즉, AWS Backup은 단순 백업 생성 기능이 아니라</p><p id="d2b720e4-6f49-823f-9f2c-81381ead47e7" class="" dir="auto"><strong>중앙 집중형 백업 운영 체계</strong>라고 볼 수 있음.</p><hr id="068720e4-6f49-83ae-a90b-018bc483c73b" dir="auto"/><h1 id="f3c720e4-6f49-824a-acf5-81bedba2798a" class="" dir="auto">13.7 AWS Backup이 필요한 이유</h1><p id="b09720e4-6f49-8325-b808-01243d6207f9" class="" dir="auto">각 AWS 서비스는 자체 백업 기능을 가질 수 있음.</p><p id="fe0720e4-6f49-82b8-a5ff-01a4a7d8e9b3" class="" dir="auto">예를 들어 RDS는 자동 백업과 스냅샷 기능이 있고, EBS는 스냅샷이 있으며, DynamoDB도 백업 기능이 있음.</p><p id="479720e4-6f49-8281-b238-815a74f323b8" class="" dir="auto">하지만 서비스가 늘어나면 다음 문제가 생김.</p><ul id="714720e4-6f49-83d5-b143-81d77c720b59" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 설정이 서비스별로 흩어짐</li></ul><ul id="a3d720e4-6f49-823d-b4dd-01e2f241e9f3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보관 정책이 제각각임</li></ul><ul id="5fc720e4-6f49-8302-80b2-01575db820e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누락된 리소스가 생길 수 있음</li></ul><ul id="b51720e4-6f49-8335-9e51-01d0eb40c2ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 감사와 추적이 어려움</li></ul><ul id="fbe720e4-6f49-82d6-9f4e-81fdab834ed1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정/리전 단위 관리가 복잡함</li></ul><p id="3ec720e4-6f49-83c6-9992-018fa13f8f85" class="" dir="auto">AWS Backup은 이런 문제를 줄이기 위해</p><p id="d0d720e4-6f49-82bc-bbdd-81e27e779e35" class="" dir="auto"><strong>백업 정책과 운영을 중앙에서 통합</strong>할 수 있게 해줌.</p><hr id="cc8720e4-6f49-8214-88bb-01f9272e2478" dir="auto"/><h1 id="505720e4-6f49-83af-b3af-0191b744022e" class="" dir="auto">13.8 AWS Backup의 핵심 구성 요소</h1><p id="d62720e4-6f49-8258-b700-81bfa5dc4009" class="" dir="auto">AWS Backup을 이해할 때 중요한 개념</p><ul id="bce720e4-6f49-824e-950d-0143e4d685fc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backup Plan</li></ul><ul id="516720e4-6f49-823a-80dc-81048e34a459" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backup Rule</li></ul><ul id="889720e4-6f49-8346-9c9d-01b263ad69c2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backup Vault</li></ul><ul id="562720e4-6f49-82bc-8a86-01e605c8527f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Recovery Point</li></ul><ul id="c0d720e4-6f49-82ef-9551-81a650373740" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Resource Assignment</li></ul><hr id="a09720e4-6f49-83a4-b942-01e7fb6ddaa7" dir="auto"/><h2 id="3d0720e4-6f49-83ac-b6a4-81c23d5118e6" class="" dir="auto">13.8.1 Backup Plan</h2><p id="e4e720e4-6f49-825f-8288-810973847157" class="" dir="auto">백업 정책의 상위 정의임.</p><p id="7b6720e4-6f49-83a4-acee-814ab9fab3fa" class="" dir="auto">언제 백업할지, 얼마나 오래 보관할지, 어떤 보관소를 사용할지 등을 정의함.</p><p id="450720e4-6f49-8358-8f75-81d8750a17fd" class="" dir="auto">즉, Backup Plan은 “백업 운영 정책서”에 해당함.</p><hr id="34c720e4-6f49-83e6-825b-01c0cf647891" dir="auto"/><h2 id="120720e4-6f49-83c2-8b6c-81b987f038e7" class="" dir="auto">13.8.2 Backup Rule</h2><p id="a6e720e4-6f49-839e-b6d0-81986a1dfb7d" class="" dir="auto">Backup Plan 안에서 실제 스케줄과 보존 정책을 정의하는 세부 규칙임.</p><p id="792720e4-6f49-8353-a8b2-01630ce6fdcd" class="" dir="auto">예를 들어</p><ul id="42e720e4-6f49-82b7-bc6d-0120a831b02e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">매일 1회 백업</li></ul><ul id="322720e4-6f49-83c8-a5a8-81c465a3f138" class="bulleted-list" dir="auto"><li style="list-style-type:disc">30일 보관</li></ul><ul id="4c3720e4-6f49-825b-95b9-8146de16fe81" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 Vault에 저장</li></ul><p id="8b5720e4-6f49-8336-859f-81e4c2fac742" class="" dir="auto">같은 내용이 여기에 들어감.</p><hr id="ac9720e4-6f49-82c9-b1f6-016dfa945195" dir="auto"/><h2 id="4a2720e4-6f49-8271-a903-01a342fb8d30" class="" dir="auto">13.8.3 Backup Vault</h2><p id="e2f720e4-6f49-8382-b0a8-014696eccb70" class="" dir="auto">백업 데이터를 저장하는 논리적 보관소임.</p><p id="478720e4-6f49-83d7-a28b-81a943953bf6" class="" dir="auto">즉, 생성된 백업 결과물이 모이는 저장 공간이라고 이해하면 됨.</p><hr id="4b2720e4-6f49-82a4-b810-01bb8743722a" dir="auto"/><h2 id="676720e4-6f49-82b5-81b2-01050ca8b3dd" class="" dir="auto">13.8.4 Recovery Point</h2><p id="1d3720e4-6f49-8217-bf4d-0155297ebf27" class="" dir="auto">백업이 생성된 특정 시점의 복구 지점을 의미함.</p><p id="ef3720e4-6f49-82d9-8fa4-816d0376adb6" class="" dir="auto">즉, “이 시점으로 되돌릴 수 있다”는 단위임.</p><hr id="ba7720e4-6f49-83c4-82a6-811b383667cc" dir="auto"/><h2 id="363720e4-6f49-82e5-9ace-01669c41e67a" class="" dir="auto">13.8.5 Resource Assignment</h2><p id="cd5720e4-6f49-8307-8109-01020bf6110d" class="" dir="auto">어떤 리소스에 어떤 백업 정책을 적용할지 정하는 연결 관계임.</p><p id="35d720e4-6f49-82bd-beee-0172b77baf2a" class="" dir="auto">예를 들어</p><ul id="435720e4-6f49-82e6-b624-01c273ffbb0d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 태그가 붙은 RDS</li></ul><ul id="054720e4-6f49-82d1-ba8e-817870b5e026" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 EFS</li></ul><ul id="657720e4-6f49-83f2-af1e-8151423ebf67" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 DynamoDB 테이블</li></ul><p id="a29720e4-6f49-82fc-80ad-017c773940e7" class="" dir="auto">에 대해 같은 정책을 적용할 수 있음.</p><hr id="42f720e4-6f49-83fb-8fcf-81b71e27bd1a" dir="auto"/><h1 id="06f720e4-6f49-82c6-a32c-01fbded20cd4" class="" dir="auto">13.9 태그 기반 백업 관리</h1><p id="cbc720e4-6f49-8238-b949-012075a34a53" class="" dir="auto">대규모 환경에서는 백업 대상을 하나씩 직접 지정하면 운영이 매우 번거로움.</p><p id="31f720e4-6f49-8320-8d1f-817b08ccfc52" class="" dir="auto">그래서 AWS Backup은 태그 기반 리소스 선택이 중요함.</p><p id="d09720e4-6f49-8389-94de-8154380ffeb2" class="" dir="auto">예</p><ul id="440720e4-6f49-8389-8077-0103c43e8955" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Backup=Daily</code></li></ul><ul id="6a9720e4-6f49-8367-a667-81ada9ba7f19" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><code>Environment=Prod</code></li></ul><p id="b9b720e4-6f49-832c-885f-811c3248fc20" class="" dir="auto">같은 태그를 기준으로 정책을 자동 적용할 수 있음.</p><p id="28e720e4-6f49-8309-8dfc-81a838d14a95" class="" dir="auto">장점</p><ul id="bb1720e4-6f49-824a-93a6-01a0d1071c6f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">신규 리소스에도 자동 정책 적용 가능</li></ul><ul id="c9d720e4-6f49-82c5-89d5-8169a0c8296e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 표준화 쉬움</li></ul><ul id="0b0720e4-6f49-837d-a4ba-8142debc4741" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누락 가능성 감소</li></ul><p id="e86720e4-6f49-83f6-a957-017c0f6c2131" class="" dir="auto">즉, 백업도 결국 <strong>리소스 분류와 표준화 체계</strong> 위에서 관리하는 것이 좋음.</p><hr id="4e2720e4-6f49-83e2-8613-01e6971617ab" dir="auto"/><h1 id="9cd720e4-6f49-82af-82e4-01fe083c7f48" class="" dir="auto">13.10 백업 보관소(Backup Vault)의 의미</h1><p id="806720e4-6f49-8395-842c-012ab4c2acaa" class="" dir="auto">Vault는 단순히 파일 저장 위치가 아니라,</p><p id="334720e4-6f49-827f-a80f-819aa2bfc536" class="" dir="auto">백업 자산을 중앙에서 통제하고 보존하며 감사하기 위한 논리적 경계로 볼 수 있음.</p><p id="57a720e4-6f49-82db-9644-01c0b241d860" class="" dir="auto">Vault를 통해 다음 관점이 중요해짐.</p><ul id="37d720e4-6f49-83c7-8365-01f1a8702d6a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">어떤 백업을 어디에 보관하는가</li></ul><ul id="b19720e4-6f49-8350-aaa1-8125fa690a18" class="bulleted-list" dir="auto"><li style="list-style-type:disc">얼마나 오래 유지하는가</li></ul><ul id="824720e4-6f49-8365-b9da-81f389850c62" class="bulleted-list" dir="auto"><li style="list-style-type:disc">누가 접근할 수 있는가</li></ul><ul id="b8b720e4-6f49-83e2-b5e0-8165f9fe942f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">삭제 보호가 필요한가</li></ul><p id="264720e4-6f49-8365-8ba1-8143885078dd" class="" dir="auto">즉, Vault는 보관 정책과 보안 통제가 만나는 지점임.</p><hr id="36e720e4-6f49-8380-bc81-8115752f684c" dir="auto"/><h1 id="d8f720e4-6f49-82b0-b27b-81f067a59717" class="" dir="auto">13.11 스냅샷 개념</h1><p id="fce720e4-6f49-8244-b197-016fc1d4839e" class="" dir="auto">AWS 백업에서 자주 나오는 개념 중 하나가 <strong>Snapshot</strong> 임.</p><p id="629720e4-6f49-828b-8b31-814438c06933" class="" dir="auto">스냅샷은 특정 시점의 데이터 상태를 저장한 복사본임.</p><p id="d67720e4-6f49-82b0-a065-815092b463d7" class="" dir="auto">대표 예</p><ul id="473720e4-6f49-83d9-a84a-819fdaf82c56" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EBS Snapshot</li></ul><ul id="ca5720e4-6f49-82e5-b92c-810ac1d09fb0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RDS Snapshot</li></ul><p id="ccc720e4-6f49-8316-abca-818467c44a00" class="" dir="auto">스냅샷의 핵심 의미는 다음과 같음.</p><pre id="0b1720e4-6f49-8228-b51d-814fcc652a4b" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">현재 데이터 상태를 특정 시점 기준으로 보존한다.</code></pre><p id="47f720e4-6f49-822d-ad67-8130ccca62fc" class="" dir="auto">즉, 스냅샷은 백업의 한 형태이자 복구 기준점이 됨.</p><hr id="be2720e4-6f49-8338-b041-0122b39d1aae" dir="auto"/><h1 id="66c720e4-6f49-828c-869b-81e6fdde4f8d" class="" dir="auto">13.12 EBS Snapshot</h1><p id="cfb720e4-6f49-8383-bacb-01234112dc91" class="" dir="auto">EBS Snapshot은 EBS 볼륨의 특정 시점 상태를 저장하는 기능임.</p><p id="67b720e4-6f49-826f-a341-014210f9af20" class="" dir="auto">운영체제 디스크 또는 데이터 디스크를 보호할 때 중요함.</p><p id="a83720e4-6f49-8327-b68b-8147d80fc3cd" class="" dir="auto">특징</p><ul id="b6b720e4-6f49-8398-8532-017b38aaeabb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">증분 방식 저장</li></ul><ul id="30e720e4-6f49-83b7-9f4a-01627a956573" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다른 볼륨으로 복원 가능</li></ul><ul id="e30720e4-6f49-8249-8037-011ddda42002" class="bulleted-list" dir="auto"><li style="list-style-type:disc">다른 AZ/환경에서 재사용 가능</li></ul><ul id="58f720e4-6f49-838f-b4f2-814a54b62ee1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AMI 생성과도 관련될 수 있음</li></ul><p id="a00720e4-6f49-82dc-b80a-017af06ad90a" class="" dir="auto">즉, EBS Snapshot은 EC2 스토리지 보호의 핵심 수단 중 하나임.</p><hr id="752720e4-6f49-832d-aee0-816078a918e4" dir="auto"/><h1 id="167720e4-6f49-8262-b01f-8122d5a66b9d" class="" dir="auto">13.13 RDS Backup과 Snapshot</h1><p id="c82720e4-6f49-830c-b78b-01395d92699d" class="" dir="auto">RDS는 자체적으로 백업 기능을 제공함.</p><p id="2c4720e4-6f49-8280-bded-01a45fc09dba" class="" dir="auto">크게 보면 다음 관점으로 구분 가능함.</p><h3 id="aed720e4-6f49-8291-9e4f-01736eacdb41" class="" dir="auto">자동 백업</h3><p id="1f6720e4-6f49-8245-9cf1-012c42e9efd5" class="" dir="auto">지정된 보존 기간 동안 자동으로 백업과 트랜잭션 로그를 관리해 특정 시점 복구를 지원함.</p><h3 id="cd4720e4-6f49-83b3-b8a5-015c366ebec4" class="" dir="auto">수동 스냅샷</h3><p id="a78720e4-6f49-82f9-9e6f-8164264adb19" class="" dir="auto">운영자가 특정 시점을 별도로 보존하기 위해 만드는 백업임.</p><p id="361720e4-6f49-83ce-8be9-0189ea239cca" class="" dir="auto">즉, RDS는 단순 스냅샷뿐 아니라 <strong>Point-in-Time Recovery</strong>와 연결되는 것이 중요함.</p><hr id="087720e4-6f49-8290-823f-01ef88c0f4e2" dir="auto"/><h1 id="695720e4-6f49-82d8-b9cd-8127a4409984" class="" dir="auto">13.14 Point-in-Time Recovery 개념</h1><p id="4d1720e4-6f49-837d-9156-81616c6d35e1" class="" dir="auto">Point-in-Time Recovery는 특정 스냅샷 시점이 아니라,</p><p id="2e2720e4-6f49-8215-b71f-8100c62cf507" class="" dir="auto">허용된 범위 안에서 <strong>원하는 시점으로 복구</strong>하는 개념임.</p><p id="d5e720e4-6f49-839b-bc54-0135834479d9" class="" dir="auto">예를 들어</p><ul id="2a9720e4-6f49-8357-b213-813158dc14db" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오전 9시에 잘못된 데이터 삭제 발생</li></ul><ul id="97e720e4-6f49-83fb-ab1c-8125c8fe746b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오전 8시 57분 상태로 복구 필요</li></ul><p id="003720e4-6f49-82ed-8932-01a6410365eb" class="" dir="auto">이런 경우 단순한 하루 1회 스냅샷만으로는 부족할 수 있음.</p><p id="ab2720e4-6f49-83d1-ba04-818501ecdaf8" class="" dir="auto">즉, RPO를 더 줄이려면 PITR 같은 기능이 중요함.</p><hr id="611720e4-6f49-8243-834f-0110ce8347a4" dir="auto"/><h1 id="e83720e4-6f49-8217-8267-0174c2099585" class="" dir="auto">13.15 EFS와 파일 시스템 백업</h1><p id="83f720e4-6f49-835e-9fd3-81e7f57a7b15" class="" dir="auto">EFS 같은 공유 파일 시스템도 백업 대상이 됨.</p><p id="b59720e4-6f49-8228-bbe8-81175227bdd1" class="" dir="auto">공유 저장소는 여러 서버가 동시에 접근하기 때문에 손상이나 삭제 영향 범위가 더 클 수 있음.</p><p id="a29720e4-6f49-838e-8e02-810f7f66cc54" class="" dir="auto">따라서 다음이 중요함.</p><ul id="7a7720e4-6f49-82db-be5d-81139eaf308f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주기적 백업</li></ul><ul id="e6f720e4-6f49-8257-bcb1-013f04d998b1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복구 시점 관리</li></ul><ul id="ab8720e4-6f49-834a-81ac-01888ac9b1f1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기 보관 정책</li></ul><ul id="ae9720e4-6f49-8310-aab8-81084affbab3" class="bulleted-list" dir="auto"><li style="list-style-type:disc">파일 시스템 복원 계획</li></ul><p id="1f1720e4-6f49-8355-a9b7-011ebd49a2f4" class="" dir="auto">즉, 파일 시스템 계층도 단순 저장소가 아니라 보호 대상 데이터 자산으로 봐야 함.</p><hr id="462720e4-6f49-8381-a4b0-81aee5077687" dir="auto"/><h1 id="92c720e4-6f49-82ef-8111-01acdfc764c4" class="" dir="auto">13.16 DynamoDB 백업</h1><p id="9aa720e4-6f49-8256-85e9-01f569249a1d" class="" dir="auto">DynamoDB도 백업과 복구 기능을 제공함.</p><p id="e38720e4-6f49-833a-ba26-0120a316615c" class="" dir="auto">특히 서버리스 또는 NoSQL 기반 애플리케이션에서 중요함.</p><p id="9c2720e4-6f49-82b4-a0fb-01b8ecfefb1a" class="" dir="auto">중요한 점</p><ul id="381720e4-6f49-8280-8b50-016e01f76dcf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">테이블 수준 보호</li></ul><ul id="53b720e4-6f49-83c9-8861-812b406eeb76" class="bulleted-list" dir="auto"><li style="list-style-type:disc">온디맨드 백업 가능</li></ul><ul id="51d720e4-6f49-836a-b4a1-8193e81b70cf" class="bulleted-list" dir="auto"><li style="list-style-type:disc">특정 시점 복구 지원 가능</li></ul><ul id="eb7720e4-6f49-83ef-b873-0117a930eaa2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 체계를 중앙 정책으로 통합 가능</li></ul><p id="381720e4-6f49-82a6-b1f6-8171017fc8ca" class="" dir="auto">즉, 서버리스 데이터 저장소라고 해서 백업이 필요 없는 것이 아니며,</p><p id="e90720e4-6f49-83fb-8394-01c7ef88ed09" class="" dir="auto">오히려 자동화된 보호 체계가 더 중요할 수 있음.</p><hr id="1ee720e4-6f49-8322-ba7b-81ec1ef40d4c" dir="auto"/><h1 id="75f720e4-6f49-8356-aede-81e3c38991e9" class="" dir="auto">13.17 백업 주기 설계</h1><p id="465720e4-6f49-8397-a88f-812ff0c10735" class="" dir="auto">백업을 설계할 때 가장 중요한 것 중 하나가 <strong>주기</strong>임.</p><p id="383720e4-6f49-82d9-b657-01e8f1ef5b42" class="" dir="auto">대표 질문</p><ul id="2e2720e4-6f49-83e9-85ef-81d0358d35d1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">하루 1회면 충분한가</li></ul><ul id="641720e4-6f49-83bd-a7af-81753226fa9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">시간 단위가 필요한가</li></ul><ul id="82c720e4-6f49-83ce-a047-01cfe72679d2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">실시간 복제가 필요한가</li></ul><ul id="f76720e4-6f49-8278-971f-81d46095f12d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 창은 언제가 적절한가</li></ul><p id="a04720e4-6f49-836e-9d20-01e426b4a4a2" class="" dir="auto">주기는 보통 다음에 따라 달라짐.</p><ul id="847720e4-6f49-8255-93dc-018f5b7c6d36" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터 변경 빈도</li></ul><ul id="eb7720e4-6f49-8301-ab4a-01c8525af8bc" class="bulleted-list" dir="auto"><li style="list-style-type:disc">업무 중요도</li></ul><ul id="b9e720e4-6f49-83ff-9fcd-81d8f1447c2a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">허용 가능한 데이터 손실 범위(RPO)</li></ul><ul id="053720e4-6f49-82f0-a807-81670b47d54c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">시스템 부하 특성</li></ul><p id="b5a720e4-6f49-82a5-b63b-01721fe27e5e" class="" dir="auto">즉, 주기는 기술적으로 정하는 것이 아니라 <strong>업무 요구에 맞춰 정하는 것</strong>임.</p><hr id="68d720e4-6f49-83bd-b4f6-0174f22724b1" dir="auto"/><h1 id="4af720e4-6f49-83e9-bb41-01b123275b6a" class="" dir="auto">13.18 보관 기간 설계</h1><p id="e45720e4-6f49-83ec-b12a-01b194e8f463" class="" dir="auto">백업은 만들기만 하는 것이 아니라 <strong>얼마나 오래 보관할 것인가</strong>도 중요함.</p><p id="912720e4-6f49-82d3-bee4-81e31cddb7b1" class="" dir="auto">대표 고려사항</p><ul id="a4c720e4-6f49-8228-baab-817f552ccdeb" class="bulleted-list" dir="auto"><li style="list-style-type:disc">최근 복구는 얼마나 자주 필요한가</li></ul><ul id="6b9720e4-6f49-83f4-b519-81623df949ed" class="bulleted-list" dir="auto"><li style="list-style-type:disc">규제상 장기 보관이 필요한가</li></ul><ul id="ef1720e4-6f49-82a4-bf23-01ce4d38bc0f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">비용을 얼마나 허용할 수 있는가</li></ul><ul id="c19720e4-6f49-8328-b55f-81c768c4a316" class="bulleted-list" dir="auto"><li style="list-style-type:disc">오래된 백업을 Glacier 성격으로 옮길 것인가</li></ul><p id="5bf720e4-6f49-822b-8418-019814a3fa1f" class="" dir="auto">예를 들어</p><ul id="409720e4-6f49-8384-ad7d-81ced08a04d6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">일간 백업 30일</li></ul><ul id="91c720e4-6f49-8379-973d-0119dad33fd1" class="bulleted-list" dir="auto"><li style="list-style-type:disc">주간 백업 12주</li></ul><ul id="b74720e4-6f49-8292-b7b4-019b0c716437" class="bulleted-list" dir="auto"><li style="list-style-type:disc">월간 백업 12개월</li></ul><p id="f56720e4-6f49-82ae-b7ab-01bf4b4d09e2" class="" dir="auto">같은 식의 다층 보관 전략을 사용할 수 있음.</p><p id="93d720e4-6f49-83b1-9a4a-813ef5803d80" class="" dir="auto">즉, 보관 기간은 기술과 비용, 규정이 모두 연결되는 설계 요소임.</p><hr id="0ac720e4-6f49-8367-a6a2-010233686799" dir="auto"/><h1 id="4ad720e4-6f49-8335-995f-81f757fad9ee" class="" dir="auto">13.19 크로스 리전 백업</h1><p id="a2e720e4-6f49-837c-b33f-0178a8da6f91" class="" dir="auto">단일 리전 안에만 백업을 두면, 리전 단위 장애나 광범위 사고에는 취약할 수 있음.</p><p id="3dd720e4-6f49-82c2-9051-019add9b933b" class="" dir="auto">이때 중요한 것이 <strong>Cross-Region Backup</strong> 임.</p><p id="ad8720e4-6f49-83ff-88be-01003f2bd78d" class="" dir="auto">의미</p><ul id="dc4720e4-6f49-8312-b03e-812ebb333f92" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 사본을 다른 리전에 복제</li></ul><ul id="bf2720e4-6f49-832a-b9f1-01c7bbf802f0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">지역 재해 상황 대비</li></ul><ul id="0c0720e4-6f49-8256-93a0-01c7744dffc5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복구 위치 다양성 확보</li></ul><p id="2a9720e4-6f49-8205-a0f5-01e5551e344b" class="" dir="auto">즉, 크로스 리전 백업은 단순 추가 복사가 아니라</p><p id="3cd720e4-6f49-83e1-8361-81833849dc72" class="" dir="auto"><strong>재해 복구(Disaster Recovery)</strong> 전략과 연결됨.</p><hr id="7cd720e4-6f49-83a0-afc4-8190dd267912" dir="auto"/><h1 id="208720e4-6f49-82c3-b7d6-81c49cbd87bc" class="" dir="auto">13.20 크로스 계정 백업</h1><p id="fa8720e4-6f49-8355-9b2f-81e8dc8511f6" class="" dir="auto">백업을 같은 계정 안에만 보관하면, 계정 침해나 내부 실수에 취약할 수 있음.</p><p id="e73720e4-6f49-8353-a217-01ae648764dd" class="" dir="auto">이때 <strong>Cross-Account Backup</strong> 전략이 중요해질 수 있음.</p><p id="5a3720e4-6f49-8341-ba2d-810cd622d22e" class="" dir="auto">의미</p><ul id="c55720e4-6f49-8309-bad2-014c994c4bc7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 계정과 별도 백업 계정 분리</li></ul><ul id="b9d720e4-6f49-8299-9814-81b7c90772c6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">삭제/변조 위험 감소</li></ul><ul id="87e720e4-6f49-83c8-ae3e-812f26a54c0d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">중앙 보안 계정에서 통제 가능</li></ul><p id="c9d720e4-6f49-8351-828a-81bd3d71ac7f" class="" dir="auto">즉, 중요한 환경일수록 백업은 원본 환경과 <strong>논리적으로도 분리</strong>하는 것이 좋음.</p><hr id="1b4720e4-6f49-8337-a482-81fbea80e8c5" dir="auto"/><h1 id="9fd720e4-6f49-8256-a4df-81715ea122af" class="" dir="auto">13.21 백업 보안의 중요성</h1><p id="f03720e4-6f49-825f-a3e7-8124ade401e5" class="" dir="auto">백업은 원본 데이터를 보호하기 위한 것이지만,</p><p id="0af720e4-6f49-82ce-8756-013ffe4a0cc5" class="" dir="auto">백업 자체도 민감한 데이터일 수 있음.</p><p id="f7c720e4-6f49-8326-af71-012cb5837011" class="" dir="auto">따라서 백업 보안이 매우 중요함.</p><p id="077720e4-6f49-8205-bd7d-015bf6ba6a00" class="" dir="auto">핵심 요소</p><ul id="330720e4-6f49-82b8-90f5-8181381342c0" class="bulleted-list" dir="auto"><li style="list-style-type:disc">암호화</li></ul><ul id="ab8720e4-6f49-826e-b55f-01b9b5ef96fd" class="bulleted-list" dir="auto"><li style="list-style-type:disc">접근 제어</li></ul><ul id="e5a720e4-6f49-836a-a16a-81779ee8bf3d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">삭제 보호</li></ul><ul id="bf4720e4-6f49-8220-b63e-81af508e752a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">감사 추적</li></ul><ul id="0ff720e4-6f49-8201-a016-811a5f0c9581" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정 분리</li></ul><ul id="541720e4-6f49-8350-9747-01d73a34bcb7" class="bulleted-list" dir="auto"><li style="list-style-type:disc">장기 보관 정책</li></ul><p id="9ed720e4-6f49-82c1-9b76-81f1531b96f2" class="" dir="auto">즉, 백업은 “복사본”이 아니라 <strong>중요한 데이터 자산</strong>으로 다뤄야 함.</p><hr id="ed1720e4-6f49-8272-bffc-812a69874cf0" dir="auto"/><h1 id="bb4720e4-6f49-83fc-8fb6-0185787e0ce8" class="" dir="auto">13.22 암호화와 백업</h1><p id="bc0720e4-6f49-83e8-833f-01f9b4ee9931" class="" dir="auto">백업 데이터는 보통 원본만큼 중요하거나 더 민감할 수 있음.</p><p id="b6f720e4-6f49-8262-84d8-81a25588349a" class="" dir="auto">따라서 저장 시 암호화가 중요함.</p><p id="ae0720e4-6f49-83af-b429-81aced6f72aa" class="" dir="auto">AWS에서는 보통 다음과 연결됨.</p><ul id="7ff720e4-6f49-82ec-961d-0106c3352f8f" class="bulleted-list" dir="auto"><li style="list-style-type:disc">KMS 기반 암호화</li></ul><ul id="43f720e4-6f49-827a-8272-0127291a6c69" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스별 암호화 통합</li></ul><ul id="8c8720e4-6f49-8399-96dc-81792a2f443b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Vault/스냅샷 보관 시 암호화 유지</li></ul><p id="204720e4-6f49-835f-a4b8-818e17eaf589" class="" dir="auto">즉, 백업은 보존만이 아니라 <strong>기밀성 보호</strong>도 함께 고려해야 함.</p><hr id="80d720e4-6f49-83ac-9439-811a8fb2b4e2" dir="auto"/><h1 id="c3c720e4-6f49-82d5-a7bd-01be5d57909a" class="" dir="auto">13.23 복구 전략의 수준</h1><p id="477720e4-6f49-83e4-8331-81a9e633ab06" class="" dir="auto">복구 전략은 단일하지 않음.</p><p id="ddc720e4-6f49-82f0-8fa6-8189886bf76b" class="" dir="auto">업무 중요도에 따라 여러 수준으로 나뉨.</p><hr id="852720e4-6f49-8355-b51f-81ee38ea6d28" dir="auto"/><h2 id="a19720e4-6f49-8298-a550-81a4df335609" class="" dir="auto">13.23.1 단순 백업 복구</h2><p id="d11720e4-6f49-8353-8f77-01ed6f41b645" class="" dir="auto">장애 후 수동으로 복원하는 방식임.</p><p id="984720e4-6f49-8385-8d87-01ef9d1b6fdd" class="" dir="auto">비용은 적을 수 있지만 복구 시간이 길 수 있음.</p><hr id="6ba720e4-6f49-8279-a501-818c25f2fd04" dir="auto"/><h2 id="5e6720e4-6f49-8315-b971-0112134951de" class="" dir="auto">13.23.2 스냅샷 기반 빠른 복구</h2><p id="baa720e4-6f49-82d4-9288-012a17f20610" class="" dir="auto">주기적 스냅샷을 통해 비교적 빠르게 복원하는 방식임.</p><hr id="c31720e4-6f49-82a9-8d55-8148fdebc354" dir="auto"/><h2 id="5d7720e4-6f49-83da-a400-01a2d0b25b32" class="" dir="auto">13.23.3 크로스 리전 백업 기반 DR</h2><p id="34c720e4-6f49-8342-b26e-81201afa60f7" class="" dir="auto">다른 리전에 백업을 유지해 대규모 재해에도 복구 가능성을 높이는 방식임.</p><hr id="ee0720e4-6f49-8203-bded-01e0e61b4a49" dir="auto"/><h2 id="ab2720e4-6f49-8289-b271-81df5a52a530" class="" dir="auto">13.23.4 웜 스탠바이 / 멀티 사이트 수준</h2><p id="1c8720e4-6f49-83b1-b71c-013984c6eceb" class="" dir="auto">백업을 넘어서 거의 즉시 전환 가능한 대기 환경을 유지하는 방식임.</p><p id="c59720e4-6f49-8350-bfab-01041f2a7bb7" class="" dir="auto">이는 DR 장에서 더 확장될 수 있음.</p><p id="22f720e4-6f49-83a7-ae5d-01a92aae3a1e" class="" dir="auto">즉, 백업은 복구 전략 전체의 일부이며,</p><p id="d39720e4-6f49-8226-b781-81b4a8be8236" class="" dir="auto">RTO/RPO가 작아질수록 단순 백업만으로는 부족할 수 있음.</p><hr id="97c720e4-6f49-82c5-8cbd-81e9511ba5cf" dir="auto"/><h1 id="cd6720e4-6f49-8352-a6f8-81b1d27ca92c" class="" dir="auto">13.24 백업과 DR의 관계</h1><p id="698720e4-6f49-8381-9ceb-815ce880d98c" class="" dir="auto">백업은 Disaster Recovery와 밀접하게 관련되지만 완전히 같은 것은 아님.</p><ul id="0d1720e4-6f49-8291-99e1-01de6f068965" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>백업</strong> : 데이터를 보존하고 복원 가능하게 함</li></ul><ul id="c07720e4-6f49-83b5-909e-81dfce11979d" class="bulleted-list" dir="auto"><li style="list-style-type:disc"><strong>DR</strong> : 재해 상황에서 서비스 전체를 다시 운영 가능하게 함</li></ul><p id="dad720e4-6f49-8339-a25a-01988fb31f49" class="" dir="auto">즉, DR은 데이터뿐 아니라 다음까지 포함함.</p><ul id="94d720e4-6f49-829a-8b50-818c7c0a7c75" class="bulleted-list" dir="auto"><li style="list-style-type:disc">네트워크</li></ul><ul id="4c7720e4-6f49-8273-88fd-819499134a7d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">애플리케이션</li></ul><ul id="a74720e4-6f49-83af-9e46-013a1db033e8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">데이터베이스</li></ul><ul id="a3f720e4-6f49-822c-a216-81fff313292a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">인증</li></ul><ul id="f74720e4-6f49-83bd-af5c-01afd424ca40" class="bulleted-list" dir="auto"><li style="list-style-type:disc">DNS</li></ul><ul id="376720e4-6f49-828f-822c-016afbfa578e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 절차</li></ul><p id="9d7720e4-6f49-837b-a90c-81732c9a0462" class="" dir="auto">따라서 백업은 DR의 핵심 요소이지만, DR 전체를 대체하지는 않음.</p><hr id="f4a720e4-6f49-8378-9268-810c5cf7e89d" dir="auto"/><h1 id="3f6720e4-6f49-82ec-8959-01be59a9b2f6" class="" dir="auto">13.25 복구 테스트의 중요성</h1><p id="60b720e4-6f49-82ad-83c5-81b09f7402e4" class="" dir="auto">백업은 만들어 두기만 하면 끝이 아님.</p><p id="b2f720e4-6f49-8349-820a-81eff9584ba6" class="" dir="auto">실제로 복구가 가능한지, 얼마나 걸리는지, 절차가 맞는지 검증해야 함.</p><p id="7d1720e4-6f49-8315-90ec-01bc7e23d3a4" class="" dir="auto">복구 테스트가 중요한 이유</p><ul id="383720e4-6f49-82bb-b770-8114f1d1f15a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업이 실제로 유효한지 확인</li></ul><ul id="58f720e4-6f49-830d-a711-017d35c60eda" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복구 시간 측정 가능</li></ul><ul id="252720e4-6f49-83c5-8221-810b0ec8be36" class="bulleted-list" dir="auto"><li style="list-style-type:disc">절차 문서 검증 가능</li></ul><ul id="8f9720e4-6f49-834c-ac90-01dc3bd0763e" class="bulleted-list" dir="auto"><li style="list-style-type:disc">권한/네트워크 문제 사전 발견</li></ul><ul id="5f7720e4-6f49-82f6-87fa-81d2a2056cfe" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영자 숙련도 향상</li></ul><p id="44d720e4-6f49-8270-ba4b-81aab14def69" class="" dir="auto">즉, 백업은 “저장 여부”보다 <strong>복구 가능성 검증</strong>이 더 중요할 수 있음.</p><hr id="a69720e4-6f49-832a-ab10-81a18fe9ac6d" dir="auto"/><h1 id="ab8720e4-6f49-83a7-b00f-014a02456b16" class="" dir="auto">13.26 운영 관점의 백업 설계 포인트</h1><h3 id="077720e4-6f49-824d-a882-01e5eab8d50c" class="" dir="auto">1. 모든 리소스를 같은 방식으로 보호하면 안 됨</h3><p id="acd720e4-6f49-831c-bb8f-81150acee6a4" class="" dir="auto">데이터 중요도에 따라 정책을 다르게 해야 함.</p><h3 id="a0a720e4-6f49-83b2-801c-01639f29997c" class="" dir="auto">2. 태그 기반 표준화가 중요함</h3><p id="904720e4-6f49-835d-ae98-019dab92e1bf" class="" dir="auto">백업 누락을 줄이기 위해 정책 자동화를 활용해야 함.</p><h3 id="334720e4-6f49-826d-b953-81c26743bbf6" class="" dir="auto">3. 단일 리전/단일 계정 의존을 줄여야 함</h3><p id="ae3720e4-6f49-83bf-b02d-019447c92a34" class="" dir="auto">중요 서비스일수록 크로스 리전, 크로스 계정 전략을 고려해야 함.</p><h3 id="f6e720e4-6f49-831d-885d-813fa5ec76dd" class="" dir="auto">4. 백업과 복구를 같이 설계해야 함</h3><p id="6a7720e4-6f49-83f5-b1ac-01f2d5806d18" class="" dir="auto">백업만 있고 복구 절차가 없으면 운영 가치가 낮음.</p><h3 id="d46720e4-6f49-8366-b6f9-813ff1cc25ec" class="" dir="auto">5. 비용과 보존의 균형이 필요함</h3><p id="620720e4-6f49-83ea-84b8-81ff6aca1eb6" class="" dir="auto">오래 보관할수록 비용이 늘어나므로 계층화와 정책이 필요함.</p><p id="f18720e4-6f49-83e4-84ad-01b3a31d4383" class="" dir="auto">즉, 백업은 단순 저장이 아니라 <strong>정책, 보안, 운영, 비용의 균형 문제</strong>임.</p><hr id="e6e720e4-6f49-8229-92c5-815819363453" dir="auto"/><h1 id="1c3720e4-6f49-837e-97c2-0169b328dc11" class="" dir="auto">13.27 멀티 티어 아키텍처와의 연결</h1><p id="f3c720e4-6f49-829d-b8fc-012d66708f34" class="" dir="auto">앞에서 만든 멀티 티어 구조에 백업 계층을 연결하면 다음처럼 볼 수 있음.</p><pre id="70f720e4-6f49-82ab-8426-011335c8ac01" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">Web / App Tier
+   │
+RDS / EFS / DynamoDB / EBS
+   │
+AWS Backup / Snapshot / Backup Vault
+   │
+Cross-Region / Cross-Account 복제</code></pre><p id="4a4720e4-6f49-83b2-88fb-8114ecabe69f" class="" dir="auto">이 구조의 의미</p><ul id="f2e720e4-6f49-8340-ace0-818b8870e2b8" class="bulleted-list" dir="auto"><li style="list-style-type:disc">운영 데이터는 여러 서비스에 분산 저장됨</li></ul><ul id="866720e4-6f49-8240-8e7c-0157ab9e57e5" class="bulleted-list" dir="auto"><li style="list-style-type:disc">각 서비스의 백업을 중앙 정책으로 관리 가능함</li></ul><ul id="550720e4-6f49-8207-bb6f-010270c49464" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업은 단일 위치가 아니라 복수 위치 보호까지 고려 가능함</li></ul><p id="89d720e4-6f49-822b-a29a-816b2326c00d" class="" dir="auto">즉, 백업은 아키텍처의 마지막 부가 기능이 아니라</p><p id="9b3720e4-6f49-8339-b990-011c2e2fa51d" class="" dir="auto"><strong>전체 시스템 신뢰성의 핵심 계층</strong>임.</p><hr id="9ef720e4-6f49-83b5-b6e2-0135b52513f3" dir="auto"/><h1 id="17d720e4-6f49-823f-be48-013961a96894" class="" dir="auto">13.28 AWS Backup의 의미 한 번에 정리</h1><p id="295720e4-6f49-8256-b531-01b43928068f" class="" dir="auto">AWS Backup은 여러 AWS 서비스의 백업을 중앙에서 일관되게 관리하게 해주는 서비스임.</p><p id="159720e4-6f49-8282-92e1-81341e40778e" class="" dir="auto">여기서 중요한 점은 다음과 같음.</p><ul id="d0b720e4-6f49-830b-b934-01036fdfaaa2" class="bulleted-list" dir="auto"><li style="list-style-type:disc">서비스별 백업 기능을 통합함</li></ul><ul id="bed720e4-6f49-823f-844f-81dd574aed1b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">정책 기반 자동화를 가능하게 함</li></ul><ul id="012720e4-6f49-83c4-9845-01e6ae2ca49b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보관소 중심 관리가 가능함</li></ul><ul id="798720e4-6f49-8349-854a-013bceb8c1e9" class="bulleted-list" dir="auto"><li style="list-style-type:disc">계정/리전 확장성을 고려할 수 있음</li></ul><ul id="81d720e4-6f49-82d7-b353-0155699215a6" class="bulleted-list" dir="auto"><li style="list-style-type:disc">감사와 표준화에 유리함</li></ul><p id="25d720e4-6f49-8212-9146-8100857b0deb" class="" dir="auto">즉, AWS Backup은 단순한 스냅샷 생성기가 아니라</p><p id="63b720e4-6f49-83c0-8e35-8171c0ac2f69" class="" dir="auto"><strong>엔터프라이즈 백업 운영 플랫폼</strong>에 가까움.</p><hr id="88b720e4-6f49-827a-acef-0114ac113533" dir="auto"/><h1 id="f93720e4-6f49-83b6-b7eb-813e21575ff8" class="" dir="auto">13.29 서비스 역할 한 번에 정리</h1><h2 id="967720e4-6f49-8331-bd6a-81c6fbe55893" class="" dir="auto">AWS Backup</h2><p id="3f1720e4-6f49-82d1-b9f9-81b25bb8ac68" class="" dir="auto">여러 AWS 서비스의 백업을 중앙 정책 기반으로 관리한다.</p><h2 id="0e8720e4-6f49-8248-bb9a-81018bc6b9a4" class="" dir="auto">Backup Plan</h2><p id="eeb720e4-6f49-821b-9020-81e23a00dfed" class="" dir="auto">언제, 얼마나 자주, 얼마나 오래 백업할지 정의한다.</p><h2 id="e3a720e4-6f49-8295-848f-0151674cd4da" class="" dir="auto">Backup Vault</h2><p id="d5b720e4-6f49-8234-8657-01090234f005" class="" dir="auto">백업 결과를 저장하는 논리적 보관소다.</p><h2 id="6db720e4-6f49-82e9-a806-015be66fe9c1" class="" dir="auto">Recovery Point</h2><p id="c2e720e4-6f49-821c-bd05-81b9aefc026b" class="" dir="auto">특정 시점으로 복구할 수 있는 백업 지점이다.</p><h2 id="b9c720e4-6f49-83aa-b18f-014f3f20c88d" class="" dir="auto">Snapshot</h2><p id="f6f720e4-6f49-83af-bdc3-815f94bec897" class="" dir="auto">특정 시점의 데이터 상태를 저장한 복사본이다.</p><h2 id="016720e4-6f49-832b-a40b-013bbf0e69ba" class="" dir="auto">Cross-Region Backup</h2><p id="9c4720e4-6f49-8317-b2d3-01d1be6a038f" class="" dir="auto">리전 단위 재해에 대비해 다른 리전에 백업을 복제한다.</p><h2 id="022720e4-6f49-82c1-90c5-81100da78880" class="" dir="auto">Cross-Account Backup</h2><p id="9f3720e4-6f49-8340-9193-81e263dec030" class="" dir="auto">계정 침해나 실수에 대비해 별도 계정에 백업을 보관한다.</p><hr id="381720e4-6f49-8378-88d2-0187bc86de6b" dir="auto"/><h1 id="fec720e4-6f49-83fe-b615-8106331255fe" class="" dir="auto">13.30 장 요약</h1><p id="0d7720e4-6f49-8252-8ec4-81499314d269" class="" dir="auto">이번 장에서 학습한 핵심 내용</p><ul id="aff720e4-6f49-83a5-9ba5-01e7051b2e13" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업과 복구가 필요한 이유</li></ul><ul id="1c1720e4-6f49-82db-aa8c-8116a5924a39" class="bulleted-list" dir="auto"><li style="list-style-type:disc">고가용성과 백업의 차이</li></ul><ul id="124720e4-6f49-83a0-8c5c-018a68aee2ac" class="bulleted-list" dir="auto"><li style="list-style-type:disc">RPO와 RTO 개념</li></ul><ul id="f77720e4-6f49-8395-a0c7-8123f98d2b9c" class="bulleted-list" dir="auto"><li style="list-style-type:disc">AWS Backup의 역할과 필요성</li></ul><ul id="4bc720e4-6f49-823b-ac10-013e4ee5e774" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Backup Plan, Rule, Vault, Recovery Point 개념</li></ul><ul id="c12720e4-6f49-83c1-af25-01f69942b374" class="bulleted-list" dir="auto"><li style="list-style-type:disc">태그 기반 백업 관리</li></ul><ul id="0fa720e4-6f49-828e-9c90-01e02b76144b" class="bulleted-list" dir="auto"><li style="list-style-type:disc">EBS Snapshot, RDS Backup, DynamoDB Backup 개념</li></ul><ul id="876720e4-6f49-8366-81a1-012a037d3201" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Point-in-Time Recovery 의미</li></ul><ul id="441720e4-6f49-8259-a2ec-81612f488178" class="bulleted-list" dir="auto"><li style="list-style-type:disc">보관 기간과 백업 주기 설계</li></ul><ul id="cfb720e4-6f49-8299-9e17-819f5c44141d" class="bulleted-list" dir="auto"><li style="list-style-type:disc">Cross-Region / Cross-Account Backup 개념</li></ul><ul id="cbf720e4-6f49-82e9-aea7-013e48fd1a29" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업 보안과 암호화</li></ul><ul id="568720e4-6f49-8321-a298-011322d0793a" class="bulleted-list" dir="auto"><li style="list-style-type:disc">백업과 DR의 관계</li></ul><ul id="9b1720e4-6f49-8374-8b66-01ae75bd7931" class="bulleted-list" dir="auto"><li style="list-style-type:disc">복구 테스트의 중요성</li></ul><hr id="9ad720e4-6f49-830e-a5ba-81b52314e501" dir="auto"/><h1 id="0ac720e4-6f49-83b0-993c-810cdf744830" class="" dir="auto">13.31 한 줄 정리</h1><pre id="aa4720e4-6f49-833d-86fb-0102fa336afe" class="code code-wrap"><code style="white-space:pre-wrap;word-break:break-all">고가용성은 서비스를 계속 운영하게 한다.
+백업은 데이터를 다시 되살릴 수 있게 한다.
+AWS Backup은 여러 서비스의 백업을 중앙 정책으로 관리하게 해준다.
+좋은 백업 전략은 저장보다 복구 가능성을 중심으로 설계해야 한다.</code></pre><hr id="143720e4-6f49-83bd-8354-0161c5c788eb" dir="auto"/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>

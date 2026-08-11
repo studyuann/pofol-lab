@@ -799,4 +799,5 @@ except Exception as e:
 
 * 생성형 AI에게 요청할 때는 인증 방식, 조회 대상, 출력할 필드, 필터링 조건, 예외 처리 요구를 함께 적는 것이 좋다.
 
- [[boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이|boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이 확인]]  [[프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영|프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영 자동화]]
+- [[boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이|boto3로 로그인 사용자 권한별 IAM Role 생성 및 AssumeRole 권한 차이 확인]]
+- [[프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영|프론트엔드, FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영 자동화]]

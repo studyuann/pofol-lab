@@ -158,7 +158,6 @@ CREATE TABLE payments (
 
 CREATE INDEX idx_payments_status_created_at ON payments(status, created_at DESC);
 
-
 -- =========================================================
 -- bootcamp_shop Sample Data (PostgreSQL)
 -- =========================================================

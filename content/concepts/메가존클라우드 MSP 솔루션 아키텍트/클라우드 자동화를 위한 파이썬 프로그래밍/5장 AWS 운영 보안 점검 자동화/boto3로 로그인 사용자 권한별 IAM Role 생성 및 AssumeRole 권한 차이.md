@@ -499,7 +499,6 @@ import json
 import boto3
 from botocore.exceptions import ClientError
 
-
 AWS_PROFILE = "instructor"
 AWS_REGION = "ap-northeast-2"
 
@@ -508,7 +507,6 @@ ROLE_NAMES = {
     "operator": "app-operator-role",
     "admin": "app-admin-role"
 }
-
 
 def create_base_session():
     """
@@ -527,7 +525,6 @@ def create_base_session():
         profile_name=AWS_PROFILE,
         region_name=AWS_REGION
     )
-
 
 def get_current_identity(session):
     """
@@ -548,7 +545,6 @@ def get_current_identity(session):
     print()
 
     return identity
-
 
 def build_trust_policy(principal_arn):
     """
@@ -582,7 +578,6 @@ def build_trust_policy(principal_arn):
     }
 
     return json.dumps(trust_policy)
-
 
 def build_viewer_policy():
     """
@@ -621,7 +616,6 @@ def build_viewer_policy():
 
     return json.dumps(policy)
 
-
 def build_operator_policy():
     """
     operator Role에 연결할 Permission Policy를 생성한다.
@@ -659,7 +653,6 @@ def build_operator_policy():
     }
 
     return json.dumps(policy)
-
 
 def build_admin_policy():
     """
@@ -704,7 +697,6 @@ def build_admin_policy():
 
     return json.dumps(policy)
 
-
 def get_permission_policy_by_role_type(role_type):
     """
     role_type에 맞는 Permission Policy 문서를 반환한다.
@@ -725,7 +717,6 @@ def get_permission_policy_by_role_type(role_type):
         return build_admin_policy()
 
     raise ValueError(f"지원하지 않는 role_type임: {role_type}")
-
 
 def create_or_update_role(iam_client, role_type, role_name, principal_arn):
     """
@@ -781,7 +772,6 @@ def create_or_update_role(iam_client, role_type, role_name, principal_arn):
         print(e)
         raise
 
-
 def attach_inline_permission_policy(iam_client, role_type, role_name):
     """
     Role에 Inline Permission Policy를 연결한다.
@@ -805,7 +795,6 @@ def attach_inline_permission_policy(iam_client, role_type, role_name):
     print(f"PolicyName: {policy_name}")
     print()
 
-
 def print_role_map(account_id):
     """
     이후 FastAPI에서 사용할 USER_ROLE_MAP 예시를 출력한다.
@@ -818,7 +807,6 @@ def print_role_map(account_id):
     print(f'    "admin": "arn:aws:iam::{account_id}:role/app-admin-role"')
     print("}")
     print()
-
 
 def main():
     session = create_base_session()
@@ -846,7 +834,6 @@ def main():
     print_role_map(account_id)
 
     print("IAM Role 생성 및 정책 연결 완료")
-
 
 if __name__ == "__main__":
     main()
@@ -936,7 +923,6 @@ Assume한 Role의 Permission Policy를 기준으로 동작한다.
 import boto3
 from botocore.exceptions import ClientError
 
-
 AWS_PROFILE = "instructor"
 AWS_REGION = "ap-northeast-2"
 
@@ -945,7 +931,6 @@ ROLE_MAP = {
     "operator": "app-operator-role",
     "admin": "app-admin-role"
 }
-
 
 def create_base_session():
     """
@@ -959,7 +944,6 @@ def create_base_session():
         profile_name=AWS_PROFILE,
         region_name=AWS_REGION
     )
-
 
 def get_account_id(session):
     """
@@ -977,7 +961,6 @@ def get_account_id(session):
 
     return identity["Account"]
 
-
 def build_role_arn(account_id, role_name):
     """
     Role 이름을 Role ARN으로 변환한다.
@@ -991,7 +974,6 @@ def build_role_arn(account_id, role_name):
     """
 
     return f"arn:aws:iam::{account_id}:role/{role_name}"
-
 
 def assume_role(base_session, role_arn, role_type):
     """
@@ -1024,7 +1006,6 @@ def assume_role(base_session, role_arn, role_type):
 
     return credentials
 
-
 def create_assumed_session(credentials):
     """
     AssumeRole로 받은 임시 자격 증명을 사용해 새로운 boto3 Session을 생성한다.
@@ -1040,7 +1021,6 @@ def create_assumed_session(credentials):
         aws_session_token=credentials["SessionToken"],
         region_name=AWS_REGION
     )
-
 
 def check_assumed_identity(assumed_session):
     """
@@ -1059,7 +1039,6 @@ def check_assumed_identity(assumed_session):
     print(f"Arn    : {identity['Arn']}")
     print(f"UserId : {identity['UserId']}")
     print()
-
 
 def test_ec2_describe_instances(assumed_session):
     """
@@ -1105,7 +1084,6 @@ def test_ec2_describe_instances(assumed_session):
         print(f"ErrorCode: {e.response['Error']['Code']}")
         print()
 
-
 def test_s3_list_buckets(assumed_session):
     """
     S3 버킷 목록 조회 권한을 테스트한다.
@@ -1138,7 +1116,6 @@ def test_s3_list_buckets(assumed_session):
         print(f"ErrorCode: {e.response['Error']['Code']}")
         print()
 
-
 def get_first_instance_id(assumed_session):
     """
     테스트용 EC2 인스턴스 ID 하나를 조회한다.
@@ -1155,7 +1132,6 @@ def get_first_instance_id(assumed_session):
             return instance["InstanceId"]
 
     return None
-
 
 def test_ec2_stop_dry_run(assumed_session):
     """
@@ -1217,7 +1193,6 @@ def test_ec2_stop_dry_run(assumed_session):
         print(f"ErrorCode: {error_code}")
         print()
 
-
 def get_first_bucket_name(assumed_session):
     """
     테스트용 S3 버킷 이름 하나를 조회한다.
@@ -1235,7 +1210,6 @@ def get_first_bucket_name(assumed_session):
         return None
 
     return buckets[0]["Name"]
-
 
 def test_s3_put_object(assumed_session):
     """
@@ -1291,7 +1265,6 @@ def test_s3_put_object(assumed_session):
         print(f"ErrorCode: {error_code}")
         print()
 
-
 def run_test_for_role(role_type, role_name, account_id, base_session):
     """
     특정 Role에 대해 AssumeRole 후 권한 테스트를 수행한다.
@@ -1324,7 +1297,6 @@ def run_test_for_role(role_type, role_name, account_id, base_session):
         print(f"Message  : {e.response['Error']['Message']}")
         print()
 
-
 def main():
     base_session = create_base_session()
     account_id = get_account_id(base_session)
@@ -1336,7 +1308,6 @@ def main():
             account_id=account_id,
             base_session=base_session
         )
-
 
 if __name__ == "__main__":
     main()
@@ -1631,7 +1602,6 @@ app-viewer-role / app-operator-role / app-admin-role
 import boto3
 from botocore.exceptions import ClientError
 
-
 AWS_PROFILE = "instructor"
 AWS_REGION = "ap-northeast-2"
 
@@ -1641,13 +1611,11 @@ ROLE_POLICY_MAP = {
     "app-admin-role": "admin-permission-policy"
 }
 
-
 def create_base_session():
     return boto3.Session(
         profile_name=AWS_PROFILE,
         region_name=AWS_REGION
     )
-
 
 def delete_inline_policy(iam_client, role_name, policy_name):
     """
@@ -1675,7 +1643,6 @@ def delete_inline_policy(iam_client, role_name, policy_name):
         print(e)
         raise
 
-
 def delete_role(iam_client, role_name):
     """
     IAM Role을 삭제한다.
@@ -1696,7 +1663,6 @@ def delete_role(iam_client, role_name):
         print(e)
         raise
 
-
 def main():
     session = create_base_session()
     iam_client = session.client("iam")
@@ -1706,7 +1672,6 @@ def main():
         delete_role(iam_client, role_name)
 
     print("실습 Role 정리 완료")
-
 
 if __name__ == "__main__":
     main()

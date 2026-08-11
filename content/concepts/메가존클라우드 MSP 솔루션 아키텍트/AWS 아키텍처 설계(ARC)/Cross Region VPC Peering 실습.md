@@ -73,10 +73,8 @@ Region 1 : ap-northeast-2 (Seoul)
 
  EC2-A
 
-
                 Cross Region
                 VPC Peering
-
 
 Region 2 : us-east-1 (N. Virginia)
 

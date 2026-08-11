@@ -348,25 +348,21 @@ cloudpass123!
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-
 DB_USER = "cloud_user"
 DB_PASSWORD = "cloudpass123!"
 DB_HOST = "localhost"
 DB_PORT = 3306
 DB_NAME = "cloud_app"
 
-
 DATABASE_URL = (
     f"mysql+pymysql://{DB_USER}:{DB_PASSWORD}"
     f"@{DB_HOST}:{DB_PORT}/{DB_NAME}?charset=utf8mb4"
 )
 
-
 engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True
 )
-
 
 SessionLocal = sessionmaker(
     autocommit=False,
@@ -374,9 +370,7 @@ SessionLocal = sessionmaker(
     bind=engine
 )
 
-
 Base = declarative_base()
-
 
 def get_db():
     """
@@ -433,7 +427,6 @@ from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy.sql import func
 
 from database import Base
-
 
 class User(Base):
     """
@@ -494,7 +487,6 @@ password_hash = $2b$12$....
 ```
 from pydantic import BaseModel
 
-
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str
@@ -502,12 +494,10 @@ class TokenResponse(BaseModel):
     role: str
     display_name: str
 
-
 class UserResponse(BaseModel):
     username: str
     role: str
     display_name: str
-
 
 class ApiResponse(BaseModel):
     success: bool
@@ -528,12 +518,10 @@ from passlib.context import CryptContext
 from database import Base, engine, SessionLocal
 from models import User
 
-
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
 )
-
 
 def hash_password(password: str):
     """
@@ -542,7 +530,6 @@ def hash_password(password: str):
 
     return pwd_context.hash(password)
 
-
 def create_tables():
     """
     SQLAlchemy 모델을 기준으로 DB 테이블을 생성한다.
@@ -550,7 +537,6 @@ def create_tables():
     """
 
     Base.metadata.create_all(bind=engine)
-
 
 def create_user_if_not_exists(db, username, password, role, display_name):
     """
@@ -576,7 +562,6 @@ def create_user_if_not_exists(db, username, password, role, display_name):
     db.commit()
 
     print(f"[생성 완료] 사용자 생성: {username} / role={role}")
-
 
 def seed_users():
     """
@@ -622,12 +607,10 @@ def seed_users():
     finally:
         db.close()
 
-
 def main():
     create_tables()
     seed_users()
     print("DB 초기화 완료")
-
 
 if __name__ == "__main__":
     main()
@@ -707,22 +690,18 @@ from sqlalchemy.orm import Session
 from database import get_db
 from models import User
 
-
 SECRET_KEY = "change-this-secret-key-for-lab"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 120
-
 
 pwd_context = CryptContext(
     schemes=["bcrypt"],
     deprecated="auto"
 )
 
-
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl="/auth/login"
 )
-
 
 def verify_password(plain_password: str, password_hash: str):
     """
@@ -737,7 +716,6 @@ def verify_password(plain_password: str, password_hash: str):
 
     return pwd_context.verify(plain_password, password_hash)
 
-
 def get_user_by_username(db: Session, username: str):
     """
     username으로 사용자를 조회한다.
@@ -745,7 +723,6 @@ def get_user_by_username(db: Session, username: str):
     """
 
     return db.query(User).filter(User.username == username).first()
-
 
 def authenticate_user(db: Session, username: str, password: str):
     """
@@ -771,7 +748,6 @@ def authenticate_user(db: Session, username: str, password: str):
         return None
 
     return user
-
 
 def create_access_token(data: dict):
     """
@@ -802,7 +778,6 @@ def create_access_token(data: dict):
     )
 
     return encoded_jwt
-
 
 def get_current_user(
     token: str = Depends(oauth2_scheme),
@@ -897,18 +872,15 @@ import boto3
 from fastapi import HTTPException
 from botocore.exceptions import ClientError
 
-
 AWS_PROFILE = os.getenv("AWS_PROFILE", "instructor")
 AWS_REGION = os.getenv("AWS_DEFAULT_REGION", "ap-northeast-2")
 AWS_ACCOUNT_ID = os.getenv("AWS_ACCOUNT_ID", "471166314777")
-
 
 USER_ROLE_MAP = {
     "viewer": f"arn:aws:iam::{AWS_ACCOUNT_ID}:role/app-viewer-role",
     "operator": f"arn:aws:iam::{AWS_ACCOUNT_ID}:role/app-operator-role",
     "admin": f"arn:aws:iam::{AWS_ACCOUNT_ID}:role/app-admin-role"
 }
-
 
 def create_base_session():
     """
@@ -932,7 +904,6 @@ def create_base_session():
         region_name=AWS_REGION
     )
 
-
 def get_role_arn_for_user(user):
     """
     로그인 사용자의 role 값을 기준으로 IAM Role ARN을 선택한다.
@@ -952,7 +923,6 @@ def get_role_arn_for_user(user):
         )
 
     return role_arn
-
 
 def assume_role_for_user(user):
     """
@@ -987,7 +957,6 @@ def assume_role_for_user(user):
             detail=f"AssumeRole 실패: {error_code}"
         )
 
-
 def create_assumed_session(credentials):
     """
     STS AssumeRole로 발급받은 임시 자격 증명으로 boto3 Session을 생성한다.
@@ -1002,7 +971,6 @@ def create_assumed_session(credentials):
         aws_session_token=credentials["SessionToken"],
         region_name=AWS_REGION
     )
-
 
 def get_assumed_session_for_user(user):
     """
@@ -1048,7 +1016,6 @@ from botocore.exceptions import ClientError
 
 from aws_role import AWS_REGION, get_assumed_session_for_user
 
-
 def extract_name_tag(instance):
     """
     EC2 인스턴스의 Name 태그 값을 추출한다.
@@ -1062,7 +1029,6 @@ def extract_name_tag(instance):
             return tag.get("Value", "")
 
     return ""
-
 
 def list_instances(user):
     """
@@ -1097,7 +1063,6 @@ def list_instances(user):
             detail=f"EC2 인스턴스 조회 실패: {e.response['Error']['Code']}"
         )
 
-
 def start_instance(user, instance_id: str):
     """
     EC2 인스턴스를 시작한다.
@@ -1124,7 +1089,6 @@ def start_instance(user, instance_id: str):
             status_code=403,
             detail=f"EC2 시작 실패: {e.response['Error']['Code']}"
         )
-
 
 def stop_instance(user, instance_id: str):
     """
@@ -1168,7 +1132,6 @@ from botocore.exceptions import ClientError
 
 from aws_role import get_assumed_session_for_user
 
-
 def list_buckets(user):
     """
     로그인 사용자 권한에 맞는 IAM Role을 AssumeRole 한 뒤
@@ -1196,7 +1159,6 @@ def list_buckets(user):
             status_code=403,
             detail=f"S3 버킷 목록 조회 실패: {e.response['Error']['Code']}"
         )
-
 
 def list_objects(user, bucket_name: str):
     """
@@ -1227,7 +1189,6 @@ def list_objects(user, bucket_name: str):
             status_code=403,
             detail=f"S3 객체 목록 조회 실패: {e.response['Error']['Code']}"
         )
-
 
 async def upload_file(user, bucket_name: str, file: UploadFile):
     """
@@ -1286,20 +1247,17 @@ from aws_role import assume_role_for_user, create_assumed_session
 from ec2_service import list_instances, start_instance, stop_instance
 from s3_service import list_buckets, list_objects, upload_file
 
-
 app = FastAPI(
     title="Cloud Operations Automation API",
     description="FastAPI, MariaDB, boto3를 이용한 로그인 기반 AWS 운영 자동화 API",
     version="1.0.0"
 )
 
-
 app.mount(
     "/static",
     StaticFiles(directory="static"),
     name="static"
 )
-
 
 @app.get("/")
 def index():
@@ -1308,7 +1266,6 @@ def index():
     """
 
     return FileResponse("static/index.html")
-
 
 @app.post("/auth/login", response_model=TokenResponse)
 def login(
@@ -1358,7 +1315,6 @@ def login(
         "display_name": user.display_name
     }
 
-
 @app.get("/me", response_model=UserResponse)
 def me(current_user=Depends(get_current_user)):
     """
@@ -1371,7 +1327,6 @@ def me(current_user=Depends(get_current_user)):
         "role": current_user.role,
         "display_name": current_user.display_name
     }
-
 
 @app.get("/aws/whoami")
 def aws_whoami(current_user=Depends(get_current_user)):
@@ -1397,7 +1352,6 @@ def aws_whoami(current_user=Depends(get_current_user)):
         "aws_identity": identity
     }
 
-
 @app.get("/api/ec2/instances")
 def api_list_instances(current_user=Depends(get_current_user)):
     """
@@ -1407,7 +1361,6 @@ def api_list_instances(current_user=Depends(get_current_user)):
     return {
         "items": list_instances(current_user)
     }
-
 
 @app.post("/api/ec2/instances/{instance_id}/start")
 def api_start_instance(
@@ -1423,7 +1376,6 @@ def api_start_instance(
         instance_id=instance_id
     )
 
-
 @app.post("/api/ec2/instances/{instance_id}/stop")
 def api_stop_instance(
     instance_id: str,
@@ -1438,7 +1390,6 @@ def api_stop_instance(
         instance_id=instance_id
     )
 
-
 @app.get("/api/s3/buckets")
 def api_list_buckets(current_user=Depends(get_current_user)):
     """
@@ -1448,7 +1399,6 @@ def api_list_buckets(current_user=Depends(get_current_user)):
     return {
         "items": list_buckets(current_user)
     }
-
 
 @app.get("/api/s3/buckets/{bucket_name}/objects")
 def api_list_objects(
@@ -1465,7 +1415,6 @@ def api_list_objects(
             bucket_name=bucket_name
         )
     }
-
 
 @app.post("/api/s3/buckets/{bucket_name}/upload")
 async def api_upload_file(

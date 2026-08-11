@@ -8,4 +8,6 @@ draft: false
 
 # 온프레미스 ICT 인프라구조
 
-[[DNS]]  [[VPN(Virtual Private Network)]]  [[BGP(Border Gateway Protocol)]]
+- [[DNS]]
+- [[VPN(Virtual Private Network)]]
+- [[BGP(Border Gateway Protocol)]]

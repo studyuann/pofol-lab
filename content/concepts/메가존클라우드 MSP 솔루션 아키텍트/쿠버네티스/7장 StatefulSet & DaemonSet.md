@@ -618,7 +618,6 @@ kubectl get pods -o wide
 # 노드별 Pod 개수 확인
 kubectl get pods --all-namespaces -o wide | grep node-exporter
 
-
 # DaemonSet 삭제
 kubectl delete daemonset node-exporter
 ```

@@ -8,7 +8,7 @@ draft: false
 
 # HTTPS
 
-[[SSL-TLS\_HTTPS.pdf]]
+- [[SSL-TLS\_HTTPS.pdf]]
 
 ```
 암호화 통신 :  암호 알고리즘

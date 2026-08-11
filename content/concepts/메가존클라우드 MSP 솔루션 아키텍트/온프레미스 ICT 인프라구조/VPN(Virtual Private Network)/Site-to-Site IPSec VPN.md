@@ -109,4 +109,4 @@ Site-to-Site IPSec VPN을 구성할 때 **주요 설정 값**을 확인해야 �
 
 ✅ **IPSec VPN 터널을 통해 두 라우터 간 안전한 연결을 유지**
 
- [[실습예제 Cisco IOS에서 Site-to-Site IPSec VPN을 설정하는 예제|실습예제: Cisco IOS에서 Site-to-Site IPSec VPN을 설정하는 예제]]
+- [[실습예제 Cisco IOS에서 Site-to-Site IPSec VPN을 설정하는 예제|실습예제: Cisco IOS에서 Site-to-Site IPSec VPN을 설정하는 예제]]

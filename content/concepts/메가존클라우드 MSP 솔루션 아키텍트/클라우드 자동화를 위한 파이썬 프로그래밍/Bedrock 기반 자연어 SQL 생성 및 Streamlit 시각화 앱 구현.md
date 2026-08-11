@@ -238,7 +238,6 @@ ATHENA_DATABASE = os.getenv("ATHENA_DATABASE", "nlp_s3_analytics_db")
 athena = boto3.client("athena", region_name=AWS_REGION)
 s3 = boto3.client("s3", region_name=AWS_REGION)
 
-
 def run_athena_query(sql: str) -> pd.DataFrame:
     if not S3_BUCKET:
         raise ValueError(".env 파일에 S3_BUCKET 값을 설정해야 한다.")
@@ -707,7 +706,6 @@ TABLE_SCHEMA = f"""
 - SQL 외의 설명은 출력하지 않는다.
 """
 
-
 def extract_sql(text: str) -> str:
     code_block = re.search(r"```sql\s*(.*?)```", text, re.DOTALL | re.IGNORECASE)
     if code_block:
@@ -718,7 +716,6 @@ def extract_sql(text: str) -> str:
         return generic_block.group(1).strip()
 
     return text.strip()
-
 
 def validate_sql(sql: str) -> None:
     normalized = sql.strip().lower()
@@ -737,7 +734,6 @@ def validate_sql(sql: str) -> None:
 
     if ATHENA_TABLE.lower() not in normalized:
         raise ValueError(f"허용된 테이블만 조회할 수 있다: {ATHENA_TABLE}")
-
 
 def generate_sql_from_question(question: str) -> str:
     system_text = f"""

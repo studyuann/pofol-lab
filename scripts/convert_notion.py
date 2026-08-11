@@ -28,9 +28,7 @@ def clean_title(name):
     if not name:
         return ""
     unquoted = unquote(name)
-    # .html / .md 확장자 제거
     unquoted = re.sub(r'\.(html|md)$', '', unquoted, flags=re.IGNORECASE)
-    # 노션 32자리 헥사 ID 제거
     cleaned = re.sub(r'[\s%20-]+[0-9a-f]{32}$', '', unquoted, flags=re.IGNORECASE)
     cleaned = re.sub(r'^[0-9a-f]{32}_?', '', cleaned, flags=re.IGNORECASE)
     return cleaned.strip()
@@ -74,7 +72,7 @@ def process_conversion():
                 
                 page_body = soup.find('article') or soup.find('body') or soup
                 
-                # BeautifulSoup 단계에서 <a> 태그를 깔끔한 Obsidian 위키링크로 치환
+                # BeautifulSoup 단계에서 <a> 태그를 마크다운 목록(- [[위키링크]]) 형태로 변환
                 for a_tag in page_body.find_all('a'):
                     href = a_tag.get('href', '')
                     text = a_tag.get_text().strip()
@@ -88,12 +86,15 @@ def process_conversion():
                         
                     if target_name and text:
                         if target_name == text:
-                            wikilink = f" [[{target_name}]] "
+                            wikilink = f"\n- [[{target_name}]]\n"
                         else:
-                            wikilink = f" [[{target_name}|{text}]] "
+                            wikilink = f"\n- [[{target_name}|{text}]]\n"
                         a_tag.replace_with(wikilink)
                 
                 md_text = md(str(page_body), heading_style="ATX").strip()
+                
+                # 연속된 빈 줄 정리 및 목록 구문 다듬기
+                md_text = re.sub(r'\n{3,}', '\n\n', md_text)
                 
                 tags_str = ", ".join([f'"{t}"' for t in rel_dirs]) if rel_dirs else '"msp"'
                 frontmatter = f"""---
@@ -118,7 +119,7 @@ draft: false
                 os.makedirs(os.path.dirname(dest_path), exist_ok=True)
                 shutil.copy2(src_file_path, dest_path)
                 
-    print(f"SOUP_CONVERSION_SUCCESS: {count} pages processed.")
+    print(f"BULLET_CONVERSION_SUCCESS: {count} pages processed.")
 
 if __name__ == '__main__':
     extract_zip(ZIP_PATH, TEMP_EXTRACT_DIR)

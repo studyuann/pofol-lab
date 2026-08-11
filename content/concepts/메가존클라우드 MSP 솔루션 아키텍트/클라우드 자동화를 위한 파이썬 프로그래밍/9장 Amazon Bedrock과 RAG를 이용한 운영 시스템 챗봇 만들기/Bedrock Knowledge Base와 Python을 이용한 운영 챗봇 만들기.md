@@ -371,7 +371,6 @@ pip list
 import boto3
 from botocore.exceptions import ClientError
 
-
 # 서울 리전 사용
 AWS_REGION = "ap-northeast-2"
 
@@ -387,7 +386,6 @@ MODEL_ARN = (
 # Knowledge Base에서 검색할 문서 조각 수
 NUMBER_OF_RESULTS = 5
 
-
 def create_client():
     """
     Bedrock Agent Runtime 클라이언트를 생성한다.
@@ -400,7 +398,6 @@ def create_client():
         service_name="bedrock-agent-runtime",
         region_name=AWS_REGION
     )
-
 
 def build_ops_question(user_question):
     """
@@ -425,7 +422,6 @@ def build_ops_question(user_question):
 사용자 질문:
 {user_question}
 """.strip()
-
 
 def retrieve_and_generate(question):
     """
@@ -456,14 +452,12 @@ def retrieve_and_generate(question):
 
     return response
 
-
 def extract_answer(response):
     """
     retrieve_and_generate 응답에서 최종 답변 텍스트만 추출한다.
     """
 
     return response.get("output", {}).get("text", "")
-
 
 def extract_sources(response):
     """
@@ -489,7 +483,6 @@ def extract_sources(response):
             })
 
     return sources
-
 
 def ask_knowledge_base(question):
     """
@@ -532,7 +525,6 @@ def ask_knowledge_base(question):
             "error": f"예상하지 못한 오류가 발생했음: {e}"
         }
 
-
 def print_sources(sources):
     """
     출처 문서를 화면에 출력한다.
@@ -554,7 +546,6 @@ def print_sources(sources):
         if text:
             print("참조 내용 일부:")
             print(text)
-
 
 def main():
     """
@@ -588,7 +579,6 @@ def main():
         print(result["answer"])
 
         print_sources(result["sources"])
-
 
 if __name__ == "__main__":
     main()
@@ -866,7 +856,6 @@ import boto3
 import streamlit as st
 from botocore.exceptions import ClientError
 
-
 # 서울 리전 사용
 AWS_REGION = "ap-northeast-2"
 
@@ -882,13 +871,11 @@ MODEL_ARN = (
 # Knowledge Base에서 검색할 문서 조각 수
 NUMBER_OF_RESULTS = 5
 
-
 def create_client():
     return boto3.client(
         service_name="bedrock-agent-runtime",
         region_name=AWS_REGION
     )
-
 
 def build_ops_question(user_question):
     return f"""
@@ -909,7 +896,6 @@ def build_ops_question(user_question):
 사용자 질문:
 {user_question}
 """.strip()
-
 
 def retrieve_and_generate(question):
     client = create_client()
@@ -936,10 +922,8 @@ def retrieve_and_generate(question):
 
     return response
 
-
 def extract_answer(response):
     return response.get("output", {}).get("text", "")
-
 
 def extract_sources(response):
     sources = []
@@ -961,7 +945,6 @@ def extract_sources(response):
             })
 
     return sources
-
 
 def ask_knowledge_base(question):
     try:
@@ -1000,7 +983,6 @@ def ask_knowledge_base(question):
             "error": f"예상하지 못한 오류가 발생했음: {e}"
         }
 
-
 st.set_page_config(
     page_title="운영 매뉴얼 챗봇",
     page_icon="🛠️",
@@ -1018,11 +1000,9 @@ st.sidebar.write(f"검색 문서 수: `{NUMBER_OF_RESULTS}`")
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
-
 
 question = st.chat_input(
     "운영 매뉴얼에 대해 질문하세요. 예: DB 연결 오류 발생 시 점검 절차는?"

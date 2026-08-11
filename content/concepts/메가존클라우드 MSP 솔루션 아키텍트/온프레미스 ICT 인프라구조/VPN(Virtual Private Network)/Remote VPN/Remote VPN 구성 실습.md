@@ -113,7 +113,6 @@ conn "ezvpn"
         xauth_identity=cisco      #identity for Xauth, password in ipsec.secrets
         auto=add
 
-
 #/etc/IPsec.secrets
 203.113.0.1 : PSK "cisco"
 cisco : XAUTH "cisco"

@@ -161,15 +161,12 @@ import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 from dotenv import load_dotenv
 
-
 load_dotenv()
-
 
 AWS_PROFILE = os.getenv("AWS_PROFILE", "default")
 AWS_REGION = os.getenv("AWS_REGION", "ap-northeast-2")
 AGENT_ID = os.getenv("BEDROCK_AGENT_ID")
 AGENT_ALIAS_ID = os.getenv("BEDROCK_AGENT_ALIAS_ID")
-
 
 def create_bedrock_agent_client():
     """
@@ -187,7 +184,6 @@ def create_bedrock_agent_client():
 
     client = session.client("bedrock-agent-runtime")
     return client
-
 
 def read_agent_response(response):
     """
@@ -216,7 +212,6 @@ def read_agent_response(response):
 
     return "".join(answer_parts)
 
-
 def ask_agent(client, session_id, question):
     """
     Bedrock Agent에게 질문을 전달하고 답변을 반환한다.
@@ -235,7 +230,6 @@ def ask_agent(client, session_id, question):
     answer = read_agent_response(response)
     return answer
 
-
 def validate_env():
     """
     필수 환경 변수가 설정되어 있는지 확인한다.
@@ -246,7 +240,6 @@ def validate_env():
 
     if not AGENT_ALIAS_ID:
         raise ValueError("BEDROCK_AGENT_ALIAS_ID 환경 변수가 설정되지 않았음")
-
 
 def main():
     """
@@ -301,7 +294,6 @@ def main():
     except Exception as e:
         print("프로그램 시작 중 오류 발생")
         print(e)
-
 
 if __name__ == "__main__":
     main()
@@ -481,22 +473,18 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
-
 load_dotenv()
-
 
 AWS_PROFILE = os.getenv("AWS_PROFILE", "default")
 AWS_REGION = os.getenv("AWS_REGION", "ap-northeast-2")
 AGENT_ID = os.getenv("BEDROCK_AGENT_ID")
 AGENT_ALIAS_ID = os.getenv("BEDROCK_AGENT_ALIAS_ID")
 
-
 app = FastAPI(
     title="Bedrock Agent Chatbot API",
     description="Bedrock Agent를 호출하는 인프라 운영 챗봇 API",
     version="1.0.0"
 )
-
 
 class ChatRequest(BaseModel):
     """
@@ -514,7 +502,6 @@ class ChatRequest(BaseModel):
     question: str
     session_id: str | None = None
 
-
 class ChatResponse(BaseModel):
     """
     챗봇 응답 형식이다.
@@ -529,7 +516,6 @@ class ChatResponse(BaseModel):
     session_id: str
     answer: str
 
-
 def create_bedrock_agent_client():
     """
     Bedrock Agent Runtime 클라이언트를 생성한다.
@@ -542,7 +528,6 @@ def create_bedrock_agent_client():
 
     return session.client("bedrock-agent-runtime")
 
-
 def validate_env():
     """
     필수 환경 변수를 확인한다.
@@ -553,7 +538,6 @@ def validate_env():
 
     if not AGENT_ALIAS_ID:
         raise RuntimeError("BEDROCK_AGENT_ALIAS_ID 환경 변수가 설정되지 않았음")
-
 
 def read_agent_response(response):
     """
@@ -572,7 +556,6 @@ def read_agent_response(response):
 
     return "".join(answer_parts)
 
-
 def invoke_bedrock_agent(question, session_id):
     """
     Bedrock Agent를 호출하고 답변을 반환한다.
@@ -589,7 +572,6 @@ def invoke_bedrock_agent(question, session_id):
 
     return read_agent_response(response)
 
-
 @app.get("/")
 def root():
     """
@@ -599,7 +581,6 @@ def root():
     return {
         "message": "Bedrock Agent Chatbot API is running"
     }
-
 
 @app.post("/chat", response_model=ChatResponse)
 def chat(request: ChatRequest):

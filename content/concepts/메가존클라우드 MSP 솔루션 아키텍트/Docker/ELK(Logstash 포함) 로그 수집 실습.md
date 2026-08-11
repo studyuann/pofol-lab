@@ -272,7 +272,6 @@ curl http://localhost:5601
 #  paths:
 #    - '/var/lib/docker/containers/*/*.log' # 도커 로그 위치
 
-
 filebeat.autodiscover:
   providers:
     - type: docker

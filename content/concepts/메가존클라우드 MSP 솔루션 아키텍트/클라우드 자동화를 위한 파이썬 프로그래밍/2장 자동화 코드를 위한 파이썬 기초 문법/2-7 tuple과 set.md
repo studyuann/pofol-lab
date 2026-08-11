@@ -548,7 +548,6 @@ def get_server_info():
 
 	return name,ip,state
 
-
 name,ip,state=get_server_info()
 
 print(name)
@@ -584,7 +583,6 @@ def check_server(server_name):
         return server_name, "stopped"
     else:
         return server_name, "unknown"
-
 
 name, state = check_server("web-01")
 

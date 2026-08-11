@@ -56,7 +56,7 @@ EKS에서는 AWS Load Balancer Controller가 이 Ingress를 해석해서 **AWS A
 
 4. Ingress를 생성할 수 있는 권한과 서브넷 태그 설정이 준비되어 있어야 함
 
- [[AWS Load Balancer Controller 설치]] 
+- [[AWS Load Balancer Controller 설치]]
 
 먼저 현재 컨텍스트와 노드를 확인함.
 

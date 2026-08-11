@@ -46,7 +46,6 @@ three-tier-autoscaling.yaml
 AWSTemplateFormatVersion: '2010-09-09'
 Description: ALB + AutoScaling 3 Tier Architecture
 
-
 Parameters:
 
   InstanceType:
@@ -60,9 +59,7 @@ Parameters:
     Type: String
     Default: 10.0.0.0/16
 
-
 Resources:
-
 
 # VPC
 
@@ -74,7 +71,6 @@ Resources:
         - Key: Name
           Value: 이니셜-vpc-cf
 
-
 # Internet Gateway
 
   InternetGateway:
@@ -85,7 +81,6 @@ Resources:
     Properties:
       VpcId: !Ref VPC
       InternetGatewayId: !Ref InternetGateway
-
 
 # Public Subnet
 
@@ -103,7 +98,6 @@ Resources:
       CidrBlock: 10.0.2.0/24
       AvailabilityZone: ap-northeast-2c
 
-
 # Security Group
 
   WebSecurityGroup:
@@ -119,7 +113,6 @@ Resources:
           ToPort: 80
           CidrIp: 0.0.0.0/0
 
-
 # Application Load Balancer
 
   LoadBalancer:
@@ -132,7 +125,6 @@ Resources:
       SecurityGroups:
         - !Ref WebSecurityGroup
 
-
 # Target Group
 
   TargetGroup:
@@ -141,7 +133,6 @@ Resources:
       Port: 80
       Protocol: HTTP
       VpcId: !Ref VPC
-
 
 # Listener
 
@@ -155,7 +146,6 @@ Resources:
       DefaultActions:
         - Type: forward
           TargetGroupArn: !Ref TargetGroup
-
 
 # Launch Template
 
@@ -187,7 +177,6 @@ Resources:
             systemctl enable httpd
             echo "CloudFormation Web Server" > /var/www/html/index.html
 
-
 # Auto Scaling Group
 
   AutoScalingGroup:
@@ -212,7 +201,6 @@ Resources:
 
       TargetGroupARNs:
         - !Ref TargetGroup
-
 
 Outputs:
 

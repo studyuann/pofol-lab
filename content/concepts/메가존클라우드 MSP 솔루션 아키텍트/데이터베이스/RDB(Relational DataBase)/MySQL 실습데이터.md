@@ -117,7 +117,6 @@ INSERT INTO customers (email, name, phone, status, created_at) VALUES
 ('user21@example.com','No Order User1','010-1111-0021','ACTIVE', NOW()),
 ('user22@example.com','No Order User2','010-1111-0022','ACTIVE', NOW());
 
-
 -- 상품 30개
 INSERT INTO products (sku, name, category, price, stock, created_at) VALUES
 ('SKU-1001','USB-C Cable 1m','ACCESSORY',9000, 200, NOW() - INTERVAL 60 DAY),
